@@ -91,9 +91,6 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
     // once lifted, elements stay lifted — nothing re-animates on the way back
     for (const el of rising) if (!el.classList.contains('in') && el.getBoundingClientRect().top < vh * 0.86) el.classList.add('in');
 
-    // the shutter: the rows fill from the foot of the band upward, each growing
-    // from its own base, so the light half climbs slat by slat out of its own
-    // ground rather than arriving detached above it
     // how far the light half has climbed over the held one: 0 as its head
     // reaches the bottom of the screen, 1 once it owns the whole of it
     const over = light ? clamp01((vh - light.getBoundingClientRect().top) / vh) : 0;
@@ -101,9 +98,14 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
     if (hold) hold.style.top = (holdTop - over * vh * HOLD_DRIFT).toFixed(1) + 'px';
     if (scrim) scrim.style.opacity = (over * HOLD_SHADE).toFixed(3);
 
+    // the shutter: the curtain closes while the section itself is arriving. It
+    // starts the moment the light half's own ground reaches the bottom of the
+    // screen, and finishes as the band clears the top; the rows fill from the
+    // foot upward, so the white climbs out of the section below them
     if (shutter && rows.length > 1) {
       const r = shutter.getBoundingClientRect();
-      const p = clamp01((vh - r.top) / Math.max(r.height, 1));
+      const run = Math.max(vh - r.height, 1);
+      const p = clamp01((run - r.top) / run);
       const n = rows.length;
       for (let k = 0; k < n; k++) {
         const start = ((n - 1 - k) / (n - 1)) * ROW_STAGGER;
@@ -111,8 +113,8 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
         rows[k].style.transform = `scaleY(${smooth(u).toFixed(4)})`;
       }
       // the nav takes the ground it is standing on
-      const light = r.top <= vh * 0.06 || (next ? next.getBoundingClientRect().top <= vh * 0.06 : false);
-      themed.forEach((el) => { el.dataset.theme = light ? 'light' : 'dark'; });
+      const onLight = r.top <= vh * 0.06 || (next ? next.getBoundingClientRect().top <= vh * 0.06 : false);
+      themed.forEach((el) => { el.dataset.theme = onLight ? 'light' : 'dark'; });
     }
   }
 
