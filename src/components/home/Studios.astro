@@ -109,7 +109,9 @@ const reelFor = (key: string) =>
      that slides between them. It is the frame counter on a camera back — you
      see where you are and where you have come from, and that a hand held
      still is still turning it. */
-  .roll { position: absolute; top: 0; bottom: 0; left: calc(var(--s-5) * -1); width: 0.5rem;
+  /* the strip is centred on the picture's own left edge, so the stops sit on
+     the edge itself rather than a little way off it */
+  .roll { position: absolute; top: 0; bottom: 0; left: -0.25rem; width: 0.5rem;
           display: grid; grid-template-rows: repeat(var(--n, 1), 1fr); z-index: 30; pointer-events: none; }
   /* a hairline runs the height of the roll, so the ticks read as stops on a
      strip rather than as stray dots in the gutter */
