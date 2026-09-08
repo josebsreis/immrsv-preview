@@ -37,7 +37,7 @@ const STAGGER = 0.5;
 /** how much of the cursor's push survives once a shape has formed */
 const TOUCH_IN_SHAPE = 0.4;
 /** seconds: cube held, crossing, shape held */
-const BEAT = { cube: 2.6, cross: 1.5, shape: 4.2 };
+const BEAT = { first: 2.6, cube: 0.7, cross: 1.4, shape: 4.2 };
 
 export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => void): ShapeLab {
   const cfg = HERO_CONFIG;
@@ -104,7 +104,7 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
   let shape = -1;            // −1 = the cube
   let blend = 0;             // 0..1 toward `shape`
   let target = 0;            // where blend is heading
-  let auto = !reduced, phase = 0, cycle = 0;
+  let auto = !reduced, phase = 0, cycle = 0, working = false;
   let spinAngle = 0, introT0 = 0, last: number | undefined;
   let yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
 
@@ -165,7 +165,7 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
     if (i < 0) { target = 0; return; }
     // crossing straight from one shape to another would have the particles
     // slide between two skins; they go home through the cube instead
-    if (blend > 0.02 && shape >= 0) { pending = i; target = 0; return; }
+    if (blend > 0.02 && shape >= 0) { pending = i; target = 0; working = true; return; }
     ensure(i);
     shape = i; target = 1;
     onLabel?.(SHAPES[i].name);
@@ -204,11 +204,12 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
     // the reel: cube, cross, shape, cross, next shape…
     if (auto) {
       cycle += dt;
-      const span = phase === 0 ? BEAT.cube : phase === 1 ? BEAT.cross : phase === 2 ? BEAT.shape : BEAT.cross;
+      const span = phase === 0 ? (working ? BEAT.cube : BEAT.first)
+                : phase === 2 ? BEAT.shape : BEAT.cross;
       if (cycle > span) {
         cycle = 0; phase = (phase + 1) % 4;
         if (phase === 1) show((shape + 1 + SHAPES.length) % SHAPES.length);
-        if (phase === 3) target = 0;
+        if (phase === 3) { target = 0; working = true; }
       }
     }
     if (target === 0 && blend < 0.02 && pending >= 0) { const p = pending; pending = -1; ensure(p); shape = p; target = 1; onLabel?.(SHAPES[p].name); }
@@ -227,7 +228,8 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
     // one turn, always the same way round: the axis leans from the cube's
     // diagonal up to vertical as a shape stands
     const e = EASE(blend);
-    spinAngle += (cfg.mark.spin * (1 - e) + cfg.mark.spin * 0.85 * e) * dt;
+    const whirl = working ? 1 - e : 0;
+    spinAngle += (cfg.mark.spin * (1 + whirl * cfg.shapes.whirl) * (1 - e) + cfg.mark.spin * 0.85 * e) * dt;
     _axis.copy(SPIN_AXIS).lerp(UP, e).normalize();
     qSpin.setFromAxisAngle(_axis, spinAngle);
     qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble * (1 - e));

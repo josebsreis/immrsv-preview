@@ -130,6 +130,9 @@ export function createHero(opts: HeroOptions): Hero {
   let shapeTo = 0;       // where it is heading
   let pending = -1;      // a form asked for while another is still standing
   let phase = 0, beat = 0, parked = false;
+  /** true once the mark has started making things: the cube is then an
+   *  interlude between two forms rather than the thing on show */
+  let working = false;
 
   /** sample shape `i` for every plate, once. A shape baked from a model waits
    *  for its cloud to arrive; if that never comes, its field stands in, so the
@@ -197,7 +200,7 @@ export function createHero(opts: HeroOptions): Hero {
     if (i < 0) { shapeTo = 0; pending = -1; return; }
     // one form never slides into the next: the cloud goes home through the
     // cube, which is the only reading that makes sense of three loose plates
-    if (shapeAt > 0.02 && shape >= 0) { pending = i; shapeTo = 0; phase = 3; beat = 0; spinBoost += cfg.shapes.charge; return; }
+    if (shapeAt > 0.02 && shape >= 0) { pending = i; shapeTo = 0; phase = 3; beat = 0; working = true; return; }
     ensureShape(i); shape = i; shapeTo = 1; phase = 1; beat = 0;
   }
   let introT0 = 0, last: number | undefined, yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
@@ -267,21 +270,21 @@ export function createHero(opts: HeroOptions): Hero {
     const S = cfg.shapes;
     if (reel && exit === 0 && ready) {
       beat += dt;
-      const span = phase === 0 ? S.beat.cube : phase === 2 ? S.beat.shape : S.beat.cross;
+      const span = phase === 0 ? (working ? S.beat.cube : S.beat.first)
+                : phase === 2 ? S.beat.shape : S.beat.cross;
       if (beat > span) {
         beat = 0; phase = (phase + 1) % 4;
         if (phase === 1) showShape((shape + 1) % SHAPES.length);
         // the cube between two forms is the mark at work, not a thing it is
-        // making: it spins up, and the headline holds the last word until the
-        // next form has actually stood
-        else if (phase === 3) { shapeTo = 0; spinBoost += cfg.shapes.charge; }
+        // making: it comes back, spins up hard, and throws the next one out
+        else if (phase === 3) { shapeTo = 0; working = true; }
       }
     } else if (exit > 0 && !parked) {
       // scrolling away winds the reel back to its first beat: the hero is left
       // as it was found, so coming back does not resume half way through a
       // form, or leave the headline naming one the mark is no longer making
       parked = true;
-      shapeTo = 0; pending = -1; phase = 0; beat = 0;
+      shapeTo = 0; pending = -1; phase = 0; beat = 0; working = false;
     }
     if (exit === 0) parked = false;
     if (shapeTo === 0 && shapeAt < 0.02 && pending >= 0) { const q = pending; pending = -1; ensureShape(q); shape = q; shapeTo = 1; phase = 1; beat = 0; }
@@ -309,7 +312,12 @@ export function createHero(opts: HeroOptions): Hero {
     // existed to hide the cube's hollow back; a form has a front and a floor,
     // so the axis leans up to vertical as one stands — the mark keeps turning
     // through the change instead of stopping and picking a new direction.
-    const rate = (cfg.mark.spin + spinBoost) * spinFade * (1 - shapeE) + cfg.mark.spin * S.turntable * shapeE;
+    // the whirl: nothing while the cube is simply standing there, everything
+    // between one form and the next — it spins up as a form comes apart, peaks
+    // on the bare cube, and winds down as the next one is thrown out
+    const whirl = working ? 1 - shapeE : 0;
+    const cruise = cfg.mark.spin * (1 + whirl * S.whirl);
+    const rate = (cruise + spinBoost) * spinFade * (1 - shapeE) + cfg.mark.spin * S.turntable * shapeE;
     spinAngle += rate * dt;
     _axis.copy(SPIN_AXIS).lerp(UP, shapeE).normalize();
     qSpin.setFromAxisAngle(_axis, spinAngle);
