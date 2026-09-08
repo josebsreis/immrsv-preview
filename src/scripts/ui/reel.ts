@@ -1,59 +1,71 @@
 /* ═══════════════════════════════════════════════════════════════════
-   A reel of stills that changes on its own.
+   A reel of stills you scrub with the cursor.
 
-   Every frame is in the DOM from the start and only its opacity moves,
-   so a change costs the compositor a crossfade and nothing else — no
-   layout, no decode at the moment it matters. The next frame is asked
-   for one step ahead, which is the only reason the first change is not
-   a flash of nothing.
+   Nothing changes on its own. The height of the frame is divided into
+   as many bands as there are projects, and where the pointer stands
+   decides which one you are looking at — so running the cursor down the
+   image walks through the studio's work, and running it back up walks
+   back.
 
-   It runs only while it is on screen and only if the reader has not
-   asked for less motion; a still reel still shows its first frame.
+   A change is a curtain, not a fade: the new frame is revealed by
+   opening a clip from the edge the cursor came from, over the top of
+   the one before it, which is still sitting there underneath.
+
+   Where there is no pointer to speak of, a tap takes the next one.
    ═══════════════════════════════════════════════════════════════════ */
 
 export interface Reel { destroy(): void }
 
 export function createReel(el: HTMLElement): Reel {
   const frames = [...el.querySelectorAll<HTMLElement>('[data-reel-frame]')];
-  const caption = el.querySelector<HTMLElement>('[data-reel-caption]');
   if (frames.length < 2) return { destroy() {} };
 
-  const hold = Number(el.dataset.reelHold ?? 4200);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let at = 0, timer = 0, live = false;
+  const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  let at = 0, top = 1;
 
-  /** ask for the frame after this one, so its turn is not spent decoding */
-  const warm = (i: number) => {
-    const next = frames[(i + 1) % frames.length];
-    next.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
-      if (img.loading === 'lazy') img.loading = 'eager';
-    });
-  };
-
-  const show = (i: number) => {
+  /** `down` is the direction the reel is travelling, not the cursor */
+  function show(i: number, down: boolean) {
+    if (i === at || i < 0 || i >= frames.length) return;
+    const next = frames[i];
+    next.style.zIndex = String(++top);
+    // the frame that is arriving carries the whole picture; it is only the
+    // window onto it that opens, so nothing about the image itself moves
+    if (!reduced) {
+      next.style.transition = 'none';
+      next.style.clipPath = down ? 'inset(0 0 100% 0)' : 'inset(100% 0 0 0)';
+      void next.offsetWidth;                      // let that land before releasing
+      next.style.transition = '';
+    }
+    next.style.clipPath = 'inset(0 0 0 0)';
+    frames[at].style.zIndex = '';
     at = i;
-    frames.forEach((f, k) => f.classList.toggle('on', k === i));
-    if (caption) caption.textContent = frames[i].dataset.reelFrame ?? '';
-    warm(i);
-  };
+    // ask for the neighbours, so a scrub does not stall on a decode
+    for (const k of [i + 1, i - 1]) {
+      const img = frames[k]?.querySelector<HTMLImageElement>('img');
+      if (img && img.loading === 'lazy') img.loading = 'eager';
+    }
+  }
 
-  const tick = () => {
-    show((at + 1) % frames.length);
-    timer = window.setTimeout(tick, hold);
-  };
-  const start = () => { if (live || reduced) return; live = true; timer = window.setTimeout(tick, hold); };
-  const stop = () => { live = false; clearTimeout(timer); };
+  frames.forEach((f, i) => { f.style.clipPath = i === 0 ? 'inset(0 0 0 0)' : 'inset(0 0 100% 0)'; });
+  frames[0].style.zIndex = '1';
 
-  show(0);
-  const io = new IntersectionObserver(([e]) => (e.isIntersecting ? start() : stop()), { rootMargin: '10% 0px' });
-  io.observe(el);
-  const onVisibility = () => { if (document.hidden) stop(); else start(); };
-  document.addEventListener('visibilitychange', onVisibility);
+  const onMove = (e: PointerEvent) => {
+    const r = el.getBoundingClientRect();
+    if (r.height < 1) return;
+    const t = (e.clientY - r.top) / r.height;
+    const i = Math.min(frames.length - 1, Math.max(0, Math.floor(t * frames.length)));
+    show(i, i > at);
+  };
+  const onTap = () => show((at + 1) % frames.length, true);
+
+  if (fine) el.addEventListener('pointermove', onMove, { passive: true });
+  else el.addEventListener('click', onTap);
 
   return {
     destroy() {
-      stop(); io.disconnect();
-      document.removeEventListener('visibilitychange', onVisibility);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('click', onTap);
     },
   };
 }
