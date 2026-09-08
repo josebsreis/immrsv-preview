@@ -94,10 +94,13 @@ export const HERO_CONFIG = {
     ignore: 'a, button, [data-no-strike]',
   },
 
-  /** the scroll exit: the mark lets go, bursts outward and goes out with the
-   *  first screen — it belongs to the hero and to nothing after it */
+  /** the scroll exit: the form comes apart from the top down and falls, and
+   *  is gone with the first screen — it belongs to the hero and to nothing
+   *  after it */
   exit: {
-    burst: 7,         // how far the particles are thrown as the hero leaves
+    fall: 6,          // how far the particles drop as the hero leaves
+    drift: 0.55,      // and how far they wander sideways on the way down
+    release: 0.55,    // share of the exit spent letting go, head first
     spin: 0.04,       // what is left of the cruise rotation on the way out
     dim: 1,           // and it goes out entirely
   },
