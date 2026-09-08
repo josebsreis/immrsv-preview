@@ -74,6 +74,25 @@ const { content } = Astro.props;
   .bl { left: 0; bottom: 0; translate: -50% 50%; }
   .br { right: 0; bottom: 0; translate: 50% 50%; }
 
+  /* Desktop: each studio is a card of its own screen, and they stack — every
+     one sticks at the top and the next climbs over it. The cards are pulled
+     out to the page edges so a card covers the one beneath entirely; inset,
+     they would leave the last one showing down both sides. */
+  @media (min-width: 860px) {
+    .studios { padding-bottom: 0; }
+    .studio { position: sticky; top: 0; min-height: 100svh; align-content: center;
+              margin-inline: calc(var(--page-x) * -1);
+              padding: 14vh var(--page-x) 12vh;
+              background: var(--ground);
+              border-top: var(--hairline) solid var(--line); }
+    /* the last card has nothing coming over it, so it can keep the air below */
+    .studio:last-of-type { padding-bottom: 16vh; }
+    /* the clip sits with the words rather than under everything, and small
+       enough that the type still leads */
+    .band { grid-column: 2; max-width: 34rem; margin-top: var(--s-6); }
+    .band video, .band img { aspect-ratio: 16 / 9; }
+  }
+
   @media (max-width: 859px) {
     .head, .studio { grid-template-columns: 1fr; row-gap: var(--s-5); }
     .studios { padding-bottom: 12vh; }
