@@ -70,8 +70,8 @@ export interface ShapeDef {
  *  on one leg, arms just off the body, so the silhouette has air in it. */
 const FIGURE: ShapeDef = {
   name: 'figure',
-  scale: 1.0,
-  lift: -0.42,
+  scale: 1.62,
+  lift: -0.475,
   bounds: [-0.55, -0.06, -0.34, 0.55, 1.02, 0.34],
   sdf(x, y, z) {
     // head and neck
@@ -108,8 +108,8 @@ const FIGURE: ShapeDef = {
  *  at this resolution the silhouette is the whole argument. */
 const HOUSE: ShapeDef = {
   name: 'house',
-  scale: 1.06,
-  lift: -0.30,
+  scale: 1.7,
+  lift: -0.40,
   bounds: [-0.6, -0.04, -0.44, 0.6, 0.86, 0.44],
   sdf(x, y, z) {
     // the walls, with the openings cut out of them
@@ -132,8 +132,8 @@ const HOUSE: ShapeDef = {
  *  read as a surface, not a brick. */
 const SCREEN: ShapeDef = {
   name: 'screen',
-  scale: 1.06,
-  lift: -0.34,
+  scale: 1.66,
+  lift: -0.44,
   bounds: [-0.52, -0.04, -0.36, 0.52, 0.92, 0.36],
   sdf(x, y, z) {
     // the panel, tilted back about x
