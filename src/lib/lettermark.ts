@@ -13,3 +13,15 @@ export const LETTERMARK = {
   /** the viewBox as numbers, for anything that has to lay out over it */
   box: { x: 275, y: 78.3, w: 695.5, h: 85.5 },
 } as const;
+
+/** The symbol alone — the three faces of the cube, with the gaps between them.
+ *  Light passes through those gaps, which is what makes it worth eclipsing. */
+export const SYMBOL = {
+  viewBox: '10 10 184 210',
+  box: { x: 10, y: 10, w: 184, h: 210 },
+  paths: [
+    'M102.31 79.53L129 94.86L184.31 63.11L102.16 15.94L20.27 62.88L75.54 94.87L102.31 79.53Z',
+    'M69.41 136.45V106.12L14 74.38V168.58L95.68 216.06V151.72L69.41 136.45Z',
+    'M135.17 105.94V136.45L108.6 151.89V216.06L190.28 168.58V74.38L135.17 105.94Z',
+  ],
+} as const;

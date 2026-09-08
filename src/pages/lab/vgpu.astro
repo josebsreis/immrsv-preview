@@ -9,7 +9,7 @@ import Base from '@layouts/Base.astro';
     <p class="note label" data-note>WebGPU · vgpu · lab</p>
   </main>
   <script>
-    import { startVgpuMark } from '../../scripts/lab/vgpuMark';
+    import { startEclipse } from '../../scripts/lab/vgpuEclipse';
     const canvas = document.querySelector<HTMLCanvasElement>('[data-vgpu]')!;
     const note = document.querySelector<HTMLElement>('[data-note]')!;
     const fit = () => {
@@ -19,7 +19,7 @@ import Base from '@layouts/Base.astro';
     };
     fit();
     addEventListener('resize', fit);
-    startVgpuMark(canvas).catch((err) => { note.textContent = String(err.message ?? err); });
+    startEclipse(canvas, { art: 'symbol', scale: 0.42 }).catch((err) => { note.textContent = String(err.message ?? err); });
   </script>
 </Base>
 
