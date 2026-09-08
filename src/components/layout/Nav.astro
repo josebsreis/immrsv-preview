@@ -7,7 +7,7 @@ const { items } = Astro.props;
   <a class="home" href="/" aria-label="IMMRSV — home" data-tap><Wordmark /></a>
   <nav class="menu" aria-label="Primary">
     {items.map((it) => (
-      <a class="item glass label" href={it.href} data-tap data-dhover-item>
+      <a class="item glass label" href={it.href} data-tap data-dhover-item data-axis="x">
         <span class="tile" data-dhover-tile aria-hidden="true"></span>
         <span class="txt">{it.label}</span>
       </a>
@@ -33,7 +33,7 @@ const { items } = Astro.props;
           color: var(--ink); transition: color var(--dur-base) ease; }
   .item:hover { background: var(--glass); }
   .tile { position: absolute; inset: 0; background: var(--glass-hover);
-          transform: translateY(-100%); will-change: transform;
+          transform: translateX(-100%); will-change: transform;
           transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
   .txt { position: relative; }
   @media (prefers-reduced-motion: reduce) { .tile { transition: none; } }
