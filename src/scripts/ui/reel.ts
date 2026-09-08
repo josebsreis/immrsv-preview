@@ -39,7 +39,7 @@ export function createReel(el: HTMLElement): Reel {
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
-  let at = 0, top = 1;
+  let at = 0, top = 1, was = false;
 
   /* Every frame is fetched and decoded before the card is reached. The
      flicker on a change was an image arriving undecoded and painting a frame
@@ -96,19 +96,24 @@ export function createReel(el: HTMLElement): Reel {
       && pointer.x >= r.left && pointer.x <= r.right && pointer.y >= r.top && pointer.y <= r.bottom;
     // the card under the hand says so, and the roll shows only there
     el.classList.toggle('hovering', inside);
+    const entering = inside && !was;
+    was = inside;
     // A card left behind goes back to its first picture. Otherwise a reel is
     // whatever frame the hand happened to leave it on, and the first project
     // — the one chosen to lead — is the one nobody sees at rest.
     if (!inside) { if (at !== 0) show(0, false); return; }
-    // Hysteresis. A hand at rest still trembles, and a page under a still
-    // hand moves in steps; either one sitting on the line between two bands
-    // would flip the frame back and forth — the flicker to the second picture
-    // and back on the way in. So the pointer has to be a third of a band past
-    // the line before the frame follows it.
     const pos = ((pointer.y - r.top) / r.height) * frames.length;
+    const band = Math.min(frames.length - 1, Math.max(0, Math.floor(pos)));
+    // Arriving on the card takes the frame under the pointer at once: waiting
+    // for a third of a band of travel means entering halfway down and being
+    // shown the first picture until the hand has moved a long way.
+    if (entering) { show(band, band > at); return; }
+    // Once on it, hysteresis. A hand at rest still trembles and a page under a
+    // still hand moves in steps; either sitting on the line between two bands
+    // would flip the frame back and forth — the flicker on the way in.
     let i = at;
-    if (pos > at + 1.33) i = Math.min(frames.length - 1, Math.floor(pos));
-    else if (pos < at - 0.33) i = Math.max(0, Math.floor(pos));
+    if (pos > at + 1.33) i = band;
+    else if (pos < at - 0.33) i = band;
     show(i, i > at);
   };
   const onTap = () => show((at + 1) % frames.length, true);
