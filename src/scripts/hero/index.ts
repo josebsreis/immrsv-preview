@@ -170,9 +170,9 @@ export function createHero(opts: HeroOptions): Hero {
     P.tx = x; P.ty = y; P.moved = true;
     shockT = performance.now() / 1000;
     spinBoost += cfg.strike.spin;
-    // a click is a blast and a change of form: it comes apart, and what comes
-    // back together is the next thing
-    if (reel && exit === 0) showShape((shape + 1) % SHAPES.length);
+    // a click is a blast and nothing more: the reel keeps its own time, so a
+    // click is something you do to whatever is standing, not a way to skip it
+    if (reel && exit === 0) beat = Math.max(0, beat - 1.2);   // and it buys the form a moment longer
     if (fluid) for (let k = 0; k < 10; k++) {
       const a = k / 10 * 6.2832, c = Math.cos(a), s = Math.sin(a);
       fluid.splat(x + c * 0.012, y + s * 0.012 * camera.aspect, c * cfg.strike.fluidForce, s * cfg.strike.fluidForce, cfg.strike.fluidDye, cfg.strike.fluidRadius);
