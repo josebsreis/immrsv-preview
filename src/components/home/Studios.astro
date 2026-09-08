@@ -14,19 +14,34 @@ const { content } = Astro.props;
    a time instead of a stock clip; where it has none yet, the clip stands. */
 const FOLDER: Record<string, string> = { architecture: 'architecture-design', media: 'creative-media', products: 'digital-products' };
 /** every card carries the same count, so the three reels turn at the same
- *  pace; a studio with fewer than that shows empty frames for the rest,
- *  and one with more shows its first four */
+ *  pace and the section reads as three of one thing */
 const PER_STUDIO = 4;
-const placeholders = Array.from({ length: PER_STUDIO }, (_, i) =>
-  ({ src: `/work/placeholder/0${i + 1}`, name: 'Coming soon' }));
-const reelFor = (key: string) => {
-  const own = (work as { studio: string; name: string; images: string[] }[])
-    .filter((p) => p.studio === FOLDER[key])
-    // one frame per project: the reel is a list of what they have built, not a
-    // contact sheet of every render in a folder
-    .map((p) => ({ src: p.images[0], name: p.name }))
-    .slice(0, PER_STUDIO);
-  return own.concat(placeholders.slice(0, PER_STUDIO - own.length));
+type Shot = { src: string; name: string };
+const projects = work as { studio: string; name: string; images: string[] }[];
+/** every render there is, in delivery order */
+const everything: Shot[] = projects.flatMap((p) => p.images.map((src) => ({ src, name: p.name })));
+
+/**
+ * A studio's four frames: its own projects first, one frame each. A studio
+ * with fewer than four borrows — its own spare renders before anyone else's,
+ * then work from across the practice, spread through the pool rather than
+ * taken off the top so the borrowed frames are not all the same building.
+ * Stand-ins until the client sends the rest; nothing here is invented.
+ */
+const reelFor = (key: string): Shot[] => {
+  const mine = projects.filter((p) => p.studio === FOLDER[key]);
+  const own: Shot[] = mine.map((p) => ({ src: p.images[0], name: p.name })).slice(0, PER_STUDIO);
+  if (own.length >= PER_STUDIO) return own;
+
+  const spare: Shot[] = mine.flatMap((p) => p.images.slice(1).map((src) => ({ src, name: p.name })));
+  const taken = new Set(own.concat(spare).map((s) => s.src));
+  const rest = everything.filter((s) => !taken.has(s.src));
+  const want = PER_STUDIO - own.length - spare.length;
+  const spread: Shot[] = [];
+  for (let k = 0; k < want && rest.length; k++) {
+    spread.push(rest[Math.floor((k * rest.length) / Math.max(want, 1))]);
+  }
+  return own.concat(spare, spread).slice(0, PER_STUDIO);
 };
 ---
 {content.items.length > 0 && (
