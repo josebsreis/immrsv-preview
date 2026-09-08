@@ -39,6 +39,7 @@ src/
   scripts/
     hero/             the mark: config.ts (every tunable), mark.ts, sim.ts, lens.ts, pointer.ts, index.ts
     fluid.ts          the WebGL fluid (own canvas, under the hero)
+    wordmark.ts       the name in GL: scroll wipe + cursor light (own canvas)
     ui/               smoothScroll, scrollChoreography, rotatingWord, statsReel, splitText, hoverAudio, loader
     home.ts           the homepage's client entry — wires everything by data attributes
   lib/

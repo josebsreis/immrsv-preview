@@ -1,18 +1,24 @@
 ---
-/** The name at full width — the first thing after the hero leaves. Nothing
- *  else on the screen, so the mark reads as a title page. */
+/** The name at full width — the first thing after the hero leaves. The SVG is
+ *  the mark; when WebGL is available a canvas takes over the drawing of it
+ *  (see src/scripts/wordmark.ts) and the SVG stays only for assistive tech. */
 import Lettermark from '@components/ui/Lettermark.astro';
 ---
 <section class="panel" aria-label="IMMRSV">
-  <div class="mark" data-rise><Lettermark /></div>
+  <div class="mark" data-wordmark data-rise>
+    <Lettermark />
+    <canvas data-wordmark-canvas aria-hidden="true"></canvas>
+  </div>
 </section>
 
 <style>
-  /* above the hero's fixed layers, under the shutter */
   /* it follows the hero closely — the name lands as soon as the hero leaves */
   .panel { position: relative; z-index: var(--z-ui);
            display: grid; place-items: center; padding: 8vh var(--page-x); }
-  .mark { width: 100%; color: var(--ink); }
-  .mark :global(svg) { width: 100%; height: auto; }
+  .mark { position: relative; width: 100%; color: var(--ink); }
+  .mark :global(svg) { width: 100%; height: auto; display: block; transition: opacity var(--dur-base) ease; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* the canvas is drawing the same letters — leave the SVG for screen readers */
+  .mark[data-gl] :global(svg) { opacity: 0; }
   @media (max-width: 719px) { .panel { padding: 0 1.25rem; } }
 </style>
