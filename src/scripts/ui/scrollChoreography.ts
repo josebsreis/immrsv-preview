@@ -72,7 +72,7 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
     // the mark belongs to the hero and to nothing after it: as the first
     // screen goes by it comes apart, and it is gone before the name arrives
     const hero = getHero();
-    hero?.setExit((y - vh * 0.05) / (vh * 0.55));
+    hero?.setExit(y / (vh * 0.5));
     hero?.setOut(clamp01((y - vh * 0.3) / (vh * 0.45)));
 
     for (const { host, units, last } of passages) {

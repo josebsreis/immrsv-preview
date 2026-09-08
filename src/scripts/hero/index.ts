@@ -337,7 +337,11 @@ export function createHero(opts: HeroOptions): Hero {
     // be two — a loosening that swelled and settled, and this — and the second
     // began while the first was still pulling back, so the cloud opened,
     // hesitated, and only then left.
-    const burst = exit * exit * cfg.exit.burst;
+    // It answers the first pixel of scroll and then accelerates: a square law
+    // alone is so flat at the start that the mark appears to ignore you for
+    // the first stretch, which reads as the page not responding rather than
+    // as a thing gathering speed.
+    const burst = (0.4 * exit + 0.6 * exit * exit) * cfg.exit.burst;
     // Air. A form that only turns is a model on a turntable; a slow lean at the
     // top, or a rise and fall of the whole thing, is the difference between an
     // object and something standing there. The wave is worked out once a frame
