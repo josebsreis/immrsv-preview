@@ -19,7 +19,8 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "sanity": "^6.12.0",
-    "three": "^0.185.1"
+    "three": "^0.185.1",
+    "vgpu": "^0.4.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

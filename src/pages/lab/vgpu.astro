@@ -1,0 +1,32 @@
+---
+/** A lab page, not part of the site: the mark rendered by vgpu (WebGPU),
+ *  so the approach can be judged next to the particle version. */
+import Base from '@layouts/Base.astro';
+---
+<Base theme="dark" title="Lab — vgpu">
+  <main class="lab">
+    <canvas data-vgpu></canvas>
+    <p class="note label" data-note>WebGPU · vgpu · lab</p>
+  </main>
+  <script>
+    import { startVgpuMark } from '../../scripts/lab/vgpuMark';
+    const canvas = document.querySelector<HTMLCanvasElement>('[data-vgpu]')!;
+    const note = document.querySelector<HTMLElement>('[data-note]')!;
+    const fit = () => {
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      canvas.width = Math.round(innerWidth * dpr);
+      canvas.height = Math.round(innerHeight * dpr);
+    };
+    fit();
+    addEventListener('resize', fit);
+    startVgpuMark(canvas).catch((err) => { note.textContent = String(err.message ?? err); });
+  </script>
+</Base>
+
+<style>
+  /* a bare page: the site's nav and footer stay out of the way */
+  .lab { position: fixed; inset: 0; z-index: 10; background: var(--ground); }
+  .lab :global(+ *), .lab :global(~ .footer) { display: none; }
+  canvas { width: 100%; height: 100%; display: block; }
+  .note { position: fixed; left: var(--page-x); bottom: var(--page-y); color: var(--ink-3); }
+</style>
