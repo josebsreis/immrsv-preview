@@ -16,47 +16,34 @@
 export interface Marquee { destroy(): void }
 
 export function createMarquee(el: HTMLElement): Marquee {
+  const found = el.querySelector<HTMLElement>('[data-marquee-track]');
+  const first = found?.firstElementChild as HTMLElement | null;
+  if (!found || !first) return { destroy() {} };
+  const track = found;
+
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   /** px a second at rest */
   const base = Number(el.dataset.marqueeSpeed ?? 46);
   /** how much of a scrolled pixel the band takes on top of that */
   const drag = Number(el.dataset.marqueeDrag ?? 1.5);
 
-  /* Every track in the band runs off one clock. The words take one direction
-     and the squares on the rails take the other, at their own rate, which is
-     what gives a flat band a near side and a far one. */
-  interface Track { el: HTMLElement; first: HTMLElement; dir: number; rate: number; runW: number; x: number }
-  const tracks: Track[] = [];
-  el.querySelectorAll<HTMLElement>('[data-marquee-track]').forEach((t) => {
-    const first = t.firstElementChild as HTMLElement | null;
-    if (!first) return;
-    tracks.push({
-      el: t, first, x: 0, runW: 0,
-      dir: t.dataset.marqueeDir === 'right' ? 1 : -1,
-      rate: Number(t.dataset.marqueeRate ?? 1),
-    });
-  });
-  if (!tracks.length) return { destroy() {} };
-
-  /* Enough copies to cover the screen and then some: the loop works by sliding
-     one run's width and starting again, so there has to be another run already
-     standing where the first one was. */
+  /* Enough copies to cover the screen and then some: the loop works by
+     sliding one run's width and starting again, so there has to be another
+     run already standing where the first one was. */
+  let runW = first.getBoundingClientRect().width;
   const fill = () => {
-    for (const t of tracks) {
-      t.runW = t.first.getBoundingClientRect().width;
-      if (t.runW < 1) continue;
-      let guard = 40;
-      while (t.el.getBoundingClientRect().width < innerWidth + t.runW * 1.5 && guard-- > 0) {
-        t.el.appendChild(t.first.cloneNode(true));
-      }
+    runW = first.getBoundingClientRect().width;
+    if (runW < 1) return;
+    while (track.getBoundingClientRect().width < innerWidth + runW * 1.5) {
+      track.appendChild(first.cloneNode(true));
     }
   };
   fill();
-  // the runs are as wide as what is in them, and type is not its final width
-  // until the face it is set in has arrived
-  document.fonts?.ready.then(() => { for (const t of tracks) t.x = 0; fill(); });
+  // the run is as wide as the words in it, and the words are not their final
+  // width until the face they are set in has arrived
+  document.fonts?.ready.then(() => { x = 0; fill(); });
 
-  let pending = 0, lastY = scrollY, raf = 0, last = 0, live = false;
+  let x = 0, dir = -1, pending = 0, lastY = scrollY, raf = 0, last = 0, live = false;
 
   const onScroll = () => {
     const dy = scrollY - lastY;
@@ -68,33 +55,26 @@ export function createMarquee(el: HTMLElement): Marquee {
     if (!live || Math.abs(dy) < 0.4) return;
     pending += dy;
     // reading down runs it one way, reading back up turns it round
-    const next = dy > 0 ? 1 : -1;
-    if (String(next) !== el.dataset.marqueeWay) {
-      el.dataset.marqueeWay = String(next);
-      el.dataset.marqueeStatus = next === 1 ? 'normal' : 'inverted';
+    const next = dy > 0 ? -1 : 1;
+    if (next !== dir) {
+      dir = next;
+      el.dataset.marqueeStatus = dir === -1 ? 'normal' : 'inverted';
     }
   };
   el.dataset.marqueeStatus = 'normal';
-  el.dataset.marqueeWay = '1';
 
   function frame(now: number) {
     const dt = Math.min((now - (last || now)) / 1000, 0.05);
     last = now;
     // The drift, plus what the page scrolled since the last frame: down pushes
-    // the band one way, up the other, so it always runs with you. The borrowed
-    // motion is capped per frame — a flick of a trackpad, or a smooth scroller
-    // catching up after a jump, is not a licence to teleport.
-    const way = el.dataset.marqueeStatus === 'inverted' ? -1 : 1;
+    // the band left, up pushes it right, so it always runs with you. The
+    // borrowed motion is capped per frame — a flick of a trackpad, or a smooth
+    // scroller catching up after a jump, is not a licence to teleport.
     const push = Math.max(-70, Math.min(70, pending)) * drag;
     pending = 0;
-    for (const t of tracks) {
-      const sign = t.dir * way;
-      // the drift follows the way you are reading; the borrowed scroll follows
-      // the track's own direction, so the rails always run against the words
-      t.x += base * t.rate * sign * dt + push * t.dir * t.rate;
-      if (t.runW > 0) { t.x %= t.runW; if (t.x > 0) t.x -= t.runW; }
-      t.el.style.transform = `translate3d(${t.x.toFixed(2)}px,0,0)`;
-    }
+    x += base * dir * dt - push;
+    if (runW > 0) { x %= runW; if (x > 0) x -= runW; }
+    track.style.transform = `translate3d(${x.toFixed(2)}px,0,0)`;
     if (live) raf = requestAnimationFrame(frame);
   }
 
