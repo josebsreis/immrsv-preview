@@ -7,6 +7,7 @@ import { createScrollChoreography } from './ui/scrollChoreography';
 import { createRotatingWord } from './ui/rotatingWord';
 import { createStatsReel } from './ui/statsReel';
 import { createWordmarkInk } from './ui/wordmarkInk';
+import { createDirectionalHover } from './ui/directionalHover';
 import { splitChars } from './ui/splitText';
 import { createHoverAudio } from './ui/hoverAudio';
 import { runLoader } from './ui/loader';
@@ -27,6 +28,7 @@ if (reel) createStatsReel(reel);
 // the name inks in under the cursor
 const markHost = document.querySelector<HTMLElement>('[data-wordmark]');
 if (markHost && matchMedia('(hover: hover)').matches) createWordmarkInk(markHost);
+createDirectionalHover();
 createHoverAudio(site.audio.taps);
 
 runLoader(document.querySelector<HTMLElement>('[data-loader]'), () => hero?.setReady());
