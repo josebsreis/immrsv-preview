@@ -18,6 +18,19 @@
 
 export interface Reel { destroy(): void }
 
+/* Where the pointer is, kept once for every reel on the page. The page moves
+   under a still cursor when you scroll, and that is a change of position as
+   far as the card is concerned, so a reel has to be able to ask where the
+   pointer stands without waiting for it to move. */
+const pointer = { x: -1, y: -1, seen: false };
+let tracking = false;
+function track() {
+  if (tracking) return;
+  tracking = true;
+  addEventListener('pointermove', (e) => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.seen = true; }, { passive: true });
+  addEventListener('pointerleave', () => { pointer.seen = false; });
+}
+
 export function createReel(el: HTMLElement): Reel {
   const frames = [...el.querySelectorAll<HTMLElement>('[data-reel-frame]')];
   if (frames.length < 2) return { destroy() {} };
@@ -72,25 +85,31 @@ export function createReel(el: HTMLElement): Reel {
   frames.forEach((f, i) => { f.style.clipPath = i === 0 ? 'inset(0 0 0 0)' : 'inset(0 0 100% 0)'; });
   frames[0].style.zIndex = '1';
 
-  const onMove = (e: PointerEvent) => {
+  /** pick the frame for wherever the pointer is over the card right now */
+  const settle = () => {
+    if (!pointer.seen) return;
     const r = el.getBoundingClientRect();
     if (r.height < 1) return;
-    const t = (e.clientY - r.top) / r.height;
+    if (pointer.x < r.left || pointer.x > r.right || pointer.y < r.top || pointer.y > r.bottom) return;
+    const t = (pointer.y - r.top) / r.height;
     const i = Math.min(frames.length - 1, Math.max(0, Math.floor(t * frames.length)));
     show(i, i > at);
   };
   const onTap = () => show((at + 1) % frames.length, true);
 
-  // the pointer drives it wherever there is one — a stylus and a trackpad
-  // both report themselves differently and both work here — and a tap takes
-  // the next frame for anything that only ever taps
-  el.addEventListener('pointermove', onMove, { passive: true });
+  // Two things move the pointer across the card: the hand, and the page
+  // scrolling underneath a hand that is holding still. Both are answered.
+  // A tap takes the next frame for anything that only ever taps.
+  track();
+  addEventListener('pointermove', settle, { passive: true });
+  addEventListener('scroll', settle, { passive: true });
   if (!fine) el.addEventListener('click', onTap);
 
   return {
     destroy() {
       near.disconnect();
-      el.removeEventListener('pointermove', onMove);
+      removeEventListener('pointermove', settle);
+      removeEventListener('scroll', settle);
       el.removeEventListener('click', onTap);
     },
   };
