@@ -98,10 +98,12 @@
   --ground: #ffffff;
   --ground-rgb: 255 255 255;
   --ink: #0d1017;
-  --ink-2: #3a3d44;
-  --ink-3: #6b6f78;
-  --ink-4: #8a909b;
-  --ink-dim: #c9ccd2;
+  /* the secondary voice runs warm rather than blue-grey: on a white ground a
+     cool grey reads as unset body copy, a warm one reads as chosen */
+  --ink-2: #6b645c;               /* secondary text */
+  --ink-3: #8b847b;               /* muted text */
+  --ink-4: #a8a29a;               /* dim: rule cross, meta */
+  --ink-dim: #d2cec8;
   --glass: rgb(0 0 0 / 0.05);
   --glass-hover: rgb(0 0 0 / 0.09);
   --line: rgb(0 0 0 / 0.08);
