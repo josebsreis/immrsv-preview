@@ -1,7 +1,7 @@
 ---
 /** The hero: the particle mark (a client island booted by src/scripts/home.ts)
- *  behind an edge-anchored layer of DOM — statement, CTAs, sentence, cue,
- *  featured project. All copy comes in as props. */
+ *  behind an edge-anchored layer of DOM — statement, CTAs, and a bottom row
+ *  holding the cue, the sentence and the featured project. Copy comes in as props. */
 import Button from '@components/ui/Button.astro';
 import ScrollCue from '@components/ui/ScrollCue.astro';
 import FeaturedProject from '@components/hero/FeaturedProject.astro';
@@ -24,10 +24,12 @@ const [line1, line2 = ''] = content.headline.split('\n');
     </div>
   </div>
 
-  <p class="desc arrives" style="--arrive-delay: .7s">{content.description}</p>
   <!-- placement belongs to the hero, so children are wrapped rather than styled across scopes -->
-  <div class="cue-slot"><ScrollCue /></div>
-  {featured && <div class="feat-slot"><FeaturedProject project={featured} /></div>}
+  <div class="bottom">
+    <div class="cue-slot"><ScrollCue /></div>
+    <p class="desc arrives" style="--arrive-delay: .7s">{content.description}</p>
+    {featured && <div class="feat-slot"><FeaturedProject project={featured} /></div>}
+  </div>
 </section>
 
 <style>
@@ -46,16 +48,19 @@ const [line1, line2 = ''] = content.headline.split('\n');
   .rot :global(i.out) { opacity: 0; filter: blur(9px); }
   .cta { display: flex; gap: var(--s-2); margin-top: 2.375rem; }
 
-  .desc { position: absolute; left: var(--page-x); bottom: var(--page-y); max-width: 20.625rem; z-index: var(--z-ui);
-          font-size: var(--t-lead); line-height: 1.45; letter-spacing: -0.005em; color: var(--ink); }
-  .cue-slot { position: absolute; left: 50%; bottom: var(--page-y); z-index: var(--z-ui); translate: -50% 0; }
-  .feat-slot { position: absolute; right: var(--page-x); bottom: var(--page-y); z-index: var(--z-ui); }
+  /* the anchored bottom row: cue, sentence, then the card at the far right */
+  .bottom { position: absolute; left: var(--page-x); right: var(--page-x); bottom: var(--page-y); z-index: var(--z-ui);
+            display: flex; align-items: flex-end; gap: var(--s-7); }
+  .cue-slot { flex: none; }
+  .desc { flex: 0 1 20.625rem; font-size: var(--t-lead); line-height: 1.45; letter-spacing: -0.005em; color: var(--ink); }
+  .feat-slot { flex: none; margin-left: auto; }
 
   @media (max-width: 1099px) { .feat-slot { display: none; } }
   @media (max-width: 719px) {
     .lead { left: 1.25rem; top: 6.5rem; }
     .cta { flex-direction: column; align-items: flex-start; }
-    .desc { left: 1.25rem; right: 1.25rem; bottom: 4rem; max-width: none; font-size: var(--t-body); }
-    .cue-slot { left: 1.25rem; translate: none; bottom: 1.5rem; }
+    /* stacked, sentence above the cue */
+    .bottom { left: 1.25rem; right: 1.25rem; bottom: 1.5rem; flex-direction: column-reverse; align-items: flex-start; gap: var(--s-5); }
+    .desc { flex: none; font-size: var(--t-body); }
   }
 </style>
