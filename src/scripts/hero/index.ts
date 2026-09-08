@@ -86,6 +86,9 @@ export function createHero(opts: HeroOptions): Hero {
     src: (Uint16Array | null)[];
     /** 0..1 per particle: when it leaves, so a form unfolds rather than snaps */
     when: Float32Array;
+    /** where the particles were the instant a new form was asked for: a
+     *  crossing interrupted mid-way carries on from here rather than jumping */
+    hold: Float32Array;
   }
   const plates: Plate[] = [];
   const inner = new THREE.Group();                                    // pivots on the void
@@ -108,7 +111,7 @@ export function createHero(opts: HeroOptions): Hero {
       homeInner[j * 3 + 2] = sim.home[j * 3 + 2] + holder.position.z;
       when[j] = Math.random();
     }
-    plates.push({ holder, points, sim, axis, out, homeInner, when, targets: SHAPES.map(() => null), src: SHAPES.map(() => null) });
+    plates.push({ holder, points, sim, axis, out, homeInner, when, targets: SHAPES.map(() => null), src: SHAPES.map(() => null), hold: new Float32Array(sim.total * 3) });
   });
   const L0 = new THREE.Group(); L0.add(inner); scene.add(L0);
   const qSpin = new THREE.Quaternion(), qTilt = new THREE.Quaternion();
@@ -127,6 +130,7 @@ export function createHero(opts: HeroOptions): Hero {
   let shapeAt = 0;       // 0..1 — how far the cloud has gone into `shape`
   let shapeTo = 0;       // where it is heading
   let prev = -1;         // the form being crossed out of, while `mix` < 1
+  let held = false;      // …and whether that is a snapshot rather than a form
   let mix = 1;           // 0..1 across a direct crossing from `prev` to `shape`
   let phase = 0, beat = 0, parked = false;
   /** where the reel has got to. Not `shape`: that goes back to −1 on every
@@ -201,15 +205,41 @@ export function createHero(opts: HeroOptions): Hero {
     // A form standing hands straight over to the next one: the particles travel
     // from one skin to the other and never pass through the cube. Going home
     // between every pair made each change three events instead of one.
+    //
+    // Asked again mid-crossing — clicking twice quickly — it leaves from where
+    // the particles actually are, not from where the last form would have been:
+    // a snapshot of this instant becomes the thing being crossed out of.
     if (shapeAt > 0.9 && shape >= 0 && ready(shape) && ready(i)) {
-      prev = shape; shape = i; mix = 0; beat = 0; phase = 2;
+      snapshot();
+      prev = shape; held = true; shape = i; mix = 0; beat = 0; phase = 2;
       return;
     }
-    prev = -1; mix = 1;
+    prev = -1; held = false; mix = 1;
     shape = i; shapeTo = 1; phase = 1; beat = 0;
   }
   /** has this shape's targets, on every plate */
   const ready = (i: number) => i >= 0 && plates.every((p) => p.targets[i]);
+
+  /** freeze where every particle is bound this instant, so a crossing can be
+   *  interrupted without anything jumping */
+  function snapshot() {
+    const c = mix * mix * (3 - 2 * mix), S = cfg.shapes;
+    for (const p of plates) {
+      const tg = shape >= 0 ? p.targets[shape] : null;
+      const tp = prev >= 0 ? (held ? p.hold : p.targets[prev]) : null;
+      if (!tg) continue;
+      const { hold, when, total } = { hold: p.hold, when: p.when, total: p.sim.total };
+      for (let j = 0; j < total; j++) {
+        const i3 = j * 3;
+        if (!tp) { hold[i3] = tg[i3]; hold[i3 + 1] = tg[i3 + 1]; hold[i3 + 2] = tg[i3 + 2]; continue; }
+        const u = clamp(c * (1 + S.stagger) - S.stagger * when[j], 0, 1);
+        const e = u * u * (3 - 2 * u);
+        hold[i3] = tp[i3] + (tg[i3] - tp[i3]) * e;
+        hold[i3 + 1] = tp[i3 + 1] + (tg[i3 + 1] - tp[i3 + 1]) * e;
+        hold[i3 + 2] = tp[i3 + 2] + (tg[i3 + 2] - tp[i3 + 2]) * e;
+      }
+    }
+  }
   let introT0 = 0, last: number | undefined, yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
 
   function strike(x: number, y: number) {
@@ -278,17 +308,17 @@ export function createHero(opts: HeroOptions): Hero {
       // as it was found, so coming back does not resume half way through a
       // form, or leave the headline naming one the mark is no longer making
       parked = true;
-      shapeTo = 0; phase = 0; beat = 0; prev = -1; mix = 1; cursor = -1;
+      shapeTo = 0; phase = 0; beat = 0; prev = -1; held = false; mix = 1; cursor = -1;
     }
     if (exit === 0) parked = false;
-    if (shapeTo === 0 && shapeAt < 0.002 && shape >= 0) { shape = -1; prev = -1; mix = 1; }
+    if (shapeTo === 0 && shapeAt < 0.002 && shape >= 0) { shape = -1; prev = -1; held = false; mix = 1; }
     const sRate = dt / S.beat.cross;
     shapeAt = clamp(shapeAt + (shapeTo > shapeAt ? sRate : -sRate), 0, 1);
     // the letters always win: a form gives way as the name is read
     const shapeE = shapeAt * shapeAt * (3 - 2 * shapeAt);
     // the direct crossing from one form to the next
     if (mix < 1) mix = clamp(mix + dt / S.beat.cross, 0, 1);
-    if (mix >= 1) prev = -1;
+    if (mix >= 1) { prev = -1; held = false; }
     const cross = mix * mix * (3 - 2 * mix);
 
     // parallax: the mark sways with the cursor inside a hard clamp
@@ -327,12 +357,12 @@ export function createHero(opts: HeroOptions): Hero {
     // both of them while one is crossing into the other
     if (shapeE > 0.0005) {
       if (shape >= 0 && SHAPES[shape].skin) poseShape(shape, t);
-      if (prev >= 0 && SHAPES[prev].skin) poseShape(prev, t);
+      if (prev >= 0 && !held && SHAPES[prev].skin) poseShape(prev, t);
     }
     for (const p of plates) {
       simulate(p.holder, p.points, p.sim, ctx);
       const tg = shape >= 0 ? p.targets[shape] : null;
-      const tp = prev >= 0 ? p.targets[prev] : null;
+      const tp = prev >= 0 ? (held ? p.hold : p.targets[prev]) : null;
       if (shapeE > 0.0005 && tg) {
         const { off, home, total } = p.sim, when = p.when;
         for (let j = 0; j < total; j++) {

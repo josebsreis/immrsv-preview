@@ -37,9 +37,18 @@ export const HERO_CONFIG = {
     spin: 0.2,                    // cruise angular speed, rad/s, about the diagonal
     wobble: 0.03,                 // slow tilt so the turn never feels like a loop
     tint: {                       // particle colours, dark→light along aTint
-      base: [0.58, 0.58, 0.6],
-      mid: [0.82, 0.82, 0.84],
+      base: [0.40, 0.42, 0.50],   // the low end runs cool: a cloud of pure
+      mid: [0.72, 0.73, 0.78],    //   greys reads as paper, not as light
       high: [1, 1, 1],
+    },
+    /** how the cloud is read as a volume rather than a sheet */
+    depth: {
+      near: 7.6,                  // camera distance at which nothing is dimmed
+      far: 10.6,                  // …and at which the far side is fully faded
+      dim: 0.42,                  // what is left of a point at the back
+      even: 0.45,                 // how far a standing form flattens to one
+                                  //   size and tint — 1 is a white mass
+      lift: 0.15,                 // and how much brighter it goes
     },
   },
 

@@ -39,37 +39,50 @@ export interface PlateSim {
 
 export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
   const { base, mid, high } = cfg.mark.tint;
+  const D = cfg.mark.depth;
   return new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     uniforms: { uTime: { value: 0 }, uPx: { value: cfg.mark.pointPx }, uFlat: { value: 0 } },
     vertexShader: `
       attribute float aSeed; attribute float aSize; attribute float aTint; attribute vec3 aOff; attribute float aIn;
-      uniform float uTime, uPx, uFlat;   // uFlat: 1 while the cloud is spelling the name
+      uniform float uTime, uPx, uFlat;   // uFlat: 1 while the cloud is standing as a form
       varying float vA; varying vec3 vC;
       void main(){
         vec3 p = position + aOff;
         float ph = aSeed * 6.28318;
         // micro drift — each point wanders a hair around home
         p += 0.0055 * vec3( sin(uTime*0.9 + ph), cos(uTime*0.7 + ph*1.3), sin(uTime*1.1 + ph*0.7) );
-        vec4 clip = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        vec4 clip = projectionMatrix * mv;
         // displaced particles glow a little brighter and larger
         float f = clamp(length(aOff) / 0.09, 0.0, 1.0);
         gl_Position  = clip;
-        // as the letters form, every point takes the same size and the same
-        // brightness: a letterform wants an even stroke, not a starfield
-        float sz = mix(aSize, 1.0, uFlat);
-        float tn = mix(aTint, 0.92, uFlat);
+        // A form wants an even skin where the cube wants a starfield, but only
+        // part way: flattening every point to one size and one brightness is
+        // what turned a body into a white mass.
+        float sz = mix(aSize, 1.0, uFlat * ${D.even.toFixed(2)});
+        float tn = mix(aTint, 0.86, uFlat * ${D.even.toFixed(2)});
         gl_PointSize = sz * uPx / clip.w * (1.0 + f*0.22);
-        vA = (0.62 + 0.16*f) * mix(0.10, 1.0, aIn) * (1.0 + 0.7*uFlat);
+        // Depth. Nothing here reads as a volume without it: the far side of a
+        // cloud has to fall away, or every point sits on the same pane of glass.
+        float dep = clamp((-mv.z - ${D.near.toFixed(3)}) / ${(D.far - D.near).toFixed(3)}, 0.0, 1.0);
+        float lit = mix(1.0, ${D.dim.toFixed(2)}, dep);
+        vA = (0.58 + 0.16*f) * mix(0.10, 1.0, aIn) * (1.0 + ${D.lift.toFixed(2)}*uFlat) * lit;
         vec3 c0 = vec3(${base.join(',')}), c1 = vec3(${mid.join(',')}), c2 = vec3(${high.join(',')});
-        vC = tn < 0.5 ? mix(c0, c1, tn*2.0) : mix(c1, c2, (tn-0.5)*2.0);
+        vec3 col = tn < 0.5 ? mix(c0, c1, tn*2.0) : mix(c1, c2, (tn-0.5)*2.0);
+        // and the far side cools as it goes, the way distance always does
+        vC = mix(col, col * vec3(0.74, 0.80, 0.94), dep);
       }`,
     fragmentShader: `
       precision highp float;
       varying float vA; varying vec3 vC;
       void main(){
         float r = length(gl_PointCoord - 0.5);
-        float a = smoothstep(0.5, 0.10, r) * vA;
+        // a hard little core inside a soft fall: a dot with a shape to it,
+        // rather than a smudge that only reads once a thousand overlap
+        float core = smoothstep(0.34, 0.14, r);
+        float halo = smoothstep(0.5, 0.16, r);
+        float a = (halo * 0.55 + core * 0.45) * vA;
         gl_FragColor = vec4(vC * a, a);
       }`,
   });
