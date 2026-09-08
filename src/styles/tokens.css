@@ -20,6 +20,10 @@
   --page-x: 2rem;                 /* edge margin — every anchored element uses it */
   --page-y: 2.125rem;             /* bottom margin for the hero's anchored row */
   --nav-y: 1.625rem;
+  /* the page's two-column split: a narrow left column and the gap after it.
+     Every panel that uses it starts its right column on the same line. */
+  --col-side: 20rem;
+  --col-gap: 7rem;
 
   /* ── spacing scale (rem) ───────────────────────────────────────── */
   --s-1: 0.25rem;
@@ -106,6 +110,11 @@
   --marker: rgb(0 0 0 / 0.6);
   --marker-hover: rgb(0 0 0 / 0.95);
   --logo-filter: none;
+}
+
+/* the split tightens before the panels stack */
+@media (max-width: 1099px) {
+  :root { --col-side: 14rem; --col-gap: 3rem; }
 }
 
 /* ── breakpoints (documented; CSS can't read custom props in @media) ──
