@@ -125,7 +125,7 @@ const reelFor = (key: string): Shot[] => {
   .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
         overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-  .band { position: relative; margin-top: var(--s-6); aspect-ratio: 3 / 2; }
+  .band { position: relative; margin-top: var(--s-6); }
 
   /* Every frame is stacked on the same spot, the first included: a change
      opens a clip from the edge the reel is travelling from, over the frame
@@ -186,6 +186,8 @@ const reelFor = (key: string): Shot[] => {
   @media (max-width: 859px) {
     .studios { padding-bottom: 12vh; }
     .studio { padding-top: 9vh; }
+    /* stacked, nothing else gives the band a height: the frames are all
+       absolute, so the ratio is what holds it open */
     .band { aspect-ratio: 3 / 2; }
     .promise, .desc, .intro { max-width: none; }
   }

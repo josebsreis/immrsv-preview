@@ -110,11 +110,10 @@ export function createReel(el: HTMLElement): Reel {
     // A card left behind goes back to its first picture. Otherwise a reel is
     // whatever frame the hand happened to leave it on, and the first project
     // — the one chosen to lead — is the one nobody sees at rest.
-    // A card the hand has left goes back to its first picture, and back to the
-    // state it was built in: every frame closed but the first, no stack left
-    // over from the last scrub. Anything less and a reel remembers a hover
-    // from ten minutes ago.
-    if (!inside) { if (at !== 0) rest(); return; }
+    // A card the hand has left keeps the picture it was left on: the reel is
+    // a thing you set, not a thing that resets itself the moment you look
+    // away. Only the counter goes, with the pane it sits on.
+    if (!inside) return;
     const pos = ((pointer.y - r.top) / r.height) * frames.length;
     const band = Math.min(frames.length - 1, Math.max(0, Math.floor(pos)));
     // Arriving on the card takes the frame under the pointer at once: waiting
