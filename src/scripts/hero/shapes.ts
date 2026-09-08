@@ -55,6 +55,9 @@ function smin(a: number, b: number, k: number) {
 
 export interface ShapeDef {
   readonly name: string;
+  /** the headline's last word while this form stands — the mark and the
+   *  sentence say the same thing at the same moment */
+  readonly word: string;
   /** signed distance, authored with y up and the feet near y = 0 */
   readonly sdf: (x: number, y: number, z: number) => number;
   /** the box to sample inside: [minX, minY, minZ, maxX, maxY, maxZ] */
@@ -70,6 +73,7 @@ export interface ShapeDef {
  *  on one leg, arms just off the body, so the silhouette has air in it. */
 const FIGURE: ShapeDef = {
   name: 'figure',
+  word: 'media.',
   scale: 1.62,
   lift: -0.475,
   bounds: [-0.55, -0.06, -0.34, 0.55, 1.02, 0.34],
@@ -108,6 +112,7 @@ const FIGURE: ShapeDef = {
  *  at this resolution the silhouette is the whole argument. */
 const HOUSE: ShapeDef = {
   name: 'house',
+  word: 'space.',
   scale: 1.7,
   lift: -0.40,
   bounds: [-0.6, -0.04, -0.44, 0.6, 0.86, 0.44],
@@ -132,6 +137,7 @@ const HOUSE: ShapeDef = {
  *  read as a surface, not a brick. */
 const SCREEN: ShapeDef = {
   name: 'screen',
+  word: 'products.',
   scale: 1.66,
   lift: -0.44,
   bounds: [-0.52, -0.04, -0.36, 0.52, 0.92, 0.36],
@@ -148,7 +154,8 @@ const SCREEN: ShapeDef = {
   },
 };
 
-export const SHAPES: readonly ShapeDef[] = [FIGURE, HOUSE, SCREEN];
+/** the reel runs in the studios' own order: architecture, media, products */
+export const SHAPES: readonly ShapeDef[] = [HOUSE, FIGURE, SCREEN];
 
 /* ── sampling ─────────────────────────────────────────────────────── */
 

@@ -57,23 +57,19 @@ const [line1, line2 = ''] = content.headline.split('\n');
   .desc { max-width: 20.625rem; font-size: var(--t-lead); line-height: 1.45; letter-spacing: -0.005em; color: var(--ink); }
   .feat-slot { flex: none; }
 
-  /* too narrow for three across: the card and the sentence stack on the right,
-     to one width, with the cue holding the left corner */
+  /* too narrow for three across: the card stands down and the row keeps its
+     two corners — the cue at the left, the sentence at the right */
+  @media (max-width: 1099px) {
+    .feat-slot { display: none; }
+  }
   @media (min-width: 720px) and (max-width: 1099px) {
-    .bottom { display: grid; align-items: end; row-gap: var(--s-5);
-              grid-template-columns: 1fr min(20rem, 40vw);
-              grid-template-areas: ".   card"
-                                   "cue desc"; }
-    .cue-slot { grid-area: cue; }
-    .desc-slot { grid-area: desc; justify-content: flex-start; }
-    .feat-slot { grid-area: card; --feat-w: 100%; }
-    .desc { max-width: none; font-size: var(--t-body); }
+    .desc-slot { justify-content: flex-end; }
+    .desc { max-width: 24rem; font-size: var(--t-body); }
   }
 
   /* the card takes too much of a phone screen — the sentence carries it, with
      the cue reduced to its squares beside it */
   @media (max-width: 719px) {
-    .feat-slot { display: none; }
     .lead { left: 1.25rem; top: 6.5rem; }
     .cta { flex-direction: column; align-items: flex-start; }
     .bottom { left: 1.25rem; right: 1.25rem; bottom: 1.5rem; gap: var(--s-4); }

@@ -18,6 +18,9 @@ export interface HeroOptions {
   /** the fluid's own canvas (sits under the host) */
   fluidCanvas?: HTMLCanvasElement | null;
   config?: DeepPartial<HeroConfig>;
+  /** told which form the mark is making, or −1 for the cube. The page uses
+   *  this to say the same thing in words at the same moment. */
+  onForm?: (index: number, word: string | null) => void;
 }
 
 export interface Hero {
@@ -151,8 +154,15 @@ export function createHero(opts: HeroOptions): Hero {
     if (i < 0) { shapeTo = 0; pending = -1; return; }
     // one form never slides into the next: the cloud goes home through the
     // cube, which is the only reading that makes sense of three loose plates
-    if (shapeAt > 0.02 && shape >= 0) { pending = i; shapeTo = 0; phase = 3; beat = 0; return; }
+    if (shapeAt > 0.02 && shape >= 0) { pending = i; shapeTo = 0; phase = 3; beat = 0; announce(-1); return; }
     ensureShape(i); shape = i; shapeTo = 1; phase = 1; beat = 0;
+    announce(i);
+  }
+  function announce(i: number) {
+    opts.onForm?.(i, i < 0 ? null : SHAPES[i].word);
+    // the mark spins up as it works: the same gesture the page opens with,
+    // so making a figure and making the cube read as one machine
+    spinBoost += cfg.shapes.charge;
   }
   let introT0 = 0, last: number | undefined, yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
 
@@ -225,10 +235,10 @@ export function createHero(opts: HeroOptions): Hero {
       if (beat > span) {
         beat = 0; phase = (phase + 1) % 4;
         if (phase === 1) showShape((shape + 1) % SHAPES.length);
-        else if (phase === 3) shapeTo = 0;
+        else if (phase === 3) { shapeTo = 0; announce(-1); }
       }
     } else if (exit > 0) shapeTo = 0;
-    if (shapeTo === 0 && shapeAt < 0.02 && pending >= 0) { const q = pending; pending = -1; ensureShape(q); shape = q; shapeTo = 1; phase = 1; beat = 0; }
+    if (shapeTo === 0 && shapeAt < 0.02 && pending >= 0) { const q = pending; pending = -1; ensureShape(q); shape = q; shapeTo = 1; phase = 1; beat = 0; announce(q); }
     else if (shapeTo === 0 && shapeAt < 0.002 && shape >= 0) shape = -1;
     const sRate = dt / S.beat.cross;
     shapeAt = clamp(shapeAt + (shapeTo > shapeAt ? sRate : -sRate), 0, 1);

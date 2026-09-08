@@ -99,7 +99,8 @@ export const HERO_CONFIG = {
     touch: 0.4,           // how much of the cursor's push survives inside a shape
     flat: 0.75,           // how even the points go as a form resolves
     turntable: 0.85,      // the vertical turn, as a share of the cruise spin
-    beat: { cube: 4.5, cross: 1.5, shape: 5 },   // seconds
+    charge: 1.4,          // the spin-up on every crossing: the mark at work
+    beat: { cube: 3.2, cross: 1.4, shape: 5 },   // seconds: the cube is a beat, not a rest
   },
 
   /** the crossing from cube to wordmark */
