@@ -90,6 +90,18 @@ export const HERO_CONFIG = {
     drift: 0.05,      // a slow wander, so nothing ever looks rigid
   },
 
+  /** the reel: the cloud lets go of the cube and stands as the things the
+   *  studios make, then goes back. Fields in code, sampled once — nothing
+   *  is downloaded for this. */
+  shapes: {
+    enabled: true,
+    stagger: 0.5,         // share of the crossing spent letting particles leave in turn
+    touch: 0.4,           // how much of the cursor's push survives inside a shape
+    flat: 0.75,           // how even the points go as a form resolves
+    turntable: 0.85,      // the vertical turn, as a share of the cruise spin
+    beat: { cube: 4.5, cross: 1.5, shape: 5 },   // seconds
+  },
+
   /** the crossing from cube to wordmark */
   morph: {
     stagger: 0.45,        // how much of the run is spent letting particles leave in turn

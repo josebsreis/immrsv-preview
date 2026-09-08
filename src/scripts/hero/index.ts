@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { HERO_CONFIG, type HeroConfig } from './config';
 import { FACE_BASES, SPIN_AXIS, buildPlate, makeParticleMaterial, type PlateSim } from './mark';
 import { simulate } from './sim';
+import { SHAPES, shapeTargets } from './shapes';
 import { createLens } from './lens';
 import { createPointer } from './pointer';
 import { createFluid, type FluidHandle } from '../fluid';
@@ -30,6 +31,8 @@ export interface Hero {
   setExit(p: number): void;
   /** a strike at viewport coords (0..1, y up) */
   strike(x: number, y: number): void;
+  /** stand as shape `i`, or go back to the cube with −1 */
+  showShape(i: number): void;
   readonly fluid: FluidHandle | null;
   destroy(): void;
 }
@@ -73,7 +76,17 @@ export function createHero(opts: HeroOptions): Hero {
   // ── the mark ───────────────────────────────────────────────────────
   const material = makeParticleMaterial(cfg);
   material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
-  const plates: { holder: THREE.Group; points: THREE.Points; sim: PlateSim; axis: THREE.Vector3; out: THREE.Vector3 }[] = [];
+  interface Plate {
+    holder: THREE.Group; points: THREE.Points; sim: PlateSim; axis: THREE.Vector3; out: THREE.Vector3;
+    /** the plate's rest positions in the mark's own frame — what the shape
+     *  fields are authored against */
+    homeInner: Float32Array;
+    /** one array of targets per shape, sampled the first time it is asked for */
+    targets: (Float32Array | null)[];
+    /** 0..1 per particle: when it leaves, so a form unfolds rather than snaps */
+    when: Float32Array;
+  }
+  const plates: Plate[] = [];
   const inner = new THREE.Group();                                    // pivots on the void
   const vc = cfg.mark.voidCentre;
   inner.position.set(-vc, -vc, -vc);
@@ -87,20 +100,69 @@ export function createHero(opts: HeroOptions): Hero {
     // lies in its face — the plate flips as it leaves
     const out = new THREE.Vector3(b.n[0], b.n[1], b.n[2]).normalize();
     const axis = out.clone().cross(SPIN_AXIS).normalize();
-    plates.push({ holder, points, sim, axis, out });
+    const nP = sim.total, homeInner = new Float32Array(nP * 3), when = new Float32Array(nP);
+    for (let j = 0; j < nP; j++) {
+      homeInner[j * 3] = sim.home[j * 3] + holder.position.x;
+      homeInner[j * 3 + 1] = sim.home[j * 3 + 1] + holder.position.y;
+      homeInner[j * 3 + 2] = sim.home[j * 3 + 2] + holder.position.z;
+      when[j] = Math.random();
+    }
+    plates.push({ holder, points, sim, axis, out, homeInner, when, targets: SHAPES.map(() => null) });
   });
   const L0 = new THREE.Group(); L0.add(inner); scene.add(L0);
-  const qSpin = new THREE.Quaternion(), qTilt = new THREE.Quaternion(), AX = new THREE.Vector3(1, 0, 0);
+  const qSpin = new THREE.Quaternion(), qTilt = new THREE.Quaternion(), qUp = new THREE.Quaternion();
+  const AX = new THREE.Vector3(1, 0, 0), UP = new THREE.Vector3(0, 1, 0);
 
   // ── state the page drives ──────────────────────────────────────────
   let ready = reduced, exit = 0, morph = 0, out = 0, shockT = -9;
-  let spinAngle = 0, spinBoost = cfg.intro.spinBoost;
+  let spinAngle = 0, upAngle = 0, spinBoost = cfg.intro.spinBoost;
+
+  // ── the reel ───────────────────────────────────────────────────────
+  const reel = cfg.shapes.enabled && !reduced;
+  let shape = -1;        // −1 is the cube
+  let shapeAt = 0;       // 0..1 — how far the cloud has gone into `shape`
+  let shapeTo = 0;       // where it is heading
+  let pending = -1;      // a form asked for while another is still standing
+  let phase = 0, beat = 0;
+
+  /** sample shape `i` for every plate, once: the fields are authored in the
+   *  mark's frame, so a plate's targets are those points less its own offset */
+  function ensureShape(i: number) {
+    for (const p of plates) {
+      if (p.targets[i]) continue;
+      const n = p.sim.total, t = shapeTargets(SHAPES[i], p.homeInner, n);
+      for (let j = 0; j < n; j++) {
+        t[j * 3] -= p.holder.position.x;
+        t[j * 3 + 1] -= p.holder.position.y;
+        t[j * 3 + 2] -= p.holder.position.z;
+      }
+      p.targets[i] = t;
+    }
+  }
+  /** the fields are built one idle slice at a time: ~50ms each, and never on
+   *  the way to first paint — the hero itself is already there by then */
+  if (reel) {
+    const idle = (fn: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 4000 }) : setTimeout(fn, 600));
+    SHAPES.forEach((_, i) => idle(() => ensureShape(i)));
+  }
+
+  function showShape(i: number) {
+    if (!reel || i === shape) return;
+    if (i < 0) { shapeTo = 0; pending = -1; return; }
+    // one form never slides into the next: the cloud goes home through the
+    // cube, which is the only reading that makes sense of three loose plates
+    if (shapeAt > 0.02 && shape >= 0) { pending = i; shapeTo = 0; phase = 3; beat = 0; return; }
+    ensureShape(i); shape = i; shapeTo = 1; phase = 1; beat = 0;
+  }
   let introT0 = 0, last: number | undefined, yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
 
   function strike(x: number, y: number) {
     P.tx = x; P.ty = y; P.moved = true;
     shockT = performance.now() / 1000;
     spinBoost += cfg.strike.spin;
+    // a click is a blast and a change of form: it comes apart, and what comes
+    // back together is the next thing
+    if (reel && exit === 0) showShape((shape + 1) % SHAPES.length);
     if (fluid) for (let k = 0; k < 10; k++) {
       const a = k / 10 * 6.2832, c = Math.cos(a), s = Math.sin(a);
       fluid.splat(x + c * 0.012, y + s * 0.012 * camera.aspect, c * cfg.strike.fluidForce, s * cfg.strike.fluidForce, cfg.strike.fluidDye, cfg.strike.fluidRadius);
@@ -154,6 +216,25 @@ export function createHero(opts: HeroOptions): Hero {
     if (last === undefined || !ready) introT0 = t;                      // the intro waits to be released
     last = now;
 
+    // the reel turns on its own: cube, crossing, form, crossing, next form.
+    // Scrolling takes precedence — nothing changes shape on the way out.
+    const S = cfg.shapes;
+    if (reel && exit === 0 && ready) {
+      beat += dt;
+      const span = phase === 0 ? S.beat.cube : phase === 2 ? S.beat.shape : S.beat.cross;
+      if (beat > span) {
+        beat = 0; phase = (phase + 1) % 4;
+        if (phase === 1) showShape((shape + 1) % SHAPES.length);
+        else if (phase === 3) shapeTo = 0;
+      }
+    } else if (exit > 0) shapeTo = 0;
+    if (shapeTo === 0 && shapeAt < 0.02 && pending >= 0) { const q = pending; pending = -1; ensureShape(q); shape = q; shapeTo = 1; phase = 1; beat = 0; }
+    else if (shapeTo === 0 && shapeAt < 0.002 && shape >= 0) shape = -1;
+    const sRate = dt / S.beat.cross;
+    shapeAt = clamp(shapeAt + (shapeTo > shapeAt ? sRate : -sRate), 0, 1);
+    // the letters always win: a form gives way as the name is read
+    const shapeE = shapeAt * shapeAt * (3 - 2 * shapeAt) * (1 - morph);
+
     // parallax: the mark sways with the cursor inside a hard clamp
     P.x += (P.tx - P.x) * 0.08; P.y += (P.ty - P.y) * 0.08;
     const C = cfg.camera;
@@ -168,10 +249,14 @@ export function createHero(opts: HeroOptions): Hero {
     // once the faces are leaving, the revolution eases down to a drift rather
     // than carrying the whole frame around with it
     const spinFade = 1 - (1 - cfg.exit.spin) * Math.min(1, morph / 0.55);
-    spinAngle += ((cfg.mark.spin + spinBoost) * spinFade) * dt;
+    spinAngle += ((cfg.mark.spin + spinBoost) * spinFade) * (1 - shapeE) * dt;
+    upAngle += cfg.mark.spin * S.turntable * shapeE * dt;
     qSpin.setFromAxisAngle(SPIN_AXIS, spinAngle);
     qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble);
+    // the diagonal tumble only ever existed to hide the cube's hollow back:
+    // a form has a front and a floor, so it turns on a vertical axis instead
     L0.quaternion.copy(qSpin).multiply(qTilt);
+    if (shapeE > 0) { qUp.setFromAxisAngle(UP, upAngle); L0.quaternion.slerp(qUp, shapeE); }
 
     L0.updateMatrixWorld(true);
 
@@ -191,7 +276,7 @@ export function createHero(opts: HeroOptions): Hero {
       material.uniforms.uFlat.value = ctx.morph;
     } else {
       material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
-      material.uniforms.uFlat.value = 0;
+      material.uniforms.uFlat.value = shapeE * S.flat;
     }
     for (const p of plates) {
       if (ctx.morph > 0) {
@@ -202,6 +287,22 @@ export function createHero(opts: HeroOptions): Hero {
         ctx.mvv.copy(_vv).transformDirection(_inv).multiplyScalar(_vv.length());
       }
       simulate(p.holder, p.points, p.sim, ctx);
+      const tg = shape >= 0 ? p.targets[shape] : null;
+      if (shapeE > 0.0005 && tg) {
+        const { off, home, total } = p.sim, when = p.when;
+        for (let j = 0; j < total; j++) {
+          const u = clamp(shapeE * (1 + S.stagger) - S.stagger * when[j], 0, 1);
+          const w = u * u * (3 - 2 * u);
+          if (w <= 0) continue;
+          const i3 = j * 3;
+          // some of the cursor's push survives, so a standing form is still
+          // something you can put your hand through
+          const keep = 1 - w * (1 - S.touch);
+          off[i3] = off[i3] * keep + (tg[i3] - home[i3]) * w;
+          off[i3 + 1] = off[i3 + 1] * keep + (tg[i3 + 1] - home[i3 + 1]) * w;
+          off[i3 + 2] = off[i3 + 2] * keep + (tg[i3 + 2] - home[i3 + 2]) * w;
+        }
+      }
     }
 
     lens.render(scene, camera, P);
@@ -220,6 +321,7 @@ export function createHero(opts: HeroOptions): Hero {
     setMorph(p) { morph = Math.max(0, Math.min(1, p)); },
     setOut(p) { out = Math.max(0, Math.min(1, p)); },
     strike,
+    showShape,
     get fluid() { return fluid; },
     destroy() {
       running = false; cancelAnimationFrame(raf);
