@@ -24,10 +24,8 @@ export interface HeroOptions {
 export interface Hero {
   /** release the intro (call when the page is ready) */
   setReady(): void;
-  /** 0..1 — how far the mark has gone out, once the name has been read */
+  /** 0..1 — the fade, as the hero goes by */
   setOut(p: number): void;
-  /** 0..1 — how far the particles have travelled into the wordmark */
-  setMorph(p: number): void;
   /** 0..1 — the scroll-driven exit */
   setExit(p: number): void;
   /** a strike at viewport coords (0..1, y up) */
@@ -120,7 +118,7 @@ export function createHero(opts: HeroOptions): Hero {
   const _axis = new THREE.Vector3();
 
   // ── state the page drives ──────────────────────────────────────────
-  let ready = reduced, exit = 0, morph = 0, out = 0, shockT = -9;
+  let ready = reduced, exit = 0, out = 0, shockT = -9;
   let spinAngle = 0, spinBoost = cfg.intro.spinBoost;
 
   // ── the reel ───────────────────────────────────────────────────────
@@ -227,7 +225,14 @@ export function createHero(opts: HeroOptions): Hero {
   };
   addEventListener('pointerdown', onDown);
 
+  // The address bar on a phone slides away as you scroll and back as you stop,
+  // which fires a resize each way. Rebuilding the canvas for that makes the
+  // mark jump about with the scroll, so a height-only change of less than a
+  // fifth is ignored: the canvas is pinned to the tall viewport regardless.
+  let vw = innerWidth, vhSeen = innerHeight;
   const onResize = () => {
+    if (innerWidth === vw && Math.abs(innerHeight - vhSeen) < vhSeen * 0.2) return;
+    vw = innerWidth; vhSeen = innerHeight;
     camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
     renderer.setPixelRatio(dpr()); renderer.setSize(innerWidth, innerHeight);
     lens.resize();
@@ -240,28 +245,8 @@ export function createHero(opts: HeroOptions): Hero {
   let running = true, raf = 0;
   const ctx = {
     dt: 0, t: 0, camera, pointer: P, introT0: 0, exit: 0, shockT: -9, reduced, cfg,
-    morph: 0, out: 0, density: 1, mp0: new THREE.Vector3(), mru: new THREE.Vector3(), mvv: new THREE.Vector3(),
+    out: 0,
   };
-  // the wordmark panel's outline: the particles land inside it
-  const wordmark = document.querySelector<SVGSVGElement>('[data-wordmark] svg');
-  const _p0 = new THREE.Vector3(), _ru = new THREE.Vector3(), _vv = new THREE.Vector3();
-  const _right = new THREE.Vector3(), _up = new THREE.Vector3(), _inv = new THREE.Matrix4();
-
-  /** the box the letters live in, in world units on the plane through the origin */
-  function letterBox() {
-    if (!wordmark) return false;
-    const r = wordmark.getBoundingClientRect();
-    if (r.width < 1) return false;
-    const half = Math.tan((camera.fov * Math.PI) / 360) * camera.position.length();
-    const halfW = half * camera.aspect;
-    camera.matrixWorld.extractBasis(_right, _up, _p0);            // _p0 is scratch here
-    // the top-left corner of the box, and one edge each way
-    const nx = (r.left / innerWidth) * 2 - 1, ny = 1 - (r.top / innerHeight) * 2;
-    _p0.copy(_right).multiplyScalar(nx * halfW).addScaledVector(_up, ny * half);
-    _ru.copy(_right).multiplyScalar((r.width / innerWidth) * 2 * halfW);
-    _vv.copy(_up).multiplyScalar((-r.height / innerHeight) * 2 * half);
-    return true;
-  }
   function frame(now: number) {
     const t = now / 1000;
     const dt = Math.max(0, Math.min((now - (last ?? now)) / 1000, 0.05));
@@ -295,7 +280,7 @@ export function createHero(opts: HeroOptions): Hero {
     const sRate = dt / S.beat.cross;
     shapeAt = clamp(shapeAt + (shapeTo > shapeAt ? sRate : -sRate), 0, 1);
     // the letters always win: a form gives way as the name is read
-    const shapeE = shapeAt * shapeAt * (3 - 2 * shapeAt) * (1 - morph);
+    const shapeE = shapeAt * shapeAt * (3 - 2 * shapeAt);
 
     // parallax: the mark sways with the cursor inside a hard clamp
     P.x += (P.tx - P.x) * 0.08; P.y += (P.ty - P.y) * 0.08;
@@ -308,9 +293,9 @@ export function createHero(opts: HeroOptions): Hero {
 
     // the revolution about the diagonal; faster after a strike, and as it drains away on scroll
     spinBoost *= Math.exp(-cfg.intro.spinDecay * dt);
-    // once the faces are leaving, the revolution eases down to a drift rather
+    // once the mark is leaving, the revolution eases down to a drift rather
     // than carrying the whole frame around with it
-    const spinFade = 1 - (1 - cfg.exit.spin) * Math.min(1, morph / 0.55);
+    const spinFade = 1 - (1 - cfg.exit.spin) * Math.min(1, exit / 0.5);
     // One turn, always the same way round. The diagonal tumble only ever
     // existed to hide the cube's hollow back; a form has a front and a floor,
     // so the axis leans up to vertical as one stands — the mark keeps turning
@@ -334,32 +319,12 @@ export function createHero(opts: HeroOptions): Hero {
 
     material.uniforms.uTime.value = t;
     ctx.dt = dt; ctx.t = t; ctx.introT0 = introT0; ctx.exit = exit; ctx.shockT = shockT;
-    ctx.morph = morph > 0 && letterBox() ? morph : 0;
     ctx.out = out;
-    if (ctx.morph > 0) {
-      const boxPx = wordmark ? wordmark.getBoundingClientRect().width : innerWidth;
-      const fit = clamp(boxPx / cfg.morph.fullDensityPx, cfg.morph.minScale, 1);
-      ctx.density = Math.min(1, Math.max(cfg.morph.minDensity, fit));
-      // the point is sized to the letterform, not to the screen: on a phone the
-      // letters are a quarter of the size and so are the points that draw them
-      const letterPx = cfg.mark.pointPx * fit * (1 - cfg.morph.thin);
-      const px = cfg.mark.pointPx + (letterPx - cfg.mark.pointPx) * ctx.morph;
-      material.uniforms.uPx.value = px * renderer.getPixelRatio();
-      material.uniforms.uFlat.value = ctx.morph;
-    } else {
-      material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
-      material.uniforms.uFlat.value = shapeE * S.flat;
-    }
+    material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
+    material.uniforms.uFlat.value = shapeE * S.flat;
     // an animated form is re-posed once a frame, for every plate at once
     if (shape >= 0 && shapeE > 0.0005 && SHAPES[shape].skin) poseShape(shape, t);
     for (const p of plates) {
-      if (ctx.morph > 0) {
-        _inv.copy(p.holder.matrixWorld).invert();                 // the box in this plate's space
-        ctx.mp0.copy(_p0).applyMatrix4(_inv);
-        // transformDirection normalises, so the edge lengths are put back
-        ctx.mru.copy(_ru).transformDirection(_inv).multiplyScalar(_ru.length());
-        ctx.mvv.copy(_vv).transformDirection(_inv).multiplyScalar(_vv.length());
-      }
       simulate(p.holder, p.points, p.sim, ctx);
       const tg = shape >= 0 ? p.targets[shape] : null;
       if (shapeE > 0.0005 && tg) {
@@ -392,7 +357,6 @@ export function createHero(opts: HeroOptions): Hero {
   return {
     setReady() { ready = true; },
     setExit(p) { exit = Math.max(0, Math.min(1, p)); },
-    setMorph(p) { morph = Math.max(0, Math.min(1, p)); },
     setOut(p) { out = Math.max(0, Math.min(1, p)); },
     strike,
     showShape,

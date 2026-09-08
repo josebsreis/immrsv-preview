@@ -15,7 +15,7 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
   <main class="main">
     <div class="dark" data-hold>
       <Hero content={home.hero} featured={home.featuredProject} />
-      <WordmarkPanel />
+      <WordmarkPanel outline />
       <Manifesto content={home.about} />
       <Brands content={home.brands} />
       <div class="scrim" data-scrim aria-hidden="true"></div>

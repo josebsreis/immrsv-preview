@@ -26,7 +26,6 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
   const next = document.querySelector<HTMLElement>('[data-next]');
   const themed = document.querySelectorAll<HTMLElement>('[data-theme-follows]');
   const rising = Array.from(document.querySelectorAll<HTMLElement>('[data-rise]'));
-  const wordmark = document.querySelector<HTMLElement>('[data-wordmark]');
   const hold = document.querySelector<HTMLElement>('[data-hold]');
   const scrim = document.querySelector<HTMLElement>('[data-scrim]');
   const light = document.querySelector<HTMLElement>('[data-shutter-scroll]')?.parentElement ?? null;
@@ -70,21 +69,11 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
     const y = scrollY, vh = innerHeight;
     if (veil) veil.style.opacity = (clamp01((y - vh * 0.45) / (vh * 0.85)) * 0.22).toFixed(3);
 
-    // the mark comes apart and travels into the name: the crossing is timed by
-    // the wordmark panel itself, so the particles land inside its outline
+    // the mark belongs to the hero and to nothing after it: as the first
+    // screen goes by it comes apart, and it is gone before the name arrives
     const hero = getHero();
-    hero?.setExit((y - vh * 0.2) / (vh * 1.7));
-    if (wordmark) {
-      const w = wordmark.getBoundingClientRect();
-      const mid = w.top + w.height / 2;
-      const m = clamp01((vh * 1.05 - mid) / (vh * 0.62));
-      hero?.setMorph(m);
-      // it holds at full strength until the panel itself has left the screen
-      hero?.setOut(clamp01(-w.bottom / (vh * 0.45)));
-      // the drawn outline only hardens once the particles have spelt the name,
-      // so for a moment the mark is nothing but the cloud
-      wordmark.style.setProperty('--formed', smooth(clamp01((m - 0.72) / 0.26)).toFixed(3));
-    }
+    hero?.setExit((y - vh * 0.05) / (vh * 0.55));
+    hero?.setOut(clamp01((y - vh * 0.3) / (vh * 0.45)));
 
     for (const { host, units, last } of passages) {
       const r = host.getBoundingClientRect();

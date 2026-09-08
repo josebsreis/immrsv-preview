@@ -33,9 +33,13 @@ const [line1, line2 = ''] = content.headline.split('\n');
 </section>
 
 <style>
-  .fluid { position: fixed; inset: 0; width: 100%; height: 100%; z-index: var(--z-fluid); background: var(--ground); }
-  .canvas-host { position: fixed; inset: 0; z-index: var(--z-canvas); pointer-events: none; }
-  .canvas-host :global(canvas) { position: fixed; inset: 0; display: block; }
+  /* Both canvases are pinned to the largest the viewport ever gets, not to
+     what it is this instant: on a phone the address bar slides in and out as
+     you scroll, and a canvas that tracked it would resize — and so re-lay-out
+     the mark — on every one of those. */
+  .fluid { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100lvh; z-index: var(--z-fluid); background: var(--ground); }
+  .canvas-host { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100lvh; z-index: var(--z-canvas); pointer-events: none; }
+  .canvas-host :global(canvas) { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100lvh; display: block; }
   .veil { position: fixed; inset: 0; z-index: var(--z-veil); background: var(--ground); opacity: 0; pointer-events: none; }
 
   .hero { position: relative; min-height: 100vh; min-height: 100svh; pointer-events: none; }

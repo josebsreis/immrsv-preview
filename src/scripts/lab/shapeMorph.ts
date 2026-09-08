@@ -190,8 +190,7 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
 
   const ctx: SimContext = {
     dt: 0, t: 0, camera, pointer: P, introT0: 0, exit: 0, shockT: -9, reduced, cfg,
-    morph: 0, out: 0, density: 1,
-    mp0: new THREE.Vector3(), mru: new THREE.Vector3(), mvv: new THREE.Vector3(),
+    out: 0,
   };
 
   let running = true, raf = 0;

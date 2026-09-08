@@ -83,15 +83,13 @@ export const HERO_CONFIG = {
     ignore: 'a, button, [data-no-strike]',
   },
 
-  /** the scroll exit: the cube loosens, its particles travel into the letters
-   *  of the name — landing behind the outline in the panel below — and hold
-   *  there before going out */
+  /** the scroll exit: the mark lets go, bursts outward and goes out with the
+   *  first screen — it belongs to the hero and to nothing after it */
   exit: {
     loosen: 1.2,
-    spin: 0.04,       // what is left of the cruise rotation once the name is read
-    dim: 1,           // it goes out entirely, once the panel has passed
-    dip: 0.14,        // a small duck while the particles are in flight
-    drift: 0.05,      // a slow wander, so nothing ever looks rigid
+    burst: 7,         // how far the particles are thrown as the hero leaves
+    spin: 0.04,       // what is left of the cruise rotation on the way out
+    dim: 1,           // and it goes out entirely
   },
 
   /** the reel: the cloud lets go of the cube and stands as the things the
@@ -111,17 +109,6 @@ export const HERO_CONFIG = {
                           //   the cube between two forms is the thing spinning
                           //   them up, not a pose it holds
     beat: { first: 3.6, cube: 0.7, cross: 0.55, shape: 5 },   // seconds
-  },
-
-  /** the crossing from cube to wordmark */
-  morph: {
-    stagger: 0.45,        // how much of the run is spent letting particles leave in turn
-    hold: 1,              // the letters are the mark here: full strength
-    thin: 0.42,           // how much finer a point gets as the letterform resolves
-    minScale: 0.3,        // …never finer than this share of the base point
-    fullDensityPx: 1280,  // the box width that can carry every particle
-    minDensity: 0.6,      // …and the least it ever thins to, on a phone, where
-                          //    the cloud is the only thing drawing the name
   },
 
   /** the Lusion-style lens: flow map + chromatic post pass on the mark */

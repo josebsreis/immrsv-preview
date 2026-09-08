@@ -4,7 +4,6 @@
    thickness, plus a denser, brighter outline that draws the silhouette.
    ═══════════════════════════════════════════════════════════════════ */
 import * as THREE from 'three';
-import { LETTERMARK } from '@lib/lettermark';
 import type { HeroConfig } from './config';
 
 type Vec3 = readonly [number, number, number];
@@ -33,7 +32,6 @@ export interface PlateSim {
   intro: Float32Array;    // seed − home
   over: Float32Array;     // overshoot vector, radial from the void
   seedv: Float32Array;    // seed − seed centre
-  letter: Float32Array;   // u,v inside the wordmark's box — where it lands when the mark reads
   iDelay: Float32Array; iDur: Float32Array;
   mPrev: THREE.Vector3; hadM: boolean;
   shockSeen: number; settled: boolean;
@@ -75,62 +73,6 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
         gl_FragColor = vec4(vC * a, a);
       }`,
   });
-}
-
-/* The wordmark, as a field of points. The letters are rasterised once into a
-   small bitmap and every filled pixel becomes a candidate landing spot, so the
-   particles can spell the name without any path maths at runtime. */
-let letterField: { w: number; h: number; edge: Int32Array; fill: Int32Array } | null = null;
-
-function buildLetterField() {
-  const w = 1024, box = LETTERMARK.box, h = Math.round((w * box.h) / box.w);
-  const c = document.createElement('canvas');
-  c.width = w; c.height = h;
-  const g = c.getContext('2d', { willReadFrequently: true })!;
-  g.setTransform(w / box.w, 0, 0, h / box.h, (-box.x * w) / box.w, (-box.y * h) / box.h);
-  g.fillStyle = '#fff';
-  for (const d of LETTERMARK.paths) g.fill(new Path2D(d));
-  const data = g.getImageData(0, 0, w, h).data;
-  const on = new Uint8Array(w * h);
-  for (let i = 3, px = 0; i < data.length; i += 4, px++) on[px] = data[i] > 128 ? 1 : 0;
-
-  // an edge pixel is a filled one with air within a couple of pixels: those are
-  // the letterform's own contour, which is exactly where the outline is drawn
-  const edge: number[] = [], fill: number[] = [], R = 3;
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const px = y * w + x;
-    if (!on[px]) continue;
-    let open = false;
-    for (let dy = -R; dy <= R && !open; dy++) for (let dx = -R; dx <= R; dx++) {
-      const nx = x + dx, ny = y + dy;
-      if (nx < 0 || ny < 0 || nx >= w || ny >= h || !on[ny * w + nx]) { open = true; break; }
-    }
-    (open ? edge : fill).push(px);
-  }
-  letterField = { w, h, edge: Int32Array.from(edge), fill: Int32Array.from(fill) };
-}
-
-/** n points in the letters, as u,v in the wordmark's own box. Most land on the
- *  contour so the cloud reads as the same letterform the outline draws; the
- *  rest fill the interior thinly, so the letters have body without turning to
- *  soup. */
-const EDGE_SHARE = 0.72;
-
-function letterSamples(n: number): Float32Array {
-  const out = new Float32Array(n * 2);
-  try { if (!letterField) buildLetterField(); } catch { letterField = null; }
-  if (!letterField || letterField.edge.length === 0) {
-    for (let i = 0; i < n; i++) { out[i * 2] = Math.random(); out[i * 2 + 1] = Math.random(); }
-    return out;
-  }
-  const { w, h, edge, fill } = letterField;
-  for (let i = 0; i < n; i++) {
-    const pool = Math.random() < EDGE_SHARE || fill.length === 0 ? edge : fill;
-    const px = pool[(Math.random() * pool.length) | 0];
-    out[i * 2] = ((px % w) + Math.random()) / w;
-    out[i * 2 + 1] = (((px / w) | 0) + Math.random()) / h;
-  }
-  return out;
 }
 
 /** build one plate's cloud and its simulation state */
@@ -192,7 +134,6 @@ export function buildPlate(i: number, cfg: HeroConfig, material: THREE.Material,
   // void pulled back by that much — all three plates seed in one spot
   const I = cfg.intro;
   const intro = new Float32Array(total * 3), over = new Float32Array(total * 3), seedv = new Float32Array(total * 3), iDelay = new Float32Array(total), iDur = new Float32Array(total);
-  const letter = letterSamples(total);
   const cx = voidCentre - b.n[0] * separation, cy = voidCentre - b.n[1] * separation, cz = voidCentre - b.n[2] * separation;
   const stagger = reduced ? 0 : I.stagger, dur = reduced ? 0.01 : I.duration;
   for (let j = 0; j < total; j++) {
@@ -210,7 +151,7 @@ export function buildPlate(i: number, cfg: HeroConfig, material: THREE.Material,
 
   const sim: PlateSim = {
     total, n: b.n, home: pos, off: off.array as Float32Array, ain: ain.array as Float32Array, sim: new Float32Array(total * 3),
-    vel, stiff, damp, jit: jitA, gain, intro, over, seedv, letter, iDelay, iDur,
+    vel, stiff, damp, jit: jitA, gain, intro, over, seedv, iDelay, iDur,
     mPrev: new THREE.Vector3(), hadM: false, shockSeen: -1, settled: false,
   };
   return { points, sim };
