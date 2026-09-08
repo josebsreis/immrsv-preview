@@ -1,0 +1,37 @@
+---
+import '@styles/global.css';
+import Nav from '@components/layout/Nav.astro';
+import Footer from '@components/layout/Footer.astro';
+import { site } from '@lib/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** the page's starting theme; sections can override with their own data-theme */
+  theme?: 'dark' | 'light';
+  /** hide the shared nav (a page that renders its own) */
+  noNav?: boolean;
+  noFooter?: boolean;
+}
+const { title, description = 'IMMRSV — an independent practice working across architecture, creative media and digital products.', theme = 'dark', noNav = false, noFooter = false } = Astro.props;
+const fullTitle = title ? `${title} — ${site.name}` : `${site.name} — Designing the future of experience`;
+---
+<!doctype html>
+<html lang="en" data-theme={theme}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta name="theme-color" content={theme === 'dark' ? '#060606' : '#ffffff'} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <slot name="head" />
+  </head>
+  <body data-theme={theme}>
+    {!noNav && <Nav items={site.nav} />}
+    <slot />
+    {!noFooter && <Footer />}
+  </body>
+</html>

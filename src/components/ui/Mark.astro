@@ -1,0 +1,10 @@
+---
+/** The symbol alone — three faces, each its own path so they can be animated. */
+interface Props { class?: string; }
+const { class: cls } = Astro.props;
+---
+<svg class={cls} viewBox="10 10 184 210" fill="currentColor" aria-hidden="true">
+  <path class="face" d="M102.31 79.53L129 94.86L184.31 63.11L102.16 15.94L20.27 62.88L75.54 94.87L102.31 79.53Z"/>
+  <path class="face" d="M69.41 136.45V106.12L14 74.38V168.58L95.68 216.06V151.72L69.41 136.45Z"/>
+  <path class="face" d="M135.17 105.94V136.45L108.6 151.89V216.06L190.28 168.58V74.38L135.17 105.94Z"/>
+</svg>

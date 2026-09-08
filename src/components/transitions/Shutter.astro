@@ -1,0 +1,14 @@
+---
+/** Ten strips that close from the bottom up, driven by scroll (see
+ *  scrollChoreography). The colour is the next section's ground. */
+interface Props { color?: string; }
+const { color = '#fff' } = Astro.props;
+---
+<div class="shutter" data-shutter aria-hidden="true" style={`--shutter-color:${color}`}>
+  {Array.from({ length: 10 }).map(() => <i></i>)}
+</div>
+
+<style>
+  .shutter { position: fixed; inset: 0; z-index: var(--z-shutter); display: flex; flex-direction: column; pointer-events: none; }
+  .shutter i { flex: 1; background: var(--shutter-color); transform: scaleY(0); transform-origin: 50% 100%; will-change: transform; }
+</style>

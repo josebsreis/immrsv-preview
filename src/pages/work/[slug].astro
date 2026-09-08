@@ -1,0 +1,68 @@
+---
+import Base from '@layouts/Base.astro';
+import PortableText from '@components/ui/PortableText.astro';
+import Button from '@components/ui/Button.astro';
+import { getProjects } from '@lib/sanity/queries';
+import { site } from '@lib/site';
+import type { Project } from '@lib/sanity/types';
+
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  return projects.map((project) => ({ params: { slug: project.slug }, props: { project } }));
+}
+const { project } = Astro.props as { project: Project };
+const studios = project.studios.map((k) => site.studios.find((s) => s.key === k)?.label).filter(Boolean);
+---
+<Base theme="light" title={project.title} description={project.summary}>
+  <main class="page">
+    <header class="head">
+      <a class="label back" href="/work" data-tap>← Work</a>
+      <h1>{project.title}</h1>
+      {project.summary && <p class="summary">{project.summary}</p>}
+      <dl class="facts">
+        {project.location && <div><dt class="label">Location</dt><dd>{project.location}</dd></div>}
+        {project.year && <div><dt class="label">Year</dt><dd>{project.year}</dd></div>}
+        {studios.length > 0 && <div><dt class="label">Studios</dt><dd>{studios.join(', ')}</dd></div>}
+      </dl>
+    </header>
+
+    {project.cover && <figure class="cover"><img src={project.cover.url} alt={project.cover.alt ?? project.title} loading="eager" /></figure>}
+
+    {project.body.length > 0 && <div class="story"><PortableText blocks={project.body} /></div>}
+
+    {project.gallery.length > 0 && (
+      <div class="gallery">{project.gallery.map((g) => <img src={g.url} alt={g.alt ?? ''} loading="lazy" decoding="async" />)}</div>
+    )}
+
+    <footer class="end">
+      <Button href="/#contact" label="Discuss a project like this" />
+    </footer>
+  </main>
+  <script>
+    import { createSmoothScroll } from '../../scripts/ui/smoothScroll';
+    import { createHoverAudio } from '../../scripts/ui/hoverAudio';
+    import { splitChars } from '../../scripts/ui/splitText';
+    import { site } from '../../lib/site';
+    document.body.classList.add('ready');
+    createSmoothScroll();
+    createHoverAudio(site.audio.taps);
+    document.fonts.ready.then(() => splitChars());
+  </script>
+</Base>
+
+<style>
+  .page { padding: 18vh var(--page-x) 16vh; }
+  .head { display: grid; grid-template-columns: 1fr 18rem; gap: var(--s-6); align-items: end; margin-bottom: var(--s-7); }
+  .back { grid-column: 1 / -1; color: var(--ink-3); }
+  h1 { font-size: var(--t-h2); line-height: 1.02; letter-spacing: -0.03em; font-weight: 400; max-width: 14em; }
+  .summary { grid-column: 1; font-size: var(--t-lead); color: var(--ink-3); max-width: 40ch; }
+  .facts { grid-column: 2; grid-row: 2 / 4; display: grid; gap: var(--s-3); }
+  .facts dt { color: var(--ink-4); margin-bottom: 0.2em; }
+  .facts dd { font-size: var(--t-body); }
+  .cover img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+  .story { padding: var(--s-8) 0; }
+  .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s-4); }
+  .gallery img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+  .end { padding-top: var(--s-8); }
+  @media (max-width: 859px) { .head { grid-template-columns: 1fr; } .facts { grid-column: 1; grid-row: auto; } .gallery { grid-template-columns: 1fr; } }
+</style>

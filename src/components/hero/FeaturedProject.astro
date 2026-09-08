@@ -1,0 +1,36 @@
+---
+import type { Project } from '@lib/sanity/types';
+interface Props { project: Project; class?: string; }
+const { project, class: cls } = Astro.props;
+---
+<a class:list={['feat', 'glass', 'arrives', cls]} href={`/work/${project.slug}`} data-tap style="--arrive-delay: .7s">
+  <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
+  <div class="media">
+    <div class="top">
+      <span class="label lbl">Featured project</span>
+      {project.year && <span class="label meta">{project.year}</span>}
+    </div>
+    {project.cover && <img src={project.cover.url} alt={project.cover.alt ?? project.title} loading="eager" decoding="async" />}
+  </div>
+  <div class="ttl">
+    <span>{project.title}{project.summary && <small>{project.summary}</small>}</span>
+  </div>
+</a>
+
+<style>
+  .feat { position: relative; display: block; width: min(23.75rem, 30vw); color: var(--ink); overflow: hidden; }
+  /* a frame at the corners only: the site's square, one on each */
+  .c { position: absolute; width: var(--square); height: var(--square); background: var(--marker); pointer-events: none; transition: background var(--dur-fast) ease; }
+  .tl { left: 0; top: 0; } .tr { right: 0; top: 0; } .bl { left: 0; bottom: 0; } .br { right: 0; bottom: 0; }
+  .feat:hover .c { background: var(--marker-hover); }
+  .media { position: relative; margin: 0.625rem 0.625rem 0; overflow: hidden; }
+  .media::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgb(var(--ground-rgb) / 0.62) 0%, rgb(var(--ground-rgb) / 0.25) 38%, rgb(var(--ground-rgb) / 0) 65%); }
+  .top { position: absolute; left: 0; right: 0; top: 0; z-index: 1; display: flex; justify-content: space-between; align-items: baseline; padding: 0.625rem 0.75rem 0.5rem; }
+  .lbl { color: var(--ink); }
+  .meta { letter-spacing: 0.14em; color: var(--ink-3); }
+  img { width: 100%; aspect-ratio: 2 / 1; object-fit: cover; opacity: 0.9; transition: opacity 0.4s ease, transform 1.2s ease; }
+  .feat:hover img { opacity: 1; transform: scale(1.03); }
+  .ttl { padding: 0.75rem 0.625rem 0.75rem 0.75rem; font-size: var(--t-small); line-height: 1.3; letter-spacing: -0.005em; }
+  .ttl small { display: block; margin-top: 3px; font-size: var(--t-caption); letter-spacing: 0.06em; color: var(--ink-3); }
+</style>

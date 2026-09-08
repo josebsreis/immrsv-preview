@@ -1,0 +1,33 @@
+---
+/** White loader: the mark, small, its three faces lighting in turn — the cube
+ *  assembling over and over. When the page is ready, dark bars close from the
+ *  top (the hero's ground colour), so removing the loader is seamless. */
+import Mark from '@components/ui/Mark.astro';
+---
+<div class="loader" data-loader aria-hidden="true" style="--loader-close-ms: 960">
+  <div class="mark"><Mark /></div>
+  <div class="bars">{Array.from({ length: 10 }).map(() => <i></i>)}</div>
+</div>
+
+<style>
+  .loader { position: fixed; inset: 0; z-index: var(--z-loader); background: #fff; display: flex; align-items: center; justify-content: center; }
+  .mark { width: 2.5rem; color: #0d1017; }
+  .mark :global(svg) { width: 100%; height: auto; }
+  .mark :global(.face) { opacity: 0.14; animation: facePulse 1.5s ease-in-out infinite; }
+  .mark :global(.face:nth-child(2)) { animation-delay: 0.25s; }
+  .mark :global(.face:nth-child(3)) { animation-delay: 0.5s; }
+  @keyframes facePulse { 0%, 60%, 100% { opacity: 0.14; } 18% { opacity: 1; } }
+  .bars { position: absolute; inset: 0; display: flex; flex-direction: column; pointer-events: none; }
+  .bars i { flex: 1; background: #060606; transform: scaleY(0); transform-origin: 50% 0; }
+  .loader:global(.closing) .bars i { animation: barClose 0.55s var(--ease-in-out) both; }
+  .loader:global(.closing) .bars i:nth-child(n) { animation-delay: calc((var(--n, 0)) * 0.04s); }
+  .loader:global(.closing) .mark { transition: opacity 0.3s ease; opacity: 0; }
+  .loader:global(.done) { display: none; }
+  @keyframes barClose { to { transform: scaleY(1); } }
+  @media (prefers-reduced-motion: reduce) { .mark :global(.face) { animation: none; opacity: 1; } }
+</style>
+
+<script>
+  // stagger without ten nth-child rules
+  document.querySelectorAll<HTMLElement>('[data-loader] .bars i').forEach((el, i) => el.style.setProperty('--n', String(i)));
+</script>

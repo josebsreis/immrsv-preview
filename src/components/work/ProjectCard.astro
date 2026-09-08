@@ -1,0 +1,34 @@
+---
+import type { Project } from '@lib/sanity/types';
+import { site } from '@lib/site';
+interface Props { project: Project; eager?: boolean; }
+const { project, eager = false } = Astro.props;
+const studios = project.studios.map((k) => site.studios.find((s) => s.key === k)?.label).filter(Boolean).join(' · ');
+---
+<a class="card" href={`/work/${project.slug}`} data-tap>
+  <div class="media">
+    {project.cover
+      ? <img src={project.cover.url} alt={project.cover.alt ?? project.title} loading={eager ? 'eager' : 'lazy'} decoding="async" style={project.cover.lqip ? `background:url(${project.cover.lqip}) center/cover` : undefined} />
+      : <div class="placeholder" />}
+    <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
+  </div>
+  <div class="meta">
+    <span class="title">{project.title}</span>
+    <span class="label sub">{[project.location, project.year].filter(Boolean).join(' — ')}</span>
+  </div>
+  {studios && <span class="label studios">{studios}</span>}
+</a>
+
+<style>
+  .card { display: block; color: var(--ink); }
+  .media { position: relative; overflow: hidden; background: var(--glass); }
+  img, .placeholder { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transition: transform 1.2s ease; }
+  .card:hover img { transform: scale(1.03); }
+  .c { position: absolute; width: var(--square); height: var(--square); background: var(--marker); opacity: 0; transition: opacity var(--dur-fast) ease; }
+  .tl { left: 0; top: 0; } .tr { right: 0; top: 0; } .bl { left: 0; bottom: 0; } .br { right: 0; bottom: 0; }
+  .card:hover .c { opacity: 1; }
+  .meta { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-4); margin-top: var(--s-3); }
+  .title { font-size: var(--t-body); letter-spacing: -0.005em; }
+  .sub { color: var(--ink-3); letter-spacing: 0.14em; }
+  .studios { display: block; margin-top: var(--s-1); color: var(--ink-4); }
+</style>

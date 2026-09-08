@@ -1,0 +1,24 @@
+---
+/** A small Portable Text renderer: paragraphs, headings, plain marks. Enough
+ *  for project stories; swap for astro-portabletext when the schema grows. */
+interface Props { blocks: unknown[]; }
+const { blocks } = Astro.props;
+type Span = { text: string; marks?: string[] };
+type Block = { _type: string; style?: string; children?: Span[] };
+const text = (b: Block) => (b.children ?? []).map((s) => s.text).join('');
+---
+<div class="pt">
+  {(blocks as Block[]).map((b) => {
+    if (b._type !== 'block') return null;
+    if (b.style === 'h2') return <h2>{text(b)}</h2>;
+    if (b.style === 'h3') return <h3>{text(b)}</h3>;
+    return <p>{text(b)}</p>;
+  })}
+</div>
+
+<style>
+  .pt { max-width: 62ch; }
+  .pt p { font-size: var(--t-body); line-height: 1.7; color: var(--ink-2); margin-bottom: 1.2em; }
+  .pt h2, .pt h3 { margin: 2em 0 0.6em; letter-spacing: -0.02em; }
+  .pt h2 { font-size: 1.5rem; } .pt h3 { font-size: 1.125rem; }
+</style>

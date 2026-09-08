@@ -1,0 +1,30 @@
+---
+import Base from '@layouts/Base.astro';
+import ProjectGrid from '@components/work/ProjectGrid.astro';
+import { getProjects } from '@lib/sanity/queries';
+const projects = await getProjects();
+---
+<Base theme="light" title="Work">
+  <main class="page">
+    <header class="head">
+      <span class="label tag">Work</span>
+      <h1>Selected projects across architecture, creative media and digital products.</h1>
+    </header>
+    <ProjectGrid projects={projects} />
+  </main>
+  <script>
+    import { createSmoothScroll } from '../../scripts/ui/smoothScroll';
+    import { createHoverAudio } from '../../scripts/ui/hoverAudio';
+    import { site } from '../../lib/site';
+    document.body.classList.add('ready');
+    createSmoothScroll();
+    createHoverAudio(site.audio.taps);
+  </script>
+</Base>
+
+<style>
+  .page { padding: 22vh var(--page-x) 16vh; }
+  .head { margin-bottom: var(--s-8); max-width: 26em; }
+  .tag { display: block; color: var(--ink-3); margin-bottom: var(--s-4); }
+  h1 { font-size: var(--t-h2); line-height: 1.04; letter-spacing: -0.025em; font-weight: 400; }
+</style>

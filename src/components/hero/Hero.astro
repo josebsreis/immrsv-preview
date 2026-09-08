@@ -1,0 +1,61 @@
+---
+/** The hero: the particle mark (a client island booted by src/scripts/home.ts)
+ *  behind an edge-anchored layer of DOM — statement, CTAs, sentence, cue,
+ *  featured project. All copy comes in as props. */
+import Button from '@components/ui/Button.astro';
+import ScrollCue from '@components/ui/ScrollCue.astro';
+import FeaturedProject from '@components/hero/FeaturedProject.astro';
+import type { HomeContent } from '@lib/sanity/types';
+
+interface Props { content: HomeContent['hero']; featured?: HomeContent['featuredProject']; }
+const { content, featured } = Astro.props;
+const [line1, line2 = ''] = content.headline.split('\n');
+---
+<canvas class="fluid" data-fluid aria-hidden="true"></canvas>
+<div class="canvas-host" data-hero-canvas></div>
+<div class="veil" data-veil aria-hidden="true"></div>
+
+<section class="hero" aria-label="Introduction">
+  <div class="lead arrives" style="--arrive-delay: .6s">
+    <h1>{line1}<br />{line2} <span class="rot" data-rotating-word data-words={JSON.stringify(content.words)}>{content.words[0]}</span></h1>
+    <div class="cta">
+      <Button href={content.primaryCta.href} label={content.primaryCta.label} />
+      <Button href={content.secondaryCta.href} label={content.secondaryCta.label} />
+    </div>
+  </div>
+
+  <p class="desc arrives" style="--arrive-delay: .7s">{content.description}</p>
+  <!-- placement belongs to the hero, so children are wrapped rather than styled across scopes -->
+  <div class="cue-slot"><ScrollCue /></div>
+  {featured && <div class="feat-slot"><FeaturedProject project={featured} /></div>}
+</section>
+
+<style>
+  .fluid { position: fixed; inset: 0; width: 100%; height: 100%; z-index: var(--z-fluid); background: var(--ground); }
+  .canvas-host { position: fixed; inset: 0; z-index: var(--z-canvas); pointer-events: none; }
+  .canvas-host :global(canvas) { position: fixed; inset: 0; display: block; }
+  .veil { position: fixed; inset: 0; z-index: var(--z-veil); background: var(--ground); opacity: 0; pointer-events: none; }
+
+  .hero { position: relative; min-height: 100vh; min-height: 100svh; pointer-events: none; }
+  .hero :global(a) { pointer-events: auto; }
+
+  .lead { position: absolute; left: var(--page-x); top: clamp(7.375rem, 16vh, 10.625rem); z-index: var(--z-ui); }
+  h1 { font-size: var(--t-display); line-height: 0.96; letter-spacing: -0.035em; max-width: 11em; }
+  .rot { display: inline-block; white-space: nowrap; }
+  .rot :global(i) { display: inline-block; font-style: normal; transition: opacity 0.75s ease-in-out, filter 0.75s ease-in-out; }
+  .rot :global(i.out) { opacity: 0; filter: blur(9px); }
+  .cta { display: flex; gap: var(--s-2); margin-top: 2.375rem; }
+
+  .desc { position: absolute; left: var(--page-x); bottom: var(--page-y); max-width: 20.625rem; z-index: var(--z-ui);
+          font-size: var(--t-lead); line-height: 1.45; letter-spacing: -0.005em; color: var(--ink); }
+  .cue-slot { position: absolute; left: 50%; bottom: var(--page-y); z-index: var(--z-ui); translate: -50% 0; }
+  .feat-slot { position: absolute; right: var(--page-x); bottom: var(--page-y); z-index: var(--z-ui); }
+
+  @media (max-width: 1099px) { .feat-slot { display: none; } }
+  @media (max-width: 719px) {
+    .lead { left: 1.25rem; top: 6.5rem; }
+    .cta { flex-direction: column; align-items: flex-start; }
+    .desc { left: 1.25rem; right: 1.25rem; bottom: 4rem; max-width: none; font-size: var(--t-body); }
+    .cue-slot { left: 1.25rem; translate: none; bottom: 1.5rem; }
+  }
+</style>

@@ -1,0 +1,17 @@
+---
+import { site } from '@lib/site';
+const year = new Date().getFullYear();
+---
+<footer class="footer" id="contact" data-theme="light">
+  <div class="row">
+    <span class="label">{site.name}</span>
+    <a class="label" href="mailto:hello@immrsv.studio" data-tap>hello@immrsv.studio</a>
+    <span class="label muted">© {year}</span>
+  </div>
+</footer>
+
+<style>
+  .footer { background: var(--ground); color: var(--ink); padding: var(--s-8) var(--page-x) var(--s-6); border-top: var(--hairline) solid var(--line); }
+  .row { display: flex; justify-content: space-between; gap: var(--s-4); flex-wrap: wrap; }
+  .muted { color: var(--ink-3); }
+</style>
