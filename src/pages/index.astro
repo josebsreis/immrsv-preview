@@ -23,7 +23,7 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
 
     <!-- the light half travels over the dark one, its shutter leading it -->
     <div class="light">
-      <ShutterScroll rows={10} />
+      <ShutterScroll rows={7} height="1.9rem" />
       <section class="next" id="work" data-next data-theme="light">
         <Studios content={home.studios} />
         <header class="head">
