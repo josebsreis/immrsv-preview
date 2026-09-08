@@ -1,12 +1,13 @@
 ---
-/** The site's button: a glass slab with the square on the left. On hover the
- *  square travels to the right end while the letters slip left one after
- *  another. `data-split` marks the label for the character split; `data-tap`
- *  gives it the hover sound. */
+/** The site's button: a glass slab with the square on the left. On hover a
+ *  panel slides in from the edge the cursor crossed, the square travels to the
+ *  right end and the letters slip left one after another. `data-split` marks
+ *  the label for the character split; `data-tap` gives it the hover sound. */
 interface Props { href: string; label: string; class?: string; }
 const { href, label, class: cls } = Astro.props;
 ---
-<a class:list={['btn', 'glass', cls]} href={href} data-tap>
+<a class:list={['btn', 'glass', cls]} href={href} data-tap data-dhover-item>
+  <span class="tile" data-dhover-tile aria-hidden="true"></span>
   <i class="sq" aria-hidden="true"></i>
   <b data-split>{label}</b>
 </a>
@@ -14,19 +15,25 @@ const { href, label, class: cls } = Astro.props;
 <style>
   .btn {
     --pl: 2.125rem; --pr: 1.625rem; --gap: 1rem;
-    position: relative;
+    position: relative; overflow: hidden;
     display: inline-flex; align-items: center;
     height: 2.375rem; padding: 0 var(--pr) 0 var(--pl);
     font-size: var(--t-caption); letter-spacing: var(--track-label); text-transform: uppercase;
     color: var(--ink);
-    transition: background var(--dur-fast) ease, scale 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: scale 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  /* the panel replaces the plain background change */
+  .btn:hover { background: var(--glass); }
+  .tile { position: absolute; inset: 0; background: var(--glass-hover);
+          transform: translateY(-100%); will-change: transform;
+          transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
   .btn:active { scale: 0.97; }
-  .btn b { font-weight: 500; white-space: nowrap; }
+  .btn b { position: relative; font-weight: 500; white-space: nowrap; }
   .btn .sq { position: absolute; left: var(--gap); top: 50%; margin-top: calc(var(--square) / -2); transition: left 0.66s 0.05s var(--ease-snap); }
   .btn :global(.ch) { display: inline-block; white-space: pre; transition: translate 0.66s calc(var(--i) * 0.016s + 0.05s) var(--ease-snap); }
   @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
     .btn:hover .sq { left: calc(100% - var(--gap) - var(--square)); }
     .btn:hover :global(.ch) { translate: calc(var(--gap) - var(--pl)) 0; }
   }
+  @media (prefers-reduced-motion: reduce) { .tile { transition: none; } }
 </style>

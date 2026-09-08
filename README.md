@@ -69,6 +69,10 @@ sanity.config.ts      the Studio
   `data-rotating-word`, `data-reveal-words`, `data-rule`, `data-pin`,
   `data-spacer`, `data-next`, `data-shutter`, `data-theme-follows`,
   `data-tap`, `data-split`), never by layout class.
+- **Directional hover.** Anything that should fill from the edge the cursor
+  crossed marks itself `data-dhover-item` with a `data-dhover-tile` inside;
+  `data-axis="x|y"` (on the item or a `data-dhover` wrapper) limits it to one
+  pair of edges. Used by the buttons, the nav pills and the brands grid.
 - **Hero tunables** live in `src/scripts/hero/config.ts`; a page can override
   any of them via `createHero({ config })`.
 - **Anything on the homepage that sits over the hero** needs its own layer:

@@ -6,7 +6,12 @@ const { items } = Astro.props;
 <header class="nav arrives" data-theme-follows style="--arrive-delay: .5s">
   <a class="home" href="/" aria-label="IMMRSV — home" data-tap><Wordmark /></a>
   <nav class="menu" aria-label="Primary">
-    {items.map((it) => <a class="item glass label" href={it.href} data-tap>{it.label}</a>)}
+    {items.map((it) => (
+      <a class="item glass label" href={it.href} data-tap data-dhover-item>
+        <span class="tile" data-dhover-tile aria-hidden="true"></span>
+        <span class="txt">{it.label}</span>
+      </a>
+    ))}
   </nav>
 </header>
 
@@ -23,7 +28,15 @@ const { items } = Astro.props;
   /* the child svg is sized from here — a class passed across component scopes would not be */
   .home :global(svg) { height: 2.125rem; width: auto; color: var(--ink); transition: color var(--dur-base) ease; }
   .menu { display: flex; gap: 2px; pointer-events: auto; }
-  .item { display: flex; align-items: center; height: 2.125rem; padding: 0 1rem; color: var(--ink); transition: background var(--dur-fast) ease, color var(--dur-base) ease; }
+  /* the pills answer the way the buttons do: a panel from the edge crossed */
+  .item { position: relative; overflow: hidden; display: flex; align-items: center; height: 2.125rem; padding: 0 1rem;
+          color: var(--ink); transition: color var(--dur-base) ease; }
+  .item:hover { background: var(--glass); }
+  .tile { position: absolute; inset: 0; background: var(--glass-hover);
+          transform: translateY(-100%); will-change: transform;
+          transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+  .txt { position: relative; }
+  @media (prefers-reduced-motion: reduce) { .tile { transition: none; } }
   @media (max-width: 719px) {
     .nav { padding: 1.125rem 1.25rem; }
     .home :global(svg) { height: 1.6875rem; }
