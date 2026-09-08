@@ -84,12 +84,13 @@ export const HERO_CONFIG = {
   exit: {
     loosen: 1.6,
     spin: 0.06,       // what is left of the cruise rotation once it has dispersed
-    dim: 0.25,        // spread thin, the dust needs most of its brightness to read
-    dip: 0.24,        // …but it drops further while it is flying, to keep the
-                      //    moment of the break-up from cluttering the frame
-    spread: 4.4,      // how far a particle drifts across the frame, world units
-    spreadY: 2.9,     // …the frame is wider than it is tall
-    spreadZ: 1,       // …and shallow, so nothing lands close to the camera
+    dim: 1,           // it goes out entirely — nothing is left behind
+    dip: 0.14,        // a small extra duck while the particles are still dense
+    fly: 4.6,         // how far each plate travels out along its own normal
+    flip: 2.3,        // …turning this far about an axis in its own face, rad
+    spread: 0.55,     // the particles loosen as the plate goes, but only a little
+    spreadY: 0.4,
+    spreadZ: 0.2,
     drift: 0.05,      // the slow wander that keeps the dust alive
   },
 

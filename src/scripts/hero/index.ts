@@ -69,7 +69,7 @@ export function createHero(opts: HeroOptions): Hero {
   // ── the mark ───────────────────────────────────────────────────────
   const material = makeParticleMaterial(cfg);
   material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
-  const plates: { holder: THREE.Group; points: THREE.Points; sim: PlateSim }[] = [];
+  const plates: { holder: THREE.Group; points: THREE.Points; sim: PlateSim; axis: THREE.Vector3; out: THREE.Vector3 }[] = [];
   const inner = new THREE.Group();                                    // pivots on the void
   const vc = cfg.mark.voidCentre;
   inner.position.set(-vc, -vc, -vc);
@@ -79,7 +79,11 @@ export function createHero(opts: HeroOptions): Hero {
     holder.add(points);
     holder.position.set(b.n[0], b.n[1], b.n[2]).multiplyScalar(cfg.mark.separation);
     inner.add(holder);
-    plates.push({ holder, points, sim });
+    // the way out: straight along its own normal, turning about an axis that
+    // lies in its face — the plate flips as it leaves
+    const out = new THREE.Vector3(b.n[0], b.n[1], b.n[2]).normalize();
+    const axis = out.clone().cross(SPIN_AXIS).normalize();
+    plates.push({ holder, points, sim, axis, out });
   });
   const L0 = new THREE.Group(); L0.add(inner); scene.add(L0);
   const qSpin = new THREE.Quaternion(), qTilt = new THREE.Quaternion(), AX = new THREE.Vector3(1, 0, 0);
@@ -141,6 +145,15 @@ export function createHero(opts: HeroOptions): Hero {
     qSpin.setFromAxisAngle(SPIN_AXIS, spinAngle);
     qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble);
     L0.quaternion.copy(qSpin).multiply(qTilt);
+
+    // the exit: each face flips and leaves along its own normal, so the cube
+    // comes apart the way it was assembled rather than dissolving in place
+    const e = Math.pow(clamp(exit, 0, 1), 1.2);
+    for (const p of plates) {
+      p.holder.position.copy(p.out).multiplyScalar(cfg.mark.separation + e * cfg.exit.fly);
+      if (e > 0) p.holder.quaternion.setFromAxisAngle(p.axis, e * cfg.exit.flip);
+      else p.holder.quaternion.identity();
+    }
     L0.updateMatrixWorld(true);
 
     material.uniforms.uTime.value = t;

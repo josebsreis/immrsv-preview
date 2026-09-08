@@ -68,8 +68,8 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
     const y = scrollY, vh = innerHeight;
     if (veil) veil.style.opacity = (clamp01((y - vh * 0.45) / (vh * 0.85)) * 0.22).toFixed(3);
 
-    // the mark breaks up over the first screen and a half of scrolling
-    hero?.setExit((y - vh * 0.25) / (vh * 1.15));
+    // the mark drifts apart and goes out over the first two screens of scroll
+    hero?.setExit((y - vh * 0.2) / (vh * 1.7));
 
     for (const { host, units, last } of passages) {
       const r = host.getBoundingClientRect();

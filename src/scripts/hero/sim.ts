@@ -52,13 +52,13 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
   // one strike impulse per plate per click, and none before the first click
   const shock = hit && ctx.shockT > 0 && S.shockSeen !== ctx.shockT; if (shock) S.shockSeen = ctx.shockT;
   const ex = ctx.exit;
-  // the shape starts opening on the first turn of the wheel, but it opens —
-  // it does not burst: an eased curve, gentle at the top, over most of the exit
+  // the shape starts opening on the first turn of the wheel and keeps opening
+  // for the whole of the exit — it drifts apart rather than bursting, and the
+  // light drains with it until there is nothing left
   const loosen = ex > 0 ? sm(0, 0.16, ex) * (1 - sm(0.12, 0.45, ex)) : 0;
-  const burst = ex > 0 ? Math.pow(sm(0, 0.62, ex), 1.35) : 0;
-  // the light goes early, and dips further while the particles are still dense
-  const fade = ex > 0 ? sm(0, 0.24, ex) : 0;
-  const dip = ex > 0 ? sm(0.03, 0.28, ex) * (1 - sm(0.4, 0.85, ex)) : 0;
+  const burst = ex > 0 ? Math.pow(sm(0, 0.92, ex), 1.25) : 0;
+  const fade = ex > 0 ? sm(0.1, 1, ex) : 0;
+  const dip = ex > 0 ? sm(0.03, 0.3, ex) * (1 - sm(0.45, 0.9, ex)) : 0;
 
   for (let j = 0; j < total; j++) {
     const i3 = j * 3;
