@@ -28,7 +28,7 @@ const reelFor = (key: string) =>
     </header>
 
     {content.items.map((s, i) => (
-      <article class="studio">
+      <article class="studio" data-reel>
         <span class="n label">{String(i + 1).padStart(2, '0')}</span>
         <div class="words">
           <h3 data-rise>{s.name}</h3>
@@ -44,7 +44,7 @@ const reelFor = (key: string) =>
         </div>
 
         {reelFor(s.key).length > 0 ? (
-          <div class="band" data-rise data-reel>
+          <div class="band" data-rise>
             {reelFor(s.key).map((shot, k) => (
               <picture class="frame" data-reel-frame={shot.name}>
                 <source srcset={`${shot.src}.avif`} type="image/avif" />

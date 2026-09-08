@@ -1,11 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════
    A reel of stills you scrub with the cursor.
 
-   Nothing changes on its own. The height of the frame is divided into
+   Nothing changes on its own. The height of the card is divided into
    as many bands as there are projects, and where the pointer stands
    decides which one you are looking at — so running the cursor down the
-   image walks through the studio's work, and running it back up walks
-   back.
+   card walks through the studio's work, and running it back up walks
+   back. The whole card is the control, not just the picture: the words
+   are half of it, and reaching for a strip of image to scrub is a game,
+   not an interface.
 
    A change is a curtain, not a fade: the new frame is revealed by
    opening a clip from the edge the cursor came from, over the top of
@@ -59,8 +61,11 @@ export function createReel(el: HTMLElement): Reel {
   };
   const onTap = () => show((at + 1) % frames.length, true);
 
-  if (fine) el.addEventListener('pointermove', onMove, { passive: true });
-  else el.addEventListener('click', onTap);
+  // the pointer drives it wherever there is one — a stylus and a trackpad
+  // both report themselves differently and both work here — and a tap takes
+  // the next frame for anything that only ever taps
+  el.addEventListener('pointermove', onMove, { passive: true });
+  if (!fine) el.addEventListener('click', onTap);
 
   return {
     destroy() {
