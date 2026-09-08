@@ -16,9 +16,10 @@
 export interface Marquee { destroy(): void }
 
 export function createMarquee(el: HTMLElement): Marquee {
-  const track = el.querySelector<HTMLElement>('[data-marquee-track]');
-  const first = track?.firstElementChild as HTMLElement | null;
-  if (!track || !first) return { destroy() {} };
+  const found = el.querySelector<HTMLElement>('[data-marquee-track]');
+  const first = found?.firstElementChild as HTMLElement | null;
+  if (!found || !first) return { destroy() {} };
+  const track = found;
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   /** px a second at rest */

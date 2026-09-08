@@ -114,6 +114,29 @@ export function createHero(opts: HeroOptions): Hero {
     plates.push({ holder, points, sim, axis, out, homeInner, when, targets: SHAPES.map(() => null), src: SHAPES.map(() => null), hold: new Float32Array(sim.total * 3) });
   });
   const L0 = new THREE.Group(); L0.add(inner); scene.add(L0);
+
+  /* The pool of light a projection stands in. It is one plane lying flat under
+     the form, outside the turning group so it stays level, and it only exists
+     while something is standing. */
+  const pool = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 1),
+    new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      uniforms: { uA: { value: 0 } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+      fragmentShader: `
+        precision highp float; varying vec2 vUv; uniform float uA;
+        void main(){
+          float r = length(vUv - 0.5) * 2.0;
+          // bright at the foot, gone by the rim, and never a hard edge
+          float a = pow(max(0.0, 1.0 - r), 2.6) * uA;
+          gl_FragColor = vec4(vec3(0.62, 0.66, 0.78) * a, a);
+        }`,
+    }),
+  );
+  pool.rotation.x = -Math.PI / 2;
+  pool.frustumCulled = false;
+  scene.add(pool);
   const qSpin = new THREE.Quaternion(), qTilt = new THREE.Quaternion();
   const AX = new THREE.Vector3(1, 0, 0), UP = new THREE.Vector3(0, 1, 0);
   /** the axis the mark turns on: the cube's diagonal, tilting up to vertical
@@ -381,6 +404,15 @@ export function createHero(opts: HeroOptions): Hero {
     ctx.out = out;
     material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
     material.uniforms.uFlat.value = shapeE * S.flat;
+    material.uniforms.uHolo.value = shapeE;
+    // the pool sits on the floor of whatever is standing, and the turn is
+    // about the vertical by then, so its height in the world is simply that
+    (pool.material as THREE.ShaderMaterial).uniforms.uA.value = shapeE * cfg.mark.holo.pool;
+    pool.visible = shapeE > 0.002;
+    if (pool.visible && def) {
+      pool.position.y = def.lift * def.scale;
+      pool.scale.setScalar(def.scale * 2.4);
+    }
     // an animated form is re-posed once a frame, for every plate at once —
     // both of them while one is crossing into the other
     if (shapeE > 0.0005) {
@@ -478,6 +510,7 @@ export function createHero(opts: HeroOptions): Hero {
       document.removeEventListener('visibilitychange', onVisibility);
       destroyPointer(); lens.dispose(); fluid?.destroy();
       for (const p of plates) p.points.geometry.dispose();
+      pool.geometry.dispose(); (pool.material as THREE.Material).dispose();
       material.dispose(); renderer.dispose(); renderer.domElement.remove();
     },
   };

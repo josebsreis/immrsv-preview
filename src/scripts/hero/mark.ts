@@ -39,19 +39,20 @@ export interface PlateSim {
 
 export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
   const { base, mid, high } = cfg.mark.tint;
-  const D = cfg.mark.depth;
+  const D = cfg.mark.depth, H = cfg.mark.holo;
   return new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { uTime: { value: 0 }, uPx: { value: cfg.mark.pointPx }, uFlat: { value: 0 } },
+    uniforms: { uTime: { value: 0 }, uPx: { value: cfg.mark.pointPx }, uFlat: { value: 0 }, uHolo: { value: 0 } },
     vertexShader: `
       attribute float aSeed; attribute float aSize; attribute float aTint; attribute vec3 aOff; attribute float aIn;
-      uniform float uTime, uPx, uFlat;   // uFlat: 1 while the cloud is standing as a form
+      uniform float uTime, uPx, uFlat, uHolo;   // uFlat: 1 while the cloud is standing as a form
       varying float vA; varying vec3 vC; varying float vB;
       void main(){
         vec3 p = position + aOff;
         float ph = aSeed * 6.28318;
         // micro drift — each point wanders a hair around home
         p += 0.0055 * vec3( sin(uTime*0.9 + ph), cos(uTime*0.7 + ph*1.3), sin(uTime*1.1 + ph*0.7) );
+        vec4 wp = modelMatrix * vec4(p, 1.0);
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         vec4 clip = projectionMatrix * mv;
         // displaced particles glow a little brighter and larger
@@ -78,6 +79,10 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
         // the same light spread over a wider disc is a fainter disc
         vA = (0.58 + 0.16*f) * mix(0.10, 1.0, aIn) * (1.0 + ${D.lift.toFixed(2)}*uFlat) * lit
              / (1.0 + blur * ${(D.bokeh * 0.55).toFixed(2)});
+        // the scan: bands of light travelling up through the form, in world
+        // height so they stay level however the mark is turned
+        float band = 0.5 + 0.5 * sin(wp.y * ${H.freq.toFixed(1)} - uTime * ${(H.speed * 6.2832).toFixed(2)});
+        vA *= mix(1.0, 1.0 - ${H.bands.toFixed(2)} + ${H.bands.toFixed(2)} * band * 1.6, uHolo);
         vec3 c0 = vec3(${base.join(',')}), c1 = vec3(${mid.join(',')}), c2 = vec3(${high.join(',')});
         vec3 col = tn < 0.5 ? mix(c0, c1, tn*2.0) : mix(c1, c2, (tn-0.5)*2.0);
         // and the far side cools as it goes, the way distance always does

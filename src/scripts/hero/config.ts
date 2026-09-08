@@ -41,6 +41,16 @@ export const HERO_CONFIG = {
       mid: [0.72, 0.73, 0.78],    //   greys reads as paper, not as light
       high: [1, 1, 1],
     },
+    /** the projection: scan bands across the form and a pool of light under
+     *  it — the two things that say "this is being projected" without
+     *  reaching for a colour */
+    holo: {
+      bands: 0.34,                // depth of the banding, 0 is off
+      freq: 22,                   // bands per world unit
+      speed: 0.55,                // how fast they travel up
+      pool: 0.5,                  // brightness of the light on the floor
+    },
+
     /** how the cloud is read as a volume rather than a sheet */
     depth: {
       near: 7.6,                  // camera distance at which nothing is dimmed
