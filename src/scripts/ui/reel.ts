@@ -35,7 +35,7 @@ function track() {
 export function createReel(el: HTMLElement): Reel {
   const frames = [...el.querySelectorAll<HTMLElement>('[data-reel-frame]')];
   if (frames.length < 2) return { destroy() {} };
-  const mark = el.querySelector<HTMLElement>('[data-reel-mark]');
+  const ticks = [...el.querySelectorAll<HTMLElement>('[data-reel-step]')];
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -70,8 +70,8 @@ export function createReel(el: HTMLElement): Reel {
     // the start value laid out first, and the reflow that forces is where the
     // old version flickered.
     next.style.clipPath = 'inset(0 0 0 0)';
-    // the marker on the roll slides to the tick for this frame
-    if (mark) mark.style.top = `${((i + 0.5) / frames.length) * 100}%`;
+    // the dash for this frame stretches; the rest go back to being dashes
+    ticks.forEach((t, k) => t.classList.toggle('on', k === i));
     if (!reduced) {
       next.getAnimations().forEach((a) => a.cancel());
       next.animate(
@@ -86,8 +86,17 @@ export function createReel(el: HTMLElement): Reel {
     warmAll();
   }
 
-  frames.forEach((f, i) => { f.style.clipPath = i === 0 ? 'inset(0 0 0 0)' : 'inset(0 0 100% 0)'; });
-  frames[0].style.zIndex = '1';
+  /** the state the reel is built in, and returns to when it is let go */
+  function rest() {
+    at = 0; top = 1;
+    frames.forEach((f, i) => {
+      f.getAnimations().forEach((a) => a.cancel());
+      f.style.clipPath = i === 0 ? 'inset(0 0 0 0)' : 'inset(0 0 100% 0)';
+      f.style.zIndex = i === 0 ? '1' : '';
+    });
+    ticks.forEach((t, k) => t.classList.toggle('on', k === 0));
+  }
+  rest();
 
   /** pick the frame for wherever the pointer is over the card right now */
   const settle = () => {
@@ -101,7 +110,11 @@ export function createReel(el: HTMLElement): Reel {
     // A card left behind goes back to its first picture. Otherwise a reel is
     // whatever frame the hand happened to leave it on, and the first project
     // — the one chosen to lead — is the one nobody sees at rest.
-    if (!inside) { if (at !== 0) show(0, false); return; }
+    // A card the hand has left goes back to its first picture, and back to the
+    // state it was built in: every frame closed but the first, no stack left
+    // over from the last scrub. Anything less and a reel remembers a hover
+    // from ten minutes ago.
+    if (!inside) { if (at !== 0) rest(); return; }
     const pos = ((pointer.y - r.top) / r.height) * frames.length;
     const band = Math.min(frames.length - 1, Math.max(0, Math.floor(pos)));
     // Arriving on the card takes the frame under the pointer at once: waiting

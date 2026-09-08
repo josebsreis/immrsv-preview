@@ -78,7 +78,6 @@ const reelFor = (key: string): Shot[] => {
             ))}
             <span class="roll" aria-hidden="true">
               {reelFor(s.key).map(() => <i class="tick" data-reel-step></i>)}
-              <b class="mark" data-reel-mark></b>
             </span>
           </div>
         ) : s.media && (
@@ -126,37 +125,33 @@ const reelFor = (key: string): Shot[] => {
   .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
         overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-  .band { position: relative; margin-top: var(--s-6); }
+  .band { position: relative; margin-top: var(--s-6); aspect-ratio: 3 / 2; }
+
+  /* Every frame is stacked on the same spot, the first included: a change
+     opens a clip from the edge the reel is travelling from, over the frame
+     before it, which is still sitting underneath. The band carries its own
+     height, so no frame has to stay in flow to give it one. */
+  .frame { position: absolute; inset: 0; clip-path: inset(0 0 100% 0); }
+  .frame:first-of-type { clip-path: inset(0 0 0 0); }
 
   /* The roll: one tick per project down the side of the picture, each sitting
      at the centre of the band of card that selects it, and a single marker
      that slides between them. It is the frame counter on a camera back — you
      see where you are and where you have come from, and that a hand held
      still is still turning it. */
-  /* The strip stands inside the picture, on a pane of frosted dark, and only
-     while the card is the one under the hand: a counter is for the thing you
-     are turning, not a fixture on every picture at once. */
-  .roll { position: absolute; top: var(--s-4); bottom: var(--s-4); left: var(--s-4); width: 1.25rem;
-          display: grid; grid-template-rows: repeat(var(--n, 1), 1fr); z-index: 30; pointer-events: none;
-          background: rgb(0 0 0 / 0.28); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  /* The counter: four dashes stacked inside the picture on a pane of frosted
+     dark, and the one you are on stretches. A strip the height of the image
+     made a ladder of the whole edge; this is the length of a thumb and reads
+     at a glance. It shows only while the card is the one under the hand. */
+  .roll { position: absolute; top: var(--s-4); left: var(--s-4); z-index: 30; pointer-events: none;
+          display: flex; flex-direction: column; gap: 5px; padding: 8px 9px;
+          background: rgb(0 0 0 / 0.26); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
           opacity: 0; transition: opacity 0.25s ease; }
   .studio.hovering .roll { opacity: 1; }
-  /* a hairline runs the height of the roll, so the ticks read as stops on a
-     strip rather than as stray dots */
-  .roll::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: var(--hairline);
-                  background: rgb(255 255 255 / 0.28); }
-  .tick { position: relative; align-self: center; justify-self: center; width: 4px; height: 4px; background: rgb(255 255 255 / 0.7); }
-  .mark { position: absolute; left: 50%; top: calc(100% / var(--n, 1) / 2); translate: -50% -50%;
-          width: 7px; height: 7px; background: #fff;
-          transition: top 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
-  @media (prefers-reduced-motion: reduce) { .mark { transition: none; } }
-  /* Every frame is stacked on the same spot. A change opens a clip from the
-     edge the reel is travelling from, over the frame before it — a curtain
-     drawn across, rather than one picture dissolving into another. */
-  .frame { position: absolute; inset: 0; clip-path: inset(0 0 100% 0); }
-  .frame:first-of-type { position: relative; clip-path: inset(0 0 0 0); }
-
-  .band video, .band img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tick { width: 10px; height: 2px; background: rgb(255 255 255 / 0.45);
+          transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease; }
+  .tick.on { width: 24px; background: #fff; }
+  @media (prefers-reduced-motion: reduce) { .tick { transition: none; } }
 
   /* Desktop: the words on the left, the clip on the right and out to the edge
      of the page. The card is as tall as the clip — its ratio sets the height,
@@ -166,7 +161,6 @@ const reelFor = (key: string): Shot[] => {
      the clip can reach it. */
   @media (min-width: 860px) {
     .studios { padding-bottom: 0; }
-    /* the number keeps a column of its own, and the words start beside it */
     /* The shared column gap is 18rem — it is sized for the statement layout,
        where two columns sit either side of a wide gutter, and here it starved
        the words. This card sets its own: the number close to what it numbers,
@@ -177,9 +171,8 @@ const reelFor = (key: string): Shot[] => {
               margin-inline: calc(var(--page-x) * -1);
               background: var(--ground);
               border-top: var(--hairline) solid var(--line); }
-    /* the number sits with the top of the name, not in the middle of the card */
     /* the number and the name start together at the top; the services are
-       pushed to the foot of the card, so the words hold both edges */
+       pushed to the foot, so the words hold both edges of the card */
     .n { align-self: start; padding-top: var(--s-6); }
     .words { align-self: stretch; display: flex; flex-direction: column;
              padding-block: var(--s-6); }
