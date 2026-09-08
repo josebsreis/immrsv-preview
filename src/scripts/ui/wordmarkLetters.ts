@@ -2,8 +2,9 @@
    The name, letter by letter. Each glyph is its own object: touching one
    hands it the pointer's momentum — a shove along the direction of travel
    and a spin from the torque about its centre — then a spring walks it
-   back to its place. Contact also fills it, and the fill drains a moment
-   later, so the mark is an outline again by the time you look away.
+   back to its place. Contact also fills it at once; a moment later the fill
+   dies the way a failing tube does — stuttering off — so the mark is an
+   outline again by the time you look away.
 
    The physics is the same shape as GSAP's inertia (velocity in, resistance,
    settle at the origin) written as a spring so the page keeps its own
@@ -87,14 +88,25 @@ export function createWordmarkLetters(
     L.vy += clamp(vy * C.shove, C.maxShove);
     L.vr += clamp(torque * C.spin, C.maxSpin);
 
+    // lit is instant; the going-out is an animation, so cancel any in progress
+    L.el.classList.remove('out');
     L.el.classList.add('lit');
     clearTimeout(L.timer);
-    L.timer = window.setTimeout(() => L.el.classList.remove('lit'), C.hold);
+    L.timer = window.setTimeout(() => {
+      L.el.classList.remove('lit');
+      L.el.classList.add('out');
+    }, C.hold);
   }
 
   const enters = letters.map((L) => {
     const fn = (e: PointerEvent) => touch(L, e);
     L.el.addEventListener('pointerenter', fn);
+    return fn;
+  });
+  // once it has finished going out, the letter is just an outline again
+  const ends = letters.map((L) => {
+    const fn = () => L.el.classList.remove('out');
+    L.el.addEventListener('animationend', fn);
     return fn;
   });
 
@@ -131,7 +143,11 @@ export function createWordmarkLetters(
     destroy() {
       cancelAnimationFrame(raf); io.disconnect(); ro.disconnect();
       removeEventListener('pointermove', onMove);
-      letters.forEach((L, i) => { clearTimeout(L.timer); L.el.removeEventListener('pointerenter', enters[i]); });
+      letters.forEach((L, i) => {
+        clearTimeout(L.timer);
+        L.el.removeEventListener('pointerenter', enters[i]);
+        L.el.removeEventListener('animationend', ends[i]);
+      });
     },
   };
 }
