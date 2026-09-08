@@ -1,23 +1,26 @@
 /* ═══════════════════════════════════════════════════════════════════
    The homepage's scroll story: the veil that dims the mark as the hero
-   leaves; the About statement read in a word at a time; the rule drawing
-   across; the pinned shutter into the next section; the theme flip; and
-   the exit progress handed to the hero.
+   leaves; the statement read a character at a time; the rule drawing
+   across; the shutter's rows closing at the end of the dark half; and the
+   nav following whichever ground it is over.
    ═══════════════════════════════════════════════════════════════════ */
 import type { Hero } from '../hero';
 
 export interface ScrollChoreography { update(): void; destroy(): void; }
 
+const REVEAL_BAND = 0.2;      // how much of a passage is mid-transition at once
+const ROW_STAGGER = 0.55;     // how much of the shutter's run is spent handing over
+
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+const smooth = (u: number) => u * u * (3 - 2 * u);
+
 export function createScrollChoreography(hero: Hero | null): ScrollChoreography {
   const veil = document.querySelector<HTMLElement>('[data-veil]');
   const readable = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal-words]'));
-  const REVEAL_BAND = 0.2;      // how much of a passage is mid-transition at once
   const rule = document.querySelector<HTMLElement>('[data-rule]');
-  const pin = document.querySelector<HTMLElement>('[data-pin]');
-  const spacer = document.querySelector<HTMLElement>('[data-spacer]');
+  const shutter = document.querySelector<HTMLElement>('[data-shutter-scroll]');
+  const rows = shutter ? (Array.from(shutter.children) as HTMLElement[]) : [];
   const next = document.querySelector<HTMLElement>('[data-next]');
-  const shutter = document.querySelector<HTMLElement>('[data-shutter]');
-  const strips = shutter ? Array.from(shutter.children) as HTMLElement[] : [];
   const themed = document.querySelectorAll<HTMLElement>('[data-theme-follows]');
   const rising = Array.from(document.querySelectorAll<HTMLElement>('[data-rise]'));
 
@@ -47,22 +50,21 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
     }
   }
 
-  // sticky with a negative top: the block scrolls normally until its end meets
-  // the bottom of the viewport, then holds there through the spacer
-  const fitPin = () => { if (pin) pin.style.top = Math.min(0, innerHeight - pin.offsetHeight) + 'px'; };
-
   function update() {
     const y = scrollY, vh = innerHeight;
-    if (veil) veil.style.opacity = (Math.max(0, Math.min(1, (y - vh * 0.45) / (vh * 0.85))) * 0.22).toFixed(3);
+    if (veil) veil.style.opacity = (clamp01((y - vh * 0.45) / (vh * 0.85)) * 0.22).toFixed(3);
+
+    // the mark breaks up over the first screen and a half of scrolling
+    hero?.setExit((y - vh * 0.25) / (vh * 1.15));
 
     for (const { host, units, last } of passages) {
       const r = host.getBoundingClientRect();
       // the sweep runs while the passage crosses the middle of the screen
-      const p = Math.max(0, Math.min(1, (vh * 0.85 - r.top) / (r.height + vh * 0.25)));
+      const p = clamp01((vh * 0.85 - r.top) / (r.height + vh * 0.25));
       const band = Math.max(16, units.length * REVEAL_BAND);
       const head = p * (units.length + band);
       for (let i = 0; i < units.length; i++) {
-        const v = Math.max(0, Math.min(1, (head - i) / band));
+        const v = clamp01((head - i) / band);
         const q = Math.round(v * 50) / 50;                    // only write when it actually moves
         if (q === last[i]) continue;
         last[i] = q;
@@ -70,37 +72,32 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
         units[i].classList.toggle('on', q > 0.5);             // for browsers without color-mix
       }
     }
+
     if (rule) rule.classList.toggle('in', rule.getBoundingClientRect().top < vh * 0.88);
     // once lifted, elements stay lifted — nothing re-animates on the way back
     for (const el of rising) if (!el.classList.contains('in') && el.getBoundingClientRect().top < vh * 0.86) el.classList.add('in');
 
-    if (!spacer || !next) return;
-    const exitEnd = spacer.offsetTop - vh + spacer.offsetHeight;
-    hero?.setExit((y - vh * 0.25) / (exitEnd - vh * 0.25));
-
-    const sr = spacer.getBoundingClientRect();
-    // the first slice of the spacer is a hold: the pinned block sits still and
-    // its last block can be read before the shutter starts closing
-    const HOLD = 0.3;
-    const raw = Math.max(0, Math.min(1, (vh - sr.top) / sr.height));
-    const sp = Math.max(0, (raw - HOLD) / (1 - HOLD));
-    const N = strips.length, S = 0.62;                                 // bars fill mostly one by one
-    strips.forEach((strip, k) => {
-      const start = ((N - 1 - k) / (N - 1)) * S;
-      const u = Math.max(0, Math.min(1, (sp - start) / (1 - S)));
-      strip.style.transform = `scaleY(${(u * u * (3 - 2 * u)).toFixed(4)})`;
-    });
-    const done = sp >= 0.985;                                          // the scroll settles just short of the limit
-    next.style.visibility = done ? 'visible' : 'hidden';
-    next.classList.toggle('on', done);
-    themed.forEach((el) => { el.dataset.theme = done ? 'light' : 'dark'; });
-    if (shutter) shutter.hidden = done;
+    // the shutter: its rows fill from the top down, the last one landing just
+    // as the band's foot — the join with the light half — reaches the screen
+    if (shutter && rows.length > 1) {
+      const r = shutter.getBoundingClientRect();
+      const p = clamp01((vh - r.top) / Math.max(r.height, 1));
+      const n = rows.length;
+      for (let k = 0; k < n; k++) {
+        const start = (k / (n - 1)) * ROW_STAGGER;
+        const u = clamp01((p - start) / (1 - ROW_STAGGER));
+        rows[k].style.transform = `scaleY(${smooth(u).toFixed(4)})`;
+      }
+      // the nav takes the ground it is standing on
+      const light = r.top <= vh * 0.06 || (next ? next.getBoundingClientRect().top <= vh * 0.06 : false);
+      themed.forEach((el) => { el.dataset.theme = light ? 'light' : 'dark'; });
+    }
   }
 
-  const onResize = () => { fitPin(); update(); };
+  const onResize = () => update();
   addEventListener('scroll', update, { passive: true });
   addEventListener('resize', onResize);
-  fitPin(); setTimeout(fitPin, 100); update();
+  update();
 
   return { update, destroy() { removeEventListener('scroll', update); removeEventListener('resize', onResize); } };
 }

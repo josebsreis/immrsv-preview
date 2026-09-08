@@ -1,0 +1,22 @@
+---
+/** The transition between the dark half and the light one, in flow rather
+ *  than as an overlay: a stack of rows in the next section's ground colour,
+ *  sitting at the end of this one. Scrolling grows them from the bottom up,
+ *  one after another, so the next section arrives as slats and then simply
+ *  continues. Driven by scripts/ui/scrollChoreography.ts. */
+interface Props { rows?: number; height?: string; theme?: 'dark' | 'light'; }
+const { rows = 10, height = '3rem', theme = 'light' } = Astro.props;
+---
+<div class="shutter" data-shutter-scroll data-theme={theme} style={`--row-h: ${height}`} aria-hidden="true">
+  {Array.from({ length: rows }).map(() => <i></i>)}
+</div>
+
+<style>
+  /* the rows take the ground of the section they are announcing */
+  .shutter { position: relative; z-index: var(--z-ui); display: flex; flex-direction: column;
+             width: 100%; color: var(--ground); pointer-events: none; }
+  .shutter i { display: block; width: 100%; height: var(--row-h); background: currentColor;
+               transform: scaleY(0); transform-origin: 50% 100%; will-change: transform;
+               backface-visibility: hidden; }
+  @media (prefers-reduced-motion: reduce) { .shutter i { transform: none; } }
+</style>

@@ -31,7 +31,7 @@ src/
     hero/             Hero (the island's DOM), FeaturedProject
     home/             WordmarkPanel, Manifesto (stats reel + statement), Brands, Studios
     work/             ProjectCard, ProjectGrid
-    transitions/      Loader, Shutter
+    transitions/      Loader, ShutterScroll
   pages/
     index.astro       homepage
     work/index.astro  all projects
@@ -66,9 +66,15 @@ sanity.config.ts      the Studio
   child renders (`.home :global(svg)`).
 - **Behaviour by data attribute.** Scripts find their elements with
   `data-*` hooks (`data-hero-canvas`, `data-fluid`, `data-loader`,
-  `data-rotating-word`, `data-reveal-words`, `data-rule`, `data-pin`,
-  `data-spacer`, `data-next`, `data-shutter`, `data-theme-follows`,
+  `data-rotating-word`, `data-reveal-words`, `data-reveal-group`, `data-rule`,
+  `data-rise`, `data-next`, `data-shutter-scroll`, `data-theme-follows`,
   `data-tap`, `data-split`), never by layout class.
+- **The dark/light handover** is in flow, not an overlay: `ShutterScroll`
+  sits at the end of the dark half and its rows — in the *next* section's
+  ground colour — fill from the top down as it crosses the screen, the last
+  one landing as the light section arrives. Anything that must sit over the
+  hero's fixed canvases needs `z-index: var(--z-ui)`, the light section
+  included, or the veil tints it.
 - **Directional hover.** Anything that should fill from the edge the cursor
   crossed marks itself `data-dhover-item` with a `data-dhover-tile` inside;
   `data-axis="x|y"` (on the item or a `data-dhover` wrapper) limits it to one

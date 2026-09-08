@@ -1,7 +1,7 @@
 ---
 import Base from '@layouts/Base.astro';
 import Loader from '@components/transitions/Loader.astro';
-import Shutter from '@components/transitions/Shutter.astro';
+import ShutterScroll from '@components/transitions/ShutterScroll.astro';
 import Hero from '@components/hero/Hero.astro';
 import WordmarkPanel from '@components/home/WordmarkPanel.astro';
 import Manifesto from '@components/home/Manifesto.astro';
@@ -15,44 +15,34 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
 <Base theme="dark">
   <Loader />
   <main class="main">
-    <div class="stage">
-      <div class="pin" data-pin>
-        <Hero content={home.hero} featured={home.featuredProject} />
-        <WordmarkPanel />
-        <Manifesto content={home.about} />
-        <Brands content={home.brands} />
-      </div>
-      <div class="spacer" data-spacer></div>
+    <div class="dark">
+      <Hero content={home.hero} featured={home.featuredProject} />
+      <WordmarkPanel />
+      <Manifesto content={home.about} />
+      <Brands content={home.brands} />
+      <ShutterScroll rows={10} />
     </div>
 
     <section class="next" id="work" data-next data-theme="light">
-      <div class="inner">
-        <Studios content={home.studios} />
-        <header class="head">
-          <span class="label">Selected work</span>
-          <a class="label all" href="/work" data-tap>All projects →</a>
-        </header>
-        <ProjectGrid projects={projects.slice(0, 4)} />
-      </div>
+      <Studios content={home.studios} />
+      <header class="head">
+        <span class="label">Selected work</span>
+        <a class="label all" href="/work" data-tap>All projects →</a>
+      </header>
+      <ProjectGrid projects={projects.slice(0, 4)} />
     </section>
   </main>
-  <Shutter color="#fff" />
   <script src="../scripts/home.ts"></script>
 </Base>
 
 <style>
   .main { position: relative; z-index: var(--z-main); }
-  /* the pin: hero + about stick once their end meets the bottom of the
-     viewport; the spacer is the scroll the shutter plays across */
-  .stage { position: relative; z-index: 1; }
-  .pin { position: sticky; top: 0; }               /* top is set in JS: viewport − content */
-  .spacer { height: 150vh; }   /* the first 30% is the hold, the rest the shutter */
-  /* pulled under the shutter, shown once it is white */
-  .next { position: relative; z-index: 2; margin-top: -102vh; visibility: hidden; min-height: 140vh;
-          background: var(--ground); color: var(--ink); padding: 18vh var(--page-x) 12vh; }
-  .inner { opacity: 0; }
-  .next:global(.on) .inner { animation: rise 0.9s var(--ease-out) 0.1s both; }
-  @keyframes rise { from { opacity: 0; transform: translateY(1.125rem); } to { opacity: 1; transform: none; } }
+  /* the dark half scrolls over the fixed hero canvases; the shutter's rows
+     close at its end and the light half simply continues from there */
+  .dark { position: relative; }
+  /* above the hero's fixed layers — its own ground closes the dark half off */
+  .next { position: relative; z-index: var(--z-ui); background: var(--ground); color: var(--ink);
+          padding: 2vh var(--page-x) 12vh; }
   .head { display: flex; justify-content: space-between; align-items: baseline;
           padding-top: var(--s-6); margin-bottom: var(--s-7); color: var(--ink-3);
           border-top: var(--hairline) solid var(--line); }
