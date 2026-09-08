@@ -49,7 +49,7 @@ h1, h2, h3 { font-weight: 500; }
 /* a page-edge anchored row: hero bottom, etc. */
 .anchored { position: absolute; z-index: var(--z-ui); }
 
-/* elements the loader releases together */
+/* elements that arrive together once the page is ready */
 .arrives { opacity: 0; }
 body.ready .arrives { animation: arrive var(--dur-slow) ease both; animation-delay: var(--arrive-delay, 0.6s); }
 @keyframes arrive { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }

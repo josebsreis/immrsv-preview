@@ -31,7 +31,7 @@ src/
     hero/             Hero (the island's DOM), FeaturedProject
     home/             WordmarkPanel, Manifesto (stats reel + statement), Brands, Studios
     work/             ProjectCard, ProjectGrid
-    transitions/      Loader, ShutterScroll
+    transitions/      ShutterScroll
   pages/
     index.astro       homepage
     work/index.astro  all projects
@@ -40,7 +40,7 @@ src/
     hero/             the mark: config.ts (every tunable), mark.ts, sim.ts, lens.ts, pointer.ts, index.ts
     fluid.ts          the WebGL fluid (own canvas, under the hero)
     ui/               smoothScroll, scrollChoreography, rotatingWord, statsReel, wordmarkLetters,
-                      directionalHover, videoInView, splitText, hoverAudio, loader
+                      directionalHover, videoInView, splitText, hoverAudio
     home.ts           the homepage's client entry — wires everything by data attributes
   lib/
     site.ts           structural config (nav, studios, audio) — not content
@@ -65,9 +65,9 @@ sanity.config.ts      the Studio
   element (`.cue-slot`, `.feat-slot`) or uses `:global()` for elements the
   child renders (`.home :global(svg)`).
 - **Behaviour by data attribute.** Scripts find their elements with
-  `data-*` hooks (`data-hero-canvas`, `data-fluid`, `data-loader`,
+  `data-*` hooks (`data-hero-canvas`, `data-fluid`,
   `data-rotating-word`, `data-reveal-words`, `data-reveal-group`, `data-rule`,
-  `data-rise`, `data-next`, `data-shutter-scroll`, `data-theme-follows`,
+  `data-rise`, `data-next`, `data-shutter-scroll`, `data-hold`, `data-theme-follows`,
   `data-tap`, `data-split`), never by layout class.
 - **The dark/light handover.** The dark half is `position: sticky` with a
   negative top (`[data-hold]`, set in JS to viewport − height), so it holds

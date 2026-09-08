@@ -11,7 +11,6 @@ import { createDirectionalHover } from './ui/directionalHover';
 import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
 import { createHoverAudio } from './ui/hoverAudio';
-import { runLoader } from './ui/loader';
 import { site } from '@lib/site';
 
 const host = document.querySelector<HTMLElement>('[data-hero-canvas]');
@@ -36,4 +35,9 @@ createDirectionalHover();
 createVideoInView();
 createHoverAudio(site.audio.taps);
 
-runLoader(document.querySelector<HTMLElement>('[data-loader]'), () => hero?.setReady());
+// no loading screen: the page arrives as soon as the fonts have settled, and
+// the mark's intro starts with it
+document.fonts.ready.then(() => {
+  document.body.classList.add('ready');
+  hero?.setReady();
+});

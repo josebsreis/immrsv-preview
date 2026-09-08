@@ -1,6 +1,5 @@
 ---
 import Base from '@layouts/Base.astro';
-import Loader from '@components/transitions/Loader.astro';
 import ShutterScroll from '@components/transitions/ShutterScroll.astro';
 import Hero from '@components/hero/Hero.astro';
 import WordmarkPanel from '@components/home/WordmarkPanel.astro';
@@ -13,7 +12,6 @@ import { getHome, getProjects } from '@lib/sanity/queries';
 const [home, projects] = await Promise.all([getHome(), getProjects()]);
 ---
 <Base theme="dark">
-  <Loader />
   <main class="main">
     <div class="dark" data-hold>
       <Hero content={home.hero} featured={home.featuredProject} />

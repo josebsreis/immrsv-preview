@@ -20,7 +20,7 @@ export interface HeroOptions {
 }
 
 export interface Hero {
-  /** release the intro (call when the loader is done) */
+  /** release the intro (call when the page is ready) */
   setReady(): void;
   /** 0..1 — the scroll-driven exit */
   setExit(p: number): void;
@@ -120,7 +120,7 @@ export function createHero(opts: HeroOptions): Hero {
   function frame(now: number) {
     const t = now / 1000;
     const dt = Math.max(0, Math.min((now - (last ?? now)) / 1000, 0.05));
-    if (last === undefined || !ready) introT0 = t;                      // the intro waits for the loader
+    if (last === undefined || !ready) introT0 = t;                      // the intro waits to be released
     last = now;
 
     // parallax: the mark sways with the cursor inside a hard clamp
