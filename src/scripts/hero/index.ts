@@ -19,9 +19,6 @@ export interface HeroOptions {
   /** the fluid's own canvas (sits under the host) */
   fluidCanvas?: HTMLCanvasElement | null;
   config?: DeepPartial<HeroConfig>;
-  /** told which form the mark is making, or −1 for the cube. The page uses
-   *  this to say the same thing in words at the same moment. */
-  onForm?: (index: number, word: string | null) => void;
 }
 
 export interface Hero {
@@ -202,11 +199,6 @@ export function createHero(opts: HeroOptions): Hero {
     // cube, which is the only reading that makes sense of three loose plates
     if (shapeAt > 0.02 && shape >= 0) { pending = i; shapeTo = 0; phase = 3; beat = 0; spinBoost += cfg.shapes.charge; return; }
     ensureShape(i); shape = i; shapeTo = 1; phase = 1; beat = 0;
-    announce(i);
-  }
-  /** the page is told what the mark is making, so the headline can name it */
-  function announce(i: number) {
-    opts.onForm?.(i, i < 0 ? null : SHAPES[i].word);
   }
   let introT0 = 0, last: number | undefined, yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
 
@@ -290,10 +282,9 @@ export function createHero(opts: HeroOptions): Hero {
       // form, or leave the headline naming one the mark is no longer making
       parked = true;
       shapeTo = 0; pending = -1; phase = 0; beat = 0;
-      announce(-1);
     }
     if (exit === 0) parked = false;
-    if (shapeTo === 0 && shapeAt < 0.02 && pending >= 0) { const q = pending; pending = -1; ensureShape(q); shape = q; shapeTo = 1; phase = 1; beat = 0; announce(q); }
+    if (shapeTo === 0 && shapeAt < 0.02 && pending >= 0) { const q = pending; pending = -1; ensureShape(q); shape = q; shapeTo = 1; phase = 1; beat = 0; }
     else if (shapeTo === 0 && shapeAt < 0.002 && shape >= 0) shape = -1;
     const sRate = dt / S.beat.cross;
     shapeAt = clamp(shapeAt + (shapeTo > shapeAt ? sRate : -sRate), 0, 1);

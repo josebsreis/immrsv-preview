@@ -62,9 +62,6 @@ export interface ShapeDef {
   /** a baked rig: the same points, plus the bones that move them, so the form
    *  can stand there breathing instead of standing there. See skin.ts. */
   readonly skin?: string;
-  /** the headline's last word while this form stands — the mark and the
-   *  sentence say the same thing at the same moment */
-  readonly word: string;
   /** signed distance, authored with y up and the feet near y = 0. A baked
    *  shape keeps one as the fallback for when its file cannot be fetched. */
   readonly sdf: (x: number, y: number, z: number) => number;
@@ -76,12 +73,10 @@ export interface ShapeDef {
   readonly lift: number;
 }
 
-/** A standing figure: the studio that builds people and creatures. Not a
- *  likeness — a maquette, the thing that sits on a modeller's shelf. Weight
- *  on one leg, arms just off the body, so the silhouette has air in it. */
+/** A standing figure — the fallback field, for when the rig cannot be
+ *  fetched. Not a likeness: a maquette, the thing on a modeller's shelf. */
 const FIGURE: ShapeDef = {
   name: 'figure',
-  word: 'media.',
   skin: '/shapes/figure.skin',
   scale: 1.58,
   lift: -0.5,
@@ -116,12 +111,10 @@ const FIGURE: ShapeDef = {
   },
 };
 
-/** A house: the studio that draws buildings. A gable and a chimney read as
- *  architecture at a glance, which a clever modernist section does not —
- *  at this resolution the silhouette is the whole argument. */
+/** A house. A gable and a chimney read at a glance, which a clever modernist
+ *  section does not — at this resolution the silhouette is the whole argument. */
 const HOUSE: ShapeDef = {
   name: 'house',
-  word: 'space.',
   scale: 1.5,
   lift: -0.47,
   bounds: [-0.62, -0.02, -0.46, 0.62, 0.98, 0.46],
@@ -142,12 +135,10 @@ const HOUSE: ShapeDef = {
   },
 };
 
-/** A tree: the site a building stands on. It shares the headline's word with
- *  the house — architecture is the ground as much as the walls — and it is the
- *  one form here that reads at a glance from any angle. */
+/** A tree: the one form here that reads at a glance from any angle, which is
+ *  most of why it earns its place. */
 const TREE: ShapeDef = {
   name: 'tree',
-  word: 'space.',
   src: '/shapes/tree.bin',
   scale: 1.6,
   lift: -0.5,
@@ -162,12 +153,11 @@ const TREE: ShapeDef = {
   },
 };
 
-/** A screen: the studio that ships software. A slab held a few degrees off
+/** A screen: a slab held a few degrees off
  *  vertical on a stem, the way a monitor stands on a desk — thin enough to
  *  read as a surface, not a brick. */
 const SCREEN: ShapeDef = {
   name: 'screen',
-  word: 'products.',
   scale: 1.66,
   lift: -0.44,
   bounds: [-0.52, -0.04, -0.36, 0.52, 0.92, 0.36],
@@ -184,7 +174,9 @@ const SCREEN: ShapeDef = {
   },
 };
 
-/** the reel runs in the studios' own order: architecture, media, products */
+/* The forms are not an illustration of the three studios — the headline says
+   what the work is. They are here to show the mark making things, so the only
+   rule is that each one reads at a glance. */
 export const SHAPES: readonly ShapeDef[] = [HOUSE, TREE, FIGURE, SCREEN];
 
 /* ── sampling ─────────────────────────────────────────────────────── */

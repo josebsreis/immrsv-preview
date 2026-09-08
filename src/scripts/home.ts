@@ -21,7 +21,7 @@ createSmoothScroll();
 const choreography = createScrollChoreography(() => hero);
 document.fonts.ready.then(() => splitChars());
 const rot = document.querySelector<HTMLElement>('[data-rotating-word]');
-const word = rot ? createRotatingWord(rot) : null;
+if (rot) createRotatingWord(rot);
 const reel = document.querySelector<HTMLElement>('[data-stats]');
 if (reel) createStatsReel(reel);
 
@@ -47,9 +47,7 @@ if (host && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
   const load = () =>
     import('./hero')
       .then(({ createHero }) => {
-        // the headline names whatever the mark is making: the sentence and the
-        // cloud change together, and the word stops drifting on its own timer
-        hero = createHero({ host, fluidCanvas, onForm: (_i, w) => word?.show(w) });
+        hero = createHero({ host, fluidCanvas });
         return document.fonts.ready.then(() => { hero?.setReady(); choreography.update(); });
       })
       .catch(() => {});
