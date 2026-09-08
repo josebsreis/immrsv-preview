@@ -19,7 +19,8 @@ const { project, class: cls } = Astro.props;
 
 <style>
   /* drawn, not filled: a hairline frame with the site's square on each corner */
-  .feat { position: relative; display: block; width: min(23.75rem, 30vw); color: var(--ink);
+  /* the placement is the parent's: it can set --feat-w to fill its own column */
+  .feat { position: relative; display: block; width: var(--feat-w, min(23.75rem, 30vw)); color: var(--ink);
           border: var(--hairline) solid var(--line); transition: border-color var(--dur-fast) ease; }
   .feat:hover { border-color: var(--line-strong); }
   .c { position: absolute; width: var(--square); height: var(--square); background: var(--marker);
