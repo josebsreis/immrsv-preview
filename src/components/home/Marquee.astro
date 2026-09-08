@@ -12,7 +12,7 @@ const { items, label = 'What we do' } = Astro.props;
 /** twice through, so the second run is already in place when the first leaves */
 const runs = [0, 1];
 ---
-<section class="band" aria-label={label} data-marquee data-marquee-speed="46" data-marquee-drag="2.1">
+<section class="band" aria-label={label} data-marquee data-marquee-speed="46" data-marquee-drag="1.5">
   <div class="track" data-marquee-track aria-hidden="true">
     {runs.map(() => (
       <div class="run">
