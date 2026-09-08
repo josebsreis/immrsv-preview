@@ -11,6 +11,7 @@ export interface ScrollChoreography { update(): void; destroy(): void; }
 export function createScrollChoreography(hero: Hero | null): ScrollChoreography {
   const veil = document.querySelector<HTMLElement>('[data-veil]');
   const readable = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal-words]'));
+  const REVEAL_BAND = 0.2;      // how much of a passage is mid-transition at once
   const rule = document.querySelector<HTMLElement>('[data-rule]');
   const pin = document.querySelector<HTMLElement>('[data-pin]');
   const spacer = document.querySelector<HTMLElement>('[data-spacer]');
@@ -20,14 +21,31 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
   const themed = document.querySelectorAll<HTMLElement>('[data-theme-follows]');
   const rising = Array.from(document.querySelectorAll<HTMLElement>('[data-rise]'));
 
-  // wrap every word so each can be lit on its own as the line is read
-  const passages = readable.map((el) => {
-    const words: HTMLElement[] = [];
-    const src = el.textContent!.trim().split(/\s+/);
+  /* Every character gets its own span so the text can be lit through, a
+     soft band at a time. Elements sharing a [data-reveal-group] are one
+     passage: the light crosses all of them as a single sweep, in reading
+     order, rather than each paragraph starting again. */
+  interface Passage { host: HTMLElement; units: HTMLElement[]; last: number[]; }
+  const passages: Passage[] = [];
+  const byHost = new Map<HTMLElement, Passage>();
+
+  for (const el of readable) {
+    const host = el.closest<HTMLElement>('[data-reveal-group]') ?? el;
+    let passage = byHost.get(host);
+    if (!passage) { passage = { host, units: [], last: [] }; byHost.set(host, passage); passages.push(passage); }
+
+    const text = el.textContent!.trim();
     el.textContent = '';
-    src.forEach((w) => { const s = document.createElement('span'); s.className = 'w'; s.textContent = w; el.appendChild(s); el.appendChild(document.createTextNode(' ')); words.push(s); });
-    return { el, words };
-  });
+    for (const ch of text) {
+      if (ch === ' ') { el.appendChild(document.createTextNode(' ')); continue; }
+      const span = document.createElement('span');
+      span.className = 'rv';
+      span.textContent = ch;
+      el.appendChild(span);
+      passage.units.push(span);
+      passage.last.push(-1);
+    }
+  }
 
   // sticky with a negative top: the block scrolls normally until its end meets
   // the bottom of the viewport, then holds there through the spacer
@@ -37,10 +55,20 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
     const y = scrollY, vh = innerHeight;
     if (veil) veil.style.opacity = (Math.max(0, Math.min(1, (y - vh * 0.45) / (vh * 0.85))) * 0.82).toFixed(3);
 
-    for (const { el, words } of passages) {
-      const p = (vh * 0.92 - el.getBoundingClientRect().top) / (vh * 0.6);  // fully lit by the upper third
-      const lit = Math.round(Math.max(0, Math.min(1, p)) * words.length);
-      words.forEach((w, i) => w.classList.toggle('lit', i < lit));
+    for (const { host, units, last } of passages) {
+      const r = host.getBoundingClientRect();
+      // the sweep runs while the passage crosses the middle of the screen
+      const p = Math.max(0, Math.min(1, (vh * 0.85 - r.top) / (r.height + vh * 0.25)));
+      const band = Math.max(16, units.length * REVEAL_BAND);
+      const head = p * (units.length + band);
+      for (let i = 0; i < units.length; i++) {
+        const v = Math.max(0, Math.min(1, (head - i) / band));
+        const q = Math.round(v * 50) / 50;                    // only write when it actually moves
+        if (q === last[i]) continue;
+        last[i] = q;
+        units[i].style.setProperty('--l', String(q));
+        units[i].classList.toggle('on', q > 0.5);             // for browsers without color-mix
+      }
     }
     if (rule) rule.classList.toggle('in', rule.getBoundingClientRect().top < vh * 0.88);
     // once lifted, elements stay lifted — nothing re-animates on the way back
