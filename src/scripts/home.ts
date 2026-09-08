@@ -8,6 +8,7 @@ import { createStatsReel } from './ui/statsReel';
 import { createWordmarkLetters } from './ui/wordmarkLetters';
 import { createDirectionalHover } from './ui/directionalHover';
 import { createMarquee } from './ui/marquee';
+import { createReel } from './ui/reel';
 import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
 import { createHoverAudio } from './ui/hoverAudio';
@@ -35,6 +36,7 @@ if (markHost && markHost.dataset.outline !== 'off'
 }
 createDirectionalHover();
 document.querySelectorAll<HTMLElement>('[data-marquee]').forEach(createMarquee);
+document.querySelectorAll<HTMLElement>('[data-reel]').forEach(createReel);
 createVideoInView();
 createHoverAudio(site.audio.taps);
 

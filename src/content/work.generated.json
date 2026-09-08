@@ -1,0 +1,111 @@
+[
+  {
+    "studio": "architecture-design",
+    "name": "Cedar Park",
+    "slug": "cedar-park",
+    "images": [
+      "/work/architecture-design/cedar-park/01"
+    ]
+  },
+  {
+    "studio": "architecture-design",
+    "name": "Delphi",
+    "slug": "delphi",
+    "images": [
+      "/work/architecture-design/delphi/01",
+      "/work/architecture-design/delphi/02"
+    ]
+  },
+  {
+    "studio": "architecture-design",
+    "name": "Fitness Center",
+    "slug": "fitness-center",
+    "images": [
+      "/work/architecture-design/fitness-center/01",
+      "/work/architecture-design/fitness-center/02",
+      "/work/architecture-design/fitness-center/03",
+      "/work/architecture-design/fitness-center/04",
+      "/work/architecture-design/fitness-center/05"
+    ]
+  },
+  {
+    "studio": "architecture-design",
+    "name": "Mishawaka",
+    "slug": "mishawaka",
+    "images": [
+      "/work/architecture-design/mishawaka/01",
+      "/work/architecture-design/mishawaka/02"
+    ]
+  },
+  {
+    "studio": "architecture-design",
+    "name": "Pacific Palisades Residence",
+    "slug": "pacific-palisades-residence",
+    "images": [
+      "/work/architecture-design/pacific-palisades-residence/01"
+    ]
+  },
+  {
+    "studio": "architecture-design",
+    "name": "Racel Residence",
+    "slug": "racel-residence",
+    "images": [
+      "/work/architecture-design/racel-residence/01",
+      "/work/architecture-design/racel-residence/02",
+      "/work/architecture-design/racel-residence/03",
+      "/work/architecture-design/racel-residence/04"
+    ]
+  },
+  {
+    "studio": "architecture-design",
+    "name": "Rogers Cafe",
+    "slug": "rogers-cafe",
+    "images": [
+      "/work/architecture-design/rogers-cafe/01",
+      "/work/architecture-design/rogers-cafe/02"
+    ]
+  },
+  {
+    "studio": "architecture-design",
+    "name": "RuthChris Bar",
+    "slug": "ruthchris-bar",
+    "images": [
+      "/work/architecture-design/ruthchris-bar/01",
+      "/work/architecture-design/ruthchris-bar/02"
+    ]
+  },
+  {
+    "studio": "architecture-design",
+    "name": "Swing Suite",
+    "slug": "swing-suite",
+    "images": [
+      "/work/architecture-design/swing-suite/01"
+    ]
+  },
+  {
+    "studio": "creative-media",
+    "name": "Anaconda",
+    "slug": "anaconda",
+    "images": [
+      "/work/creative-media/anaconda/01"
+    ]
+  },
+  {
+    "studio": "creative-media",
+    "name": "Grubhub",
+    "slug": "grubhub",
+    "images": [
+      "/work/creative-media/grubhub/01",
+      "/work/creative-media/grubhub/02"
+    ]
+  },
+  {
+    "studio": "creative-media",
+    "name": "Spiderman",
+    "slug": "spiderman",
+    "images": [
+      "/work/creative-media/spiderman/01",
+      "/work/creative-media/spiderman/02"
+    ]
+  }
+]

@@ -4,8 +4,21 @@
  *  under each. The clips are silent loops that only run on screen
  *  (scripts/ui/videoInView.ts). */
 import type { HomeContent } from '@lib/sanity/types';
+import work from '../../content/work.generated.json';
+
 interface Props { content: HomeContent['studios']; }
 const { content } = Astro.props;
+
+/* The studios' own work, as delivered by the client and squeezed down by
+   scripts/images.mjs. Where a studio has projects, its card shows them one at
+   a time instead of a stock clip; where it has none yet, the clip stands. */
+const FOLDER: Record<string, string> = { architecture: 'architecture-design', media: 'creative-media' };
+const reelFor = (key: string) =>
+  (work as { studio: string; name: string; images: string[] }[])
+    .filter((p) => p.studio === FOLDER[key])
+    // one frame per project: the reel is a list of what they have built, not a
+    // contact sheet of every render in a folder
+    .map((p) => ({ src: p.images[0], name: p.name }));
 ---
 {content.items.length > 0 && (
   <section class="studios" id="studios">
@@ -30,7 +43,17 @@ const { content } = Astro.props;
           </div>
         </div>
 
-        {s.media && (
+        {reelFor(s.key).length > 0 ? (
+          <div class="band" data-rise data-reel data-reel-hold="4200">
+            {reelFor(s.key).map((shot, k) => (
+              <picture class="frame" data-reel-frame={shot.name}>
+                <source srcset={`${shot.src}.avif`} type="image/avif" />
+                <img src={`${shot.src}.webp`} alt={`${shot.name} — ${s.name}`}
+                     loading={k === 0 ? 'eager' : 'lazy'} decoding="async" />
+              </picture>
+            ))}
+          </div>
+        ) : s.media && (
           <div class="band" data-rise>
             {s.media.kind === 'video' ? (
               <video data-in-view src={s.media.url} poster={s.media.poster} preload="none"
@@ -75,11 +98,14 @@ const { content } = Astro.props;
   .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
         overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-  .band { position: relative; margin-top: var(--s-6); }
-  /* the palette has no colour in it — the footage is pulled most of the way
-     out and sat back a little, so a clip never shouts over the type */
-  .band video, .band img { width: 100%; height: 100%; object-fit: cover; display: block;
-                           filter: grayscale(0.82) contrast(1.06) brightness(0.82); opacity: 0.9; }
+  .band { position: relative; margin-top: var(--s-6); overflow: hidden; }
+  /* every frame is stacked on the same spot and only opacity moves, so a
+     change is a crossfade the compositor can do on its own */
+  .frame { position: absolute; inset: 0; opacity: 0; transition: opacity 0.9s ease; }
+  .frame.on { opacity: 1; }
+  .frame:first-of-type { position: relative; }
+
+  .band video, .band img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
   /* Desktop: the words on the left, the clip on the right and out to the edge
      of the page. The card is as tall as the clip — its ratio sets the height,
