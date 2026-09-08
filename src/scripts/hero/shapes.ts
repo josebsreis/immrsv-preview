@@ -69,6 +69,11 @@ export interface ShapeDef {
   readonly bounds: readonly [number, number, number, number, number, number];
   /** multiplied onto the authored coordinates before they reach the mark */
   readonly scale: number;
+  /** a slow lean, strongest at the top and nothing at the foot — for things
+   *  that are rooted and would move in air */
+  readonly sway?: number;
+  /** a slow rise and fall of the whole form, for things that would not */
+  readonly bob?: number;
   /** lifted by this after scaling, so the shape sits centred on the pivot */
   readonly lift: number;
 }
@@ -111,35 +116,12 @@ const FIGURE: ShapeDef = {
   },
 };
 
-/** A house. A gable and a chimney read at a glance, which a clever modernist
- *  section does not — at this resolution the silhouette is the whole argument. */
-const HOUSE: ShapeDef = {
-  name: 'house',
-  scale: 1.95,
-  lift: -0.47,
-  bounds: [-0.62, -0.02, -0.46, 0.62, 0.98, 0.46],
-  sdf(x, y, z) {
-    // Legibility beats realism here: a steep gable, a deep eave and openings
-    // big enough to punch daylight through the walls. A gentler roof reads as
-    // a box the moment the turn takes it edge-on.
-    let walls = roundBox(x, y - 0.24, z, 0.34, 0.24, 0.26, 0.01);
-    walls = sub(walls, roundBox(x + 0.13, y - 0.15, z - 0.26, 0.085, 0.155, 0.07, 0.008));   // door
-    walls = sub(walls, roundBox(x - 0.17, y - 0.33, z - 0.26, 0.09, 0.085, 0.07, 0.008));    // front window
-    walls = sub(walls, roundBox(x - 0.34, y - 0.32, z, 0.07, 0.09, 0.10, 0.008));            // side window
-    walls = sub(walls, roundBox(x + 0.34, y - 0.32, z, 0.07, 0.09, 0.10, 0.008));
-    // the roof: steep, and oversailing far enough to throw its own line
-    const roof = gable(x, y - 0.47, z, 0.44, 0.44, 0.31);
-    let d = uni(walls, roof);
-    d = uni(d, roundBox(x - 0.20, y - 0.76, z + 0.10, 0.04, 0.13, 0.04, 0.006));             // chimney
-    return d;
-  },
-};
-
 /** A tree: the one form here that reads at a glance from any angle, which is
  *  most of why it earns its place. */
 const TREE: ShapeDef = {
   name: 'tree',
   src: '/shapes/tree.bin',
+  sway: 0.055,
   scale: 2.08,
   lift: -0.5,
   bounds: [-0.42, -0.02, -0.42, 0.42, 1.0, 0.42],
@@ -158,6 +140,8 @@ const TREE: ShapeDef = {
  *  read as a surface, not a brick. */
 const SCREEN: ShapeDef = {
   name: 'screen',
+  bob: 0.022,
+  sway: 0.008,
   scale: 2.15,
   lift: -0.44,
   bounds: [-0.52, -0.04, -0.36, 0.52, 0.92, 0.36],
@@ -177,12 +161,14 @@ const SCREEN: ShapeDef = {
 /* The forms are not an illustration of the three studios — the headline says
    what the work is. They are here to show the mark making things, so the only
    rule is that each one reads at a glance. */
-export const SHAPES: readonly ShapeDef[] = [HOUSE, TREE, FIGURE, SCREEN];
+export const SHAPES: readonly ShapeDef[] = [TREE, FIGURE, SCREEN];
 
 /* ── sampling ─────────────────────────────────────────────────────── */
 
 /** the mark's pivot: shapes are centred here so they turn on the spot */
 const PIVOT = 1 / 3;
+/** the height a form's foot sits at, in the mark's own coordinates */
+export const formFloor = (def: ShapeDef) => PIVOT + def.lift * def.scale;
 
 /* ── baked clouds ─────────────────────────────────────────────────── */
 

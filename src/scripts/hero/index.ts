@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { HERO_CONFIG, type HeroConfig } from './config';
 import { FACE_BASES, SPIN_AXIS, buildPlate, makeParticleMaterial, type PlateSim } from './mark';
 import { simulate } from './sim';
-import { SHAPES, cloudFor, loadCloud, poseInto, shapeTargets, skinnedIndices } from './shapes';
+import { SHAPES, cloudFor, formFloor, loadCloud, poseInto, shapeTargets, skinnedIndices } from './shapes';
 import { loadSkin, skinFor } from './skin';
 import { createLens } from './lens';
 import { createPointer } from './pointer';
@@ -332,6 +332,17 @@ export function createHero(opts: HeroOptions): Hero {
     // began while the first was still pulling back, so the cloud opened,
     // hesitated, and only then left.
     const burst = exit * exit * cfg.exit.burst;
+    // Air. A form that only turns is a model on a turntable; a slow lean at the
+    // top, or a rise and fall of the whole thing, is the difference between an
+    // object and something standing there. The wave is worked out once a frame
+    // and each particle takes its own share of it, so it costs no trigonometry
+    // per point.
+    const def = shape >= 0 ? SHAPES[shape] : null;
+    const swayX = def?.sway ? def.sway * Math.sin(t * 0.62) : 0;
+    const swayZ = def?.sway ? def.sway * 0.7 * Math.cos(t * 0.47) : 0;
+    const bobY = def?.bob ? def.bob * Math.sin(t * 0.55) : 0;
+    const floorY = def ? formFloor(def) : 0;
+    const invH = def ? 1 / def.scale : 1;
 
     // parallax: the mark sways with the cursor inside a hard clamp
     P.x += (P.tx - P.x) * 0.08; P.y += (P.ty - P.y) * 0.08;
@@ -393,6 +404,16 @@ export function createHero(opts: HeroOptions): Hero {
             tx = tp[i3] + (tx - tp[i3]) * e;
             ty = tp[i3 + 1] + (ty - tp[i3 + 1]) * e;
             tz = tp[i3 + 2] + (tz - tp[i3 + 2]) * e;
+          }
+          if (def && w > 0.02) {
+            // rooted at the foot, loosest at the head — and each particle
+            // takes a slightly different share, so the form bends rather
+            // than sliding
+            const h = clamp((ty - floorY) * invH, 0, 1);
+            const lean = h * h * (0.7 + 0.6 * when[j]) * w;
+            tx += swayX * lean;
+            tz += swayZ * lean;
+            ty += bobY * w;
           }
           // some of the cursor's push survives, so a standing form is still
           // something you can put your hand through
