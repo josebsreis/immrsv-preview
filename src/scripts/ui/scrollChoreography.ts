@@ -25,7 +25,14 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
   const rows = shutter ? (Array.from(shutter.children) as HTMLElement[]) : [];
   const next = document.querySelector<HTMLElement>('[data-next]');
   const themed = document.querySelectorAll<HTMLElement>('[data-theme-follows]');
-  const rising = Array.from(document.querySelectorAll<HTMLElement>('[data-rise]'));
+  /* Anything that lifts into place is watched by the browser rather than
+     measured on every scroll: it reports the moment an element crosses the
+     lower part of the screen, whether or not a scroll event ever reached us,
+     and it costs nothing between times. Once lifted, an element stays lifted. */
+  const rising = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) { e.target.classList.add('in'); rising.unobserve(e.target); }
+  }, { rootMargin: '0px 0px -14% 0px' });
+  document.querySelectorAll<HTMLElement>('[data-rise]').forEach((el) => rising.observe(el));
   const hold = document.querySelector<HTMLElement>('[data-hold]');
   const scrim = document.querySelector<HTMLElement>('[data-scrim]');
   const light = document.querySelector<HTMLElement>('[data-shutter-scroll]')?.parentElement ?? null;
@@ -92,8 +99,6 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
     }
 
     if (rule) rule.classList.toggle('in', rule.getBoundingClientRect().top < vh * 0.88);
-    // once lifted, elements stay lifted — nothing re-animates on the way back
-    for (const el of rising) if (!el.classList.contains('in') && el.getBoundingClientRect().top < vh * 0.86) el.classList.add('in');
 
     // how far the light half has climbed over the held one: 0 as its head
     // reaches the bottom of the screen, 1 once it owns the whole of it
@@ -129,5 +134,5 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
   addEventListener('resize', onResize);
   fitHold(); setTimeout(fitHold, 120); update();
 
-  return { update, destroy() { removeEventListener('scroll', update); removeEventListener('resize', onResize); } };
+  return { update, destroy() { rising.disconnect(); removeEventListener('scroll', update); removeEventListener('resize', onResize); } };
 }

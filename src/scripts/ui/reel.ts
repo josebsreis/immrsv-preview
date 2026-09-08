@@ -94,8 +94,15 @@ export function createReel(el: HTMLElement): Reel {
     const r = el.getBoundingClientRect();
     if (r.height < 1) return;
     if (pointer.x < r.left || pointer.x > r.right || pointer.y < r.top || pointer.y > r.bottom) return;
-    const t = (pointer.y - r.top) / r.height;
-    const i = Math.min(frames.length - 1, Math.max(0, Math.floor(t * frames.length)));
+    // Hysteresis. A hand at rest still trembles, and a page under a still
+    // hand moves in steps; either one sitting on the line between two bands
+    // would flip the frame back and forth — the flicker to the second picture
+    // and back on the way in. So the pointer has to be a third of a band past
+    // the line before the frame follows it.
+    const pos = ((pointer.y - r.top) / r.height) * frames.length;
+    let i = at;
+    if (pos > at + 1.33) i = Math.min(frames.length - 1, Math.floor(pos));
+    else if (pos < at - 0.33) i = Math.max(0, Math.floor(pos));
     show(i, i > at);
   };
   const onTap = () => show((at + 1) % frames.length, true);
