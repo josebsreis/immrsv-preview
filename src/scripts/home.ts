@@ -7,6 +7,7 @@ import { createRotatingWord } from './ui/rotatingWord';
 import { createStatsReel } from './ui/statsReel';
 import { createWordmarkLetters } from './ui/wordmarkLetters';
 import { createDirectionalHover } from './ui/directionalHover';
+import { createMarquee } from './ui/marquee';
 import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
 import { createHoverAudio } from './ui/hoverAudio';
@@ -33,6 +34,7 @@ if (markHost && markHost.dataset.outline !== 'off'
   createWordmarkLetters(markHost);
 }
 createDirectionalHover();
+document.querySelectorAll<HTMLElement>('[data-marquee]').forEach(createMarquee);
 createVideoInView();
 createHoverAudio(site.audio.taps);
 

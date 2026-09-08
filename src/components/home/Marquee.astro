@@ -12,8 +12,8 @@ const { items, label = 'What we do' } = Astro.props;
 /** twice through, so the second run is already in place when the first leaves */
 const runs = [0, 1];
 ---
-<section class="band" aria-label={label}>
-  <div class="track" aria-hidden="true">
+<section class="band" aria-label={label} data-marquee data-marquee-speed="46" data-marquee-drag="2.1">
+  <div class="track" data-marquee-track aria-hidden="true">
     {runs.map(() => (
       <div class="run">
         {items.map((item) => (
@@ -33,7 +33,11 @@ const runs = [0, 1];
           border-top: var(--hairline) solid var(--line);
           border-bottom: var(--hairline) solid var(--line);
           overflow: hidden; }
-  .track { display: flex; width: max-content; animation: run 42s linear infinite; }
+  /* the run is driven from a script — one transform a frame — so that the
+     scroll can lend it speed and turn it round; with no script it still runs,
+     on the keyframes below */
+  .track { display: flex; width: max-content; animation: run 42s linear infinite; will-change: transform; }
+  [data-marquee-status] .track { animation: none; }
   .run { display: flex; flex: none; }
 
   .item { display: flex; align-items: center; gap: 1.15em;
@@ -41,8 +45,12 @@ const runs = [0, 1];
           font-size: clamp(1.5rem, 4vw, 3rem);
           font-weight: 500; letter-spacing: -0.02em; line-height: 1;
           white-space: nowrap; color: var(--ink-2); }
-  /* the squares of the lattice, at the scale of a word */
-  .dot { flex: none; width: 0.26em; height: 0.26em; background: var(--ink-4); margin-right: 0.35em; }
+  /* the squares of the lattice, at the scale of a word. They stand on their
+     corner when the band turns round — a square rotated by anything but 45°
+     is a square, so this is the one angle that shows */
+  .dot { flex: none; width: 0.26em; height: 0.26em; background: var(--ink-4); margin-right: 0.35em;
+         transition: transform 0.5s cubic-bezier(0.625, 0.05, 0, 1), background-color 0.5s ease; }
+  [data-marquee-status="inverted"] .dot { transform: rotate(45deg); background: var(--ink-2); }
 
   @keyframes run { to { transform: translateX(-50%); } }
 
