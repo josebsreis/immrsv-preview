@@ -25,7 +25,9 @@ import { LETTERMARK } from '@lib/lettermark';
   .ltr {
     fill: currentColor; fill-opacity: 0;
     stroke: currentColor; stroke-width: 1px; vector-effect: non-scaling-stroke;
-    stroke-opacity: 0.55;
+    /* --formed is written by the choreography: 0 while the particles are still
+       arriving, 1 once they have landed and the drawn mark can take over */
+    stroke-opacity: calc(0.55 * var(--formed, 1));
     pointer-events: fill;
     transform-box: fill-box; transform-origin: 50% 50%;
   }
