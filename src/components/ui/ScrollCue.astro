@@ -1,9 +1,11 @@
 ---
-/** Three squares with the light stepping down through them, and a label. */
-interface Props { href?: string; label?: string; class?: string; }
-const { href = '#about', label = 'Scroll down', class: cls } = Astro.props;
+/** Three squares with the light stepping down through them, and a label.
+ *  On phones the label is dropped (kept for screen readers) so the cue takes
+ *  no more room than the squares themselves — pass compact={false} to keep it. */
+interface Props { href?: string; label?: string; compact?: boolean; class?: string; }
+const { href = '#about', label = 'Scroll down', compact = true, class: cls } = Astro.props;
 ---
-<a class:list={['cue', 'arrives', cls]} href={href} data-tap style="--arrive-delay: .8s">
+<a class:list={['cue', 'arrives', { compact }, cls]} href={href} data-tap style="--arrive-delay: .8s">
   <span class="stack" aria-hidden="true"><i></i><i></i><i></i></span>
   <span class="label">{label}</span>
 </a>
@@ -17,4 +19,11 @@ const { href = '#about', label = 'Scroll down', class: cls } = Astro.props;
   .stack i:nth-child(3) { animation-delay: 0.56s; }
   @keyframes cueStep { 0%, 60%, 100% { opacity: 0.18; } 18% { opacity: 1; } }
   .label { letter-spacing: var(--track-wide); }
+
+  @media (max-width: 719px) {
+    .cue.compact { gap: 0; }
+    /* the squares alone, but the label stays readable to assistive tech */
+    .cue.compact .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .cue.compact .stack { padding-right: 0; }
+  }
 </style>
