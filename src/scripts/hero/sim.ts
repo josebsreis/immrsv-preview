@@ -73,9 +73,12 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
       const dn = dx * n[0] + dy * n[1] + dz * n[2];            // in-plane distance only
       dx -= dn * n[0]; dy -= dn * n[1]; dz -= dn * n[2];
       const d = Math.hypot(dx, dy, dz);
-      if (shock || d < C.reach) {
-        const fall = 1 - d / C.reach;
-        const a = shock ? cfg.strike.press * gain[j] / (d + 0.12) : press * fall * fall * gain[j] / Math.max(d, 0.07);
+      const K = cfg.strike, reach = shock ? K.reach : C.reach;
+      if (d < reach) {
+        const fall = 1 - d / reach;
+        // the blast falls away over its own radius, so it is a punch landing
+        // where the cursor is rather than a shove the whole mark feels
+        const a = shock ? K.press * fall * fall * gain[j] / (d + 0.12) : press * fall * fall * gain[j] / Math.max(d, 0.07);
         const c = Math.cos(jit[j]), s_ = Math.sin(jit[j]);     // rotate the push by this particle's jitter
         const cx = n[1] * dz - n[2] * dy, cy = n[2] * dx - n[0] * dz, cz = n[0] * dy - n[1] * dx;
         vx += (dx * c + cx * s_) * a; vy += (dy * c + cy * s_) * a; vz += (dz * c + cz * s_) * a;

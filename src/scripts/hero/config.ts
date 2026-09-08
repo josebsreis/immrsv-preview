@@ -70,8 +70,12 @@ export const HERO_CONFIG = {
 
   /** the click strike */
   strike: {
-    press: 2.4,                   // blast strength
-    spin: 2.6,                    // spin impulse per click
+    press: 3.2,                   // blast strength
+    reach: 0.42,                  // how far the blast carries, plate units — it
+                                  //   is a punch where the cursor is, not a
+                                  //   shove felt by the whole mark
+    spin: 0.8,                    // a small turn of the whole mark per click —
+                                  //   the blast itself is local, so this stays light
     fluidForce: 2200,
     fluidDye: 0.1,
     fluidRadius: 0.0035,
