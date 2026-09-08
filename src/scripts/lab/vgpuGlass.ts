@@ -18,7 +18,7 @@ struct U {
   time: f32,
   spin: f32,       // the turn about the cube's diagonal
   ior: f32,        // how hard the glass bends light
-  rough: f32,      // how soft the strips read in it
+  mirror: f32,     // how much of the room the surface returns
   _pad: f32,
 };
 @group(0) @binding(0) var<uniform> u: U;
@@ -64,23 +64,35 @@ fn normalAt(p: vec3f) -> vec3f {
                          map(p + e.yyx) - map(p - e.yyx)));
 }
 
-/* The room: black, with a few hard-edged strips — the softboxes of a dark
-   studio. Narrow and very bright, so a face catches a streak rather than a
-   wash, which is what makes a surface read as glass rather than as plastic. */
+/* The room, for what the surface mirrors: black, with a few soft strips — the
+   softboxes of a dark studio. Kept dim, so reflection never takes the object
+   over; it is the transmission that should carry it. */
 fn studio(d: vec3f) -> vec3f {
   let n = normalize(d);
   var l = 0.0;
-  // the key: a long strip above and behind
-  l = l + smoothstep(0.88, 0.995, dot(n, normalize(vec3f(-0.32, 0.92, -0.22)))) * 9.0;
-  // a hard rim strip to the right
-  l = l + smoothstep(0.93, 0.998, dot(n, normalize(vec3f(0.96, 0.1, 0.26)))) * 7.0;
-  // a second, cooler strip behind the left shoulder
-  l = l + smoothstep(0.90, 0.995, dot(n, normalize(vec3f(-0.75, 0.25, 0.62)))) * 4.0;
-  // a dim floor bounce, so the underside is not dead
-  l = l + smoothstep(0.4, 1.0, -n.y) * 0.5;
-  // and the faintest sky gradient, to give the reflection somewhere to fall
-  l = l + max(0.0, n.y) * 0.25;
+  l = l + smoothstep(0.90, 0.998, dot(n, normalize(vec3f(-0.32, 0.92, -0.22)))) * 3.4;
+  l = l + smoothstep(0.94, 0.999, dot(n, normalize(vec3f(0.96, 0.1, 0.26)))) * 2.4;
+  l = l + smoothstep(0.92, 0.997, dot(n, normalize(vec3f(-0.75, 0.25, 0.62)))) * 1.4;
+  l = l + max(0.0, n.y) * 0.06;
   return vec3f(0.95, 0.97, 1.0) * l;
+}
+
+/* What is behind the glass — and only there. The page is black, so a hidden
+   field is drawn for the refracted ray alone: a lattice of thin lines with a
+   drift through it. You never see it directly; you see it bent, which is what
+   makes the mark read as something you look through rather than at. */
+fn hidden(d: vec3f, t: f32) -> vec3f {
+  let n = normalize(d);
+  // a lattice, in the ray's own direction
+  let a = atan2(n.z, n.x) * 3.0 + t * 0.15;
+  let b = asin(clamp(n.y, -1.0, 1.0)) * 5.0 - t * 0.1;
+  let lines = pow(abs(sin(a)), 34.0) + pow(abs(sin(b)), 34.0);
+  // a few soft lights adrift in it
+  var blobs = 0.0;
+  blobs = blobs + pow(max(0.0, dot(n, normalize(vec3f(sin(t * 0.21), 0.35, cos(t * 0.21))))), 140.0) * 3.0;
+  blobs = blobs + pow(max(0.0, dot(n, normalize(vec3f(cos(t * 0.13), -0.5, sin(t * 0.17))))), 90.0) * 1.6;
+  let depth = 0.16 + 0.34 * max(0.0, n.y);
+  return vec3f(0.86, 0.91, 1.0) * (lines * 1.35 + blobs * 1.4) + vec3f(0.34, 0.38, 0.5) * depth;
 }
 
 @fragment
@@ -114,7 +126,8 @@ fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
     let n = normalAt(pos);
     let v = -rd;
     let cosi = clamp(dot(n, v), 0.0, 1.0);
-    let f = 0.04 + 0.96 * pow(1.0 - cosi, 5.0);   // Fresnel: edges mirror, faces let through
+    // Fresnel, held back: only the grazing edge turns to mirror, the rest is glass
+    let f = (0.03 + 0.97 * pow(1.0 - cosi, 5.0)) * u.mirror;
 
     // what the surface mirrors
     let refl = studio(reflect(rd, n));
@@ -122,7 +135,7 @@ fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
     // and what it lets through: bend in, cross the slab, bend out — each
     // channel bending a little differently, which is the tell for glass
     var thru = vec3f(0.0);
-    let iors = vec3f(u.ior - 0.022, u.ior, u.ior + 0.022);
+    let iors = vec3f(u.ior - 0.055, u.ior, u.ior + 0.055);
     for (var c = 0; c < 3; c = c + 1) {
       let ior = iors[c];
       let inDir = refract(rd, n, 1.0 / ior);
@@ -136,13 +149,13 @@ fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
       let exitN = -normalAt(exitP);
       var outDir = refract(inDir, exitN, ior);
       if (length(outDir) < 0.001) { outDir = reflect(inDir, exitN); }
-      let lit = studio(outDir) * exp(-t * 1.6);
+      let lit = (hidden(outDir, u.time) + studio(outDir) * 0.22) * exp(-t * 0.6);
       if (c == 0) { thru.r = lit.r; } else if (c == 1) { thru.g = lit.g; } else { thru.b = lit.b; }
     }
 
     // the lit edge itself: where the normal turns fastest, glass catches light
-    let edge = pow(1.0 - cosi, 3.0);
-    col = mix(thru, refl, f) + vec3f(0.9, 0.94, 1.0) * edge * 0.35;
+    let edge = pow(1.0 - cosi, 6.0);
+    col = mix(thru, refl, f) + vec3f(0.9, 0.94, 1.0) * edge * 0.5;
     col = col / (col + vec3f(1.15));             // roll the highlights off rather than clipping
     col = pow(col, vec3f(0.85));
   }
@@ -161,8 +174,8 @@ export async function startGlass(canvas: HTMLCanvasElement) {
     mouse: [0.5, 0.5],
     time: 0,
     spin: 0,
-    ior: 1.48,
-    rough: 0.12,
+    ior: 1.52,
+    mirror: 0.55,
     _pad: 0,
   });
   const pass = effect(gpu, WGSL).set({ u });
