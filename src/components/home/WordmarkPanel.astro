@@ -2,14 +2,14 @@
 /** The name at full width, drawn rather than set: a hairline outline whose
  *  letters are separate objects. Touching one shoves it along the pointer's
  *  travel, spins it about its centre and lights it at once; a spring returns
- *  it and the light stutters out like a tube giving up.
+ *  it and the light fades back off.
  *  Behaviour lives in scripts/ui/wordmarkLetters.ts. */
 import { LETTERMARK } from '@lib/lettermark';
 ---
 <section class="panel" aria-label="IMMRSV">
   <div class="mark arrives" data-wordmark style="--arrive-delay: .2s">
     <svg viewBox={LETTERMARK.viewBox} role="img" aria-label="IMMRSV">
-      {LETTERMARK.paths.map((d, i) => <path class="ltr" data-letter d={d} style={`--i: ${i}`} />)}
+      {LETTERMARK.paths.map((d) => <path class="ltr" data-letter d={d} />)}
     </svg>
   </div>
 </section>
@@ -29,32 +29,14 @@ import { LETTERMARK } from '@lib/lettermark';
     pointer-events: fill;
     transform-box: fill-box; transform-origin: 50% 50%;
   }
+  /* letting go fades it; touching it does not — see .lit below */
+  .ltr { transition: fill-opacity 0.95s ease, stroke-opacity 0.95s ease; }
   /* contact is instant — no ramp, the light is simply on */
-  .ltr.lit { fill-opacity: 1; stroke-opacity: 1; }
-
-  /* and it goes out the way a failing tube does: holding, cutting, catching
-     again, until it gives up. steps() so every change is a snap, never a fade */
-  .ltr.out { animation: dieOut calc(0.8s + var(--i, 0) * 0.06s) steps(1, end) both; }
-  @keyframes dieOut {
-    0%   { fill-opacity: 1;    stroke-opacity: 1; }
-    9%   { fill-opacity: 0;    stroke-opacity: 0.55; }
-    13%  { fill-opacity: 1;    stroke-opacity: 1; }
-    26%  { fill-opacity: 0;    stroke-opacity: 0.55; }
-    30%  { fill-opacity: 0.85; stroke-opacity: 1; }
-    38%  { fill-opacity: 0;    stroke-opacity: 0.55; }
-    46%  { fill-opacity: 0.6;  stroke-opacity: 0.9; }
-    52%  { fill-opacity: 0;    stroke-opacity: 0.55; }
-    70%  { fill-opacity: 0.35; stroke-opacity: 0.8; }
-    74%  { fill-opacity: 0;    stroke-opacity: 0.55; }
-    88%  { fill-opacity: 0.14; stroke-opacity: 0.7; }
-    92%  { fill-opacity: 0;    stroke-opacity: 0.55; }
-    100% { fill-opacity: 0;    stroke-opacity: 0.55; }
-  }
+  .ltr.lit { fill-opacity: 1; stroke-opacity: 1; transition: none; }
 
   /* nothing to shove without a pointer, so the mark simply stands solid */
   @media (hover: none), (prefers-reduced-motion: reduce) {
-    .ltr { fill-opacity: 1; stroke-opacity: 1; }
-    .ltr.out { animation: none; }
+    .ltr { fill-opacity: 1; stroke-opacity: 1; transition: none; }
   }
   @media (max-width: 719px) { .panel { padding: 0 1.25rem; } }
 </style>
