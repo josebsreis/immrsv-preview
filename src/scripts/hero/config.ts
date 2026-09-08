@@ -95,7 +95,6 @@ export const HERO_CONFIG = {
   /** the scroll exit: the mark lets go, bursts outward and goes out with the
    *  first screen — it belongs to the hero and to nothing after it */
   exit: {
-    loosen: 1.2,
     burst: 7,         // how far the particles are thrown as the hero leaves
     spin: 0.04,       // what is left of the cruise rotation on the way out
     dim: 1,           // and it goes out entirely

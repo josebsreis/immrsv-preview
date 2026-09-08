@@ -327,9 +327,11 @@ export function createHero(opts: HeroOptions): Hero {
     if (mix < 1) mix = clamp(mix + dt / S.beat.cross, 0, 1);
     if (mix >= 1) { prev = -1; held = false; }
     const cross = mix * mix * (3 - 2 * mix);
-    // the throw: nothing until the hero starts to leave, then everything
-    const bt = clamp((exit - 0.08) / 0.92, 0, 1);
-    const burst = bt * bt * cfg.exit.burst;
+    // The throw: one curve from the first pixel of scroll to gone. It used to
+    // be two — a loosening that swelled and settled, and this — and the second
+    // began while the first was still pulling back, so the cloud opened,
+    // hesitated, and only then left.
+    const burst = exit * exit * cfg.exit.burst;
 
     // parallax: the mark sways with the cursor inside a hard clamp
     P.x += (P.tx - P.x) * 0.08; P.y += (P.ty - P.y) * 0.08;

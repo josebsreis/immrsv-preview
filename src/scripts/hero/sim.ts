@@ -46,17 +46,16 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
     }
   } else S.hadM = false;
 
+  const ex = ctx.exit;
   const { home, off, ain, sim, intro, over, seedv, iDelay, iDur, vel, stiff, damp, jit, gain, total } = S;
   const stagger = ctx.reduced ? 0 : I.stagger, dur = ctx.reduced ? 0.01 : I.duration;
   const it = t - ctx.introT0, building = it < stagger + dur * 1.25 + 0.1;
   const press = (C.rest + speed * C.speed) * dt * 60 * C.gain;
   // one strike impulse per plate per click, and none before the first click
   const shock = hit && ctx.shockT > 0 && S.shockSeen !== ctx.shockT; if (shock) S.shockSeen = ctx.shockT;
-  // the exit: the mark lets go as the first screen leaves. The burst itself is
-  // applied after any standing form, in the hero — thrown from where the
-  // particles actually are, rather than from where the cube would have been.
-  const ex = ctx.exit;
-  const loosen = ex > 0 ? sm(0, 0.16, ex) * (1 - sm(0.12, 0.45, ex)) : 0;
+  // The exit is one motion and it belongs to the hero: the throw is applied
+  // there, after any standing form, so every particle leaves from where it
+  // actually is. Nothing about it happens here.
 
   for (let j = 0; j < total; j++) {
     const i3 = j * 3;
@@ -102,12 +101,6 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
         ain[j] = Math.min(1, e * 1.25);                        // from nothing, brightening as it opens out
       }
     } else ain[j] = 1;
-
-    if (ex > 0) {
-      ox += over[i3] * loosen * X.loosen;
-      oy += over[i3 + 1] * loosen * X.loosen;
-      oz += over[i3 + 2] * loosen * X.loosen;
-    }
 
     if (ctx.out > 0) ain[j] *= 1 - ctx.out * X.dim;
     off[i3] = ox; off[i3 + 1] = oy; off[i3 + 2] = oz;
