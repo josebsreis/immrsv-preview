@@ -54,8 +54,16 @@ h1, h2, h3 { font-weight: 500; }
 body.ready .arrives { animation: arrive var(--dur-slow) ease both; animation-delay: var(--arrive-delay, 0.6s); }
 @keyframes arrive { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
 
+/* anything that lifts into place as it is scrolled to; the choreography
+   adds .in. --i staggers a group without a rule per child. */
+[data-rise] { opacity: 0; transform: translateY(1.25rem);
+  transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 0.08s); }
+[data-rise].in { opacity: 1; transform: none; }
+
 @media (prefers-reduced-motion: reduce) {
   .arrives, body.ready .arrives { animation: none; opacity: 1; }
+  [data-rise] { opacity: 1; transform: none; }
   * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
 

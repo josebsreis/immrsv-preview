@@ -33,6 +33,34 @@ export const home = defineType({
         defineField({ name: 'caps', title: 'Three lines (caps)', type: 'text', rows: 3 }),
         defineField({ name: 'body', type: 'text', rows: 4 }),
         defineField({ name: 'cta', title: 'Button', ...cta }),
+        defineField({
+          name: 'facts',
+          title: 'Facts row',
+          description: 'A figure and what it counts. Four reads best; leave empty to hide the row.',
+          type: 'array',
+          of: [{
+            type: 'object',
+            fields: [
+              defineField({ name: 'value', type: 'string' }),
+              defineField({ name: 'label', type: 'string' }),
+            ],
+            preview: { select: { title: 'value', subtitle: 'label' } },
+          }],
+        }),
+        defineField({
+          name: 'principles',
+          title: 'Positions',
+          description: 'Numbered automatically. Three reads best; leave empty to hide the block.',
+          type: 'array',
+          of: [{
+            type: 'object',
+            fields: [
+              defineField({ name: 'title', type: 'string' }),
+              defineField({ name: 'text', type: 'text', rows: 3 }),
+            ],
+            preview: { select: { title: 'title', subtitle: 'text' } },
+          }],
+        }),
       ],
     }),
     defineField({ name: 'featuredProject', type: 'reference', to: [{ type: 'project' }] }),

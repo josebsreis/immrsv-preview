@@ -14,7 +14,7 @@ const projectFields = `{
 
 const homeQuery = `*[_type == "home"][0]{
   hero{ headline, words, description, primaryCta, secondaryCta },
-  about{ tag, statement, caps, body, cta },
+  about{ tag, statement, caps, body, cta, facts, principles },
   "featuredProject": featuredProject-> ${projectFields}
 }`;
 

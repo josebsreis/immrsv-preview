@@ -40,7 +40,7 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
      viewport; the spacer is the scroll the shutter plays across */
   .stage { position: relative; z-index: 1; }
   .pin { position: sticky; top: 0; }               /* top is set in JS: viewport − content */
-  .spacer { height: 110vh; }
+  .spacer { height: 150vh; }   /* the first 30% is the hold, the rest the shutter */
   /* pulled under the shutter, shown once it is white */
   .next { position: relative; z-index: 2; margin-top: -102vh; visibility: hidden; min-height: 140vh;
           background: var(--ground); color: var(--ink); padding: 18vh var(--page-x) 12vh; }

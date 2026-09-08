@@ -2,6 +2,12 @@ import type { StudioKey } from '@lib/site';
 
 export interface Cta { label: string; href: string; }
 
+/** a figure and what it counts — the row under the About columns */
+export interface Fact { value: string; label: string; }
+
+/** a numbered position the practice takes */
+export interface Principle { title: string; text: string; }
+
 export interface ImageRef {
   url: string;          // resolved URL (Sanity CDN or local fallback)
   alt?: string;
@@ -38,6 +44,9 @@ export interface HomeContent {
     caps: string;
     body: string;
     cta: Cta;
+    /** optional blocks — each renders only when the editor fills it */
+    facts?: Fact[];
+    principles?: Principle[];
   };
   featuredProject?: Project;
 }

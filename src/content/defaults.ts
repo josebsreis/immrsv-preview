@@ -33,6 +33,26 @@ export const defaultHome: HomeContent = {
     caps: 'Drawn with precision,\nbuilt with intent,\nexperienced as one.',
     body: 'Our work begins at the drawing and carries through to the built experience — spaces, images and interfaces made by one team, so nothing is lost between them.',
     cta: { label: 'More about us', href: '/#about' },
+    facts: [
+      { value: '2019', label: 'Founded' },
+      { value: '03', label: 'Studios, one team' },
+      { value: '40+', label: 'Projects delivered' },
+      { value: 'Lisbon', label: 'Working across Europe' },
+    ],
+    principles: [
+      {
+        title: 'One team, one thread',
+        text: 'The people who draw the space are in the room when the film is cut and the interface is built. Nothing is handed over and explained twice.',
+      },
+      {
+        title: 'Drawn before it is built',
+        text: 'Every project starts as a drawing at real scale. Decisions get made where they are still cheap to make, not on site.',
+      },
+      {
+        title: 'Made to be used',
+        text: 'A space, a film or a product is finished when someone moves through it without noticing the work that went in.',
+      },
+    ],
   },
   featuredProject: defaultProjects[0],
 };

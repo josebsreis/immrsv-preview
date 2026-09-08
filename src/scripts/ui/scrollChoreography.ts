@@ -18,6 +18,7 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
   const shutter = document.querySelector<HTMLElement>('[data-shutter]');
   const strips = shutter ? Array.from(shutter.children) as HTMLElement[] : [];
   const themed = document.querySelectorAll<HTMLElement>('[data-theme-follows]');
+  const rising = Array.from(document.querySelectorAll<HTMLElement>('[data-rise]'));
 
   // wrap every word of the statement so each can be lit on its own
   const words: HTMLElement[] = [];
@@ -42,13 +43,19 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
       words.forEach((w, i) => w.classList.toggle('lit', i < lit));
     }
     if (rule) rule.classList.toggle('in', rule.getBoundingClientRect().top < vh * 0.88);
+    // once lifted, elements stay lifted — nothing re-animates on the way back
+    for (const el of rising) if (!el.classList.contains('in') && el.getBoundingClientRect().top < vh * 0.86) el.classList.add('in');
 
     if (!spacer || !next) return;
     const exitEnd = spacer.offsetTop - vh + spacer.offsetHeight;
     hero?.setExit((y - vh * 0.25) / (exitEnd - vh * 0.25));
 
     const sr = spacer.getBoundingClientRect();
-    const sp = Math.max(0, Math.min(1, (vh - sr.top) / sr.height));
+    // the first slice of the spacer is a hold: the pinned block sits still and
+    // its last block can be read before the shutter starts closing
+    const HOLD = 0.3;
+    const raw = Math.max(0, Math.min(1, (vh - sr.top) / sr.height));
+    const sp = Math.max(0, (raw - HOLD) / (1 - HOLD));
     const N = strips.length, S = 0.62;                                 // bars fill mostly one by one
     strips.forEach((strip, k) => {
       const start = ((N - 1 - k) / (N - 1)) * S;
