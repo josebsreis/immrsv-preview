@@ -103,6 +103,9 @@ export const HERO_CONFIG = {
     touch: 0.4,           // how much of the cursor's push survives inside a shape
     flat: 0.75,           // how even the points go as a form resolves
     turntable: 0.85,      // the vertical turn, as a share of the cruise spin
+    shrink: 0.52,         // how far the mark draws in while it is working: small
+                          //   and spinning reads as a thing loading, where the
+                          //   same speed at full size reads as a thing lost
     whirl: 16,            // how much faster the mark turns while it is working:
                           //   the cube between two forms is the thing spinning
                           //   them up, not a pose it holds

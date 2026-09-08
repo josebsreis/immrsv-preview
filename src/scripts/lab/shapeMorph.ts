@@ -234,6 +234,7 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
     qSpin.setFromAxisAngle(_axis, spinAngle);
     qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble * (1 - e));
     L0.quaternion.copy(qSpin).multiply(qTilt);
+    L0.scale.setScalar(1 - whirl * cfg.shapes.shrink);
     L0.updateMatrixWorld(true);
 
     material.uniforms.uTime.value = t;

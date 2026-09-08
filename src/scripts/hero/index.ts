@@ -326,6 +326,9 @@ export function createHero(opts: HeroOptions): Hero {
     qSpin.setFromAxisAngle(_axis, spinAngle);
     qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble * (1 - shapeE));
     L0.quaternion.copy(qSpin).multiply(qTilt);
+    // and it draws in as it works: a small fast thing is loading, a big fast
+    // thing is out of control
+    L0.scale.setScalar(1 - whirl * S.shrink);
 
     L0.updateMatrixWorld(true);
 
