@@ -72,9 +72,13 @@ const { content } = Astro.props;
   @media (min-width: 860px) {
     .studios { padding-bottom: 0; }
     /* the number keeps a column of its own, and the words start beside it */
+    /* The shared column gap is 18rem — it is sized for the statement layout,
+       where two columns sit either side of a wide gutter, and here it starved
+       the words. This card sets its own: the number close to what it numbers,
+       and the clip a normal gutter away. */
     .studio { position: sticky; top: 0; padding: 0 0 0 var(--page-x);
-              display: grid; grid-template-columns: 5rem minmax(0, 1fr) 46%;
-              column-gap: var(--col-gap); align-items: center;
+              display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) 42%;
+              column-gap: var(--s-7); align-items: center;
               margin-inline: calc(var(--page-x) * -1);
               background: var(--ground);
               border-top: var(--hairline) solid var(--line); }
@@ -83,13 +87,13 @@ const { content } = Astro.props;
     /* the width is the column's, always: a ratio with a floor under it will
        otherwise widen the box to satisfy both and push the clip off the page */
     .band { margin: 0; width: 100%; align-self: stretch;
-            aspect-ratio: 4 / 3; min-height: 26rem; }
+            aspect-ratio: 3 / 2; min-height: 22rem; }
   }
 
   @media (max-width: 859px) {
     .studios { padding-bottom: 12vh; }
     .studio { padding-top: 9vh; }
-    .band { aspect-ratio: 16 / 9; }
+    .band { aspect-ratio: 3 / 2; }
     .services { grid-auto-flow: column; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, auto); column-gap: var(--s-4); }
     .promise, .desc, .intro { max-width: none; }
   }
