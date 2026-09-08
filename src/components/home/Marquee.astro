@@ -26,7 +26,10 @@ const runs = [0, 1];
 </section>
 
 <style>
+  /* the band is its own beat: the same air above it as below, and the section
+     under it gives up its top padding so the two gaps stay equal */
   .band { position: relative; z-index: var(--z-ui);
+          margin: 10vh 0; padding-block: clamp(2.5rem, 7vh, 5.5rem);
           border-top: var(--hairline) solid var(--line);
           border-bottom: var(--hairline) solid var(--line);
           overflow: hidden; }
@@ -34,8 +37,8 @@ const runs = [0, 1];
   .run { display: flex; flex: none; }
 
   .item { display: flex; align-items: center; gap: 1.15em;
-          padding: 0.85em 0.6em 0.85em 0;
-          font-size: clamp(1.35rem, 3.6vw, 2.6rem);
+          padding-right: 0.6em;
+          font-size: clamp(1.5rem, 4vw, 3rem);
           font-weight: 500; letter-spacing: -0.02em; line-height: 1;
           white-space: nowrap; color: var(--ink-2); }
   /* the squares of the lattice, at the scale of a word */
@@ -47,6 +50,8 @@ const runs = [0, 1];
   @media (prefers-reduced-motion: reduce) {
     .track { animation: none; }
   }
+
+  @media (max-width: 719px) { .band { margin: 8vh 0; } }
 
   .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
         overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

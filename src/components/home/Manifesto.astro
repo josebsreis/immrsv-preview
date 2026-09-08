@@ -51,7 +51,7 @@ const total = String(stats.length).padStart(2, '0');
   /* a narrow column for the reel, a wide gap, and the statement running out
      to the page edge */
   .manifesto { position: relative; z-index: var(--z-ui);
-               padding: 10vh var(--page-x) 14vh; display: grid;
+               padding: 0 var(--page-x) 14vh; display: grid;
                grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
                column-gap: var(--col-gap); align-items: start; }
 
@@ -96,7 +96,7 @@ const total = String(stats.length).padStart(2, '0');
   .by :global(.sq) { color: var(--ink-4); }
 
   @media (max-width: 859px) {
-    .manifesto { grid-template-columns: 1fr; row-gap: var(--s-7); padding: 8vh 1.25rem 10vh; }
+    .manifesto { grid-template-columns: 1fr; row-gap: var(--s-7); padding: 0 1.25rem 10vh; }
     .cap, .say p { max-width: none; }
   }
 </style>
