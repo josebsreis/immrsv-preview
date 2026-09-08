@@ -138,8 +138,8 @@ export function createHero(opts: HeroOptions): Hero {
 
     // the revolution about the diagonal; faster after a strike, and as it drains away on scroll
     spinBoost *= Math.exp(-cfg.intro.spinDecay * dt);
-    // once the mark lets go there is no shape left to turn: the rotation eases
-    // down to a drift, so the dust does not carry the whole frame around
+    // once the faces are leaving, the revolution eases down to a drift rather
+    // than carrying the whole frame around with it
     const spinFade = 1 - (1 - cfg.exit.spin) * Math.min(1, exit / 0.6);
     spinAngle += ((cfg.mark.spin + spinBoost) * spinFade) * dt;
     qSpin.setFromAxisAngle(SPIN_AXIS, spinAngle);

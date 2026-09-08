@@ -79,8 +79,9 @@ export const HERO_CONFIG = {
     ignore: 'a, button, [data-no-strike]',
   },
 
-  /** the scroll exit: loosen, spin up, then break apart and drift out across
-   *  the frame, left as a faint dust under everything below the hero */
+  /** the scroll exit: the cube comes apart the way it was assembled — each
+   *  face flips and leaves along its own normal, loosening a little as it goes
+   *  and draining of light until nothing is left */
   exit: {
     loosen: 1.6,
     spin: 0.06,       // what is left of the cruise rotation once it has dispersed
@@ -91,7 +92,7 @@ export const HERO_CONFIG = {
     spread: 0.55,     // the particles loosen as the plate goes, but only a little
     spreadY: 0.4,
     spreadZ: 0.2,
-    drift: 0.05,      // the slow wander that keeps the dust alive
+    drift: 0.05,      // a slow wander, so a leaving face never looks rigid
   },
 
   /** the Lusion-style lens: flow map + chromatic post pass on the mark */

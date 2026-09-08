@@ -104,7 +104,7 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
 
     if (ex > 0) {
       // the exit, driven by scroll: loosen, then out across the frame, with a
-      // slow per-particle wander so the dust never sits still
+      // slow per-particle wander so a leaving face never looks rigid
       const w = X.drift * burst;
       ox += over[i3] * loosen * X.loosen + scatter[i3] * burst + Math.sin(t * 0.5 + jit[j] * 9.1) * w;
       oy += over[i3 + 1] * loosen * X.loosen + scatter[i3 + 1] * burst + Math.cos(t * 0.43 + jit[j] * 7.7) * w;
