@@ -48,8 +48,8 @@ const total = String(stats.length).padStart(2, '0');
 
 <style>
   /* above the hero's fixed layers, under the shutter */
-  .manifesto { position: relative; z-index: var(--z-ui); min-height: 100vh; min-height: 100svh;
-               padding: 18vh var(--page-x) 16vh; display: grid; grid-template-columns: 1fr 1.35fr;
+  .manifesto { position: relative; z-index: var(--z-ui);
+               padding: 10vh var(--page-x) 14vh; display: grid; grid-template-columns: 1fr 1.35fr;
                column-gap: var(--s-8); align-items: start; }
 
   /* ── the reel ─────────────────────────────────────────────────── */
@@ -87,7 +87,7 @@ const total = String(stats.length).padStart(2, '0');
 
   @media (max-width: 1099px) { .manifesto { column-gap: var(--s-7); grid-template-columns: 1fr 1.15fr; } }
   @media (max-width: 859px) {
-    .manifesto { grid-template-columns: 1fr; row-gap: var(--s-8); padding: 14vh 1.25rem 12vh; }
+    .manifesto { grid-template-columns: 1fr; row-gap: var(--s-7); padding: 8vh 1.25rem 10vh; }
     .cap { max-width: none; }
   }
 </style>

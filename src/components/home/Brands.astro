@@ -21,7 +21,7 @@ const { content } = Astro.props;
 
 <style>
   /* above the hero's fixed layers, under the shutter */
-  .brands { position: relative; z-index: var(--z-ui); padding: 10vh var(--page-x) 16vh;
+  .brands { position: relative; z-index: var(--z-ui); padding: 8vh var(--page-x) 12vh;
             display: grid; grid-template-columns: 1fr 2fr; column-gap: var(--s-8); align-items: start;
             border-top: var(--hairline) solid var(--line); }
   .tag { display: flex; align-items: center; gap: 0.75rem; font-size: var(--t-body); color: var(--ink); }
@@ -36,7 +36,7 @@ const { content } = Astro.props;
 
   @media (max-width: 1099px) { .brands { grid-template-columns: 1fr; row-gap: var(--s-7); } }
   @media (max-width: 719px) {
-    .brands { padding: 8vh 1.25rem 12vh; }
+    .brands { padding: 6vh 1.25rem 10vh; }
     .grid { grid-template-columns: repeat(2, 1fr); }
     .logo { height: 3.25rem; }
   }

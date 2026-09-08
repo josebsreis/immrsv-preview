@@ -9,8 +9,9 @@ import Lettermark from '@components/ui/Lettermark.astro';
 
 <style>
   /* above the hero's fixed layers, under the shutter */
-  .panel { position: relative; z-index: var(--z-ui); min-height: 100vh; min-height: 100svh;
-           display: grid; place-items: center; padding: 0 var(--page-x); }
+  /* it follows the hero closely — the name lands as soon as the hero leaves */
+  .panel { position: relative; z-index: var(--z-ui);
+           display: grid; place-items: center; padding: 8vh var(--page-x); }
   .mark { width: 100%; color: var(--ink); }
   .mark :global(svg) { width: 100%; height: auto; }
   @media (max-width: 719px) { .panel { padding: 0 1.25rem; } }

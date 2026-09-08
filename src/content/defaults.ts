@@ -32,7 +32,11 @@ export const defaultHome: HomeContent = {
     statement:
       'A building, a film and a product are the same problem — someone has to move through it and understand it. Most studios solve one of the three and hand you the rest.\n\n' +
       'We keep all three under one roof, so the drawing, the image and the interface are made by the same people, and the work arrives whole.',
-    founder: { name: 'Oscar Nino', role: 'Founder, IMMRSV' },
+    founder: {
+      name: 'Oscar Nino',
+      role: 'Founder, IMMRSV',
+      portrait: { url: '/team/oscar-nino.jpg', alt: 'Oscar Nino' },
+    },
     stats: [
       { value: '30+', label: 'Projects delivered across the three studios' },
       { value: '2019', label: 'Founded in Lisbon, working across Europe' },
