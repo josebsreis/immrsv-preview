@@ -13,6 +13,11 @@ const { items, label = 'What we do' } = Astro.props;
 const runs = [0, 1];
 ---
 <section class="band" aria-label={label} data-marquee data-marquee-speed="46" data-marquee-drag="1.5">
+  {['top', 'bottom'].map((side) => (
+    <div class={`rail rail-${side}`} data-marquee-track data-marquee-dir="right" data-marquee-rate="0.55" aria-hidden="true">
+      <div class="rail-run">{Array.from({ length: 16 }).map(() => <i class="pip"></i>)}</div>
+    </div>
+  ))}
   <div class="track" data-marquee-track aria-hidden="true">
     {runs.map(() => (
       <div class="run">
@@ -53,6 +58,16 @@ const runs = [0, 1];
   .dot { flex: none; width: 0.26em; height: 0.26em; background: var(--ink-4);
          transition: transform 0.5s cubic-bezier(0.625, 0.05, 0, 1), background-color 0.5s ease; }
   [data-marquee-status="inverted"] .dot { transform: rotate(45deg); background: var(--ink-2); }
+
+  /* the squares ride the hairlines, running against the words: counter-motion
+     is what gives a flat band a near side and a far one */
+  .rail { position: absolute; left: 0; display: flex; width: max-content; pointer-events: none; }
+  .rail-top { top: 0; }
+  .rail-bottom { bottom: 0; }
+  .rail-run { display: flex; flex: none; }
+  /* they sit against the line rather than centred on it: the band clips its
+     own overflow, so a square straddling the border would lose half of itself */
+  .pip { flex: none; width: 5px; height: 5px; background: var(--ink-3); margin-right: 4.5rem; }
 
   @keyframes run { to { transform: translateX(-50%); } }
 
