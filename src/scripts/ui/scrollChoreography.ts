@@ -16,7 +16,8 @@ const HOLD_SHADE = 0.62;      // how far it is put out by the time it is covered
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const smooth = (u: number) => u * u * (3 - 2 * u);
 
-export function createScrollChoreography(hero: Hero | null): ScrollChoreography {
+/** The hero is loaded late, so it is read through a getter rather than held. */
+export function createScrollChoreography(getHero: () => Hero | null): ScrollChoreography {
   const veil = document.querySelector<HTMLElement>('[data-veil]');
   const readable = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal-words]'));
   const rule = document.querySelector<HTMLElement>('[data-rule]');
@@ -71,6 +72,7 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
 
     // the mark comes apart and travels into the name: the crossing is timed by
     // the wordmark panel itself, so the particles land inside its outline
+    const hero = getHero();
     hero?.setExit((y - vh * 0.2) / (vh * 1.7));
     if (wordmark) {
       const w = wordmark.getBoundingClientRect();

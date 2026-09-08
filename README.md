@@ -89,6 +89,10 @@ sanity.config.ts      the Studio
   is up, and going out only once it has left (`setOut`). The panel's own
   outline is off by default (`<WordmarkPanel outline={false} />`) — the cloud
   is the mark; turn it on to get the drawn version and its hover.
+- **The hero engine loads late.** three.js is ~135KB gzipped, so `home.ts`
+  imports it dynamically once the browser is idle, and never for a reader
+  who asked for less motion. The page's own bundle is ~4KB; everything but
+  the mark works before it arrives.
 - **Hero tunables** live in `src/scripts/hero/config.ts`; a page can override
   any of them via `createHero({ config })`.
 - **Anything on the homepage that sits over the hero** needs its own layer:

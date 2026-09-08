@@ -95,6 +95,7 @@ export const HERO_CONFIG = {
     stagger: 0.45,        // how much of the run is spent letting particles leave in turn
     hold: 1,              // the letters are the mark here: full strength
     thin: 0.42,           // how much finer a point gets as the letterform resolves
+    minScale: 0.3,        // …never finer than this share of the base point
     fullDensityPx: 1280,  // the box width that can carry every particle
     minDensity: 0.6,      // …and the least it ever thins to, on a phone, where
                           //    the cloud is the only thing drawing the name

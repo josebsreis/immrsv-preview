@@ -181,11 +181,17 @@ export function createHero(opts: HeroOptions): Hero {
     ctx.out = out;
     if (ctx.morph > 0) {
       const boxPx = wordmark ? wordmark.getBoundingClientRect().width : innerWidth;
-      ctx.density = Math.min(1, Math.max(cfg.morph.minDensity, boxPx / cfg.morph.fullDensityPx));
-      // a finer point as the letterform resolves, so the strokes stay legible
-      material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio() * (1 - cfg.morph.thin * ctx.morph);
+      const fit = clamp(boxPx / cfg.morph.fullDensityPx, cfg.morph.minScale, 1);
+      ctx.density = Math.min(1, Math.max(cfg.morph.minDensity, fit));
+      // the point is sized to the letterform, not to the screen: on a phone the
+      // letters are a quarter of the size and so are the points that draw them
+      const letterPx = cfg.mark.pointPx * fit * (1 - cfg.morph.thin);
+      const px = cfg.mark.pointPx + (letterPx - cfg.mark.pointPx) * ctx.morph;
+      material.uniforms.uPx.value = px * renderer.getPixelRatio();
+      material.uniforms.uFlat.value = ctx.morph;
     } else {
       material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
+      material.uniforms.uFlat.value = 0;
     }
     for (const p of plates) {
       if (ctx.morph > 0) {

@@ -43,10 +43,10 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
   const { base, mid, high } = cfg.mark.tint;
   return new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { uTime: { value: 0 }, uPx: { value: cfg.mark.pointPx } },
+    uniforms: { uTime: { value: 0 }, uPx: { value: cfg.mark.pointPx }, uFlat: { value: 0 } },
     vertexShader: `
       attribute float aSeed; attribute float aSize; attribute float aTint; attribute vec3 aOff; attribute float aIn;
-      uniform float uTime, uPx;
+      uniform float uTime, uPx, uFlat;   // uFlat: 1 while the cloud is spelling the name
       varying float vA; varying vec3 vC;
       void main(){
         vec3 p = position + aOff;
@@ -57,10 +57,14 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
         // displaced particles glow a little brighter and larger
         float f = clamp(length(aOff) / 0.09, 0.0, 1.0);
         gl_Position  = clip;
-        gl_PointSize = aSize * uPx / clip.w * (1.0 + f*0.22);
-        vA = (0.62 + 0.16*f) * mix(0.10, 1.0, aIn);
+        // as the letters form, every point takes the same size and the same
+        // brightness: a letterform wants an even stroke, not a starfield
+        float sz = mix(aSize, 1.0, uFlat);
+        float tn = mix(aTint, 0.92, uFlat);
+        gl_PointSize = sz * uPx / clip.w * (1.0 + f*0.22);
+        vA = (0.62 + 0.16*f) * mix(0.10, 1.0, aIn) * (1.0 + 0.7*uFlat);
         vec3 c0 = vec3(${base.join(',')}), c1 = vec3(${mid.join(',')}), c2 = vec3(${high.join(',')});
-        vC = aTint < 0.5 ? mix(c0, c1, aTint*2.0) : mix(c1, c2, (aTint-0.5)*2.0);
+        vC = tn < 0.5 ? mix(c0, c1, tn*2.0) : mix(c1, c2, (tn-0.5)*2.0);
       }`,
     fragmentShader: `
       precision highp float;
