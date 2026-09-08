@@ -32,6 +32,7 @@ export interface PlateSim {
   intro: Float32Array;    // seed − home
   over: Float32Array;     // overshoot vector, radial from the void
   seedv: Float32Array;    // seed − seed centre
+  scatter: Float32Array;  // where this particle drifts to once the mark breaks up
   iDelay: Float32Array; iDur: Float32Array;
   mPrev: THREE.Vector3; hadM: boolean;
   shockSeen: number; settled: boolean;
@@ -130,6 +131,8 @@ export function buildPlate(i: number, cfg: HeroConfig, material: THREE.Material,
   // void pulled back by that much — all three plates seed in one spot
   const I = cfg.intro;
   const intro = new Float32Array(total * 3), over = new Float32Array(total * 3), seedv = new Float32Array(total * 3), iDelay = new Float32Array(total), iDur = new Float32Array(total);
+  const scatter = new Float32Array(total * 3);
+  const X = cfg.exit;
   const cx = voidCentre - b.n[0] * separation, cy = voidCentre - b.n[1] * separation, cz = voidCentre - b.n[2] * separation;
   const stagger = reduced ? 0 : I.stagger, dur = reduced ? 0.01 : I.duration;
   for (let j = 0; j < total; j++) {
@@ -142,11 +145,17 @@ export function buildPlate(i: number, cfg: HeroConfig, material: THREE.Material,
     const ov = I.over * (0.6 + Math.random() * 0.8);
     over[j * 3] = (pos[j * 3] - cx) * ov; over[j * 3 + 1] = (pos[j * 3 + 1] - cy) * ov; over[j * 3 + 2] = (pos[j * 3 + 2] - cz) * ov;
     iDelay[j] = Math.random() * stagger; iDur[j] = dur * (0.75 + Math.random() * 0.5);
+
+    // where it goes when the mark lets go: a point somewhere across the frame,
+    // flatter in depth so nothing arrives huge in front of the camera
+    scatter[j * 3] = (Math.random() * 2 - 1) * X.spread;
+    scatter[j * 3 + 1] = (Math.random() * 2 - 1) * X.spreadY;
+    scatter[j * 3 + 2] = (Math.random() * 2 - 1) * X.spreadZ;
   }
 
   const sim: PlateSim = {
     total, n: b.n, home: pos, off: off.array as Float32Array, ain: ain.array as Float32Array, sim: new Float32Array(total * 3),
-    vel, stiff, damp, jit: jitA, gain, intro, over, seedv, iDelay, iDur,
+    vel, stiff, damp, jit: jitA, gain, intro, over, seedv, scatter, iDelay, iDur,
     mPrev: new THREE.Vector3(), hadM: false, shockSeen: -1, settled: false,
   };
   return { points, sim };

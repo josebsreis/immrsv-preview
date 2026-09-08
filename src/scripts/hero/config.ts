@@ -79,11 +79,16 @@ export const HERO_CONFIG = {
     ignore: 'a, button, [data-no-strike]',
   },
 
-  /** the scroll exit: loosen, spin up, collapse back to the seed */
+  /** the scroll exit: loosen, spin up, then break apart and drift out across
+   *  the frame, left as a faint dust under everything below the hero */
   exit: {
     loosen: 1.6,
     spin: 4,
-    dim: 0.88,
+    dim: 0.86,        // what is left of the brightness once it has dispersed
+    spread: 4.4,      // how far a particle drifts across the frame, world units
+    spreadY: 2.9,     // …the frame is wider than it is tall
+    spreadZ: 1,       // …and shallow, so nothing lands close to the camera
+    drift: 0.05,      // the slow wander that keeps the dust alive
   },
 
   /** the Lusion-style lens: flow map + chromatic post pass on the mark */

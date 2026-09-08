@@ -45,14 +45,16 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
     }
   } else S.hadM = false;
 
-  const { home, off, ain, sim, intro, over, seedv, iDelay, iDur, vel, stiff, damp, jit, gain, total } = S;
+  const { home, off, ain, sim, intro, over, seedv, scatter, iDelay, iDur, vel, stiff, damp, jit, gain, total } = S;
   const stagger = ctx.reduced ? 0 : I.stagger, dur = ctx.reduced ? 0.01 : I.duration;
   const it = t - ctx.introT0, building = it < stagger + dur * 1.25 + 0.1;
   const press = (C.rest + speed * C.speed) * dt * 60 * C.gain;
   // one strike impulse per plate per click, and none before the first click
   const shock = hit && ctx.shockT > 0 && S.shockSeen !== ctx.shockT; if (shock) S.shockSeen = ctx.shockT;
   const ex = ctx.exit;
-  const loosen = ex > 0 ? sm(0, 0.55, ex) * (1 - sm(0.5, 1, ex)) : 0, collapse = ex > 0 ? sm(0.45, 1, ex) : 0;
+  // loosen first, then let go: the shape breaks and the particles drift out
+  const loosen = ex > 0 ? sm(0, 0.55, ex) * (1 - sm(0.5, 1, ex)) : 0;
+  const burst = ex > 0 ? Math.pow(sm(0.22, 1, ex), 1.4) : 0;
 
   for (let j = 0; j < total; j++) {
     const i3 = j * 3;
@@ -97,10 +99,12 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
     } else ain[j] = 1;
 
     if (ex > 0) {
-      // the exit, driven by scroll: loosen first, then collapse to the seed
-      ox += over[i3] * loosen * X.loosen + intro[i3] * collapse;
-      oy += over[i3 + 1] * loosen * X.loosen + intro[i3 + 1] * collapse;
-      oz += over[i3 + 2] * loosen * X.loosen + intro[i3 + 2] * collapse;
+      // the exit, driven by scroll: loosen, then out across the frame, with a
+      // slow per-particle wander so the dust never sits still
+      const w = X.drift * burst;
+      ox += over[i3] * loosen * X.loosen + scatter[i3] * burst + Math.sin(t * 0.5 + jit[j] * 9.1) * w;
+      oy += over[i3 + 1] * loosen * X.loosen + scatter[i3 + 1] * burst + Math.cos(t * 0.43 + jit[j] * 7.7) * w;
+      oz += over[i3 + 2] * loosen * X.loosen + scatter[i3 + 2] * burst;
       ain[j] = Math.min(ain[j], 1 - ex * X.dim);
     }
     off[i3] = ox; off[i3 + 1] = oy; off[i3 + 2] = oz;
