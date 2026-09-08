@@ -29,6 +29,7 @@ function track() {
   tracking = true;
   addEventListener('pointermove', (e) => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.seen = true; }, { passive: true });
   addEventListener('pointerleave', () => { pointer.seen = false; });
+  document.addEventListener('mouseleave', () => { pointer.seen = false; dispatchEvent(new Event('scroll')); });
 }
 
 export function createReel(el: HTMLElement): Reel {
@@ -90,10 +91,12 @@ export function createReel(el: HTMLElement): Reel {
 
   /** pick the frame for wherever the pointer is over the card right now */
   const settle = () => {
-    if (!pointer.seen) return;
     const r = el.getBoundingClientRect();
-    if (r.height < 1) return;
-    if (pointer.x < r.left || pointer.x > r.right || pointer.y < r.top || pointer.y > r.bottom) return;
+    const inside = pointer.seen && r.height > 0
+      && pointer.x >= r.left && pointer.x <= r.right && pointer.y >= r.top && pointer.y <= r.bottom;
+    // the card under the hand says so, and the roll shows only there
+    el.classList.toggle('hovering', inside);
+    if (!inside) return;
     // Hysteresis. A hand at rest still trembles, and a page under a still
     // hand moves in steps; either one sitting on the line between two bands
     // would flip the frame back and forth — the flicker to the second picture

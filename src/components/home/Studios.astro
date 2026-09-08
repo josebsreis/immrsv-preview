@@ -109,18 +109,21 @@ const reelFor = (key: string) =>
      that slides between them. It is the frame counter on a camera back — you
      see where you are and where you have come from, and that a hand held
      still is still turning it. */
-  /* the strip stands just clear of the picture — its right edge touching the
-     image, its marks on the white beside it — so it reads against the ground
-     rather than vanishing into whatever the render has along its edge */
-  .roll { position: absolute; top: 0; bottom: 0; left: -0.5rem; width: 0.5rem;
-          display: grid; grid-template-rows: repeat(var(--n, 1), 1fr); z-index: 30; pointer-events: none; }
+  /* The strip stands inside the picture, on a pane of frosted dark, and only
+     while the card is the one under the hand: a counter is for the thing you
+     are turning, not a fixture on every picture at once. */
+  .roll { position: absolute; top: var(--s-4); bottom: var(--s-4); left: var(--s-4); width: 1.25rem;
+          display: grid; grid-template-rows: repeat(var(--n, 1), 1fr); z-index: 30; pointer-events: none;
+          background: rgb(0 0 0 / 0.28); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+          opacity: 0; transition: opacity 0.25s ease; }
+  .studio.hovering .roll { opacity: 1; }
   /* a hairline runs the height of the roll, so the ticks read as stops on a
-     strip rather than as stray dots in the gutter */
+     strip rather than as stray dots */
   .roll::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: var(--hairline);
-                  background: var(--line); }
-  .tick { position: relative; align-self: center; justify-self: center; width: 4px; height: 4px; background: var(--ink-4); }
+                  background: rgb(255 255 255 / 0.28); }
+  .tick { position: relative; align-self: center; justify-self: center; width: 4px; height: 4px; background: rgb(255 255 255 / 0.7); }
   .mark { position: absolute; left: 50%; top: calc(100% / var(--n, 1) / 2); translate: -50% -50%;
-          width: 7px; height: 7px; background: var(--ink);
+          width: 7px; height: 7px; background: #fff;
           transition: top 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
   @media (prefers-reduced-motion: reduce) { .mark { transition: none; } }
   /* Every frame is stacked on the same spot. A change opens a clip from the
@@ -165,11 +168,6 @@ const reelFor = (key: string) =>
 
   @media (max-width: 859px) {
     .studios { padding-bottom: 12vh; }
-    /* no gutter to stand in on a phone: the roll sits just inside the picture,
-       in white against whatever is behind it */
-    .roll { left: var(--s-4); mix-blend-mode: difference; }
-    .tick { background: rgb(255 255 255 / 0.55); }
-    .mark { background: #fff; }
     .studio { padding-top: 9vh; }
     .band { aspect-ratio: 3 / 2; }
     .promise, .desc, .intro { max-width: none; }
