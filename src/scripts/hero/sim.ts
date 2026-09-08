@@ -52,9 +52,10 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
   // one strike impulse per plate per click, and none before the first click
   const shock = hit && ctx.shockT > 0 && S.shockSeen !== ctx.shockT; if (shock) S.shockSeen = ctx.shockT;
   const ex = ctx.exit;
-  // loosen first, then let go: the shape breaks and the particles drift out
-  const loosen = ex > 0 ? sm(0, 0.55, ex) * (1 - sm(0.5, 1, ex)) : 0;
-  const burst = ex > 0 ? Math.pow(sm(0.22, 1, ex), 1.4) : 0;
+  // the shape lets go on the first turn of the wheel: a brief loosening and
+  // then straight out across the frame, done well before the hero has left
+  const loosen = ex > 0 ? sm(0, 0.1, ex) * (1 - sm(0.08, 0.3, ex)) : 0;
+  const burst = ex > 0 ? Math.pow(sm(0, 0.3, ex), 0.85) : 0;
 
   for (let j = 0; j < total; j++) {
     const i3 = j * 3;
@@ -105,7 +106,7 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
       ox += over[i3] * loosen * X.loosen + scatter[i3] * burst + Math.sin(t * 0.5 + jit[j] * 9.1) * w;
       oy += over[i3 + 1] * loosen * X.loosen + scatter[i3 + 1] * burst + Math.cos(t * 0.43 + jit[j] * 7.7) * w;
       oz += over[i3 + 2] * loosen * X.loosen + scatter[i3 + 2] * burst;
-      ain[j] = Math.min(ain[j], 1 - ex * X.dim);
+      ain[j] = Math.min(ain[j], 1 - burst * X.dim);   // it dims as it disperses, not after
     }
     off[i3] = ox; off[i3 + 1] = oy; off[i3 + 2] = oz;
   }

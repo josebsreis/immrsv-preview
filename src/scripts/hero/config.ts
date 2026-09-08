@@ -83,8 +83,8 @@ export const HERO_CONFIG = {
    *  the frame, left as a faint dust under everything below the hero */
   exit: {
     loosen: 1.6,
-    spin: 4,
-    dim: 0.86,        // what is left of the brightness once it has dispersed
+    spin: 0.06,       // what is left of the cruise rotation once it has dispersed
+    dim: 0.78,        // what is left of the brightness once it has dispersed
     spread: 4.4,      // how far a particle drifts across the frame, world units
     spreadY: 2.9,     // …the frame is wider than it is tall
     spreadZ: 1,       // …and shallow, so nothing lands close to the camera
