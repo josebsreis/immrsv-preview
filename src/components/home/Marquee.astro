@@ -26,10 +26,12 @@ const runs = [0, 1];
 </section>
 
 <style>
-  /* the band is its own beat: the same air above it as below, and the section
-     under it gives up its top padding so the two gaps stay equal */
+  /* The band is its own beat: the same air above it as below. Equal margins
+     were not enough — the hero's last row floats --page-y clear of the hero's
+     own bottom edge, so that inset lands on top of the gap above and nothing
+     answers it below. The top margin gives it back. */
   .band { position: relative; z-index: var(--z-ui);
-          margin: 10vh 0; padding-block: clamp(2.5rem, 7vh, 5.5rem);
+          margin: calc(10vh - var(--page-y)) 0 10vh; padding-block: clamp(2.5rem, 7vh, 5.5rem);
           border-top: var(--hairline) solid var(--line);
           border-bottom: var(--hairline) solid var(--line);
           overflow: hidden; }
@@ -61,7 +63,7 @@ const runs = [0, 1];
     .track { animation: none; }
   }
 
-  @media (max-width: 719px) { .band { margin: 8vh 0; } }
+  @media (max-width: 719px) { .band { margin: calc(8vh - var(--page-y)) 0 8vh; } }
 
   .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
         overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
