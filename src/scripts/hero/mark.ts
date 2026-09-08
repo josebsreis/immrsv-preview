@@ -46,7 +46,7 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
     vertexShader: `
       attribute float aSeed; attribute float aSize; attribute float aTint; attribute vec3 aOff; attribute float aIn;
       uniform float uTime, uPx, uFlat;   // uFlat: 1 while the cloud is standing as a form
-      varying float vA; varying vec3 vC;
+      varying float vA; varying vec3 vC; varying float vB;
       void main(){
         vec3 p = position + aOff;
         float ph = aSeed * 6.28318;
@@ -60,14 +60,24 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
         // A form wants an even skin where the cube wants a starfield, but only
         // part way: flattening every point to one size and one brightness is
         // what turned a body into a white mass.
-        float sz = mix(aSize, 1.0, uFlat * ${D.even.toFixed(2)});
-        float tn = mix(aTint, 0.86, uFlat * ${D.even.toFixed(2)});
-        gl_PointSize = sz * uPx / clip.w * (1.0 + f*0.22);
         // Depth. Nothing here reads as a volume without it: the far side of a
         // cloud has to fall away, or every point sits on the same pane of glass.
         float dep = clamp((-mv.z - ${D.near.toFixed(3)}) / ${(D.far - D.near).toFixed(3)}, 0.0, 1.0);
         float lit = mix(1.0, ${D.dim.toFixed(2)}, dep);
-        vA = (0.58 + 0.16*f) * mix(0.10, 1.0, aIn) * (1.0 + ${D.lift.toFixed(2)}*uFlat) * lit;
+        // A focal plane, the way a lens has one: points away from it spread and
+        // dim rather than staying the same crisp dot at every distance. This is
+        // most of what separates something photographed from a field of dots.
+        float off = clamp(abs(dep - ${D.focus.toFixed(2)}) / ${Math.max(D.focus, 1 - D.focus).toFixed(2)}, 0.0, 1.0);
+        // squared, so the plane keeps a generous sharp band and only what is
+        // properly far from it goes soft
+        float blur = off * off;
+        vB = blur;
+        float sz = mix(aSize, 1.0, uFlat * ${D.even.toFixed(2)});
+        float tn = mix(aTint, 0.86, uFlat * ${D.even.toFixed(2)});
+        gl_PointSize = sz * uPx / clip.w * (1.0 + f*0.22) * (1.0 + blur * ${D.bokeh.toFixed(2)});
+        // the same light spread over a wider disc is a fainter disc
+        vA = (0.58 + 0.16*f) * mix(0.10, 1.0, aIn) * (1.0 + ${D.lift.toFixed(2)}*uFlat) * lit
+             / (1.0 + blur * ${(D.bokeh * 0.55).toFixed(2)});
         vec3 c0 = vec3(${base.join(',')}), c1 = vec3(${mid.join(',')}), c2 = vec3(${high.join(',')});
         vec3 col = tn < 0.5 ? mix(c0, c1, tn*2.0) : mix(c1, c2, (tn-0.5)*2.0);
         // and the far side cools as it goes, the way distance always does
@@ -75,14 +85,16 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
       }`,
     fragmentShader: `
       precision highp float;
-      varying float vA; varying vec3 vC;
+      varying float vA; varying vec3 vC; varying float vB;
       void main(){
         float r = length(gl_PointCoord - 0.5);
         // a hard little core inside a soft fall: a dot with a shape to it,
-        // rather than a smudge that only reads once a thousand overlap
-        float core = smoothstep(0.34, 0.14, r);
-        float halo = smoothstep(0.5, 0.16, r);
-        float a = (halo * 0.55 + core * 0.45) * vA;
+        // rather than a smudge that only reads once a thousand overlap. Out of
+        // focus the core goes and only the fall is left — a circle of
+        // confusion, which is what a lens actually does.
+        float core = smoothstep(0.34, 0.14, r) * (1.0 - vB);
+        float halo = smoothstep(0.5, mix(0.16, 0.42, vB), r);
+        float a = (halo * mix(0.55, 1.0, vB) + core * 0.45) * vA;
         gl_FragColor = vec4(vC * a, a);
       }`,
   });

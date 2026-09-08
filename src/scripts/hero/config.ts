@@ -46,6 +46,8 @@ export const HERO_CONFIG = {
       near: 7.6,                  // camera distance at which nothing is dimmed
       far: 10.6,                  // …and at which the far side is fully faded
       dim: 0.42,                  // what is left of a point at the back
+      focus: 0.42,                // where the lens is sharp, along near→far
+      bokeh: 1.3,                 // how much wider a point goes out of focus
       even: 0.45,                 // how far a standing form flattens to one
                                   //   size and tint — 1 is a white mass
       lift: 0.15,                 // and how much brighter it goes
@@ -108,6 +110,9 @@ export const HERO_CONFIG = {
     stagger: 0.45,        // share of the crossing spent letting particles leave in
                           //   turn: the cloud shears from one form to the next
                           //   rather than sliding across as a block
+    print: 0.85,          // how much of that order is height rather than chance:
+                          //   at 1 the form is laid down from the floor up, the
+                          //   way a printer would build it
     touch: 0.4,           // how much of the cursor's push survives inside a shape
     flat: 0.75,           // how even the points go as a form resolves
     turntable: 0.85,      // the vertical turn, as a share of the cruise spin

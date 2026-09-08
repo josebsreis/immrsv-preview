@@ -394,17 +394,24 @@ export function createHero(opts: HeroOptions): Hero {
       if (shapeE > 0.0005 && tg) {
         const { off, home, total } = p.sim, when = p.when;
         for (let j = 0; j < total; j++) {
-          const u = clamp(shapeE * (1 + S.stagger) - S.stagger * when[j], 0, 1);
+          const i3 = j * 3;
+          // The order particles arrive in. Chance alone gives a cloud that
+          // condenses; ordering it by how high the point sits gives a form
+          // laid down from the floor up, the way a printer builds one — which
+          // is the difference between a cloud settling and a thing being made.
+          const key = def
+            ? when[j] * (1 - S.print) + clamp((tg[i3 + 1] - floorY) * invH, 0, 1) * S.print
+            : when[j];
+          const u = clamp(shapeE * (1 + S.stagger) - S.stagger * key, 0, 1);
           const w = u * u * (3 - 2 * u);
           if (w <= 0) continue;
-          const i3 = j * 3;
           // where this particle is bound: one form, or somewhere along the
           // line between the one it is leaving and the one it is joining
           let tx = tg[i3], ty = tg[i3 + 1], tz = tg[i3 + 2];
           if (tp) {
             // each particle crosses in its own time, so the cloud shears from
             // one form into the other rather than sliding across as a block
-            const c = clamp(cross * (1 + S.stagger) - S.stagger * when[j], 0, 1);
+            const c = clamp(cross * (1 + S.stagger) - S.stagger * key, 0, 1);
             const e = c * c * (3 - 2 * c);
             tx = tp[i3] + (tx - tp[i3]) * e;
             ty = tp[i3 + 1] + (ty - tp[i3 + 1]) * e;
