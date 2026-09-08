@@ -56,6 +56,9 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
   // then straight out across the frame, done well before the hero has left
   const loosen = ex > 0 ? sm(0, 0.1, ex) * (1 - sm(0.08, 0.3, ex)) : 0;
   const burst = ex > 0 ? Math.pow(sm(0, 0.3, ex), 0.85) : 0;
+  // the light goes early, and dips further through the throw itself
+  const fade = ex > 0 ? sm(0, 0.12, ex) : 0;
+  const dip = ex > 0 ? sm(0.02, 0.18, ex) * (1 - sm(0.22, 0.55, ex)) : 0;
 
   for (let j = 0; j < total; j++) {
     const i3 = j * 3;
@@ -106,7 +109,7 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
       ox += over[i3] * loosen * X.loosen + scatter[i3] * burst + Math.sin(t * 0.5 + jit[j] * 9.1) * w;
       oy += over[i3 + 1] * loosen * X.loosen + scatter[i3 + 1] * burst + Math.cos(t * 0.43 + jit[j] * 7.7) * w;
       oz += over[i3 + 2] * loosen * X.loosen + scatter[i3 + 2] * burst;
-      ain[j] = Math.min(ain[j], 1 - burst * X.dim);   // it dims as it disperses, not after
+      ain[j] = Math.min(ain[j], 1 - fade * X.dim - dip * X.dip);
     }
     off[i3] = ox; off[i3 + 1] = oy; off[i3 + 2] = oz;
   }
