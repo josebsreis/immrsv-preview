@@ -95,15 +95,15 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
   });
   const L0 = new THREE.Group(); L0.add(inner); scene.add(L0);
 
-  const qSpin = new THREE.Quaternion(), qTilt = new THREE.Quaternion(), qUp = new THREE.Quaternion(), qMix = new THREE.Quaternion();
-  const AX = new THREE.Vector3(1, 0, 0), UP = new THREE.Vector3(0, 1, 0);
+  const qSpin = new THREE.Quaternion(), qTilt = new THREE.Quaternion();
+  const AX = new THREE.Vector3(1, 0, 0), UP = new THREE.Vector3(0, 1, 0), _axis = new THREE.Vector3();
 
   // ── what is being shown ────────────────────────────────────────────
   let shape = -1;            // −1 = the cube
   let blend = 0;             // 0..1 toward `shape`
   let target = 0;            // where blend is heading
   let auto = !reduced, phase = 0, cycle = 0;
-  let spinAngle = 0, upAngle = 0, introT0 = 0, last: number | undefined;
+  let spinAngle = 0, introT0 = 0, last: number | undefined;
   let yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
 
   /** sample shape `i` for every plate, once. Idle work when it can be. */
@@ -188,15 +188,14 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
     camera.position.set(Math.sin(yaw) * Math.cos(tilt), Math.sin(tilt), Math.cos(yaw) * Math.cos(tilt)).multiplyScalar(C.dist);
     camera.lookAt(0, 0, 0);
 
-    // the turn: the diagonal tumble hands over to a turntable as a shape forms
+    // one turn, always the same way round: the axis leans from the cube's
+    // diagonal up to vertical as a shape stands
     const e = EASE(blend);
-    spinAngle += cfg.mark.spin * (1 - e) * dt;
-    upAngle += cfg.mark.spin * 0.85 * e * dt;
-    qSpin.setFromAxisAngle(SPIN_AXIS, spinAngle);
-    qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble);
-    qMix.copy(qSpin).multiply(qTilt);
-    qUp.setFromAxisAngle(UP, upAngle);
-    L0.quaternion.copy(qMix).slerp(qUp, e);
+    spinAngle += (cfg.mark.spin * (1 - e) + cfg.mark.spin * 0.85 * e) * dt;
+    _axis.copy(SPIN_AXIS).lerp(UP, e).normalize();
+    qSpin.setFromAxisAngle(_axis, spinAngle);
+    qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble * (1 - e));
+    L0.quaternion.copy(qSpin).multiply(qTilt);
     L0.updateMatrixWorld(true);
 
     material.uniforms.uTime.value = t;

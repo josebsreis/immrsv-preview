@@ -113,12 +113,15 @@ export function createHero(opts: HeroOptions): Hero {
     plates.push({ holder, points, sim, axis, out, homeInner, when, targets: SHAPES.map(() => null) });
   });
   const L0 = new THREE.Group(); L0.add(inner); scene.add(L0);
-  const qSpin = new THREE.Quaternion(), qTilt = new THREE.Quaternion(), qUp = new THREE.Quaternion();
+  const qSpin = new THREE.Quaternion(), qTilt = new THREE.Quaternion();
   const AX = new THREE.Vector3(1, 0, 0), UP = new THREE.Vector3(0, 1, 0);
+  /** the axis the mark turns on: the cube's diagonal, tilting up to vertical
+   *  as a form stands. Both lean the same way, so the turn never reverses. */
+  const _axis = new THREE.Vector3();
 
   // ── state the page drives ──────────────────────────────────────────
   let ready = reduced, exit = 0, morph = 0, out = 0, shockT = -9;
-  let spinAngle = 0, upAngle = 0, spinBoost = cfg.intro.spinBoost;
+  let spinAngle = 0, spinBoost = cfg.intro.spinBoost;
 
   // ── the reel ───────────────────────────────────────────────────────
   const reel = cfg.shapes.enabled && !reduced;
@@ -259,14 +262,16 @@ export function createHero(opts: HeroOptions): Hero {
     // once the faces are leaving, the revolution eases down to a drift rather
     // than carrying the whole frame around with it
     const spinFade = 1 - (1 - cfg.exit.spin) * Math.min(1, morph / 0.55);
-    spinAngle += ((cfg.mark.spin + spinBoost) * spinFade) * (1 - shapeE) * dt;
-    upAngle += cfg.mark.spin * S.turntable * shapeE * dt;
-    qSpin.setFromAxisAngle(SPIN_AXIS, spinAngle);
-    qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble);
-    // the diagonal tumble only ever existed to hide the cube's hollow back:
-    // a form has a front and a floor, so it turns on a vertical axis instead
+    // One turn, always the same way round. The diagonal tumble only ever
+    // existed to hide the cube's hollow back; a form has a front and a floor,
+    // so the axis leans up to vertical as one stands — the mark keeps turning
+    // through the change instead of stopping and picking a new direction.
+    const rate = (cfg.mark.spin + spinBoost) * spinFade * (1 - shapeE) + cfg.mark.spin * S.turntable * shapeE;
+    spinAngle += rate * dt;
+    _axis.copy(SPIN_AXIS).lerp(UP, shapeE).normalize();
+    qSpin.setFromAxisAngle(_axis, spinAngle);
+    qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble * (1 - shapeE));
     L0.quaternion.copy(qSpin).multiply(qTilt);
-    if (shapeE > 0) { qUp.setFromAxisAngle(UP, upAngle); L0.quaternion.slerp(qUp, shapeE); }
 
     L0.updateMatrixWorld(true);
 
