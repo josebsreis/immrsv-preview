@@ -40,15 +40,17 @@ const runs = [0, 1];
   [data-marquee-status] .track { animation: none; }
   .run { display: flex; flex: none; }
 
-  .item { display: flex; align-items: center; gap: 1.15em;
-          padding-right: 0.6em;
+  /* the square sits between two words, so the space either side of it has to
+     match: the gap after it and the padding before the next one are one value */
+  .item { display: flex; align-items: center; gap: 1.5em;
+          padding-right: 1.5em;
           font-size: clamp(1.5rem, 4vw, 3rem);
           font-weight: 500; letter-spacing: -0.02em; line-height: 1;
           white-space: nowrap; color: var(--ink-2); }
   /* the squares of the lattice, at the scale of a word. They stand on their
      corner when the band turns round — a square rotated by anything but 45°
      is a square, so this is the one angle that shows */
-  .dot { flex: none; width: 0.26em; height: 0.26em; background: var(--ink-4); margin-right: 0.35em;
+  .dot { flex: none; width: 0.26em; height: 0.26em; background: var(--ink-4);
          transition: transform 0.5s cubic-bezier(0.625, 0.05, 0, 1), background-color 0.5s ease; }
   [data-marquee-status="inverted"] .dot { transform: rotate(45deg); background: var(--ink-2); }
 
