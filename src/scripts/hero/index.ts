@@ -119,7 +119,7 @@ export function createHero(opts: HeroOptions): Hero {
   const AX = new THREE.Vector3(1, 0, 0), UP = new THREE.Vector3(0, 1, 0);
   /** the axis the mark turns on: the cube's diagonal, tilting up to vertical
    *  as a form stands. Both lean the same way, so the turn never reverses. */
-  const _axis = new THREE.Vector3(), _down = new THREE.Vector3(), _q = new THREE.Quaternion();
+  const _axis = new THREE.Vector3();
 
   // ── state the page drives ──────────────────────────────────────────
   let released = reduced, exit = 0, out = 0, shockT = -9;
@@ -333,13 +333,11 @@ export function createHero(opts: HeroOptions): Hero {
     if (mix < 1) mix = clamp(mix + dt / S.beat.cross, 0, 1);
     if (mix >= 1) { prev = -1; held = false; }
     const cross = mix * mix * (3 - 2 * mix);
-    // The fall. A form is built from the floor up, so it comes apart the other
-    // way: the release sweeps down from the head, and what it lets go of
-    // drops. Down is a world direction and the mark is turning, so it has to
-    // be carried into the plates' own space — otherwise the cloud falls
-    // sideways whenever the cube has rolled.
-    const X = cfg.exit;
-    _down.set(0, -1, 0).applyQuaternion(_q.copy(L0.quaternion).invert());
+    // The throw: one curve from the first pixel of scroll to gone. It used to
+    // be two — a loosening that swelled and settled, and this — and the second
+    // began while the first was still pulling back, so the cloud opened,
+    // hesitated, and only then left.
+    const burst = exit * exit * cfg.exit.burst;
     // Air. A form that only turns is a model on a turntable; a slow lean at the
     // top, or a rise and fall of the whole thing, is the difference between an
     // object and something standing there. The wave is worked out once a frame
@@ -438,23 +436,16 @@ export function createHero(opts: HeroOptions): Hero {
           off[i3 + 2] = off[i3 + 2] * keep + (tz - home[i3 + 2]) * w;
         }
       }
-      // and last, the exit: whatever the release has reached falls, wherever
-      // it happens to be standing
-      if (exit > 0) {
-        const { off, home, when, total } = { off: p.sim.off, home: p.sim.home, when: p.when, total: p.sim.total };
-        const hy = p.holder.position.y;
+      // and last, the exit: every particle thrown outward from wherever it
+      // ended up, form or no form. `over` is each one's own radial, so the
+      // cloud comes apart rather than sliding away as a block.
+      if (burst > 0) {
+        const { off, over, total } = p.sim;
         for (let j = 0; j < total; j++) {
           const i3 = j * 3;
-          // how high this particle stands, so the release can start at the top
-          const y = def ? (home[i3 + 1] + off[i3 + 1] + hy - floorY) * invH : (home[i3 + 1] + off[i3 + 1] + hy + 0.5) / 1.2;
-          const hk = y < 0 ? 0 : y > 1 ? 1 : y;
-          const rel = clamp(exit * (1 + X.release) - X.release * (1 - hk), 0, 1);
-          if (rel <= 0) continue;
-          const f = rel * rel;                       // it accelerates, as things do
-          const side = (when[j] - 0.5) * X.drift * f;
-          off[i3] += _down.x * f * X.fall + side;
-          off[i3 + 1] += _down.y * f * X.fall;
-          off[i3 + 2] += _down.z * f * X.fall + side * 0.7;
+          off[i3] += over[i3] * burst;
+          off[i3 + 1] += over[i3 + 1] * burst;
+          off[i3 + 2] += over[i3 + 2] * burst;
         }
       }
     }
