@@ -122,22 +122,22 @@ const FIGURE: ShapeDef = {
 const HOUSE: ShapeDef = {
   name: 'house',
   word: 'space.',
-  src: '/shapes/house.bin',
-  scale: 1.62,
-  lift: -0.5,
-  bounds: [-0.6, -0.04, -0.44, 0.6, 0.86, 0.44],
+  scale: 1.5,
+  lift: -0.47,
+  bounds: [-0.62, -0.02, -0.46, 0.62, 0.98, 0.46],
   sdf(x, y, z) {
-    // the walls, with the openings cut out of them
-    let walls = roundBox(x, y - 0.26, z, 0.40, 0.26, 0.30, 0.012);
-    walls = sub(walls, roundBox(x + 0.16, y - 0.135, z - 0.30, 0.075, 0.135, 0.06, 0.01));   // door
-    walls = sub(walls, roundBox(x - 0.19, y - 0.34, z - 0.30, 0.085, 0.075, 0.06, 0.01));    // front window
-    walls = sub(walls, roundBox(x - 0.40, y - 0.34, z + 0.10, 0.06, 0.075, 0.085, 0.01));    // side window
-    walls = sub(walls, roundBox(x - 0.40, y - 0.34, z - 0.10, 0.06, 0.075, 0.085, 0.01));
-    // the roof, oversailing the walls a little on every side
-    const roof = gable(x, y - 0.50, z, 0.455, 0.30, 0.335);
+    // Legibility beats realism here: a steep gable, a deep eave and openings
+    // big enough to punch daylight through the walls. A gentler roof reads as
+    // a box the moment the turn takes it edge-on.
+    let walls = roundBox(x, y - 0.24, z, 0.34, 0.24, 0.26, 0.01);
+    walls = sub(walls, roundBox(x + 0.13, y - 0.15, z - 0.26, 0.085, 0.155, 0.07, 0.008));   // door
+    walls = sub(walls, roundBox(x - 0.17, y - 0.33, z - 0.26, 0.09, 0.085, 0.07, 0.008));    // front window
+    walls = sub(walls, roundBox(x - 0.34, y - 0.32, z, 0.07, 0.09, 0.10, 0.008));            // side window
+    walls = sub(walls, roundBox(x + 0.34, y - 0.32, z, 0.07, 0.09, 0.10, 0.008));
+    // the roof: steep, and oversailing far enough to throw its own line
+    const roof = gable(x, y - 0.47, z, 0.44, 0.44, 0.31);
     let d = uni(walls, roof);
-    d = uni(d, roundBox(x - 0.20, y - 0.70, z + 0.09, 0.045, 0.115, 0.045, 0.008));          // chimney
-    d = uni(d, roundBox(x, y + 0.005, z, 0.47, 0.018, 0.37, 0.008));                          // the ground it stands on
+    d = uni(d, roundBox(x - 0.20, y - 0.76, z + 0.10, 0.04, 0.13, 0.04, 0.006));             // chimney
     return d;
   },
 };
@@ -251,23 +251,67 @@ export function sampleShape(def: ShapeDef, n: number): Float32Array {
   const w = x1 - x0, h = y1 - y0, dp = z1 - z0;
   const shell = 0.02, e = 0.004;
   const { sdf, scale, lift } = def;
-  let k = 0, tries = 0;
-  const budget = n * 220;
+
+  const nx = (x: number, y: number, z: number) => sdf(x + e, y, z) - sdf(x - e, y, z);
+  const ny = (x: number, y: number, z: number) => sdf(x, y + e, z) - sdf(x, y - e, z);
+  const nz = (x: number, y: number, z: number) => sdf(x, y, z + e) - sdf(x, y, z - e);
+
+  /** how sharply the surface turns near this point: 0 on a flat wall, 1 on a
+   *  corner. An edge is what makes a form legible — it is why the cube gives a
+   *  third of its particles to its own outline — so edges get a share here too. */
+  const R = 0.045;
+  function crease(px: number, py: number, pz: number, gx: number, gy: number, gz: number) {
+    // two directions across the surface, from the least-aligned world axis
+    const ax = Math.abs(gx) < 0.7 ? 1 : 0, ay = ax ? 0 : 1;
+    let t1x = gy * (ax ? 0 : 1) - gz * ay, t1y = gz * ax - gx * (ax ? 0 : 1), t1z = gx * ay - gy * ax;
+    const l1 = Math.hypot(t1x, t1y, t1z) || 1; t1x /= l1; t1y /= l1; t1z /= l1;
+    const t2x = gy * t1z - gz * t1y, t2y = gz * t1x - gx * t1z, t2z = gx * t1y - gy * t1x;
+    let worst = 0;
+    for (let k = 0; k < 4; k++) {
+      const s1 = k < 2 ? (k === 0 ? R : -R) : 0, s2 = k < 2 ? 0 : (k === 2 ? R : -R);
+      let qx = px + t1x * s1 + t2x * s2, qy = py + t1y * s1 + t2y * s2, qz = pz + t1z * s1 + t2z * s2;
+      const d = sdf(qx, qy, qz);
+      let hx = nx(qx, qy, qz), hy = ny(qx, qy, qz), hz = nz(qx, qy, qz);
+      const hl = Math.hypot(hx, hy, hz) || 1;
+      qx -= (d * hx) / hl; qy -= (d * hy) / hl; qz -= (d * hz) / hl;     // back onto the skin
+      hx = nx(qx, qy, qz); hy = ny(qx, qy, qz); hz = nz(qx, qy, qz);
+      const l = Math.hypot(hx, hy, hz) || 1;
+      worst = Math.max(worst, 1 - (gx * hx + gy * hy + gz * hz) / l);
+    }
+    return worst;
+  }
+
+  const EDGE_SHARE = 0.45, CREASE = 0.16;
+  const edgeWant = Math.round(n * EDGE_SHARE);
+  let edges = 0, flats = 0, k = 0;
+  let tries = 0;
+  const budget = n * 400;
+  const put = (x: number, y: number, z: number) => {
+    out[k * 3] = PIVOT + x * scale;
+    out[k * 3 + 1] = PIVOT + (y + lift) * scale;
+    out[k * 3 + 2] = PIVOT + z * scale;
+    k++;
+  };
   while (k < n && tries < budget) {
     tries++;
     let x = x0 + Math.random() * w, y = y0 + Math.random() * h, z = z0 + Math.random() * dp;
     const d = sdf(x, y, z);
     if (Math.abs(d) > shell) continue;
     // one Newton step down the gradient lands the point on the skin
-    const gx = sdf(x + e, y, z) - sdf(x - e, y, z);
-    const gy = sdf(x, y + e, z) - sdf(x, y - e, z);
-    const gz = sdf(x, y, z + e) - sdf(x, y, z - e);
-    const g = Math.hypot(gx, gy, gz) || 1;
+    let gx = nx(x, y, z), gy = ny(x, y, z), gz = nz(x, y, z);
+    let g = Math.hypot(gx, gy, gz) || 1;
     x -= (d * gx) / g; y -= (d * gy) / g; z -= (d * gz) / g;
-    out[k * 3] = PIVOT + x * scale;
-    out[k * 3 + 1] = PIVOT + (y + lift) * scale;
-    out[k * 3 + 2] = PIVOT + z * scale;
-    k++;
+    gx = nx(x, y, z); gy = ny(x, y, z); gz = nz(x, y, z);
+    g = Math.hypot(gx, gy, gz) || 1; gx /= g; gy /= g; gz /= g;
+    const onEdge = crease(x, y, z, gx, gy, gz) > CREASE;
+    if (onEdge) {
+      if (edges >= edgeWant && k < n - (edgeWant - edges)) continue;
+      edges++;
+    } else {
+      if (flats >= n - edgeWant) continue;
+      flats++;
+    }
+    put(x, y, z);
   }
   // a field that under-delivers is padded by repeating what it did give, so a
   // caller always gets a full array and never a hole where a target should be
