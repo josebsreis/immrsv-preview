@@ -10,5 +10,8 @@ const { color = '#fff' } = Astro.props;
 
 <style>
   .shutter { position: fixed; inset: 0; z-index: var(--z-shutter); display: flex; flex-direction: column; pointer-events: none; }
+  /* the choreography sets `hidden` once the next section owns the screen —
+     without this, `display: flex` above wins and the shutter stays over it */
+  .shutter[hidden] { display: none; }
   .shutter i { flex: 1; background: var(--shutter-color); transform: scaleY(0); transform-origin: 50% 100%; will-change: transform; }
 </style>

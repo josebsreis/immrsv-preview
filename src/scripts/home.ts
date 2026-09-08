@@ -8,6 +8,7 @@ import { createRotatingWord } from './ui/rotatingWord';
 import { createStatsReel } from './ui/statsReel';
 import { createWordmarkLetters } from './ui/wordmarkLetters';
 import { createDirectionalHover } from './ui/directionalHover';
+import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
 import { createHoverAudio } from './ui/hoverAudio';
 import { runLoader } from './ui/loader';
@@ -32,6 +33,7 @@ if (markHost && matchMedia('(hover: hover) and (pointer: fine)').matches
   createWordmarkLetters(markHost);
 }
 createDirectionalHover();
+createVideoInView();
 createHoverAudio(site.audio.taps);
 
 runLoader(document.querySelector<HTMLElement>('[data-loader]'), () => hero?.setReady());

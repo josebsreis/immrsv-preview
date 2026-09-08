@@ -29,7 +29,7 @@ src/
     ui/               Button, ScrollCue, Wordmark, Mark, PortableText
     layout/           Nav, Footer
     hero/             Hero (the island's DOM), FeaturedProject
-    home/             WordmarkPanel, Manifesto (stats reel + statement), Brands
+    home/             WordmarkPanel, Manifesto (stats reel + statement), Brands, Studios
     work/             ProjectCard, ProjectGrid
     transitions/      Loader, Shutter
   pages/
@@ -40,7 +40,7 @@ src/
     hero/             the mark: config.ts (every tunable), mark.ts, sim.ts, lens.ts, pointer.ts, index.ts
     fluid.ts          the WebGL fluid (own canvas, under the hero)
     ui/               smoothScroll, scrollChoreography, rotatingWord, statsReel, wordmarkLetters,
-                      directionalHover, splitText, hoverAudio, loader
+                      directionalHover, videoInView, splitText, hoverAudio, loader
     home.ts           the homepage's client entry — wires everything by data attributes
   lib/
     site.ts           structural config (nav, studios, audio) — not content

@@ -5,6 +5,7 @@ import Shutter from '@components/transitions/Shutter.astro';
 import Hero from '@components/hero/Hero.astro';
 import WordmarkPanel from '@components/home/WordmarkPanel.astro';
 import Manifesto from '@components/home/Manifesto.astro';
+import Studios from '@components/home/Studios.astro';
 import Brands from '@components/home/Brands.astro';
 import ProjectGrid from '@components/work/ProjectGrid.astro';
 import { getHome, getProjects } from '@lib/sanity/queries';
@@ -26,6 +27,7 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
 
     <section class="next" id="work" data-next data-theme="light">
       <div class="inner">
+        <Studios content={home.studios} />
         <header class="head">
           <span class="label">Selected work</span>
           <a class="label all" href="/work" data-tap>All projects →</a>
@@ -51,6 +53,8 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
   .inner { opacity: 0; }
   .next:global(.on) .inner { animation: rise 0.9s var(--ease-out) 0.1s both; }
   @keyframes rise { from { opacity: 0; transform: translateY(1.125rem); } to { opacity: 1; transform: none; } }
-  .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--s-7); color: var(--ink-3); }
+  .head { display: flex; justify-content: space-between; align-items: baseline;
+          padding-top: var(--s-6); margin-bottom: var(--s-7); color: var(--ink-3);
+          border-top: var(--hairline) solid var(--line); }
   .all { color: var(--ink); }
 </style>

@@ -1,4 +1,4 @@
-import type { Brand, HomeContent, Project } from '@lib/sanity/types';
+import type { Brand, HomeContent, Project, Studio } from '@lib/sanity/types';
 
 /** Fallback content so the site builds and previews before Sanity is connected.
  *  Once PUBLIC_SANITY_PROJECT_ID is set, Sanity wins and these are only used
@@ -28,6 +28,36 @@ const clients: Brand[] = [
   { name: 'Wolcott', logo: { url: '/brands/wolcott.svg', alt: 'Wolcott' } },
 ];
 
+const studios: Studio[] = [
+  {
+    key: 'architecture',
+    name: 'Architecture + Design',
+    promise: 'The building, drawn to the last detail.',
+    description:
+      'Concept through construction drawings for houses, interiors and small commercial work. We draw at real scale from the first sketch, so what gets built is what was agreed — and the decisions are made where they are still cheap to make.',
+    services: ['Concept design', 'Planning and permits', 'Construction drawings', 'Interiors', 'Site supervision'],
+    media: { kind: 'video', url: '/studios/architecture.mp4', poster: '/studios/architecture.jpg', alt: 'Architecture and design' },
+  },
+  {
+    key: 'media',
+    name: 'Creative Media',
+    promise: 'The image that carries the idea before it exists.',
+    description:
+      'Stills, film and virtual tours built from the same models the architects work in. Nothing is redrawn to flatter the project, so what a client approves on screen is what they will walk into.',
+    services: ['Architectural visualisation', 'Animation and film', 'Virtual tours', 'Art direction', 'Photography direction'],
+    media: { kind: 'video', url: '/studios/media.mp4', poster: '/studios/media.jpg', alt: 'Creative media' },
+  },
+  {
+    key: 'products',
+    name: 'Digital Products',
+    promise: 'The interface people actually move through.',
+    description:
+      'Sites, configurators and internal tools, designed and built by the same team. Shipped and maintained rather than handed over as a mockup, and measured once real people are using them.',
+    services: ['Product design', 'Web development', 'Configurators', 'Design systems', 'Maintenance'],
+    media: { kind: 'video', url: '/studios/products.mp4', poster: '/studios/products.jpg', alt: 'Digital products' },
+  },
+];
+
 export const defaultHome: HomeContent = {
   hero: {
     headline: 'Designing the future\nof',
@@ -52,6 +82,11 @@ export const defaultHome: HomeContent = {
       { value: '03', label: 'Studios under one roof, one team' },
       { value: '1:1', label: 'Drawn at real scale before anything is built' },
     ],
+  },
+  studios: {
+    tag: 'Studios',
+    intro: 'Three studios under one roof. Work moves between them without a handover, which is the whole point.',
+    items: studios,
   },
   brands: {
     tag: "Brands we've helped",

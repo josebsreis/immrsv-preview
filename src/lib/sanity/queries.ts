@@ -15,6 +15,8 @@ const projectFields = `{
 const homeQuery = `*[_type == "home"][0]{
   hero{ headline, words, description, primaryCta, secondaryCta },
   about{ tag, statement, stats, founder{ name, role, "portrait": portrait ${imageFields} } },
+  studios{ tag, intro, "items": items[]{ key, name, promise, description, services,
+    "media": media{ kind, "url": coalesce(file.asset->url, url), "poster": poster ${imageFields}, alt } } },
   brands{ tag, "items": items[]{ name, "logo": logo ${imageFields} } },
   "featuredProject": featuredProject-> ${projectFields}
 }`;
@@ -51,6 +53,13 @@ export async function getHome(): Promise<HomeContent> {
     const raw = await sanity.fetch(homeQuery);
     if (!raw) return defaultHome;
     const founder = raw.about?.founder;
+    const studioItems = (raw.studios?.items ?? [])
+      .filter((st: any) => st?.key && st?.name)
+      .map((st: any) => ({
+        ...st,
+        services: st.services ?? [],
+        media: st.media?.url ? { ...st.media, poster: mapImage(st.media.poster)?.url } : undefined,
+      }));
     const brandItems = (raw.brands?.items ?? [])
       .map((b: any) => ({ name: b.name, logo: mapImage(b.logo) }))
       .filter((b: any) => b.logo);
@@ -61,6 +70,9 @@ export async function getHome(): Promise<HomeContent> {
         ...raw.about,
         founder: founder ? { ...founder, portrait: mapImage(founder.portrait) } : defaultHome.about.founder,
       },
+      studios: studioItems.length
+        ? { tag: raw.studios?.tag ?? defaultHome.studios.tag, intro: raw.studios?.intro ?? defaultHome.studios.intro, items: studioItems }
+        : defaultHome.studios,
       brands: brandItems.length
         ? { tag: raw.brands?.tag ?? defaultHome.brands.tag, items: brandItems }
         : defaultHome.brands,

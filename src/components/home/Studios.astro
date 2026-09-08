@@ -1,0 +1,85 @@
+---
+/** The three studios, read as one section: the number and the service list on
+ *  the left, the name and what it means on the right, and a wide media band
+ *  under each. The clips are silent loops that only run on screen
+ *  (scripts/ui/videoInView.ts). */
+import type { HomeContent } from '@lib/sanity/types';
+interface Props { content: HomeContent['studios']; }
+const { content } = Astro.props;
+---
+{content.items.length > 0 && (
+  <section class="studios" id="studios">
+    <header class="head">
+      <p class="tag"><span class="sq" aria-hidden="true"></span>{content.tag}</p>
+      <p class="intro" data-rise>{content.intro}</p>
+    </header>
+
+    {content.items.map((s, i) => (
+      <article class="studio">
+        <div class="meta">
+          <span class="n label">{String(i + 1).padStart(2, '0')}</span>
+          <ul class="services">{s.services.map((x) => <li>{x}</li>)}</ul>
+        </div>
+
+        <div class="say">
+          <h3 data-rise>{s.name}</h3>
+          <p class="promise" data-rise style="--i: 1">{s.promise}</p>
+          <p class="desc" data-rise style="--i: 2">{s.description}</p>
+        </div>
+
+        {s.media && (
+          <div class="band" data-rise>
+            <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
+            {s.media.kind === 'video' ? (
+              <video data-in-view src={s.media.url} poster={s.media.poster} preload="none"
+                     muted loop playsinline aria-label={s.media.alt ?? s.name}></video>
+            ) : (
+              <img src={s.media.url} alt={s.media.alt ?? s.name} loading="lazy" />
+            )}
+          </div>
+        )}
+      </article>
+    ))}
+  </section>
+)}
+
+<style>
+  /* it sits inside the light section, which already holds the page margins */
+  .studios { position: relative; padding-bottom: 16vh; }
+
+  .head, .studio { display: grid; grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
+                   column-gap: var(--col-gap); align-items: start; }
+  .tag { display: flex; align-items: center; gap: 0.75rem; font-size: var(--t-body); color: var(--ink); }
+  .tag :global(.sq) { color: var(--ink-4); }
+  .intro { max-width: 34ch; font-size: var(--t-lead); line-height: 1.45; color: var(--ink-2); }
+
+  .studio { padding-top: 12vh; }
+  .n { color: var(--ink-4); }
+  .services { list-style: none; margin-top: var(--s-5); display: grid; row-gap: 0.55rem;
+              font-size: var(--t-caption); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+
+  h3 { font-size: var(--t-statement); font-weight: 400; line-height: 1.05; letter-spacing: -0.025em; color: var(--ink); }
+  .promise { margin-top: var(--s-4); max-width: 30ch; font-size: var(--t-lead); line-height: 1.35; color: var(--ink-2); }
+  .desc { margin-top: var(--s-5); max-width: 46ch; font-size: var(--t-small); line-height: 1.65; color: var(--ink-3); }
+
+  /* the band runs the full width of the section, under both columns */
+  .band { grid-column: 1 / -1; position: relative; margin-top: var(--s-7); }
+  /* the palette has no colour in it — the footage is pulled most of the way
+     out and sat back a little, so a band never shouts over the type */
+  .band video, .band img { width: 100%; aspect-ratio: 21 / 9; object-fit: cover; display: block;
+                           filter: grayscale(0.82) contrast(1.06) brightness(0.82); opacity: 0.9; }
+  .c { position: absolute; width: var(--square); height: var(--square); background: var(--marker); pointer-events: none; }
+  .tl { left: 0; top: 0; translate: -50% -50%; }
+  .tr { right: 0; top: 0; translate: 50% -50%; }
+  .bl { left: 0; bottom: 0; translate: -50% 50%; }
+  .br { right: 0; bottom: 0; translate: 50% 50%; }
+
+  @media (max-width: 859px) {
+    .head, .studio { grid-template-columns: 1fr; row-gap: var(--s-5); }
+    .studios { padding-bottom: 12vh; }
+    .studio { padding-top: 9vh; }
+    .services { grid-auto-flow: column; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, auto); column-gap: var(--s-4); }
+    .band video, .band img { aspect-ratio: 16 / 9; }
+    .promise, .desc, .intro { max-width: none; }
+  }
+</style>
