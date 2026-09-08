@@ -3,7 +3,6 @@
    magic number; everything reads from here, and a page can override any
    part of it when it creates the hero.
    ═══════════════════════════════════════════════════════════════════ */
-import type { FluidOptions } from '../fluid';
 
 export const HERO_CONFIG = {
   /** viewport width at or below which the mobile values apply */
@@ -87,9 +86,6 @@ export const HERO_CONFIG = {
                                   //   shove felt by the whole mark
     spin: 0.8,                    // a small turn of the whole mark per click —
                                   //   the blast itself is local, so this stays light
-    fluidForce: 2200,
-    fluidDye: 0.1,
-    fluidRadius: 0.0035,
     /** clicks inside these are not strikes */
     ignore: 'a, button, [data-no-strike]',
   },
@@ -132,22 +128,6 @@ export const HERO_CONFIG = {
     maxVel: 0.035,
   },
 
-  /** the fluid behind everything */
-  fluid: {
-    ambient: false,
-    splatForce: 2600,
-    splatRadius: 0.0018,
-    dyeAmount: 3.6, dyeMax: 0.18,
-    velocityDissipation: 1.8,
-    densityDissipation: 1.6,
-    curl: 5,
-    palette: { deep: [0.024, 0.024, 0.024], violet: [0.16, 0.16, 0.17], lav: [0.5, 0.5, 0.52], pale: [0.92, 0.92, 0.93] },
-    glow: 0.22, haze: 0.16,
-    stars: false,
-    aberration: 3,
-    shade: 0.5,
-    gain: 1.05,
-  } satisfies Partial<FluidOptions>,
 };
 
 export type HeroConfig = typeof HERO_CONFIG;

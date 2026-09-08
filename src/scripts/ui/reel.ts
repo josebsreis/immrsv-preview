@@ -36,6 +36,7 @@ export function createReel(el: HTMLElement): Reel {
   const frames = [...el.querySelectorAll<HTMLElement>('[data-reel-frame]')];
   if (frames.length < 2) return { destroy() {} };
   const ticks = [...el.querySelectorAll<HTMLElement>('[data-reel-step]')];
+  const mark = el.querySelector<HTMLElement>('[data-reel-mark]');
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -70,8 +71,10 @@ export function createReel(el: HTMLElement): Reel {
     // the start value laid out first, and the reflow that forces is where the
     // old version flickered.
     next.style.clipPath = 'inset(0 0 0 0)';
-    // the dash for this frame stretches; the rest go back to being dashes
+    // the dash for this frame stretches, and the picture in front comes back
+    // to its own colour while the ones behind it stay grey
     ticks.forEach((t, k) => t.classList.toggle('on', k === i));
+    frames.forEach((f, k) => f.classList.toggle('live', k === i));
     if (!reduced) {
       next.getAnimations().forEach((a) => a.cancel());
       next.animate(
@@ -95,6 +98,7 @@ export function createReel(el: HTMLElement): Reel {
       f.style.zIndex = i === 0 ? '1' : '';
     });
     ticks.forEach((t, k) => t.classList.toggle('on', k === 0));
+    frames.forEach((f, k) => f.classList.toggle('live', k === 0));
   }
   rest();
 
@@ -116,6 +120,14 @@ export function createReel(el: HTMLElement): Reel {
     if (!inside) return;
     const pos = ((pointer.y - r.top) / r.height) * frames.length;
     const band = Math.min(frames.length - 1, Math.max(0, Math.floor(pos)));
+    // The marker rides the pointer, not the frame: between two stops while you
+    // are between two pictures, so the next one can be seen coming. The stops
+    // sit at the centre of each band, so the travel runs from half a band in
+    // to half a band from the end.
+    if (mark) {
+      const t = Math.min(1, Math.max(0, (pos - 0.5) / Math.max(frames.length - 1, 1)));
+      mark.style.top = `${(t * 100).toFixed(2)}%`;
+    }
     // Arriving on the card takes the frame under the pointer at once: waiting
     // for a third of a band of travel means entering halfway down and being
     // shown the first picture until the hand has moved a long way.

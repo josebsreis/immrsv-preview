@@ -16,7 +16,6 @@ import { site } from '@lib/site';
 import type { Hero } from './hero';
 
 const host = document.querySelector<HTMLElement>('[data-hero-canvas]');
-const fluidCanvas = document.querySelector<HTMLCanvasElement>('[data-fluid]');
 let hero: Hero | null = null;
 
 createSmoothScroll();
@@ -51,7 +50,7 @@ if (host && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
   const load = () =>
     import('./hero')
       .then(({ createHero }) => {
-        hero = createHero({ host, fluidCanvas });
+        hero = createHero({ host });
         return document.fonts.ready.then(() => { hero?.setReady(); choreography.update(); });
       })
       .catch(() => {});

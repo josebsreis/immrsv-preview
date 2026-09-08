@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   The hero: the particle mark, its physics, the lens and the fluid, as
+   The hero: the particle mark, its physics and the lens, as
    one island with a small API the page drives (ready, exit progress,
    strike). All numbers come from HERO_CONFIG; a page can override any.
    ═══════════════════════════════════════════════════════════════════ */
@@ -11,13 +11,10 @@ import { SHAPES, cloudFor, formFloor, loadCloud, poseInto, shapeTargets, skinned
 import { loadSkin, skinFor } from './skin';
 import { createLens } from './lens';
 import { createPointer } from './pointer';
-import { createFluid, type FluidHandle } from '../fluid';
 
 export interface HeroOptions {
   /** where the three.js canvas goes */
   host: HTMLElement;
-  /** the fluid's own canvas (sits under the host) */
-  fluidCanvas?: HTMLCanvasElement | null;
   config?: DeepPartial<HeroConfig>;
 }
 
@@ -32,7 +29,6 @@ export interface Hero {
   strike(x: number, y: number): void;
   /** stand as shape `i`, or go back to the cube with −1 */
   showShape(i: number): void;
-  readonly fluid: FluidHandle | null;
   destroy(): void;
 }
 
@@ -68,7 +64,6 @@ export function createHero(opts: HeroOptions): Hero {
   const camera = new THREE.PerspectiveCamera(cfg.camera.fov, innerWidth / innerHeight, 0.1, 100);
   scene.add(camera);
 
-  const fluid = opts.fluidCanvas ? createFluid(opts.fluidCanvas, { ...cfg.fluid, mobileMax: cfg.mobileMax }) : null;
   const { pointer: P, destroy: destroyPointer } = createPointer();
   const lens = createLens(renderer, cfg);
 
@@ -255,10 +250,6 @@ export function createHero(opts: HeroOptions): Hero {
     // a click is a blast, and what settles out of it is the next thing: the
     // reel's own clock starts again from here
     if (reel && exit === 0 && released) { cursor = (cursor + 1) % SHAPES.length; showShape(cursor); beat = 0; }
-    if (fluid) for (let k = 0; k < 10; k++) {
-      const a = k / 10 * 6.2832, c = Math.cos(a), s = Math.sin(a);
-      fluid.splat(x + c * 0.012, y + s * 0.012 * camera.aspect, c * cfg.strike.fluidForce, s * cfg.strike.fluidForce, cfg.strike.fluidDye, cfg.strike.fluidRadius);
-    }
   }
   const onDown = (e: PointerEvent) => {
     const el = e.target instanceof Element ? e.target : null;
@@ -286,13 +277,13 @@ export function createHero(opts: HeroOptions): Hero {
   const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
   let running = true, raf = 0;
   /** Once the mark has gone out there is nothing to draw and nothing to
-   *  integrate, so the loop stops entirely: no rAF, no fluid, no 7,200
+   *  integrate, so the loop stops entirely: no rAF and no 7,200
    *  springs, for the whole of the rest of the page. Scrolling back wakes it. */
   let asleep = false;
   function wake() {
     if (!asleep || document.hidden) return;
     asleep = false; running = true; last = undefined;
-    fluid?.start(); raf = requestAnimationFrame(frame);
+    raf = requestAnimationFrame(frame);
   }
   const ctx = {
     dt: 0, t: 0, camera, pointer: P, introT0: 0, exit: 0, shockT: -9, reduced, cfg,
@@ -458,14 +449,14 @@ export function createHero(opts: HeroOptions): Hero {
     // this frame drew nothing — everything is faded out — so it is the last
     // one until something asks for the mark back
     if (out >= 0.999 && exit >= 1) {
-      asleep = true; running = false; fluid?.stop();
+      asleep = true; running = false;
       return;
     }
     if (running) raf = requestAnimationFrame(frame);
   }
   const onVisibility = () => {
-    if (document.hidden) { running = false; cancelAnimationFrame(raf); fluid?.stop(); }
-    else if (!running) { running = true; last = undefined; fluid?.start(); raf = requestAnimationFrame(frame); }
+    if (document.hidden) { running = false; cancelAnimationFrame(raf); }
+    else if (!running) { running = true; last = undefined; raf = requestAnimationFrame(frame); }
   };
   document.addEventListener('visibilitychange', onVisibility);
   raf = requestAnimationFrame(frame);
@@ -476,12 +467,11 @@ export function createHero(opts: HeroOptions): Hero {
     setOut(p) { out = Math.max(0, Math.min(1, p)); if (out < 0.999) wake(); },
     strike,
     showShape,
-    get fluid() { return fluid; },
     destroy() {
       running = false; cancelAnimationFrame(raf);
       removeEventListener('pointerdown', onDown); removeEventListener('resize', onResize);
       document.removeEventListener('visibilitychange', onVisibility);
-      destroyPointer(); lens.dispose(); fluid?.destroy();
+      destroyPointer(); lens.dispose();
       for (const p of plates) p.points.geometry.dispose();
       material.dispose(); renderer.dispose(); renderer.domElement.remove();
     },
