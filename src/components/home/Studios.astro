@@ -111,9 +111,13 @@ const reelFor = (key: string) =>
      still is still turning it. */
   .roll { position: absolute; top: 0; bottom: 0; left: calc(var(--s-5) * -1); width: 0.5rem;
           display: grid; grid-template-rows: repeat(var(--n, 1), 1fr); z-index: 30; pointer-events: none; }
-  .tick { align-self: center; justify-self: center; width: 3px; height: 3px; background: var(--ink-dim); }
+  /* a hairline runs the height of the roll, so the ticks read as stops on a
+     strip rather than as stray dots in the gutter */
+  .roll::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: var(--hairline);
+                  background: var(--line); }
+  .tick { position: relative; align-self: center; justify-self: center; width: 4px; height: 4px; background: var(--ink-4); }
   .mark { position: absolute; left: 50%; top: calc(100% / var(--n, 1) / 2); translate: -50% -50%;
-          width: var(--square); height: var(--square); background: var(--ink);
+          width: 7px; height: 7px; background: var(--ink);
           transition: top 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
   @media (prefers-reduced-motion: reduce) { .mark { transition: none; } }
   /* Every frame is stacked on the same spot. A change opens a clip from the
