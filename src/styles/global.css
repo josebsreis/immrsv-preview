@@ -3,7 +3,10 @@
 /* ── reset / base ──────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { background: var(--ground); }
+/* no rubber-band: the page is a stack of pinned layers, and an overscroll
+   that drags the whole document past its ends reads as the background
+   bouncing free of the content on top of it */
+html { background: var(--ground); overscroll-behavior-y: none; }
 body {
   min-height: 100%;
   background: var(--ground);

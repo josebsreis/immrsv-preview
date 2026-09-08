@@ -118,7 +118,7 @@ export function createHero(opts: HeroOptions): Hero {
   const _axis = new THREE.Vector3();
 
   // ── state the page drives ──────────────────────────────────────────
-  let ready = reduced, exit = 0, out = 0, shockT = -9;
+  let released = reduced, exit = 0, out = 0, shockT = -9;
   let spinAngle = 0, spinBoost = cfg.intro.spinBoost;
 
   // ── the reel ───────────────────────────────────────────────────────
@@ -126,7 +126,8 @@ export function createHero(opts: HeroOptions): Hero {
   let shape = -1;        // −1 is the cube
   let shapeAt = 0;       // 0..1 — how far the cloud has gone into `shape`
   let shapeTo = 0;       // where it is heading
-  let pending = -1;      // a form asked for while another is still standing
+  let prev = -1;         // the form being crossed out of, while `mix` < 1
+  let mix = 1;           // 0..1 across a direct crossing from `prev` to `shape`
   let phase = 0, beat = 0, parked = false;
   /** where the reel has got to. Not `shape`: that goes back to −1 on every
    *  interlude, so counting from it would ask for the first form for ever. */
@@ -198,12 +199,20 @@ export function createHero(opts: HeroOptions): Hero {
 
   function showShape(i: number) {
     if (!reel || i === shape) return;
-    if (i < 0) { shapeTo = 0; pending = -1; return; }
-    // one form never slides into the next: the cloud goes home through the
-    // cube, which is the only reading that makes sense of three loose plates
-    if (shapeAt > 0.02 && shape >= 0) { pending = i; shapeTo = 0; phase = 3; beat = 0; working = true; return; }
-    ensureShape(i); shape = i; shapeTo = 1; phase = 1; beat = 0;
+    if (i < 0) { shapeTo = 0; return; }
+    ensureShape(i);
+    // A form standing hands straight over to the next one: the particles travel
+    // from one skin to the other and never pass through the cube. Going home
+    // between every pair made each change three events instead of one.
+    if (shapeAt > 0.9 && shape >= 0 && ready(shape) && ready(i)) {
+      prev = shape; shape = i; mix = 0; beat = 0; phase = 2;
+      return;
+    }
+    prev = -1; mix = 1;
+    shape = i; shapeTo = 1; phase = 1; beat = 0;
   }
+  /** has this shape's targets, on every plate */
+  const ready = (i: number) => i >= 0 && plates.every((p) => p.targets[i]);
   let introT0 = 0, last: number | undefined, yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
 
   function strike(x: number, y: number) {
@@ -250,37 +259,46 @@ export function createHero(opts: HeroOptions): Hero {
   function frame(now: number) {
     const t = now / 1000;
     const dt = Math.max(0, Math.min((now - (last ?? now)) / 1000, 0.05));
-    if (last === undefined || !ready) introT0 = t;                      // the intro waits to be released
+    if (last === undefined || !released) introT0 = t;                      // the intro waits to be released
     last = now;
 
     // the reel turns on its own: cube, crossing, form, crossing, next form.
     // Scrolling takes precedence — nothing changes shape on the way out.
     const S = cfg.shapes;
-    if (reel && exit === 0 && ready) {
+    if (reel && exit === 0 && released) {
       beat += dt;
       const span = phase === 0 ? (working ? S.beat.cube : S.beat.first)
-                : phase === 2 ? S.beat.shape : S.beat.cross;
+                 : phase === 2 ? S.beat.shape : S.beat.cross;
       if (beat > span) {
-        beat = 0; phase = (phase + 1) % 4;
-        if (phase === 1) { cursor = (cursor + 1) % SHAPES.length; showShape(cursor); }
-        // the cube between two forms is the mark at work, not a thing it is
-        // making: it comes back, spins up hard, and throws the next one out
-        else if (phase === 3) { shapeTo = 0; working = true; }
+        beat = 0;
+        if (phase === 0) { phase = 1; cursor = 0; showShape(0); }
+        else if (phase === 2) {
+          cursor++;
+          if (cursor >= SHAPES.length) {
+            // the lap is done: the mark goes home, spins up, and starts again.
+            // The logo is where the sequence begins and ends, not a spinner
+            // wedged between every pair of forms.
+            cursor = -1; phase = 0; shapeTo = 0; working = true;
+          } else showShape(cursor);
+        } else phase = 2;
       }
     } else if (exit > 0 && !parked) {
       // scrolling away winds the reel back to its first beat: the hero is left
       // as it was found, so coming back does not resume half way through a
       // form, or leave the headline naming one the mark is no longer making
       parked = true;
-      shapeTo = 0; pending = -1; phase = 0; beat = 0; working = false;
+      shapeTo = 0; phase = 0; beat = 0; working = false; prev = -1; mix = 1; cursor = -1;
     }
     if (exit === 0) parked = false;
-    if (shapeTo === 0 && shapeAt < 0.02 && pending >= 0) { const q = pending; pending = -1; ensureShape(q); shape = q; shapeTo = 1; phase = 1; beat = 0; }
-    else if (shapeTo === 0 && shapeAt < 0.002 && shape >= 0) shape = -1;
+    if (shapeTo === 0 && shapeAt < 0.002 && shape >= 0) { shape = -1; prev = -1; mix = 1; }
     const sRate = dt / S.beat.cross;
     shapeAt = clamp(shapeAt + (shapeTo > shapeAt ? sRate : -sRate), 0, 1);
     // the letters always win: a form gives way as the name is read
     const shapeE = shapeAt * shapeAt * (3 - 2 * shapeAt);
+    // the direct crossing from one form to the next
+    if (mix < 1) mix = clamp(mix + dt / S.beat.cross, 0, 1);
+    if (mix >= 1) prev = -1;
+    const cross = mix * mix * (3 - 2 * mix);
 
     // parallax: the mark sways with the cursor inside a hard clamp
     P.x += (P.tx - P.x) * 0.08; P.y += (P.ty - P.y) * 0.08;
@@ -322,11 +340,16 @@ export function createHero(opts: HeroOptions): Hero {
     ctx.out = out;
     material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
     material.uniforms.uFlat.value = shapeE * S.flat;
-    // an animated form is re-posed once a frame, for every plate at once
-    if (shape >= 0 && shapeE > 0.0005 && SHAPES[shape].skin) poseShape(shape, t);
+    // an animated form is re-posed once a frame, for every plate at once —
+    // both of them while one is crossing into the other
+    if (shapeE > 0.0005) {
+      if (shape >= 0 && SHAPES[shape].skin) poseShape(shape, t);
+      if (prev >= 0 && SHAPES[prev].skin) poseShape(prev, t);
+    }
     for (const p of plates) {
       simulate(p.holder, p.points, p.sim, ctx);
       const tg = shape >= 0 ? p.targets[shape] : null;
+      const tp = prev >= 0 ? p.targets[prev] : null;
       if (shapeE > 0.0005 && tg) {
         const { off, home, total } = p.sim, when = p.when;
         for (let j = 0; j < total; j++) {
@@ -334,12 +357,24 @@ export function createHero(opts: HeroOptions): Hero {
           const w = u * u * (3 - 2 * u);
           if (w <= 0) continue;
           const i3 = j * 3;
+          // where this particle is bound: one form, or somewhere along the
+          // line between the one it is leaving and the one it is joining
+          let tx = tg[i3], ty = tg[i3 + 1], tz = tg[i3 + 2];
+          if (tp) {
+            // each particle crosses in its own time, so the cloud shears from
+            // one form into the other rather than sliding across as a block
+            const c = clamp(cross * (1 + S.stagger) - S.stagger * when[j], 0, 1);
+            const e = c * c * (3 - 2 * c);
+            tx = tp[i3] + (tx - tp[i3]) * e;
+            ty = tp[i3 + 1] + (ty - tp[i3 + 1]) * e;
+            tz = tp[i3 + 2] + (tz - tp[i3 + 2]) * e;
+          }
           // some of the cursor's push survives, so a standing form is still
           // something you can put your hand through
           const keep = 1 - w * (1 - S.touch);
-          off[i3] = off[i3] * keep + (tg[i3] - home[i3]) * w;
-          off[i3 + 1] = off[i3 + 1] * keep + (tg[i3 + 1] - home[i3 + 1]) * w;
-          off[i3 + 2] = off[i3 + 2] * keep + (tg[i3 + 2] - home[i3 + 2]) * w;
+          off[i3] = off[i3] * keep + (tx - home[i3]) * w;
+          off[i3 + 1] = off[i3 + 1] * keep + (ty - home[i3 + 1]) * w;
+          off[i3 + 2] = off[i3 + 2] * keep + (tz - home[i3 + 2]) * w;
         }
       }
     }
@@ -355,7 +390,7 @@ export function createHero(opts: HeroOptions): Hero {
   raf = requestAnimationFrame(frame);
 
   return {
-    setReady() { ready = true; },
+    setReady() { released = true; },
     setExit(p) { exit = Math.max(0, Math.min(1, p)); },
     setOut(p) { out = Math.max(0, Math.min(1, p)); },
     strike,
