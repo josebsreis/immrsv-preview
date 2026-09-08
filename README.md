@@ -74,6 +74,8 @@ sanity.config.ts      the Studio
   once its end meets the bottom of the screen. The light half then rides up
   over it, led by `ShutterScroll` — rows in the light half's own ground
   colour that fill from the top down as the band crosses the screen.
+  While it climbs, the held half creeps upward and a scrim (`[data-scrim]`)
+  puts it out, so the two move at different speeds.
   Anything that must sit over the hero's fixed canvases needs
   `z-index: var(--z-ui)`: the light half, and the footer, which is outside
   `main` and so competes with it directly.

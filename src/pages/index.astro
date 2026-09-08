@@ -18,6 +18,7 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
       <WordmarkPanel />
       <Manifesto content={home.about} />
       <Brands content={home.brands} />
+      <div class="scrim" data-scrim aria-hidden="true"></div>
     </div>
 
     <!-- the light half travels over the dark one, its shutter leading it -->
@@ -42,6 +43,8 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
      offset is set in JS: viewport − height), and the light half rides up over
      it — the shutter's rows leading, then its own ground */
   .dark { position: sticky; top: 0; z-index: 1; }
+  /* the dark half is put out as the light one climbs over it */
+  .scrim { position: fixed; inset: 0; z-index: 6; background: var(--ground); opacity: 0; pointer-events: none; }
   .light { position: relative; z-index: var(--z-ui); }
   .next { background: var(--ground); color: var(--ink); padding: 2vh var(--page-x) 12vh; }
   .head { display: flex; justify-content: space-between; align-items: baseline;

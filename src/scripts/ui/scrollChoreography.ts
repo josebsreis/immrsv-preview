@@ -10,6 +10,8 @@ export interface ScrollChoreography { update(): void; destroy(): void; }
 
 const REVEAL_BAND = 0.2;      // how much of a passage is mid-transition at once
 const ROW_STAGGER = 0.55;     // how much of the shutter's run is spent handing over
+const HOLD_DRIFT = 0.22;      // how far the held half creeps up as the next one climbs, in screens
+const HOLD_SHADE = 0.62;      // how far it is put out by the time it is covered
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const smooth = (u: number) => u * u * (3 - 2 * u);
@@ -24,10 +26,17 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
   const themed = document.querySelectorAll<HTMLElement>('[data-theme-follows]');
   const rising = Array.from(document.querySelectorAll<HTMLElement>('[data-rise]'));
   const hold = document.querySelector<HTMLElement>('[data-hold]');
+  const scrim = document.querySelector<HTMLElement>('[data-scrim]');
+  const light = document.querySelector<HTMLElement>('[data-shutter-scroll]')?.parentElement ?? null;
 
   // sticky with a negative top: the block scrolls normally until its end meets
   // the bottom of the screen, then holds there while the next half rides over
-  const fitHold = () => { if (hold) hold.style.top = Math.min(0, innerHeight - hold.offsetHeight) + 'px'; };
+  let holdTop = 0;
+  const fitHold = () => {
+    if (!hold) return;
+    holdTop = Math.min(0, innerHeight - hold.offsetHeight);
+    hold.style.top = holdTop + 'px';
+  };
 
   /* Every character gets its own span so the text can be lit through, a
      soft band at a time. Elements sharing a [data-reveal-group] are one
@@ -82,14 +91,22 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
     // once lifted, elements stay lifted — nothing re-animates on the way back
     for (const el of rising) if (!el.classList.contains('in') && el.getBoundingClientRect().top < vh * 0.86) el.classList.add('in');
 
-    // the shutter: its rows fill from the top down, the last one landing just
-    // as the band's foot — the join with the light half — reaches the screen
+    // the shutter: the rows fill from the foot of the band upward, each growing
+    // from its own base, so the light half climbs slat by slat out of its own
+    // ground rather than arriving detached above it
+    // how far the light half has climbed over the held one: 0 as its head
+    // reaches the bottom of the screen, 1 once it owns the whole of it
+    const over = light ? clamp01((vh - light.getBoundingClientRect().top) / vh) : 0;
+    // the held half creeps up rather than standing still, and goes out
+    if (hold) hold.style.top = (holdTop - over * vh * HOLD_DRIFT).toFixed(1) + 'px';
+    if (scrim) scrim.style.opacity = (over * HOLD_SHADE).toFixed(3);
+
     if (shutter && rows.length > 1) {
       const r = shutter.getBoundingClientRect();
       const p = clamp01((vh - r.top) / Math.max(r.height, 1));
       const n = rows.length;
       for (let k = 0; k < n; k++) {
-        const start = (k / (n - 1)) * ROW_STAGGER;
+        const start = ((n - 1 - k) / (n - 1)) * ROW_STAGGER;
         const u = clamp01((p - start) / (1 - ROW_STAGGER));
         rows[k].style.transform = `scaleY(${smooth(u).toFixed(4)})`;
       }
