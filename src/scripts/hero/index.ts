@@ -22,6 +22,8 @@ export interface HeroOptions {
 export interface Hero {
   /** release the intro (call when the page is ready) */
   setReady(): void;
+  /** 0..1 — how far the mark has gone out, once the name has been read */
+  setOut(p: number): void;
   /** 0..1 — how far the particles have travelled into the wordmark */
   setMorph(p: number): void;
   /** 0..1 — the scroll-driven exit */
@@ -91,7 +93,7 @@ export function createHero(opts: HeroOptions): Hero {
   const qSpin = new THREE.Quaternion(), qTilt = new THREE.Quaternion(), AX = new THREE.Vector3(1, 0, 0);
 
   // ── state the page drives ──────────────────────────────────────────
-  let ready = reduced, exit = 0, morph = 0, shockT = -9;
+  let ready = reduced, exit = 0, morph = 0, out = 0, shockT = -9;
   let spinAngle = 0, spinBoost = cfg.intro.spinBoost;
   let introT0 = 0, last: number | undefined, yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
 
@@ -124,7 +126,7 @@ export function createHero(opts: HeroOptions): Hero {
   let running = true, raf = 0;
   const ctx = {
     dt: 0, t: 0, camera, pointer: P, introT0: 0, exit: 0, shockT: -9, reduced, cfg,
-    morph: 0, density: 1, mp0: new THREE.Vector3(), mru: new THREE.Vector3(), mvv: new THREE.Vector3(),
+    morph: 0, out: 0, density: 1, mp0: new THREE.Vector3(), mru: new THREE.Vector3(), mvv: new THREE.Vector3(),
   };
   // the wordmark panel's outline: the particles land inside it
   const wordmark = document.querySelector<SVGSVGElement>('[data-wordmark] svg');
@@ -176,6 +178,7 @@ export function createHero(opts: HeroOptions): Hero {
     material.uniforms.uTime.value = t;
     ctx.dt = dt; ctx.t = t; ctx.introT0 = introT0; ctx.exit = exit; ctx.shockT = shockT;
     ctx.morph = morph > 0 && letterBox() ? morph : 0;
+    ctx.out = out;
     if (ctx.morph > 0) {
       const boxPx = wordmark ? wordmark.getBoundingClientRect().width : innerWidth;
       ctx.density = Math.min(1, Math.max(cfg.morph.minDensity, boxPx / cfg.morph.fullDensityPx));
@@ -209,6 +212,7 @@ export function createHero(opts: HeroOptions): Hero {
     setReady() { ready = true; },
     setExit(p) { exit = Math.max(0, Math.min(1, p)); },
     setMorph(p) { morph = Math.max(0, Math.min(1, p)); },
+    setOut(p) { out = Math.max(0, Math.min(1, p)); },
     strike,
     get fluid() { return fluid; },
     destroy() {

@@ -5,9 +5,15 @@
  *  it and the light fades back off.
  *  Behaviour lives in scripts/ui/wordmarkLetters.ts. */
 import { LETTERMARK } from '@lib/lettermark';
+
+/** outline: draw the mark itself, or leave the name to the particles alone.
+ *  With it off the SVG stays in the page for assistive tech but paints
+ *  nothing, and the letters no longer answer the cursor. */
+interface Props { outline?: boolean; }
+const { outline = false } = Astro.props;
 ---
 <section class="panel" aria-label="IMMRSV">
-  <div class="mark arrives" data-wordmark style="--arrive-delay: .2s">
+  <div class="mark arrives" data-wordmark data-outline={outline ? 'on' : 'off'} style="--arrive-delay: .2s">
     <svg viewBox={LETTERMARK.viewBox} role="img" aria-label="IMMRSV">
       {LETTERMARK.paths.map((d) => <path class="ltr" data-letter d={d} />)}
     </svg>
@@ -40,5 +46,10 @@ import { LETTERMARK } from '@lib/lettermark';
   @media (hover: none), (prefers-reduced-motion: reduce) {
     .ltr { fill-opacity: 1; stroke-opacity: 1; transition: none; }
   }
+  /* outline off: the particles carry the name alone, and the SVG paints
+     nothing anywhere — it stays only so the name is still readable to
+     assistive tech */
+  .mark[data-outline="off"] .ltr,
+  .mark[data-outline="off"] .ltr.lit { fill-opacity: 0; stroke-opacity: 0; pointer-events: none; }
   @media (max-width: 719px) { .panel { padding: 0 1.25rem; } }
 </style>

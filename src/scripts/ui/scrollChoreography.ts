@@ -77,6 +77,8 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
       const mid = w.top + w.height / 2;
       const m = clamp01((vh * 1.05 - mid) / (vh * 0.62));
       hero?.setMorph(m);
+      // it holds at full strength until the panel itself has left the screen
+      hero?.setOut(clamp01(-w.bottom / (vh * 0.45)));
       // the drawn outline only hardens once the particles have spelt the name,
       // so for a moment the mark is nothing but the cloud
       wordmark.style.setProperty('--formed', smooth(clamp01((m - 0.72) / 0.26)).toFixed(3));

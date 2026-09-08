@@ -17,6 +17,7 @@ export interface SimContext {
   introT0: number;
   exit: number;          // 0..1 scroll progress of the exit
   morph: number;         // 0..1 how far the particles have travelled into the letters
+  out: number;           // 0..1 the fade, once the wordmark panel has gone by
   density: number;       // 0..1 share of particles the letters can hold at this size
   /** the wordmark's box in this plate's local space: a corner and two edges */
   mp0: THREE.Vector3; mru: THREE.Vector3; mvv: THREE.Vector3;
@@ -60,7 +61,6 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
   // flight, and what is left goes out once the name has been read
   const mo = ctx.morph, M = cfg.morph;
   const loosen = ex > 0 ? sm(0, 0.16, ex) * (1 - sm(0.12, 0.45, ex)) : 0;
-  const fade = ex > 0 ? sm(0.1, 1, ex) : 0;
   const dip = mo > 0 ? sm(0.03, 0.3, mo) * (1 - sm(0.45, 0.9, mo)) : 0;
   const stag = M.stagger;
 
@@ -133,7 +133,8 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
       const keep = key < ctx.density ? 1 : 1 - e;
       ain[j] = Math.min(ain[j], (1 - dip * X.dip) * (1 - (1 - M.hold) * e) * keep);
     }
-    if (ex > 0) ain[j] = Math.min(ain[j], 1 - fade * X.dim);
+    // nothing dims while the name is being read — only once it has gone by
+    if (ctx.out > 0) ain[j] *= 1 - ctx.out * X.dim;
     off[i3] = ox; off[i3 + 1] = oy; off[i3 + 2] = oz;
   }
   const geo = points.geometry;

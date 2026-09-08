@@ -27,7 +27,8 @@ if (reel) createStatsReel(reel);
 
 // the letters of the name are shoved about by the cursor
 const markHost = document.querySelector<HTMLElement>('[data-wordmark]');
-if (markHost && matchMedia('(hover: hover) and (pointer: fine)').matches
+if (markHost && markHost.dataset.outline !== 'off'
+    && matchMedia('(hover: hover) and (pointer: fine)').matches
     && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
   createWordmarkLetters(markHost);
 }

@@ -83,6 +83,12 @@ sanity.config.ts      the Studio
   crossed marks itself `data-dhover-item` with a `data-dhover-tile` inside;
   `data-axis="x|y"` (on the item or a `data-dhover` wrapper) limits it to one
   pair of edges. Used by the buttons, the nav pills and the brands grid.
+- **The hero reads its own name.** The cube's particles travel into the
+  letters of the wordmark panel below it, landing inside the box the SVG
+  occupies on screen (`setMorph`), holding at full strength while that panel
+  is up, and going out only once it has left (`setOut`). The panel's own
+  outline is off by default (`<WordmarkPanel outline={false} />`) — the cloud
+  is the mark; turn it on to get the drawn version and its hover.
 - **Hero tunables** live in `src/scripts/hero/config.ts`; a page can override
   any of them via `createHero({ config })`.
 - **Anything on the homepage that sits over the hero** needs its own layer:
