@@ -132,9 +132,6 @@ export function createHero(opts: HeroOptions): Hero {
   /** where the reel has got to. Not `shape`: that goes back to −1 on every
    *  interlude, so counting from it would ask for the first form for ever. */
   let cursor = -1;
-  /** true once the mark has started making things: the cube is then an
-   *  interlude between two forms rather than the thing on show */
-  let working = false;
 
   /** sample shape `i` for every plate, once. A shape baked from a model waits
    *  for its cloud to arrive; if that never comes, its field stands in, so the
@@ -219,9 +216,9 @@ export function createHero(opts: HeroOptions): Hero {
     P.tx = x; P.ty = y; P.moved = true;
     shockT = performance.now() / 1000;
     spinBoost += cfg.strike.spin;
-    // a click is a blast and nothing more: the reel keeps its own time, so a
-    // click is something you do to whatever is standing, not a way to skip it
-    if (reel && exit === 0) beat = Math.max(0, beat - 1.2);   // and it buys the form a moment longer
+    // a click is a blast, and what settles out of it is the next thing: the
+    // reel's own clock starts again from here
+    if (reel && exit === 0 && released) { cursor = (cursor + 1) % SHAPES.length; showShape(cursor); beat = 0; }
     if (fluid) for (let k = 0; k < 10; k++) {
       const a = k / 10 * 6.2832, c = Math.cos(a), s = Math.sin(a);
       fluid.splat(x + c * 0.012, y + s * 0.012 * camera.aspect, c * cfg.strike.fluidForce, s * cfg.strike.fluidForce, cfg.strike.fluidDye, cfg.strike.fluidRadius);
@@ -267,27 +264,21 @@ export function createHero(opts: HeroOptions): Hero {
     const S = cfg.shapes;
     if (reel && exit === 0 && released) {
       beat += dt;
-      const span = phase === 0 ? (working ? S.beat.cube : S.beat.first)
-                 : phase === 2 ? S.beat.shape : S.beat.cross;
+      const span = phase === 0 ? S.beat.first : phase === 2 ? S.beat.shape : S.beat.cross;
       if (beat > span) {
         beat = 0;
+        // the logo holds while the page settles; after that one form follows
+        // another for as long as you stay, and the mark never goes home again
         if (phase === 0) { phase = 1; cursor = 0; showShape(0); }
-        else if (phase === 2) {
-          cursor++;
-          if (cursor >= SHAPES.length) {
-            // the lap is done: the mark goes home, spins up, and starts again.
-            // The logo is where the sequence begins and ends, not a spinner
-            // wedged between every pair of forms.
-            cursor = -1; phase = 0; shapeTo = 0; working = true;
-          } else showShape(cursor);
-        } else phase = 2;
+        else if (phase === 2) { cursor = (cursor + 1) % SHAPES.length; showShape(cursor); }
+        else phase = 2;
       }
     } else if (exit > 0 && !parked) {
       // scrolling away winds the reel back to its first beat: the hero is left
       // as it was found, so coming back does not resume half way through a
       // form, or leave the headline naming one the mark is no longer making
       parked = true;
-      shapeTo = 0; phase = 0; beat = 0; working = false; prev = -1; mix = 1; cursor = -1;
+      shapeTo = 0; phase = 0; beat = 0; prev = -1; mix = 1; cursor = -1;
     }
     if (exit === 0) parked = false;
     if (shapeTo === 0 && shapeAt < 0.002 && shape >= 0) { shape = -1; prev = -1; mix = 1; }
@@ -318,20 +309,12 @@ export function createHero(opts: HeroOptions): Hero {
     // existed to hide the cube's hollow back; a form has a front and a floor,
     // so the axis leans up to vertical as one stands — the mark keeps turning
     // through the change instead of stopping and picking a new direction.
-    // the whirl: nothing while the cube is simply standing there, everything
-    // between one form and the next — it spins up as a form comes apart, peaks
-    // on the bare cube, and winds down as the next one is thrown out
-    const whirl = working ? 1 - shapeE : 0;
-    const cruise = cfg.mark.spin * (1 + whirl * S.whirl);
-    const rate = (cruise + spinBoost) * spinFade * (1 - shapeE) + cfg.mark.spin * S.turntable * shapeE;
+    const rate = (cfg.mark.spin + spinBoost) * spinFade * (1 - shapeE) + cfg.mark.spin * S.turntable * shapeE;
     spinAngle += rate * dt;
     _axis.copy(SPIN_AXIS).lerp(UP, shapeE).normalize();
     qSpin.setFromAxisAngle(_axis, spinAngle);
     qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble * (1 - shapeE));
     L0.quaternion.copy(qSpin).multiply(qTilt);
-    // and it draws in as it works: a small fast thing is loading, a big fast
-    // thing is out of control
-    L0.scale.setScalar(1 - whirl * S.shrink);
 
     L0.updateMatrixWorld(true);
 

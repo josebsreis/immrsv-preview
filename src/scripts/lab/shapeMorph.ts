@@ -227,13 +227,11 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
     // one turn, always the same way round: the axis leans from the cube's
     // diagonal up to vertical as a shape stands
     const e = EASE(blend);
-    const whirl = working ? 1 - e : 0;
-    spinAngle += (cfg.mark.spin * (1 + whirl * cfg.shapes.whirl) * (1 - e) + cfg.mark.spin * 0.85 * e) * dt;
+    spinAngle += (cfg.mark.spin * (1 - e) + cfg.mark.spin * 0.85 * e) * dt;
     _axis.copy(SPIN_AXIS).lerp(UP, e).normalize();
     qSpin.setFromAxisAngle(_axis, spinAngle);
     qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble * (1 - e));
     L0.quaternion.copy(qSpin).multiply(qTilt);
-    L0.scale.setScalar(1 - whirl * cfg.shapes.shrink);
     L0.updateMatrixWorld(true);
 
     material.uniforms.uTime.value = t;

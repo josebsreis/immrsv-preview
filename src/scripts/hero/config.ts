@@ -97,18 +97,15 @@ export const HERO_CONFIG = {
    *  is downloaded for this. */
   shapes: {
     enabled: true,
-    stagger: 0.32,        // share of the crossing spent letting particles leave in
-                          //   turn — enough to unfold, not enough to dawdle
+    stagger: 0.45,        // share of the crossing spent letting particles leave in
+                          //   turn: the cloud shears from one form to the next
+                          //   rather than sliding across as a block
     touch: 0.4,           // how much of the cursor's push survives inside a shape
     flat: 0.75,           // how even the points go as a form resolves
     turntable: 0.85,      // the vertical turn, as a share of the cruise spin
-    shrink: 0.52,         // how far the mark draws in while it is working: small
-                          //   and spinning reads as a thing loading, where the
-                          //   same speed at full size reads as a thing lost
-    whirl: 16,            // how much faster the mark turns while it is working:
-                          //   the cube between two forms is the thing spinning
-                          //   them up, not a pose it holds
-    beat: { first: 3.6, cube: 0.7, cross: 0.55, shape: 5 },   // seconds
+    // seconds: the logo holds while the page settles, then the forms follow
+    // one another for as long as you stay on the hero
+    beat: { first: 3.6, cross: 1.15, shape: 4.5 },
   },
 
   /** the Lusion-style lens: flow map + chromatic post pass on the mark */
