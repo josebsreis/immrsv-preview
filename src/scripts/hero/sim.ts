@@ -17,6 +17,7 @@ export interface SimContext {
   introT0: number;
   exit: number;          // 0..1 scroll progress of the exit
   morph: number;         // 0..1 how far the particles have travelled into the letters
+  density: number;       // 0..1 share of particles the letters can hold at this size
   /** the wordmark's box in this plate's local space: a corner and two edges */
   mp0: THREE.Vector3; mru: THREE.Vector3; mvv: THREE.Vector3;
   shockT: number;        // time of the last strike, or < 0
@@ -120,12 +121,17 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
         const tx = ctx.mp0.x + ctx.mru.x * lu + ctx.mvv.x * lv;
         const ty = ctx.mp0.y + ctx.mru.y * lu + ctx.mvv.y * lv;
         const tz = ctx.mp0.z + ctx.mru.z * lu + ctx.mvv.z * lv;
-        const w = X.drift * e;
+        // the wander fades out as the letter resolves, so it lands and stays
+        const w = X.drift * e * (1 - e);
         ox += (tx - home[i3] - ox) * e + Math.sin(t * 0.5 + jit[j] * 9.1) * w;
         oy += (ty - home[i3 + 1] - oy) * e + Math.cos(t * 0.43 + jit[j] * 7.7) * w;
         oz += (tz - home[i3 + 2] - oz) * e;
       }
-      ain[j] = Math.min(ain[j], (1 - dip * X.dip) * (1 - (1 - M.hold) * e));
+      // a narrow box cannot hold every particle without turning to soup: the
+      // ones over its share stand down as the letters resolve
+      const key = jit[j] / C.jitter + 0.5;
+      const keep = key < ctx.density ? 1 : 1 - e;
+      ain[j] = Math.min(ain[j], (1 - dip * X.dip) * (1 - (1 - M.hold) * e) * keep);
     }
     if (ex > 0) ain[j] = Math.min(ain[j], 1 - fade * X.dim);
     off[i3] = ox; off[i3 + 1] = oy; off[i3 + 2] = oz;

@@ -92,8 +92,11 @@ export const HERO_CONFIG = {
 
   /** the crossing from cube to wordmark */
   morph: {
-    stagger: 0.45,    // how much of the run is spent letting particles leave in turn
-    hold: 0.86,       // how bright the letters sit behind the outline
+    stagger: 0.45,        // how much of the run is spent letting particles leave in turn
+    hold: 0.86,           // how bright the letters sit behind the outline
+    thin: 0.42,           // how much finer a point gets as the letterform resolves
+    fullDensityPx: 1280,  // the box width that can carry every particle
+    minDensity: 0.34,     // …and the least it ever thins to, on a phone
   },
 
   /** the Lusion-style lens: flow map + chromatic post pass on the mark */

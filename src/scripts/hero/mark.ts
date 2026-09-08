@@ -76,7 +76,7 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
 /* The wordmark, as a field of points. The letters are rasterised once into a
    small bitmap and every filled pixel becomes a candidate landing spot, so the
    particles can spell the name without any path maths at runtime. */
-let letterField: { w: number; h: number; hits: Int32Array } | null = null;
+let letterField: { w: number; h: number; edge: Int32Array; fill: Int32Array } | null = null;
 
 function buildLetterField() {
   const w = 1024, box = LETTERMARK.box, h = Math.round((w * box.h) / box.w);
@@ -87,22 +87,42 @@ function buildLetterField() {
   g.fillStyle = '#fff';
   for (const d of LETTERMARK.paths) g.fill(new Path2D(d));
   const data = g.getImageData(0, 0, w, h).data;
-  const hits: number[] = [];
-  for (let i = 3, px = 0; i < data.length; i += 4, px++) if (data[i] > 128) hits.push(px);
-  letterField = { w, h, hits: Int32Array.from(hits) };
+  const on = new Uint8Array(w * h);
+  for (let i = 3, px = 0; i < data.length; i += 4, px++) on[px] = data[i] > 128 ? 1 : 0;
+
+  // an edge pixel is a filled one with air within a couple of pixels: those are
+  // the letterform's own contour, which is exactly where the outline is drawn
+  const edge: number[] = [], fill: number[] = [], R = 3;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const px = y * w + x;
+    if (!on[px]) continue;
+    let open = false;
+    for (let dy = -R; dy <= R && !open; dy++) for (let dx = -R; dx <= R; dx++) {
+      const nx = x + dx, ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h || !on[ny * w + nx]) { open = true; break; }
+    }
+    (open ? edge : fill).push(px);
+  }
+  letterField = { w, h, edge: Int32Array.from(edge), fill: Int32Array.from(fill) };
 }
 
-/** n points inside the letters, as u,v in the wordmark's own box */
+/** n points in the letters, as u,v in the wordmark's own box. Most land on the
+ *  contour so the cloud reads as the same letterform the outline draws; the
+ *  rest fill the interior thinly, so the letters have body without turning to
+ *  soup. */
+const EDGE_SHARE = 0.72;
+
 function letterSamples(n: number): Float32Array {
   const out = new Float32Array(n * 2);
   try { if (!letterField) buildLetterField(); } catch { letterField = null; }
-  if (!letterField || letterField.hits.length === 0) {
+  if (!letterField || letterField.edge.length === 0) {
     for (let i = 0; i < n; i++) { out[i * 2] = Math.random(); out[i * 2 + 1] = Math.random(); }
     return out;
   }
-  const { w, h, hits } = letterField;
+  const { w, h, edge, fill } = letterField;
   for (let i = 0; i < n; i++) {
-    const px = hits[(Math.random() * hits.length) | 0];
+    const pool = Math.random() < EDGE_SHARE || fill.length === 0 ? edge : fill;
+    const px = pool[(Math.random() * pool.length) | 0];
     out[i * 2] = ((px % w) + Math.random()) / w;
     out[i * 2 + 1] = (((px / w) | 0) + Math.random()) / h;
   }

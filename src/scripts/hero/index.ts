@@ -124,7 +124,7 @@ export function createHero(opts: HeroOptions): Hero {
   let running = true, raf = 0;
   const ctx = {
     dt: 0, t: 0, camera, pointer: P, introT0: 0, exit: 0, shockT: -9, reduced, cfg,
-    morph: 0, mp0: new THREE.Vector3(), mru: new THREE.Vector3(), mvv: new THREE.Vector3(),
+    morph: 0, density: 1, mp0: new THREE.Vector3(), mru: new THREE.Vector3(), mvv: new THREE.Vector3(),
   };
   // the wordmark panel's outline: the particles land inside it
   const wordmark = document.querySelector<SVGSVGElement>('[data-wordmark] svg');
@@ -176,6 +176,14 @@ export function createHero(opts: HeroOptions): Hero {
     material.uniforms.uTime.value = t;
     ctx.dt = dt; ctx.t = t; ctx.introT0 = introT0; ctx.exit = exit; ctx.shockT = shockT;
     ctx.morph = morph > 0 && letterBox() ? morph : 0;
+    if (ctx.morph > 0) {
+      const boxPx = wordmark ? wordmark.getBoundingClientRect().width : innerWidth;
+      ctx.density = Math.min(1, Math.max(cfg.morph.minDensity, boxPx / cfg.morph.fullDensityPx));
+      // a finer point as the letterform resolves, so the strokes stay legible
+      material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio() * (1 - cfg.morph.thin * ctx.morph);
+    } else {
+      material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
+    }
     for (const p of plates) {
       if (ctx.morph > 0) {
         _inv.copy(p.holder.matrixWorld).invert();                 // the box in this plate's space
