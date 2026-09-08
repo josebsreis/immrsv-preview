@@ -2,7 +2,7 @@
 import Base from '@layouts/Base.astro';
 import ShutterScroll from '@components/transitions/ShutterScroll.astro';
 import Hero from '@components/hero/Hero.astro';
-import WordmarkPanel from '@components/home/WordmarkPanel.astro';
+import Marquee from '@components/home/Marquee.astro';
 import Manifesto from '@components/home/Manifesto.astro';
 import Studios from '@components/home/Studios.astro';
 import Brands from '@components/home/Brands.astro';
@@ -15,7 +15,7 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
   <main class="main">
     <div class="dark" data-hold>
       <Hero content={home.hero} featured={home.featuredProject} />
-      <WordmarkPanel outline />
+      <Marquee items={home.studios.items.map((s) => s.name)} />
       <Manifesto content={home.about} />
       <Brands content={home.brands} />
       <div class="scrim" data-scrim aria-hidden="true"></div>

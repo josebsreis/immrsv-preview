@@ -1,0 +1,53 @@
+---
+/** The band between the hero and the statement: what the practice does, said
+ *  once, moving. It is a separator first — the page needs a breath there, not
+ *  another block — so it is a hairline band the full width of the screen
+ *  rather than a panel with margins.
+ *
+ *  The moving copy is hidden from assistive tech and a single still copy is
+ *  exposed instead: a marquee read aloud three times over is nobody's idea of
+ *  an accessible page. */
+interface Props { items: string[]; label?: string }
+const { items, label = 'What we do' } = Astro.props;
+/** twice through, so the second run is already in place when the first leaves */
+const runs = [0, 1];
+---
+<section class="band" aria-label={label}>
+  <div class="track" aria-hidden="true">
+    {runs.map(() => (
+      <div class="run">
+        {items.map((item) => (
+          <span class="item"><span class="dot"></span>{item}</span>
+        ))}
+      </div>
+    ))}
+  </div>
+  <p class="sr">{items.join(', ')}.</p>
+</section>
+
+<style>
+  .band { position: relative; z-index: var(--z-ui);
+          border-top: var(--hairline) solid var(--line);
+          border-bottom: var(--hairline) solid var(--line);
+          overflow: hidden; }
+  .track { display: flex; width: max-content; animation: run 42s linear infinite; }
+  .run { display: flex; flex: none; }
+
+  .item { display: flex; align-items: center; gap: 1.15em;
+          padding: 0.85em 0.6em 0.85em 0;
+          font-size: clamp(1.35rem, 3.6vw, 2.6rem);
+          font-weight: 500; letter-spacing: -0.02em; line-height: 1;
+          white-space: nowrap; color: var(--ink-2); }
+  /* the squares of the lattice, at the scale of a word */
+  .dot { flex: none; width: 0.26em; height: 0.26em; background: var(--ink-4); margin-right: 0.35em; }
+
+  @keyframes run { to { transform: translateX(-50%); } }
+
+  /* nothing moves for a reader who asked for less; the band still separates */
+  @media (prefers-reduced-motion: reduce) {
+    .track { animation: none; }
+  }
+
+  .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+        overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+</style>

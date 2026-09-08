@@ -244,6 +244,11 @@ export function createHero(opts: HeroOptions): Hero {
 
   function strike(x: number, y: number) {
     P.tx = x; P.ty = y; P.moved = true;
+    // The cursor teleports to wherever the click landed, and a cursor that
+    // moves a screen's width in one frame reads to the physics as a hand
+    // swiping through at speed — which is the shove you see as a jump. The
+    // blast is the impulse here; the travel is not.
+    for (const p of plates) p.sim.hadM = false;
     shockT = performance.now() / 1000;
     spinBoost += cfg.strike.spin;
     // a click is a blast, and what settles out of it is the next thing: the
