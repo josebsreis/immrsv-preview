@@ -6,7 +6,7 @@ import { createSmoothScroll } from './ui/smoothScroll';
 import { createScrollChoreography } from './ui/scrollChoreography';
 import { createRotatingWord } from './ui/rotatingWord';
 import { createStatsReel } from './ui/statsReel';
-import { createWordmark } from './wordmark';
+import { createWordmarkInk } from './ui/wordmarkInk';
 import { splitChars } from './ui/splitText';
 import { createHoverAudio } from './ui/hoverAudio';
 import { runLoader } from './ui/loader';
@@ -24,12 +24,9 @@ if (rot) createRotatingWord(rot);
 const reel = document.querySelector<HTMLElement>('[data-stats]');
 if (reel) createStatsReel(reel);
 
-// the name, drawn in GL when the machine and the reader allow it
+// the name inks in under the cursor
 const markHost = document.querySelector<HTMLElement>('[data-wordmark]');
-const markCanvas = document.querySelector<HTMLCanvasElement>('[data-wordmark-canvas]');
-if (markHost && markCanvas && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  createWordmark(markHost, markCanvas).catch(() => {});
-}
+if (markHost && matchMedia('(hover: hover)').matches) createWordmarkInk(markHost);
 createHoverAudio(site.audio.taps);
 
 runLoader(document.querySelector<HTMLElement>('[data-loader]'), () => hero?.setReady());
