@@ -39,28 +39,27 @@ export interface PlateSim {
 
 export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
   const { base, mid, high } = cfg.mark.tint;
-  const D = cfg.mark.depth, H = cfg.mark.holo;
+  const D = cfg.mark.depth;
   return new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { uTime: { value: 0 }, uPx: { value: cfg.mark.pointPx }, uFlat: { value: 0 }, uHolo: { value: 0 } },
+    uniforms: { uTime: { value: 0 }, uPx: { value: cfg.mark.pointPx }, uFlat: { value: 0 } },
     vertexShader: `
-      attribute float aSeed; attribute float aSize; attribute float aTint; attribute vec3 aOff; attribute float aIn;
-      uniform float uTime, uPx, uFlat, uHolo;   // uFlat: 1 while the cloud is standing as a form
+      attribute float aSeed; attribute float aTint; attribute vec3 aOff; attribute float aIn;
+      uniform float uTime, uPx, uFlat;   // uFlat: 1 while the cloud is standing as a form
       varying float vA; varying vec3 vC; varying float vB;
       void main(){
         vec3 p = position + aOff;
         float ph = aSeed * 6.28318;
         // micro drift — each point wanders a hair around home
         p += 0.0055 * vec3( sin(uTime*0.9 + ph), cos(uTime*0.7 + ph*1.3), sin(uTime*1.1 + ph*0.7) );
-        vec4 wp = modelMatrix * vec4(p, 1.0);
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         vec4 clip = projectionMatrix * mv;
         // displaced particles glow a little brighter and larger
         float f = clamp(length(aOff) / 0.09, 0.0, 1.0);
         gl_Position  = clip;
-        // A form wants an even skin where the cube wants a starfield, but only
-        // part way: flattening every point to one size and one brightness is
-        // what turned a body into a white mass.
+        // Every particle is the same size. The cloud is one material, and a
+        // scatter of sizes reads as noise in it rather than as depth — what
+        // depth there is comes from the focal plane below.
         // Depth. Nothing here reads as a volume without it: the far side of a
         // cloud has to fall away, or every point sits on the same pane of glass.
         float dep = clamp((-mv.z - ${D.near.toFixed(3)}) / ${(D.far - D.near).toFixed(3)}, 0.0, 1.0);
@@ -73,16 +72,11 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
         // properly far from it goes soft
         float blur = off * off;
         vB = blur;
-        float sz = mix(aSize, 1.0, uFlat * ${D.even.toFixed(2)});
         float tn = mix(aTint, 0.86, uFlat * ${D.even.toFixed(2)});
-        gl_PointSize = sz * uPx / clip.w * (1.0 + f*0.22) * (1.0 + blur * ${D.bokeh.toFixed(2)});
+        gl_PointSize = uPx / clip.w * (1.0 + f*0.22) * (1.0 + blur * ${D.bokeh.toFixed(2)});
         // the same light spread over a wider disc is a fainter disc
         vA = (0.58 + 0.16*f) * mix(0.10, 1.0, aIn) * (1.0 + ${D.lift.toFixed(2)}*uFlat) * lit
              / (1.0 + blur * ${(D.bokeh * 0.55).toFixed(2)});
-        // the scan: bands of light travelling up through the form, in world
-        // height so they stay level however the mark is turned
-        float band = 0.5 + 0.5 * sin(wp.y * ${H.freq.toFixed(1)} - uTime * ${(H.speed * 6.2832).toFixed(2)});
-        vA *= mix(1.0, 1.0 - ${H.bands.toFixed(2)} + ${H.bands.toFixed(2)} * band * 1.6, uHolo);
         vec3 c0 = vec3(${base.join(',')}), c1 = vec3(${mid.join(',')}), c2 = vec3(${high.join(',')});
         vec3 col = tn < 0.5 ? mix(c0, c1, tn*2.0) : mix(c1, c2, (tn-0.5)*2.0);
         // and the far side cools as it goes, the way distance always does
@@ -112,7 +106,7 @@ export function buildPlate(i: number, cfg: HeroConfig, material: THREE.Material,
   const b = FACE_BASES[i];
   const { perPlate, edgePerPlate, thick, separation, voidCentre } = cfg.mark;
   const total = perPlate + edgePerPlate;
-  const pos = new Float32Array(total * 3), seed = new Float32Array(total), size = new Float32Array(total), tint = new Float32Array(total);
+  const pos = new Float32Array(total * 3), seed = new Float32Array(total), tint = new Float32Array(total);
   const place = (k: number, u: number, v: number, depth: number) => {
     for (let c = 0; c < 3; c++) pos[k * 3 + c] = b.A[c] + u * (b.B[c] - b.A[c]) + v * (b.D[c] - b.A[c]) + b.n[c] * depth;
     seed[k] = Math.random();
@@ -122,7 +116,6 @@ export function buildPlate(i: number, cfg: HeroConfig, material: THREE.Material,
     const u = Math.random(), v = Math.random();
     if (u > 2 / 3 && v > 2 / 3) continue;                         // the notch
     place(k, u, v, -Math.random() * thick);
-    size[k] = 0.6 + Math.random() * 1.5;
     tint[k] = Math.pow(Math.random(), 1.5);
     k++;
   }
@@ -135,7 +128,6 @@ export function buildPlate(i: number, cfg: HeroConfig, material: THREE.Material,
     const u = sg.p[0] + (sg.q[0] - sg.p[0]) * t, v = sg.p[1] + (sg.q[1] - sg.p[1]) * t;
     const du = -(sg.q[1] - sg.p[1]) / sg.len * jit, dv = (sg.q[0] - sg.p[0]) / sg.len * jit;
     place(k, u + du, v + dv, -Math.random() * thick);
-    size[k] = 0.9 + Math.random() * 1.6;
     tint[k] = 0.55 + Math.random() * 0.45;
     k++;
   }
@@ -143,7 +135,6 @@ export function buildPlate(i: number, cfg: HeroConfig, material: THREE.Material,
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
-  g.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
   g.setAttribute('aTint', new THREE.BufferAttribute(tint, 1));
   const off = new THREE.BufferAttribute(new Float32Array(total * 3), 3); off.setUsage(THREE.DynamicDrawUsage);
   const ain = new THREE.BufferAttribute(new Float32Array(total), 1); ain.setUsage(THREE.DynamicDrawUsage);
