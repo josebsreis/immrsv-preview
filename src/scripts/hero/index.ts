@@ -279,6 +279,15 @@ export function createHero(opts: HeroOptions): Hero {
   // ── frame ──────────────────────────────────────────────────────────
   const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
   let running = true, raf = 0;
+  /** Once the mark has gone out there is nothing to draw and nothing to
+   *  integrate, so the loop stops entirely: no rAF, no fluid, no 7,200
+   *  springs, for the whole of the rest of the page. Scrolling back wakes it. */
+  let asleep = false;
+  function wake() {
+    if (!asleep || document.hidden) return;
+    asleep = false; running = true; last = undefined;
+    fluid?.start(); raf = requestAnimationFrame(frame);
+  }
   const ctx = {
     dt: 0, t: 0, camera, pointer: P, introT0: 0, exit: 0, shockT: -9, reduced, cfg,
     out: 0,
@@ -304,22 +313,23 @@ export function createHero(opts: HeroOptions): Hero {
         else phase = 2;
       }
     } else if (exit > 0 && !parked) {
-      // scrolling away winds the reel back to its first beat: the hero is left
-      // as it was found, so coming back does not resume half way through a
-      // form, or leave the headline naming one the mark is no longer making
+      // scrolling away stops the reel where it stands. Whatever is up is what
+      // gets thrown apart — going home to the cube first meant watching a form
+      // undo itself and only then explode, which is two exits, not one.
       parked = true;
-      shapeTo = 0; phase = 0; beat = 0; prev = -1; held = false; mix = 1; cursor = -1;
     }
     if (exit === 0) parked = false;
     if (shapeTo === 0 && shapeAt < 0.002 && shape >= 0) { shape = -1; prev = -1; held = false; mix = 1; }
     const sRate = dt / S.beat.cross;
     shapeAt = clamp(shapeAt + (shapeTo > shapeAt ? sRate : -sRate), 0, 1);
-    // the letters always win: a form gives way as the name is read
     const shapeE = shapeAt * shapeAt * (3 - 2 * shapeAt);
     // the direct crossing from one form to the next
     if (mix < 1) mix = clamp(mix + dt / S.beat.cross, 0, 1);
     if (mix >= 1) { prev = -1; held = false; }
     const cross = mix * mix * (3 - 2 * mix);
+    // the throw: nothing until the hero starts to leave, then everything
+    const bt = clamp((exit - 0.08) / 0.92, 0, 1);
+    const burst = bt * bt * cfg.exit.burst;
 
     // parallax: the mark sways with the cursor inside a hard clamp
     P.x += (P.tx - P.x) * 0.08; P.y += (P.ty - P.y) * 0.08;
@@ -390,9 +400,27 @@ export function createHero(opts: HeroOptions): Hero {
           off[i3 + 2] = off[i3 + 2] * keep + (tz - home[i3 + 2]) * w;
         }
       }
+      // and last, the exit: every particle thrown outward from wherever it
+      // ended up, form or no form. `over` is each one's own radial, so the
+      // cloud comes apart rather than sliding away as a block.
+      if (burst > 0) {
+        const { off, over, total } = p.sim;
+        for (let j = 0; j < total; j++) {
+          const i3 = j * 3;
+          off[i3] += over[i3] * burst;
+          off[i3 + 1] += over[i3 + 1] * burst;
+          off[i3 + 2] += over[i3 + 2] * burst;
+        }
+      }
     }
 
     lens.render(scene, camera, P);
+    // this frame drew nothing — everything is faded out — so it is the last
+    // one until something asks for the mark back
+    if (out >= 0.999 && exit >= 1) {
+      asleep = true; running = false; fluid?.stop();
+      return;
+    }
     if (running) raf = requestAnimationFrame(frame);
   }
   const onVisibility = () => {
@@ -404,8 +432,8 @@ export function createHero(opts: HeroOptions): Hero {
 
   return {
     setReady() { released = true; },
-    setExit(p) { exit = Math.max(0, Math.min(1, p)); },
-    setOut(p) { out = Math.max(0, Math.min(1, p)); },
+    setExit(p) { exit = Math.max(0, Math.min(1, p)); if (exit < 1) wake(); },
+    setOut(p) { out = Math.max(0, Math.min(1, p)); if (out < 0.999) wake(); },
     strike,
     showShape,
     get fluid() { return fluid; },

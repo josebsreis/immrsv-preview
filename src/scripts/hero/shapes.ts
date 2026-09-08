@@ -78,7 +78,7 @@ export interface ShapeDef {
 const FIGURE: ShapeDef = {
   name: 'figure',
   skin: '/shapes/figure.skin',
-  scale: 1.58,
+  scale: 2.05,
   lift: -0.5,
   bounds: [-0.55, -0.06, -0.34, 0.55, 1.02, 0.34],
   sdf(x, y, z) {
@@ -115,7 +115,7 @@ const FIGURE: ShapeDef = {
  *  section does not — at this resolution the silhouette is the whole argument. */
 const HOUSE: ShapeDef = {
   name: 'house',
-  scale: 1.5,
+  scale: 1.95,
   lift: -0.47,
   bounds: [-0.62, -0.02, -0.46, 0.62, 0.98, 0.46],
   sdf(x, y, z) {
@@ -140,7 +140,7 @@ const HOUSE: ShapeDef = {
 const TREE: ShapeDef = {
   name: 'tree',
   src: '/shapes/tree.bin',
-  scale: 1.6,
+  scale: 2.08,
   lift: -0.5,
   bounds: [-0.42, -0.02, -0.42, 0.42, 1.0, 0.42],
   sdf(x, y, z) {
@@ -158,7 +158,7 @@ const TREE: ShapeDef = {
  *  read as a surface, not a brick. */
 const SCREEN: ShapeDef = {
   name: 'screen',
-  scale: 1.66,
+  scale: 2.15,
   lift: -0.44,
   bounds: [-0.52, -0.04, -0.36, 0.52, 0.92, 0.36],
   sdf(x, y, z) {
