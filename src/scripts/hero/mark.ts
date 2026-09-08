@@ -87,14 +87,16 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
       precision highp float;
       varying float vA; varying vec3 vC; varying float vB;
       void main(){
+        vec2 q = abs(gl_PointCoord - 0.5);
         float r = length(gl_PointCoord - 0.5);
-        // a hard little core inside a soft fall: a dot with a shape to it,
-        // rather than a smudge that only reads once a thousand overlap. Out of
-        // focus the core goes and only the fall is left — a circle of
-        // confusion, which is what a lens actually does.
-        float core = smoothstep(0.34, 0.14, r) * (1.0 - vB);
-        float halo = smoothstep(0.5, mix(0.16, 0.42, vB), r);
-        float a = (halo * mix(0.55, 1.0, vB) + core * 0.45) * vA;
+        // In focus a particle is a square — the site is built out of squares,
+        // and a square has corners, which is most of what "crisp" means at two
+        // pixels across. Out of focus it becomes a disc, because that is what a
+        // lens does to a point: the shape of the aperture, not of the thing.
+        float e = fwidth(q.x) * 0.9 + 0.004;
+        float sq = 1.0 - smoothstep(0.30 - e, 0.30 + e, max(q.x, q.y));
+        float disc = smoothstep(0.5, mix(0.2, 0.42, vB), r);
+        float a = mix(sq, disc * mix(0.8, 1.0, vB), vB) * vA;
         gl_FragColor = vec4(vC * a, a);
       }`,
   });
