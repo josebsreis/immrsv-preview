@@ -26,29 +26,47 @@ export function createReel(el: HTMLElement): Reel {
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
   let at = 0, top = 1;
 
+  /* Every frame is fetched and decoded before the card is reached. The
+     flicker on a change was an image arriving undecoded and painting a frame
+     late: a scrub can land three projects away in one move, and only the
+     neighbours had been asked for. */
+  let warmed = false;
+  const warmAll = () => {
+    if (warmed) return;
+    warmed = true;
+    for (const f of frames) {
+      f.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
+        img.loading = 'eager';
+        img.decode?.().catch(() => {});
+      });
+    }
+  };
+  const near = new IntersectionObserver(([e]) => { if (e.isIntersecting) { warmAll(); near.disconnect(); } }, { rootMargin: '60% 0px' });
+  near.observe(el);
+
   /** `down` is the direction the reel is travelling, not the cursor */
   function show(i: number, down: boolean) {
     if (i === at || i < 0 || i >= frames.length) return;
     const next = frames[i];
     next.style.zIndex = String(++top);
-    // the frame that is arriving carries the whole picture; it is only the
-    // window onto it that opens, so nothing about the image itself moves
-    if (!reduced) {
-      next.style.transition = 'none';
-      next.style.clipPath = down ? 'inset(0 0 100% 0)' : 'inset(100% 0 0 0)';
-      void next.offsetWidth;                      // let that land before releasing
-      next.style.transition = '';
-    }
+    // The frame that is arriving carries the whole picture; it is only the
+    // window onto it that opens, so nothing about the image itself moves.
+    // The open is an animation rather than a transition: a transition needs
+    // the start value laid out first, and the reflow that forces is where the
+    // old version flickered.
     next.style.clipPath = 'inset(0 0 0 0)';
+    if (!reduced) {
+      next.getAnimations().forEach((a) => a.cancel());
+      next.animate(
+        [{ clipPath: down ? 'inset(0 0 100% 0)' : 'inset(100% 0 0 0)' }, { clipPath: 'inset(0 0 0 0)' }],
+        { duration: 620, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+      );
+    }
     // the frame you were on keeps its place in the stack, directly beneath the
     // one arriving: clearing it dropped it to the bottom, so the curtain
     // opened onto the very first frame instead of onto the one you just left
     at = i;
-    // ask for the neighbours, so a scrub does not stall on a decode
-    for (const k of [i + 1, i - 1]) {
-      const img = frames[k]?.querySelector<HTMLImageElement>('img');
-      if (img && img.loading === 'lazy') img.loading = 'eager';
-    }
+    warmAll();
   }
 
   frames.forEach((f, i) => { f.style.clipPath = i === 0 ? 'inset(0 0 0 0)' : 'inset(0 0 100% 0)'; });
@@ -71,6 +89,7 @@ export function createReel(el: HTMLElement): Reel {
 
   return {
     destroy() {
+      near.disconnect();
       el.removeEventListener('pointermove', onMove);
       el.removeEventListener('click', onTap);
     },

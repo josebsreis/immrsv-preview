@@ -44,7 +44,7 @@ const reelFor = (key: string) =>
         </div>
 
         {reelFor(s.key).length > 0 ? (
-          <div class="band" data-rise>
+          <div class="band">
             {reelFor(s.key).map((shot, k) => (
               <picture class="frame" data-reel-frame={shot.name}>
                 <source srcset={`${shot.src}.avif`} type="image/avif" />
@@ -102,10 +102,8 @@ const reelFor = (key: string) =>
   /* Every frame is stacked on the same spot. A change opens a clip from the
      edge the reel is travelling from, over the frame before it — a curtain
      drawn across, rather than one picture dissolving into another. */
-  .frame { position: absolute; inset: 0; clip-path: inset(0 0 100% 0);
-           transition: clip-path 0.62s cubic-bezier(0.16, 1, 0.3, 1); will-change: clip-path; }
+  .frame { position: absolute; inset: 0; clip-path: inset(0 0 100% 0); }
   .frame:first-of-type { position: relative; clip-path: inset(0 0 0 0); }
-  @media (prefers-reduced-motion: reduce) { .frame { transition: none; } }
 
   .band video, .band img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
