@@ -1,0 +1,26 @@
+---
+/** A lab page, not part of the site: the particle mark morphing into the
+ *  things the three studios make. Click or press 1–3 to steer it, 0 for
+ *  the cube. */
+import Base from '@layouts/Base.astro';
+---
+<Base theme="dark" title="Lab — shapes">
+  <main class="lab">
+    <div class="stage" data-stage></div>
+    <p class="note label"><span data-label>cube</span> · click or 1–3 · 0 for the cube</p>
+  </main>
+  <script>
+    import { startShapeLab } from '../../scripts/lab/shapeMorph';
+    const stage = document.querySelector<HTMLElement>('[data-stage]')!;
+    const label = document.querySelector<HTMLElement>('[data-label]')!;
+    const lab = startShapeLab(stage, (name) => { label.textContent = name; });
+    (window as any).shapeLab = lab;
+  </script>
+</Base>
+
+<style>
+  .lab { position: fixed; inset: 0; z-index: 10; background: var(--ground); }
+  .stage { position: absolute; inset: 0; }
+  .stage :global(canvas) { width: 100%; height: 100%; display: block; }
+  .note { position: fixed; left: var(--page-x); bottom: var(--page-y); color: var(--ink-3); pointer-events: none; }
+</style>
