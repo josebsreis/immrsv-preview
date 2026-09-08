@@ -70,19 +70,14 @@ const [line1, line2 = ''] = content.headline.split('\n');
     .desc { max-width: none; font-size: var(--t-body); }
   }
 
-  /* one column: the card over the sentence, with the cue — squares only at
-     this width — holding the corner beside it */
+  /* the card takes too much of a phone screen — the sentence carries it, with
+     the cue reduced to its squares beside it */
   @media (max-width: 719px) {
+    .feat-slot { display: none; }
     .lead { left: 1.25rem; top: 6.5rem; }
     .cta { flex-direction: column; align-items: flex-start; }
-    .bottom { left: 1.25rem; right: 1.25rem; bottom: 1.5rem;
-              display: grid; align-items: end; column-gap: var(--s-4); row-gap: var(--s-5);
-              grid-template-columns: auto 1fr;
-              grid-template-areas: "card card"
-                                   "cue  desc"; }
-    .cue-slot { grid-area: cue; }
-    .desc-slot { grid-area: desc; justify-content: flex-start; }
-    .feat-slot { grid-area: card; --feat-w: 100%; }
+    .bottom { left: 1.25rem; right: 1.25rem; bottom: 1.5rem; gap: var(--s-4); }
+    .desc-slot { justify-content: flex-start; }
     .desc { max-width: none; font-size: var(--t-body); }
   }
 </style>
