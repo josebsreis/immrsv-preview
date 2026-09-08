@@ -34,6 +34,7 @@ function track() {
 export function createReel(el: HTMLElement): Reel {
   const frames = [...el.querySelectorAll<HTMLElement>('[data-reel-frame]')];
   if (frames.length < 2) return { destroy() {} };
+  const mark = el.querySelector<HTMLElement>('[data-reel-mark]');
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -68,6 +69,8 @@ export function createReel(el: HTMLElement): Reel {
     // the start value laid out first, and the reflow that forces is where the
     // old version flickered.
     next.style.clipPath = 'inset(0 0 0 0)';
+    // the marker on the roll slides to the tick for this frame
+    if (mark) mark.style.top = `${((i + 0.5) / frames.length) * 100}%`;
     if (!reduced) {
       next.getAnimations().forEach((a) => a.cancel());
       next.animate(
