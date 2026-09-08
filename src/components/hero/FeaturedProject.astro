@@ -3,7 +3,7 @@ import type { Project } from '@lib/sanity/types';
 interface Props { project: Project; class?: string; }
 const { project, class: cls } = Astro.props;
 ---
-<a class:list={['feat', 'glass', 'arrives', cls]} href={`/work/${project.slug}`} data-tap style="--arrive-delay: .7s">
+<a class:list={['feat', 'arrives', cls]} href={`/work/${project.slug}`} data-tap style="--arrive-delay: .7s">
   <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
   <div class="media">
     <div class="top">
@@ -18,10 +18,17 @@ const { project, class: cls } = Astro.props;
 </a>
 
 <style>
-  .feat { position: relative; display: block; width: min(23.75rem, 30vw); color: var(--ink); overflow: hidden; }
-  /* a frame at the corners only: the site's square, one on each */
-  .c { position: absolute; width: var(--square); height: var(--square); background: var(--marker); pointer-events: none; transition: background var(--dur-fast) ease; }
-  .tl { left: 0; top: 0; } .tr { right: 0; top: 0; } .bl { left: 0; bottom: 0; } .br { right: 0; bottom: 0; }
+  /* drawn, not filled: a hairline frame with the site's square on each corner */
+  .feat { position: relative; display: block; width: min(23.75rem, 30vw); color: var(--ink);
+          border: var(--hairline) solid var(--line); transition: border-color var(--dur-fast) ease; }
+  .feat:hover { border-color: var(--line-strong); }
+  .c { position: absolute; width: var(--square); height: var(--square); background: var(--marker);
+       pointer-events: none; transition: background var(--dur-fast) ease; }
+  /* centred on the frame's corners, the way the brands lattice sits on its crossings */
+  .tl { left: 0; top: 0; translate: -50% -50%; }
+  .tr { right: 0; top: 0; translate: 50% -50%; }
+  .bl { left: 0; bottom: 0; translate: -50% 50%; }
+  .br { right: 0; bottom: 0; translate: 50% 50%; }
   .feat:hover .c { background: var(--marker-hover); }
   .media { position: relative; margin: 0.625rem 0.625rem 0; overflow: hidden; }
   .media::after { content: ""; position: absolute; inset: 0; pointer-events: none;
