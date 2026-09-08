@@ -55,7 +55,7 @@ const reelFor = (key: string): Shot[] => {
       <article class="studio" data-reel>
         <span class="n label">{String(i + 1).padStart(2, '0')}</span>
         <div class="words">
-          <h3 data-rise><i class="cue" aria-hidden="true"></i>{s.name}</h3>
+          <h3 data-rise>{s.name}</h3>
           <p class="desc" data-rise style="--i: 1">{s.description}</p>
           <div class="services" data-marquee data-marquee-speed="24" data-marquee-drag="0.7">
             <div class="svc-track" data-marquee-track aria-hidden="true">
@@ -110,13 +110,6 @@ const reelFor = (key: string): Shot[] => {
   .n { display: block; color: var(--ink-4); }
   h3 { font-size: var(--t-statement); font-weight: 500; line-height: 1.05;
        letter-spacing: -0.025em; color: var(--ink); }
-  /* a square steps out from the left as the card is taken up, and the name
-     moves over to make room for it: the site's marker, arriving */
-  .cue { display: inline-block; width: 0; height: 0.34em; background: var(--ink);
-         vertical-align: baseline; overflow: hidden;
-         transition: width 0.42s cubic-bezier(0.16, 1, 0.3, 1), margin-right 0.42s cubic-bezier(0.16, 1, 0.3, 1); }
-  .studio.hovering .cue { width: 0.34em; margin-right: 0.42em; }
-  @media (prefers-reduced-motion: reduce) { .cue { transition: none; } }
   /* a weight up on the description too: at this size regular sits back too far
      from the name above it. The number and the services keep theirs. */
   .desc { margin-top: var(--s-5); max-width: 46ch; font-size: var(--t-body); font-weight: 500;
@@ -138,10 +131,12 @@ const reelFor = (key: string): Shot[] => {
   /* the clip fills its frame whatever shape it arrived in: the renders are
      not one ratio, and a band with letterboxing in it is not a band */
   .band video, .band img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  /* the frames behind the one you are on stand back: pulled to grey and sat
-     down a little, so the picture in front is plainly the one being read */
-  .frame img { filter: grayscale(1) brightness(0.72); transition: filter 0.5s ease; }
-  .frame.live img { filter: none; }
+  /* While one card is being read the others stand back — pulled to grey and
+     sat down — so the section is one studio at a time rather than three
+     competing for the eye. Nothing is dimmed until a card is taken up. */
+  .band { transition: filter 0.55s ease, opacity 0.55s ease; }
+  .studios.reading .studio:not(.hovering) .band { filter: grayscale(1); opacity: 0.45; }
+  @media (prefers-reduced-motion: reduce) { .band { transition: none; } }
 
   /* Every frame is stacked on the same spot, the first included: a change
      opens a clip from the edge the reel is travelling from, over the frame

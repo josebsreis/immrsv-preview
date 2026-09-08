@@ -71,10 +71,8 @@ export function createReel(el: HTMLElement): Reel {
     // the start value laid out first, and the reflow that forces is where the
     // old version flickered.
     next.style.clipPath = 'inset(0 0 0 0)';
-    // the dash for this frame stretches, and the picture in front comes back
-    // to its own colour while the ones behind it stay grey
+    // the dash for this frame stretches
     ticks.forEach((t, k) => t.classList.toggle('on', k === i));
-    frames.forEach((f, k) => f.classList.toggle('live', k === i));
     if (!reduced) {
       next.getAnimations().forEach((a) => a.cancel());
       next.animate(
@@ -98,7 +96,6 @@ export function createReel(el: HTMLElement): Reel {
       f.style.zIndex = i === 0 ? '1' : '';
     });
     ticks.forEach((t, k) => t.classList.toggle('on', k === 0));
-    frames.forEach((f, k) => f.classList.toggle('live', k === 0));
   }
   rest();
 
@@ -107,9 +104,16 @@ export function createReel(el: HTMLElement): Reel {
     const r = el.getBoundingClientRect();
     const inside = pointer.seen && r.height > 0
       && pointer.x >= r.left && pointer.x <= r.right && pointer.y >= r.top && pointer.y <= r.bottom;
-    // the card under the hand says so, and the roll shows only there
+    // the card under the hand says so: the roll shows only there, and the
+    // section is told that one of its cards is being read, so the others can
+    // stand back
     el.classList.toggle('hovering', inside);
     const entering = inside && !was;
+    // Only the card being read touches the section's flag, and only it clears
+    // it. Every card runs this, so a card writing "not me" would rub out what
+    // the card under the hand had just written.
+    if (entering) el.parentElement?.classList.add('reading');
+    else if (was && !inside) el.parentElement?.classList.remove('reading');
     was = inside;
     // A card left behind goes back to its first picture. Otherwise a reel is
     // whatever frame the hand happened to leave it on, and the first project
