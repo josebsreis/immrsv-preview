@@ -14,7 +14,8 @@ const projectFields = `{
 
 const homeQuery = `*[_type == "home"][0]{
   hero{ headline, words, description, primaryCta, secondaryCta },
-  about{ tag, statement, caps, body, cta, facts, principles },
+  about{ tag, statement, stats, founder{ name, role, "portrait": portrait ${imageFields} } },
+  brands{ tag, "items": items[]{ name, "logo": logo ${imageFields} } },
   "featuredProject": featuredProject-> ${projectFields}
 }`;
 
@@ -49,9 +50,20 @@ export async function getHome(): Promise<HomeContent> {
   try {
     const raw = await sanity.fetch(homeQuery);
     if (!raw) return defaultHome;
+    const founder = raw.about?.founder;
+    const brandItems = (raw.brands?.items ?? [])
+      .map((b: any) => ({ name: b.name, logo: mapImage(b.logo) }))
+      .filter((b: any) => b.logo);
     return {
       hero: { ...defaultHome.hero, ...raw.hero },
-      about: { ...defaultHome.about, ...raw.about },
+      about: {
+        ...defaultHome.about,
+        ...raw.about,
+        founder: founder ? { ...founder, portrait: mapImage(founder.portrait) } : defaultHome.about.founder,
+      },
+      brands: brandItems.length
+        ? { tag: raw.brands?.tag ?? defaultHome.brands.tag, items: brandItems }
+        : defaultHome.brands,
       featuredProject: raw.featuredProject ? mapProject(raw.featuredProject) : defaultHome.featuredProject,
     };
   } catch (e) {

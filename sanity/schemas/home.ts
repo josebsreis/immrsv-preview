@@ -26,17 +26,25 @@ export const home = defineType({
     }),
     defineField({
       name: 'about',
+      title: 'Statement panel',
       type: 'object',
       fields: [
-        defineField({ name: 'tag', type: 'string', initialValue: 'About' }),
-        defineField({ name: 'statement', type: 'text', rows: 3 }),
-        defineField({ name: 'caps', title: 'Three lines (caps)', type: 'text', rows: 3 }),
-        defineField({ name: 'body', type: 'text', rows: 4 }),
-        defineField({ name: 'cta', title: 'Button', ...cta }),
+        defineField({ name: 'tag', type: 'string', initialValue: 'What we do' }),
+        defineField({ name: 'statement', type: 'text', rows: 6, description: 'Leave a blank line between paragraphs.' }),
         defineField({
-          name: 'facts',
-          title: 'Facts row',
-          description: 'A figure and what it counts. Four reads best; leave empty to hide the row.',
+          name: 'founder',
+          title: 'Signed by',
+          type: 'object',
+          fields: [
+            defineField({ name: 'name', type: 'string' }),
+            defineField({ name: 'role', type: 'string' }),
+            defineField({ name: 'portrait', type: 'image', options: { hotspot: true } }),
+          ],
+        }),
+        defineField({
+          name: 'stats',
+          title: 'Figures',
+          description: 'Shown one at a time, advancing on their own. Leave empty to hide the reel.',
           type: 'array',
           of: [{
             type: 'object',
@@ -47,18 +55,25 @@ export const home = defineType({
             preview: { select: { title: 'value', subtitle: 'label' } },
           }],
         }),
+      ],
+    }),
+    defineField({
+      name: 'brands',
+      title: 'Brands',
+      type: 'object',
+      fields: [
+        defineField({ name: 'tag', type: 'string', initialValue: "Brands we've helped" }),
         defineField({
-          name: 'principles',
-          title: 'Positions',
-          description: 'Numbered automatically. Three reads best; leave empty to hide the block.',
+          name: 'items',
           type: 'array',
+          description: 'Upload the mark in a single colour — the site flips it for the dark background.',
           of: [{
             type: 'object',
             fields: [
-              defineField({ name: 'title', type: 'string' }),
-              defineField({ name: 'text', type: 'text', rows: 3 }),
+              defineField({ name: 'name', type: 'string' }),
+              defineField({ name: 'logo', type: 'image' }),
             ],
-            preview: { select: { title: 'title', subtitle: 'text' } },
+            preview: { select: { title: 'name', media: 'logo' } },
           }],
         }),
       ],

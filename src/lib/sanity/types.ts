@@ -2,11 +2,14 @@ import type { StudioKey } from '@lib/site';
 
 export interface Cta { label: string; href: string; }
 
-/** a figure and what it counts — the row under the About columns */
+/** a figure and what it counts — one slide of the stats reel */
 export interface Fact { value: string; label: string; }
 
-/** a numbered position the practice takes */
-export interface Principle { title: string; text: string; }
+/** whoever the statement is signed by */
+export interface Person { name: string; role: string; portrait?: ImageRef; }
+
+/** one logo in the brands grid */
+export interface Brand { name: string; logo: ImageRef; }
 
 export interface ImageRef {
   url: string;          // resolved URL (Sanity CDN or local fallback)
@@ -38,15 +41,17 @@ export interface HomeContent {
     primaryCta: Cta;
     secondaryCta: Cta;
   };
+  /** the statement panel: the reel of figures on the left, the statement and
+   *  its author on the right */
   about: {
     tag: string;
-    statement: string;
-    caps: string;
-    body: string;
-    cta: Cta;
-    /** optional blocks — each renders only when the editor fills it */
-    facts?: Fact[];
-    principles?: Principle[];
+    statement: string;      // a blank line starts a new paragraph
+    founder: Person;
+    stats?: Fact[];
+  };
+  brands: {
+    tag: string;
+    items: Brand[];
   };
   featuredProject?: Project;
 }

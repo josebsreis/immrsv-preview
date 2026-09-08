@@ -1,0 +1,17 @@
+---
+/** The name at full width — the first thing after the hero leaves. Nothing
+ *  else on the screen, so the mark reads as a title page. */
+import Lettermark from '@components/ui/Lettermark.astro';
+---
+<section class="panel" aria-label="IMMRSV">
+  <div class="mark" data-rise><Lettermark /></div>
+</section>
+
+<style>
+  /* above the hero's fixed layers, under the shutter */
+  .panel { position: relative; z-index: var(--z-ui); min-height: 100vh; min-height: 100svh;
+           display: grid; place-items: center; padding: 0 var(--page-x); }
+  .mark { width: 100%; color: var(--ink); }
+  .mark :global(svg) { width: 100%; height: auto; }
+  @media (max-width: 719px) { .panel { padding: 0 1.25rem; } }
+</style>

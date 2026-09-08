@@ -5,6 +5,7 @@ import { createHero } from './hero';
 import { createSmoothScroll } from './ui/smoothScroll';
 import { createScrollChoreography } from './ui/scrollChoreography';
 import { createRotatingWord } from './ui/rotatingWord';
+import { createStatsReel } from './ui/statsReel';
 import { splitChars } from './ui/splitText';
 import { createHoverAudio } from './ui/hoverAudio';
 import { runLoader } from './ui/loader';
@@ -19,6 +20,8 @@ createScrollChoreography(hero);
 document.fonts.ready.then(() => splitChars());
 const rot = document.querySelector<HTMLElement>('[data-rotating-word]');
 if (rot) createRotatingWord(rot);
+const reel = document.querySelector<HTMLElement>('[data-stats]');
+if (reel) createStatsReel(reel);
 createHoverAudio(site.audio.taps);
 
 runLoader(document.querySelector<HTMLElement>('[data-loader]'), () => hero?.setReady());

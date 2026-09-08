@@ -1,0 +1,93 @@
+---
+/** The statement panel: a reel of figures on the left, the practice stated in
+ *  the founder's voice on the right. The statement is read a word at a time as
+ *  it is scrolled; the reel advances itself and can be stepped by hand. */
+import type { HomeContent } from '@lib/sanity/types';
+interface Props { content: HomeContent['about']; }
+const { content } = Astro.props;
+const stats = content.stats ?? [];
+const paragraphs = content.statement.split(/\n{2,}/);
+const total = String(stats.length).padStart(2, '0');
+---
+<section class="manifesto" id="about">
+  <div class="reel" data-stats={stats.length ? '' : undefined}>
+    <span class="tag label">{content.tag}</span>
+
+    {stats.length > 0 && (
+      <>
+        <div class="track"><i data-stats-bar></i></div>
+        <div class="controls">
+          <div class="arrows">
+            <button type="button" data-stats-prev aria-label="Previous figure" data-tap>&#8592;</button>
+            <button type="button" data-stats-next aria-label="Next figure" data-tap>&#8594;</button>
+          </div>
+          <span class="count label"><span data-stats-index>01</span>/{total}</span>
+        </div>
+        <ul class="slides">
+          {stats.map((s) => (
+            <li class="slide" data-stat>
+              <span class="value">{s.value}</span>
+              <span class="cap">{s.label}</span>
+            </li>
+          ))}
+        </ul>
+      </>
+    )}
+  </div>
+
+  <div class="say">
+    {paragraphs.map((p) => <p data-reveal-words>{p}</p>)}
+    <div class="by" data-rise>
+      {content.founder.portrait
+        ? <img class="portrait" src={content.founder.portrait.url} alt={content.founder.portrait.alt ?? content.founder.name} width="44" height="44" loading="lazy" />
+        : <span class="sq" aria-hidden="true"></span>}
+      <span class="who"><b>{content.founder.name}</b><br />{content.founder.role}</span>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* above the hero's fixed layers, under the shutter */
+  .manifesto { position: relative; z-index: var(--z-ui); min-height: 100vh; min-height: 100svh;
+               padding: 18vh var(--page-x) 16vh; display: grid; grid-template-columns: 1fr 1.35fr;
+               column-gap: var(--s-8); align-items: start; }
+
+  /* ── the reel ─────────────────────────────────────────────────── */
+  .tag { display: block; color: var(--ink-3); margin-bottom: var(--s-5); }
+  .track { height: var(--hairline); background: var(--line); overflow: hidden; }
+  .track i { display: block; height: 100%; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; }
+  .controls { display: flex; align-items: center; justify-content: space-between; margin-top: var(--s-4); }
+  .arrows { display: flex; gap: var(--s-4); }
+  .arrows button { font-size: var(--t-body); line-height: 1; color: var(--ink-3); transition: color var(--dur-fast) ease; }
+  .arrows button:hover { color: var(--ink); }
+  .count { color: var(--ink-4); font-variant-numeric: tabular-nums; }
+
+  /* every slide in the same cell, so the block is as tall as the longest */
+  .slides { list-style: none; display: grid; margin-top: var(--s-7); }
+  .slide { grid-area: 1 / 1; display: flex; flex-direction: column; gap: var(--s-4);
+           opacity: 0; filter: blur(6px); pointer-events: none;
+           transition: opacity var(--dur-base) ease, filter var(--dur-base) ease; }
+  .slide.on { opacity: 1; filter: none; pointer-events: auto; }
+  .value { font-size: var(--t-figure); line-height: 1; letter-spacing: -0.035em; color: var(--ink); }
+  .cap { font-size: var(--t-body); line-height: 1.5; color: var(--ink-3); max-width: 22ch; }
+  /* no autoplay for a reader who asked for less motion — show them all */
+  .reel[data-stats-still] .slides { grid-auto-flow: row; row-gap: var(--s-6); }
+  .reel[data-stats-still] .slide { grid-area: auto; opacity: 1; filter: none; }
+  .reel[data-stats-still] .track, .reel[data-stats-still] .controls { display: none; }
+
+  /* ── the statement ────────────────────────────────────────────── */
+  .say p { font-size: var(--t-statement); line-height: 1.22; letter-spacing: -0.025em; color: var(--ink); }
+  .say p + p { margin-top: 1.1em; }
+  .say :global(.w) { display: inline-block; color: var(--ink-dim); transition: color var(--dur-base) ease; }
+  .say :global(.w.lit) { color: inherit; }
+  .by { display: flex; align-items: center; gap: var(--s-4); margin-top: var(--s-8); color: var(--ink-3); font-size: var(--t-small); line-height: 1.45; }
+  .by b { color: var(--ink-2); font-weight: 400; }
+  .portrait { width: 2.75rem; height: 2.75rem; object-fit: cover; filter: grayscale(1); }
+  .by :global(.sq) { color: var(--ink-4); }
+
+  @media (max-width: 1099px) { .manifesto { column-gap: var(--s-7); grid-template-columns: 1fr 1.15fr; } }
+  @media (max-width: 859px) {
+    .manifesto { grid-template-columns: 1fr; row-gap: var(--s-8); padding: 14vh 1.25rem 12vh; }
+    .cap { max-width: none; }
+  }
+</style>

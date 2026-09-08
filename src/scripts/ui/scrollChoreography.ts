@@ -10,7 +10,7 @@ export interface ScrollChoreography { update(): void; destroy(): void; }
 
 export function createScrollChoreography(hero: Hero | null): ScrollChoreography {
   const veil = document.querySelector<HTMLElement>('[data-veil]');
-  const h2 = document.querySelector<HTMLElement>('[data-reveal-words]');
+  const readable = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal-words]'));
   const rule = document.querySelector<HTMLElement>('[data-rule]');
   const pin = document.querySelector<HTMLElement>('[data-pin]');
   const spacer = document.querySelector<HTMLElement>('[data-spacer]');
@@ -20,13 +20,14 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
   const themed = document.querySelectorAll<HTMLElement>('[data-theme-follows]');
   const rising = Array.from(document.querySelectorAll<HTMLElement>('[data-rise]'));
 
-  // wrap every word of the statement so each can be lit on its own
-  const words: HTMLElement[] = [];
-  if (h2) {
-    const src = h2.textContent!.trim().split(/\s+/);
-    h2.textContent = '';
-    src.forEach((w) => { const s = document.createElement('span'); s.className = 'w'; s.textContent = w; h2.appendChild(s); h2.appendChild(document.createTextNode(' ')); words.push(s); });
-  }
+  // wrap every word so each can be lit on its own as the line is read
+  const passages = readable.map((el) => {
+    const words: HTMLElement[] = [];
+    const src = el.textContent!.trim().split(/\s+/);
+    el.textContent = '';
+    src.forEach((w) => { const s = document.createElement('span'); s.className = 'w'; s.textContent = w; el.appendChild(s); el.appendChild(document.createTextNode(' ')); words.push(s); });
+    return { el, words };
+  });
 
   // sticky with a negative top: the block scrolls normally until its end meets
   // the bottom of the viewport, then holds there through the spacer
@@ -36,9 +37,8 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
     const y = scrollY, vh = innerHeight;
     if (veil) veil.style.opacity = (Math.max(0, Math.min(1, (y - vh * 0.45) / (vh * 0.85))) * 0.82).toFixed(3);
 
-    if (h2) {
-      const r = h2.getBoundingClientRect();
-      const p = (vh * 0.92 - r.top) / (vh * 0.6);                     // fully lit by the upper third
+    for (const { el, words } of passages) {
+      const p = (vh * 0.92 - el.getBoundingClientRect().top) / (vh * 0.6);  // fully lit by the upper third
       const lit = Math.round(Math.max(0, Math.min(1, p)) * words.length);
       words.forEach((w, i) => w.classList.toggle('lit', i < lit));
     }

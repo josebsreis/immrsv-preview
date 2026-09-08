@@ -28,30 +28,25 @@ export const defaultHome: HomeContent = {
     secondaryCta: { label: 'See our portfolio', href: '/work' },
   },
   about: {
-    tag: 'About',
-    statement: 'We draw the space, render the image and build the interface — one team, from first sketch to built experience.',
-    caps: 'Drawn with precision,\nbuilt with intent,\nexperienced as one.',
-    body: 'Our work begins at the drawing and carries through to the built experience — spaces, images and interfaces made by one team, so nothing is lost between them.',
-    cta: { label: 'More about us', href: '/#about' },
-    facts: [
-      { value: '2019', label: 'Founded' },
-      { value: '03', label: 'Studios, one team' },
-      { value: '40+', label: 'Projects delivered' },
-      { value: 'Lisbon', label: 'Working across Europe' },
+    tag: 'What we do',
+    statement:
+      'A building, a film and a product are the same problem — someone has to move through it and understand it. Most studios solve one of the three and hand you the rest.\n\n' +
+      'We keep all three under one roof, so the drawing, the image and the interface are made by the same people, and the work arrives whole.',
+    founder: { name: 'Oscar Nino', role: 'Founder, IMMRSV' },
+    stats: [
+      { value: '30+', label: 'Projects delivered across the three studios' },
+      { value: '2019', label: 'Founded in Lisbon, working across Europe' },
+      { value: '03', label: 'Studios under one roof, one team' },
+      { value: '1:1', label: 'Drawn at real scale before anything is built' },
     ],
-    principles: [
-      {
-        title: 'One team, one thread',
-        text: 'The people who draw the space are in the room when the film is cut and the interface is built. Nothing is handed over and explained twice.',
-      },
-      {
-        title: 'Drawn before it is built',
-        text: 'Every project starts as a drawing at real scale. Decisions get made where they are still cheap to make, not on site.',
-      },
-      {
-        title: 'Made to be used',
-        text: 'A space, a film or a product is finished when someone moves through it without noticing the work that went in.',
-      },
+  },
+  brands: {
+    tag: "Brands we've helped",
+    items: [
+      { name: 'Alvarez & Marsal', logo: { url: '/brands/alvarez-marsal.svg', alt: 'Alvarez & Marsal' } },
+      { name: 'Ellis Adams Group', logo: { url: '/brands/ellis-adams-group.svg', alt: 'Ellis Adams Group' } },
+      { name: 'Lepesi', logo: { url: '/brands/lepesi.svg', alt: 'Lepesi' } },
+      { name: 'Wolcott', logo: { url: '/brands/wolcott.svg', alt: 'Wolcott' } },
     ],
   },
   featuredProject: defaultProjects[0],

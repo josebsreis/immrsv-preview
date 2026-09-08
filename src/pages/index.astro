@@ -3,7 +3,9 @@ import Base from '@layouts/Base.astro';
 import Loader from '@components/transitions/Loader.astro';
 import Shutter from '@components/transitions/Shutter.astro';
 import Hero from '@components/hero/Hero.astro';
-import About from '@components/home/About.astro';
+import WordmarkPanel from '@components/home/WordmarkPanel.astro';
+import Manifesto from '@components/home/Manifesto.astro';
+import Brands from '@components/home/Brands.astro';
 import ProjectGrid from '@components/work/ProjectGrid.astro';
 import { getHome, getProjects } from '@lib/sanity/queries';
 
@@ -15,7 +17,9 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
     <div class="stage">
       <div class="pin" data-pin>
         <Hero content={home.hero} featured={home.featuredProject} />
-        <About content={home.about} />
+        <WordmarkPanel />
+        <Manifesto content={home.about} />
+        <Brands content={home.brands} />
       </div>
       <div class="spacer" data-spacer></div>
     </div>

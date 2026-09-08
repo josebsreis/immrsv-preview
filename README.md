@@ -29,7 +29,7 @@ src/
     ui/               Button, ScrollCue, Wordmark, Mark, PortableText
     layout/           Nav, Footer
     hero/             Hero (the island's DOM), FeaturedProject
-    home/             About
+    home/             WordmarkPanel, Manifesto (stats reel + statement), Brands
     work/             ProjectCard, ProjectGrid
     transitions/      Loader, Shutter
   pages/
@@ -39,7 +39,7 @@ src/
   scripts/
     hero/             the mark: config.ts (every tunable), mark.ts, sim.ts, lens.ts, pointer.ts, index.ts
     fluid.ts          the WebGL fluid (own canvas, under the hero)
-    ui/               smoothScroll, scrollChoreography, rotatingWord, splitText, hoverAudio, loader
+    ui/               smoothScroll, scrollChoreography, rotatingWord, statsReel, splitText, hoverAudio, loader
     home.ts           the homepage's client entry — wires everything by data attributes
   lib/
     site.ts           structural config (nav, studios, audio) — not content
@@ -70,6 +70,9 @@ sanity.config.ts      the Studio
   `data-tap`, `data-split`), never by layout class.
 - **Hero tunables** live in `src/scripts/hero/config.ts`; a page can override
   any of them via `createHero({ config })`.
+- **Anything on the homepage that sits over the hero** needs its own layer:
+  the hero's canvases are `position: fixed`, so a plain section paints under
+  them. Give it `position: relative; z-index: var(--z-ui)`.
 - **Breakpoints:** 719 (phone), 859 (tablet), 1099 (wide). Keep
   `tokens.css` and `breakpoints.ts` in sync.
 
@@ -77,7 +80,8 @@ sanity.config.ts      the Studio
 
 1. Create a project at manage.sanity.io, put its id in `.env`.
 2. `npm run dev` → `/admin` is the Studio. Content types: **Homepage** (hero
-   copy, rotating words, About, featured project) and **Project** (title,
+   copy, rotating words, statement panel with its figures and signature,
+   brands, featured project) and **Project** (title,
    slug, year, location, studios, summary, cover, gallery, story, featured,
    order).
 3. Handover: in manage.sanity.io invite the client as admin; they take over
