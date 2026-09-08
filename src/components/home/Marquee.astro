@@ -15,7 +15,7 @@ const runs = [0, 1];
 <section class="band" aria-label={label} data-marquee data-marquee-speed="46" data-marquee-drag="1.5">
   {['top', 'bottom'].map((side) => (
     <div class={`rail rail-${side}`} data-marquee-track data-marquee-dir="right" data-marquee-rate="0.55" aria-hidden="true">
-      <div class="rail-run">{Array.from({ length: 3 }).map(() => <i class="pip"></i>)}</div>
+      <div class="rail-run">{Array.from({ length: 16 }).map(() => <i class="pip"></i>)}</div>
     </div>
   ))}
   <div class="track" data-marquee-track aria-hidden="true">
@@ -67,8 +67,7 @@ const runs = [0, 1];
   .rail-run { display: flex; flex: none; }
   /* they sit against the line rather than centred on it: the band clips its
      own overflow, so a square straddling the border would lose half of itself */
-  /* spaced by the screen, not by ems: two or three in sight at any width */
-  .pip { flex: none; width: 5px; height: 5px; background: var(--ink-3); margin-right: 38vw; }
+  .pip { flex: none; width: 5px; height: 5px; background: var(--ink-3); margin-right: 4.5rem; }
 
   @keyframes run { to { transform: translateX(-50%); } }
 
