@@ -55,10 +55,15 @@ function smin(a: number, b: number, k: number) {
 
 export interface ShapeDef {
   readonly name: string;
+  /** a baked point cloud to use instead of the field: the mark's own copy of a
+   *  real model, sampled at build time. The mesh never reaches the browser —
+   *  only the points do, quantised to 16 bits. See scripts/bakeShape.py. */
+  readonly src?: string;
   /** the headline's last word while this form stands — the mark and the
    *  sentence say the same thing at the same moment */
   readonly word: string;
-  /** signed distance, authored with y up and the feet near y = 0 */
+  /** signed distance, authored with y up and the feet near y = 0. A baked
+   *  shape keeps one as the fallback for when its file cannot be fetched. */
   readonly sdf: (x: number, y: number, z: number) => number;
   /** the box to sample inside: [minX, minY, minZ, maxX, maxY, maxZ] */
   readonly bounds: readonly [number, number, number, number, number, number];
@@ -74,8 +79,9 @@ export interface ShapeDef {
 const FIGURE: ShapeDef = {
   name: 'figure',
   word: 'media.',
-  scale: 1.62,
-  lift: -0.475,
+  src: '/shapes/figure.bin',
+  scale: 1.58,
+  lift: -0.5,
   bounds: [-0.55, -0.06, -0.34, 0.55, 1.02, 0.34],
   sdf(x, y, z) {
     // head and neck
@@ -113,8 +119,9 @@ const FIGURE: ShapeDef = {
 const HOUSE: ShapeDef = {
   name: 'house',
   word: 'space.',
-  scale: 1.7,
-  lift: -0.40,
+  src: '/shapes/house.bin',
+  scale: 1.62,
+  lift: -0.5,
   bounds: [-0.6, -0.04, -0.44, 0.6, 0.86, 0.44],
   sdf(x, y, z) {
     // the walls, with the openings cut out of them
@@ -128,6 +135,26 @@ const HOUSE: ShapeDef = {
     let d = uni(walls, roof);
     d = uni(d, roundBox(x - 0.20, y - 0.70, z + 0.09, 0.045, 0.115, 0.045, 0.008));          // chimney
     d = uni(d, roundBox(x, y + 0.005, z, 0.47, 0.018, 0.37, 0.008));                          // the ground it stands on
+    return d;
+  },
+};
+
+/** A tree: the site a building stands on. It shares the headline's word with
+ *  the house — architecture is the ground as much as the walls — and it is the
+ *  one form here that reads at a glance from any angle. */
+const TREE: ShapeDef = {
+  name: 'tree',
+  word: 'space.',
+  src: '/shapes/tree.bin',
+  scale: 1.6,
+  lift: -0.5,
+  bounds: [-0.42, -0.02, -0.42, 0.42, 1.0, 0.42],
+  sdf(x, y, z) {
+    // the fallback, for a cloud that never arrives: a trunk and three tufts
+    let d = capsule(x, y, z, 0, 0, 0, 0.02, 0.52, 0.01, 0.045);
+    d = smin(d, sphere(x, y - 0.72, z, 0.22), 0.09);
+    d = smin(d, sphere(x - 0.16, y - 0.60, z - 0.06, 0.15), 0.08);
+    d = smin(d, sphere(x + 0.13, y - 0.62, z + 0.09, 0.14), 0.08);
     return d;
   },
 };
@@ -155,12 +182,44 @@ const SCREEN: ShapeDef = {
 };
 
 /** the reel runs in the studios' own order: architecture, media, products */
-export const SHAPES: readonly ShapeDef[] = [HOUSE, FIGURE, SCREEN];
+export const SHAPES: readonly ShapeDef[] = [HOUSE, TREE, FIGURE, SCREEN];
 
 /* ── sampling ─────────────────────────────────────────────────────── */
 
 /** the mark's pivot: shapes are centred here so they turn on the spot */
 const PIVOT = 1 / 3;
+
+/* ── baked clouds ─────────────────────────────────────────────────── */
+
+/** points in unit space: y up, feet at 0, centred on the ground plane */
+const clouds = new Map<string, Float32Array | null>();
+
+/**
+ * Fetch a baked cloud, once. A failure is remembered as null rather than
+ * retried: the shape falls back to its field, which is always there.
+ */
+export async function loadCloud(src: string): Promise<Float32Array | null> {
+  const held = clouds.get(src);
+  if (held !== undefined) return held;
+  try {
+    const res = await fetch(src);
+    if (!res.ok) throw new Error(String(res.status));
+    const buf = await res.arrayBuffer();
+    const head = new DataView(buf);
+    const scale = head.getFloat32(0, true), n = head.getUint32(4, true);
+    if (!n || buf.byteLength < 8 + n * 6) throw new Error('short file');
+    const q = new Int16Array(buf, 8, n * 3), out = new Float32Array(n * 3);
+    for (let i = 0; i < n * 3; i++) out[i] = (q[i] / 32767) * scale;
+    clouds.set(src, out);
+    return out;
+  } catch {
+    clouds.set(src, null);
+    return null;
+  }
+}
+
+/** whatever has been fetched for this shape, or null */
+export const cloudFor = (def: ShapeDef): Float32Array | null => (def.src ? clouds.get(def.src) ?? null : null);
 
 /**
  * `n` points on the shape's surface, in the mark's own coordinates.
@@ -172,6 +231,19 @@ const PIVOT = 1 / 3;
  */
 export function sampleShape(def: ShapeDef, n: number): Float32Array {
   const out = new Float32Array(n * 3);
+  const cloud = cloudFor(def);
+  if (cloud) {
+    // a baked cloud is already an even scatter over the skin: take n of its
+    // points at random, and place them the way a field's points are placed
+    const m = cloud.length / 3;
+    for (let i = 0; i < n; i++) {
+      const k = (Math.random() * m) | 0;
+      out[i * 3] = PIVOT + cloud[k * 3] * def.scale;
+      out[i * 3 + 1] = PIVOT + (cloud[k * 3 + 1] + def.lift) * def.scale;
+      out[i * 3 + 2] = PIVOT + cloud[k * 3 + 2] * def.scale;
+    }
+    return out;
+  }
   const [x0, y0, z0, x1, y1, z1] = def.bounds;
   const w = x1 - x0, h = y1 - y0, dp = z1 - z0;
   const shell = 0.02, e = 0.004;

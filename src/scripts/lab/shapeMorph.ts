@@ -15,7 +15,7 @@
 import * as THREE from 'three';
 import { HERO_CONFIG } from '../hero/config';
 import { FACE_BASES, SPIN_AXIS, buildPlate, makeParticleMaterial, type PlateSim } from '../hero/mark';
-import { SHAPES, shapeTargets } from '../hero/shapes';
+import { SHAPES, cloudFor, loadCloud, shapeTargets } from '../hero/shapes';
 import { simulate, type SimContext } from '../hero/sim';
 import { createLens } from '../hero/lens';
 import { createPointer } from '../hero/pointer';
@@ -106,8 +106,18 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
   let spinAngle = 0, introT0 = 0, last: number | undefined;
   let yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
 
-  /** sample shape `i` for every plate, once. Idle work when it can be. */
+  /** sample shape `i` for every plate, once. A shape baked from a model waits
+   *  for its cloud; its field stands in if that never arrives. */
+  const asked = new Set<number>();
   function ensure(i: number) {
+    const def = SHAPES[i];
+    if (def.src && !cloudFor(def)) {
+      if (!asked.has(i)) { asked.add(i); loadCloud(def.src).then(() => build(i)); }
+      return;
+    }
+    build(i);
+  }
+  function build(i: number) {
     for (const pl of plates) {
       if (pl.targets[i]) continue;
       const n = pl.sim.total, t = shapeTargets(SHAPES[i], pl.homeInner, n);

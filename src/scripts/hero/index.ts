@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { HERO_CONFIG, type HeroConfig } from './config';
 import { FACE_BASES, SPIN_AXIS, buildPlate, makeParticleMaterial, type PlateSim } from './mark';
 import { simulate } from './sim';
-import { SHAPES, shapeTargets } from './shapes';
+import { SHAPES, cloudFor, loadCloud, shapeTargets } from './shapes';
 import { createLens } from './lens';
 import { createPointer } from './pointer';
 import { createFluid, type FluidHandle } from '../fluid';
@@ -131,9 +131,21 @@ export function createHero(opts: HeroOptions): Hero {
   let pending = -1;      // a form asked for while another is still standing
   let phase = 0, beat = 0, parked = false;
 
-  /** sample shape `i` for every plate, once: the fields are authored in the
-   *  mark's frame, so a plate's targets are those points less its own offset */
+  /** sample shape `i` for every plate, once. A shape baked from a model waits
+   *  for its cloud to arrive; if that never comes, its field stands in, so the
+   *  reel is never held up by the network. */
+  const asked = new Set<number>();
   function ensureShape(i: number) {
+    const def = SHAPES[i];
+    if (def.src && !cloudFor(def)) {
+      if (!asked.has(i)) { asked.add(i); loadCloud(def.src).then(() => buildShape(i)); }
+      return;
+    }
+    buildShape(i);
+  }
+  /** the fields are authored in the mark's frame, so a plate's targets are
+   *  those points less its own offset along its normal */
+  function buildShape(i: number) {
     for (const p of plates) {
       if (p.targets[i]) continue;
       const n = p.sim.total, t = shapeTargets(SHAPES[i], p.homeInner, n);
