@@ -52,7 +52,7 @@ const total = String(stats.length).padStart(2, '0');
      to the page edge */
   .manifesto { position: relative; z-index: var(--z-ui);
                padding: 10vh var(--page-x) 14vh; display: grid;
-               grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+               grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
                column-gap: 7rem; align-items: start; }
 
   /* ── the reel ─────────────────────────────────────────────────── */
@@ -79,7 +79,8 @@ const total = String(stats.length).padStart(2, '0');
   .reel[data-stats-still] .track, .reel[data-stats-still] .controls { display: none; }
 
   /* ── the statement ────────────────────────────────────────────── */
-  .say p { font-size: var(--t-statement); line-height: 1.22; letter-spacing: -0.025em; color: var(--ink); }
+  /* held to a readable measure rather than the width of the column */
+  .say p { max-width: 34ch; font-size: var(--t-statement); line-height: 1.22; letter-spacing: -0.025em; color: var(--ink); }
   .say p + p { margin-top: 1.1em; }
   .say :global(.w) { display: inline-block; color: var(--ink-dim); transition: color var(--dur-base) ease; }
   .say :global(.w.lit) { color: inherit; }
@@ -88,9 +89,9 @@ const total = String(stats.length).padStart(2, '0');
   .portrait { width: 2.75rem; height: 2.75rem; object-fit: cover; filter: grayscale(1); }
   .by :global(.sq) { color: var(--ink-4); }
 
-  @media (max-width: 1099px) { .manifesto { grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); column-gap: var(--s-7); } }
+  @media (max-width: 1099px) { .manifesto { grid-template-columns: minmax(0, 14rem) minmax(0, 1fr); column-gap: var(--s-7); } }
   @media (max-width: 859px) {
     .manifesto { grid-template-columns: 1fr; row-gap: var(--s-7); padding: 8vh 1.25rem 10vh; }
-    .cap { max-width: none; }
+    .cap, .say p { max-width: none; }
   }
 </style>
