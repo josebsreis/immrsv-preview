@@ -1,4 +1,4 @@
-import type { HomeContent, Project } from '@lib/sanity/types';
+import type { Brand, HomeContent, Project } from '@lib/sanity/types';
 
 /** Fallback content so the site builds and previews before Sanity is connected.
  *  Once PUBLIC_SANITY_PROJECT_ID is set, Sanity wins and these are only used
@@ -17,6 +17,15 @@ export const defaultProjects: Project[] = [
     body: [],
     featured: true,
   },
+];
+
+/** The four client marks we have so far. Doubled below only to fill the grid
+ *  — drop the repeat once there are eight real ones. */
+const clients: Brand[] = [
+  { name: 'Alvarez & Marsal', logo: { url: '/brands/alvarez-marsal.svg', alt: 'Alvarez & Marsal' } },
+  { name: 'Ellis Adams Group', logo: { url: '/brands/ellis-adams-group.svg', alt: 'Ellis Adams Group' } },
+  { name: 'Lepesi', logo: { url: '/brands/lepesi.svg', alt: 'Lepesi' } },
+  { name: 'Wolcott', logo: { url: '/brands/wolcott.svg', alt: 'Wolcott' } },
 ];
 
 export const defaultHome: HomeContent = {
@@ -46,12 +55,7 @@ export const defaultHome: HomeContent = {
   },
   brands: {
     tag: "Brands we've helped",
-    items: [
-      { name: 'Alvarez & Marsal', logo: { url: '/brands/alvarez-marsal.svg', alt: 'Alvarez & Marsal' } },
-      { name: 'Ellis Adams Group', logo: { url: '/brands/ellis-adams-group.svg', alt: 'Ellis Adams Group' } },
-      { name: 'Lepesi', logo: { url: '/brands/lepesi.svg', alt: 'Lepesi' } },
-      { name: 'Wolcott', logo: { url: '/brands/wolcott.svg', alt: 'Wolcott' } },
-    ],
+    items: [...clients, ...clients],
   },
   featuredProject: defaultProjects[0],
 };

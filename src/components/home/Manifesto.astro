@@ -48,9 +48,12 @@ const total = String(stats.length).padStart(2, '0');
 
 <style>
   /* above the hero's fixed layers, under the shutter */
+  /* a narrow column for the reel, a wide gap, and the statement running out
+     to the page edge */
   .manifesto { position: relative; z-index: var(--z-ui);
-               padding: 10vh var(--page-x) 14vh; display: grid; grid-template-columns: 1fr 1.35fr;
-               column-gap: var(--s-8); align-items: start; }
+               padding: 10vh var(--page-x) 14vh; display: grid;
+               grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+               column-gap: 7rem; align-items: start; }
 
   /* ── the reel ─────────────────────────────────────────────────── */
   .tag { display: block; color: var(--ink-3); margin-bottom: var(--s-5); }
@@ -85,7 +88,7 @@ const total = String(stats.length).padStart(2, '0');
   .portrait { width: 2.75rem; height: 2.75rem; object-fit: cover; filter: grayscale(1); }
   .by :global(.sq) { color: var(--ink-4); }
 
-  @media (max-width: 1099px) { .manifesto { column-gap: var(--s-7); grid-template-columns: 1fr 1.15fr; } }
+  @media (max-width: 1099px) { .manifesto { grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); column-gap: var(--s-7); } }
   @media (max-width: 859px) {
     .manifesto { grid-template-columns: 1fr; row-gap: var(--s-7); padding: 8vh 1.25rem 10vh; }
     .cap { max-width: none; }
