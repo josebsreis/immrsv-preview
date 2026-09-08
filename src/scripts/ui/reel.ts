@@ -40,7 +40,9 @@ export function createReel(el: HTMLElement): Reel {
       next.style.transition = '';
     }
     next.style.clipPath = 'inset(0 0 0 0)';
-    frames[at].style.zIndex = '';
+    // the frame you were on keeps its place in the stack, directly beneath the
+    // one arriving: clearing it dropped it to the bottom, so the curtain
+    // opened onto the very first frame instead of onto the one you just left
     at = i;
     // ask for the neighbours, so a scrub does not stall on a decode
     for (const k of [i + 1, i - 1]) {
