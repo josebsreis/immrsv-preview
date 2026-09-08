@@ -11,7 +11,8 @@ const year = new Date().getFullYear();
 </footer>
 
 <style>
-  .footer { background: var(--ground); color: var(--ink); padding: var(--s-8) var(--page-x) var(--s-6); border-top: var(--hairline) solid var(--line); }
+  /* over the hero's fixed canvases, which live inside main */
+  .footer { position: relative; z-index: var(--z-ui); background: var(--ground); color: var(--ink); padding: var(--s-8) var(--page-x) var(--s-6); border-top: var(--hairline) solid var(--line); }
   .row { display: flex; justify-content: space-between; gap: var(--s-4); flex-wrap: wrap; }
   .muted { color: var(--ink-3); }
 </style>

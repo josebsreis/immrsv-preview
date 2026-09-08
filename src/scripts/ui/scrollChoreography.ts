@@ -23,6 +23,11 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
   const next = document.querySelector<HTMLElement>('[data-next]');
   const themed = document.querySelectorAll<HTMLElement>('[data-theme-follows]');
   const rising = Array.from(document.querySelectorAll<HTMLElement>('[data-rise]'));
+  const hold = document.querySelector<HTMLElement>('[data-hold]');
+
+  // sticky with a negative top: the block scrolls normally until its end meets
+  // the bottom of the screen, then holds there while the next half rides over
+  const fitHold = () => { if (hold) hold.style.top = Math.min(0, innerHeight - hold.offsetHeight) + 'px'; };
 
   /* Every character gets its own span so the text can be lit through, a
      soft band at a time. Elements sharing a [data-reveal-group] are one
@@ -94,10 +99,10 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
     }
   }
 
-  const onResize = () => update();
+  const onResize = () => { fitHold(); update(); };
   addEventListener('scroll', update, { passive: true });
   addEventListener('resize', onResize);
-  update();
+  fitHold(); setTimeout(fitHold, 120); update();
 
   return { update, destroy() { removeEventListener('scroll', update); removeEventListener('resize', onResize); } };
 }

@@ -69,12 +69,14 @@ sanity.config.ts      the Studio
   `data-rotating-word`, `data-reveal-words`, `data-reveal-group`, `data-rule`,
   `data-rise`, `data-next`, `data-shutter-scroll`, `data-theme-follows`,
   `data-tap`, `data-split`), never by layout class.
-- **The dark/light handover** is in flow, not an overlay: `ShutterScroll`
-  sits at the end of the dark half and its rows — in the *next* section's
-  ground colour — fill from the top down as it crosses the screen, the last
-  one landing as the light section arrives. Anything that must sit over the
-  hero's fixed canvases needs `z-index: var(--z-ui)`, the light section
-  included, or the veil tints it.
+- **The dark/light handover.** The dark half is `position: sticky` with a
+  negative top (`[data-hold]`, set in JS to viewport − height), so it holds
+  once its end meets the bottom of the screen. The light half then rides up
+  over it, led by `ShutterScroll` — rows in the light half's own ground
+  colour that fill from the top down as the band crosses the screen.
+  Anything that must sit over the hero's fixed canvases needs
+  `z-index: var(--z-ui)`: the light half, and the footer, which is outside
+  `main` and so competes with it directly.
 - **Directional hover.** Anything that should fill from the edge the cursor
   crossed marks itself `data-dhover-item` with a `data-dhover-tile` inside;
   `data-axis="x|y"` (on the item or a `data-dhover` wrapper) limits it to one
