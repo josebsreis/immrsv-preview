@@ -15,7 +15,8 @@
 import * as THREE from 'three';
 import { HERO_CONFIG } from '../hero/config';
 import { FACE_BASES, SPIN_AXIS, buildPlate, makeParticleMaterial, type PlateSim } from '../hero/mark';
-import { SHAPES, cloudFor, loadCloud, shapeTargets } from '../hero/shapes';
+import { SHAPES, cloudFor, loadCloud, poseInto, shapeTargets, skinnedIndices } from '../hero/shapes';
+import { loadSkin, skinFor } from '../hero/skin';
 import { simulate, type SimContext } from '../hero/sim';
 import { createLens } from '../hero/lens';
 import { createPointer } from '../hero/pointer';
@@ -67,6 +68,7 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
      *  demand, since sampling a field costs ~50ms and nothing should pay for
      *  a shape it never shows */
     targets: (Float32Array | null)[];
+    src: (Uint16Array | null)[];
     homeInner: Float32Array;
     /** 0..1 per particle: when it leaves, so the cloud unfolds rather than snaps */
     when: Float32Array;
@@ -91,7 +93,7 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
     }
     const when = new Float32Array(n);
     for (let j = 0; j < n; j++) when[j] = Math.random();
-    plates.push({ holder, points, sim, targets: SHAPES.map(() => null), homeInner, when });
+    plates.push({ holder, points, sim, targets: SHAPES.map(() => null), src: SHAPES.map(() => null), homeInner, when });
   });
   const L0 = new THREE.Group(); L0.add(inner); scene.add(L0);
 
@@ -111,6 +113,10 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
   const asked = new Set<number>();
   function ensure(i: number) {
     const def = SHAPES[i];
+    if (def.skin && !skinFor(def.skin)) {
+      if (!asked.has(i)) { asked.add(i); loadSkin(def.skin).then(() => build(i)); }
+      return;
+    }
     if (def.src && !cloudFor(def)) {
       if (!asked.has(i)) { asked.add(i); loadCloud(def.src).then(() => build(i)); }
       return;
@@ -118,6 +124,16 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
     build(i);
   }
   function build(i: number) {
+    const def = SHAPES[i], skin = def.skin ? skinFor(def.skin) : null;
+    if (skin) {
+      for (const pl of plates) {
+        if (pl.src[i]) continue;
+        pl.src[i] = skinnedIndices(skin.bind, pl.homeInner, pl.sim.total);
+        pl.targets[i] = new Float32Array(pl.sim.total * 3);
+      }
+      pose(i, 0);
+      return;
+    }
     for (const pl of plates) {
       if (pl.targets[i]) continue;
       const n = pl.sim.total, t = shapeTargets(SHAPES[i], pl.homeInner, n);
@@ -133,6 +149,16 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
   // slice at a time, so no single frame carries more than one field
   const idle = (fn: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 3000 }) : setTimeout(fn, 300));
   SHAPES.forEach((_, i) => idle(() => ensure(i)));
+
+  function pose(i: number, t: number) {
+    const def = SHAPES[i], skin = def.skin ? skinFor(def.skin) : null;
+    if (!skin) return;
+    skin.update(t);
+    for (const pl of plates) {
+      const src = pl.src[i], tg = pl.targets[i];
+      if (src && tg) poseInto(def, skin.pose, src, tg, pl.holder.position.x, pl.holder.position.y, pl.holder.position.z);
+    }
+  }
 
   function show(i: number) {
     if (i === shape) return;
@@ -214,6 +240,7 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
     material.uniforms.uFlat.value = e * 0.75;
     ctx.dt = dt; ctx.t = t; ctx.introT0 = introT0;
 
+    if (shape >= 0 && e > 0.0005 && SHAPES[shape].skin) pose(shape, t);
     for (const pl of plates) {
       simulate(pl.holder, pl.points, pl.sim, ctx);
       if (e > 0.0005 && shape >= 0) {

@@ -59,6 +59,9 @@ export interface ShapeDef {
    *  real model, sampled at build time. The mesh never reaches the browser —
    *  only the points do, quantised to 16 bits. See scripts/bakeShape.py. */
   readonly src?: string;
+  /** a baked rig: the same points, plus the bones that move them, so the form
+   *  can stand there breathing instead of standing there. See skin.ts. */
+  readonly skin?: string;
   /** the headline's last word while this form stands — the mark and the
    *  sentence say the same thing at the same moment */
   readonly word: string;
@@ -79,7 +82,7 @@ export interface ShapeDef {
 const FIGURE: ShapeDef = {
   name: 'figure',
   word: 'media.',
-  src: '/shapes/figure.bin',
+  skin: '/shapes/figure.skin',
   scale: 1.58,
   lift: -0.5,
   bounds: [-0.55, -0.06, -0.34, 0.55, 1.02, 0.34],
@@ -273,6 +276,44 @@ export function sampleShape(def: ShapeDef, n: number): Float32Array {
     out[j * 3] = out[src * 3]; out[j * 3 + 1] = out[src * 3 + 1]; out[j * 3 + 2] = out[src * 3 + 2];
   }
   return out;
+}
+
+/**
+ * Which of a skinned cloud's points this plate's particles take, ordered the
+ * same way as a field's targets: each particle to the point nearest its own
+ * seat, so the cloud unfolds into the form rather than shuffling itself.
+ */
+export function skinnedIndices(bind: Float32Array, home: Float32Array, count: number): Uint16Array {
+  const m = bind.length / 3;
+  const pick = new Int32Array(count);
+  for (let i = 0; i < count; i++) pick[i] = (Math.random() * m) | 0;
+  const keyP = new Float32Array(count), keyH = new Float32Array(count);
+  for (let j = 0; j < count; j++) {
+    const k = pick[j] * 3;
+    keyP[j] = bind[k] + bind[k + 1] + bind[k + 2];
+    keyH[j] = home[j * 3] + home[j * 3 + 1] + home[j * 3 + 2];
+  }
+  const byP = Array.from(pick.keys()).sort((a, b) => keyP[a] - keyP[b]);
+  const byH = Array.from(pick.keys()).sort((a, b) => keyH[a] - keyH[b]);
+  const out = new Uint16Array(count);
+  for (let r = 0; r < count; r++) out[byH[r]] = pick[byP[r]];
+  return out;
+}
+
+/**
+ * Write a posed cloud into one plate's targets: the shape's own placement,
+ * less the plate's offset along its normal. Called every frame while an
+ * animated form is standing, which is why it does nothing but arithmetic.
+ */
+export function poseInto(def: ShapeDef, pose: Float32Array, src: Uint16Array, out: Float32Array,
+                         ox: number, oy: number, oz: number): void {
+  const s = def.scale, l = def.lift, n = src.length;
+  for (let j = 0; j < n; j++) {
+    const k = src[j] * 3, j3 = j * 3;
+    out[j3] = PIVOT + pose[k] * s - ox;
+    out[j3 + 1] = PIVOT + (pose[k + 1] + l) * s - oy;
+    out[j3 + 2] = PIVOT + pose[k + 2] * s - oz;
+  }
 }
 
 /**

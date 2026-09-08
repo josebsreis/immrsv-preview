@@ -7,7 +7,8 @@ import * as THREE from 'three';
 import { HERO_CONFIG, type HeroConfig } from './config';
 import { FACE_BASES, SPIN_AXIS, buildPlate, makeParticleMaterial, type PlateSim } from './mark';
 import { simulate } from './sim';
-import { SHAPES, cloudFor, loadCloud, shapeTargets } from './shapes';
+import { SHAPES, cloudFor, loadCloud, poseInto, shapeTargets, skinnedIndices } from './shapes';
+import { loadSkin, skinFor } from './skin';
 import { createLens } from './lens';
 import { createPointer } from './pointer';
 import { createFluid, type FluidHandle } from '../fluid';
@@ -86,6 +87,8 @@ export function createHero(opts: HeroOptions): Hero {
     homeInner: Float32Array;
     /** one array of targets per shape, sampled the first time it is asked for */
     targets: (Float32Array | null)[];
+    /** for an animated shape: which of its points each particle takes */
+    src: (Uint16Array | null)[];
     /** 0..1 per particle: when it leaves, so a form unfolds rather than snaps */
     when: Float32Array;
   }
@@ -110,7 +113,7 @@ export function createHero(opts: HeroOptions): Hero {
       homeInner[j * 3 + 2] = sim.home[j * 3 + 2] + holder.position.z;
       when[j] = Math.random();
     }
-    plates.push({ holder, points, sim, axis, out, homeInner, when, targets: SHAPES.map(() => null) });
+    plates.push({ holder, points, sim, axis, out, homeInner, when, targets: SHAPES.map(() => null), src: SHAPES.map(() => null) });
   });
   const L0 = new THREE.Group(); L0.add(inner); scene.add(L0);
   const qSpin = new THREE.Quaternion(), qTilt = new THREE.Quaternion();
@@ -137,6 +140,10 @@ export function createHero(opts: HeroOptions): Hero {
   const asked = new Set<number>();
   function ensureShape(i: number) {
     const def = SHAPES[i];
+    if (def.skin && !skinFor(def.skin)) {
+      if (!asked.has(i)) { asked.add(i); loadSkin(def.skin).then(() => buildShape(i)); }
+      return;
+    }
     if (def.src && !cloudFor(def)) {
       if (!asked.has(i)) { asked.add(i); loadCloud(def.src).then(() => buildShape(i)); }
       return;
@@ -146,6 +153,19 @@ export function createHero(opts: HeroOptions): Hero {
   /** the fields are authored in the mark's frame, so a plate's targets are
    *  those points less its own offset along its normal */
   function buildShape(i: number) {
+    const def = SHAPES[i], skin = def.skin ? skinFor(def.skin) : null;
+    if (skin) {
+      // an animated form is not a fixed set of targets: each particle is given
+      // one of the cloud's points to follow, and where that point is depends
+      // on the frame
+      for (const p of plates) {
+        if (p.src[i]) continue;
+        p.src[i] = skinnedIndices(skin.bind, p.homeInner, p.sim.total);
+        p.targets[i] = new Float32Array(p.sim.total * 3);
+      }
+      poseShape(i, 0);
+      return;
+    }
     for (const p of plates) {
       if (p.targets[i]) continue;
       const n = p.sim.total, t = shapeTargets(SHAPES[i], p.homeInner, n);
@@ -162,6 +182,17 @@ export function createHero(opts: HeroOptions): Hero {
   if (reel) {
     const idle = (fn: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 4000 }) : setTimeout(fn, 600));
     SHAPES.forEach((_, i) => idle(() => ensureShape(i)));
+  }
+
+  /** move an animated form to where it is at `t` seconds */
+  function poseShape(i: number, t: number) {
+    const def = SHAPES[i], skin = def.skin ? skinFor(def.skin) : null;
+    if (!skin) return;
+    skin.update(t);
+    for (const p of plates) {
+      const src = p.src[i], tg = p.targets[i];
+      if (src && tg) poseInto(def, skin.pose, src, tg, p.holder.position.x, p.holder.position.y, p.holder.position.z);
+    }
   }
 
   function showShape(i: number) {
@@ -314,6 +345,8 @@ export function createHero(opts: HeroOptions): Hero {
       material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
       material.uniforms.uFlat.value = shapeE * S.flat;
     }
+    // an animated form is re-posed once a frame, for every plate at once
+    if (shape >= 0 && shapeE > 0.0005 && SHAPES[shape].skin) poseShape(shape, t);
     for (const p of plates) {
       if (ctx.morph > 0) {
         _inv.copy(p.holder.matrixWorld).invert();                 // the box in this plate's space
