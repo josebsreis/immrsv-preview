@@ -53,7 +53,7 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
 
   function update() {
     const y = scrollY, vh = innerHeight;
-    if (veil) veil.style.opacity = (Math.max(0, Math.min(1, (y - vh * 0.45) / (vh * 0.85))) * 0.45).toFixed(3);
+    if (veil) veil.style.opacity = (Math.max(0, Math.min(1, (y - vh * 0.45) / (vh * 0.85))) * 0.22).toFixed(3);
 
     for (const { host, units, last } of passages) {
       const r = host.getBoundingClientRect();

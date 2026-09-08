@@ -84,7 +84,7 @@ export const HERO_CONFIG = {
   exit: {
     loosen: 1.6,
     spin: 0.06,       // what is left of the cruise rotation once it has dispersed
-    dim: 0.78,        // what is left of the brightness once it has dispersed
+    dim: 0.25,        // spread thin, the dust needs most of its brightness to read
     spread: 4.4,      // how far a particle drifts across the frame, world units
     spreadY: 2.9,     // …the frame is wider than it is tall
     spreadZ: 1,       // …and shallow, so nothing lands close to the camera
