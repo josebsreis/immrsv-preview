@@ -25,6 +25,7 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
   const next = document.querySelector<HTMLElement>('[data-next]');
   const themed = document.querySelectorAll<HTMLElement>('[data-theme-follows]');
   const rising = Array.from(document.querySelectorAll<HTMLElement>('[data-rise]'));
+  const wordmark = document.querySelector<HTMLElement>('[data-wordmark]');
   const hold = document.querySelector<HTMLElement>('[data-hold]');
   const scrim = document.querySelector<HTMLElement>('[data-scrim]');
   const light = document.querySelector<HTMLElement>('[data-shutter-scroll]')?.parentElement ?? null;
@@ -68,8 +69,14 @@ export function createScrollChoreography(hero: Hero | null): ScrollChoreography 
     const y = scrollY, vh = innerHeight;
     if (veil) veil.style.opacity = (clamp01((y - vh * 0.45) / (vh * 0.85)) * 0.22).toFixed(3);
 
-    // the mark drifts apart and goes out over the first two screens of scroll
+    // the mark comes apart and travels into the name: the crossing is timed by
+    // the wordmark panel itself, so the particles land inside its outline
     hero?.setExit((y - vh * 0.2) / (vh * 1.7));
+    if (wordmark) {
+      const w = wordmark.getBoundingClientRect();
+      const mid = w.top + w.height / 2;
+      hero?.setMorph((vh * 1.05 - mid) / (vh * 0.62));
+    }
 
     for (const { host, units, last } of passages) {
       const r = host.getBoundingClientRect();

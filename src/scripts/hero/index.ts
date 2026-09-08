@@ -22,6 +22,8 @@ export interface HeroOptions {
 export interface Hero {
   /** release the intro (call when the page is ready) */
   setReady(): void;
+  /** 0..1 — how far the particles have travelled into the wordmark */
+  setMorph(p: number): void;
   /** 0..1 — the scroll-driven exit */
   setExit(p: number): void;
   /** a strike at viewport coords (0..1, y up) */
@@ -89,7 +91,7 @@ export function createHero(opts: HeroOptions): Hero {
   const qSpin = new THREE.Quaternion(), qTilt = new THREE.Quaternion(), AX = new THREE.Vector3(1, 0, 0);
 
   // ── state the page drives ──────────────────────────────────────────
-  let ready = reduced, exit = 0, shockT = -9;
+  let ready = reduced, exit = 0, morph = 0, shockT = -9;
   let spinAngle = 0, spinBoost = cfg.intro.spinBoost;
   let introT0 = 0, last: number | undefined, yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
 
@@ -120,7 +122,30 @@ export function createHero(opts: HeroOptions): Hero {
   // ── frame ──────────────────────────────────────────────────────────
   const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
   let running = true, raf = 0;
-  const ctx = { dt: 0, t: 0, camera, pointer: P, introT0: 0, exit: 0, shockT: -9, reduced, cfg };
+  const ctx = {
+    dt: 0, t: 0, camera, pointer: P, introT0: 0, exit: 0, shockT: -9, reduced, cfg,
+    morph: 0, mp0: new THREE.Vector3(), mru: new THREE.Vector3(), mvv: new THREE.Vector3(),
+  };
+  // the wordmark panel's outline: the particles land inside it
+  const wordmark = document.querySelector<SVGSVGElement>('[data-wordmark] svg');
+  const _p0 = new THREE.Vector3(), _ru = new THREE.Vector3(), _vv = new THREE.Vector3();
+  const _right = new THREE.Vector3(), _up = new THREE.Vector3(), _inv = new THREE.Matrix4();
+
+  /** the box the letters live in, in world units on the plane through the origin */
+  function letterBox() {
+    if (!wordmark) return false;
+    const r = wordmark.getBoundingClientRect();
+    if (r.width < 1) return false;
+    const half = Math.tan((camera.fov * Math.PI) / 360) * camera.position.length();
+    const halfW = half * camera.aspect;
+    camera.matrixWorld.extractBasis(_right, _up, _p0);            // _p0 is scratch here
+    // the top-left corner of the box, and one edge each way
+    const nx = (r.left / innerWidth) * 2 - 1, ny = 1 - (r.top / innerHeight) * 2;
+    _p0.copy(_right).multiplyScalar(nx * halfW).addScaledVector(_up, ny * half);
+    _ru.copy(_right).multiplyScalar((r.width / innerWidth) * 2 * halfW);
+    _vv.copy(_up).multiplyScalar((-r.height / innerHeight) * 2 * half);
+    return true;
+  }
   function frame(now: number) {
     const t = now / 1000;
     const dt = Math.max(0, Math.min((now - (last ?? now)) / 1000, 0.05));
@@ -140,25 +165,27 @@ export function createHero(opts: HeroOptions): Hero {
     spinBoost *= Math.exp(-cfg.intro.spinDecay * dt);
     // once the faces are leaving, the revolution eases down to a drift rather
     // than carrying the whole frame around with it
-    const spinFade = 1 - (1 - cfg.exit.spin) * Math.min(1, exit / 0.6);
+    const spinFade = 1 - (1 - cfg.exit.spin) * Math.min(1, morph / 0.55);
     spinAngle += ((cfg.mark.spin + spinBoost) * spinFade) * dt;
     qSpin.setFromAxisAngle(SPIN_AXIS, spinAngle);
     qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble);
     L0.quaternion.copy(qSpin).multiply(qTilt);
 
-    // the exit: each face flips and leaves along its own normal, so the cube
-    // comes apart the way it was assembled rather than dissolving in place
-    const e = Math.pow(clamp(exit, 0, 1), 1.2);
-    for (const p of plates) {
-      p.holder.position.copy(p.out).multiplyScalar(cfg.mark.separation + e * cfg.exit.fly);
-      if (e > 0) p.holder.quaternion.setFromAxisAngle(p.axis, e * cfg.exit.flip);
-      else p.holder.quaternion.identity();
-    }
     L0.updateMatrixWorld(true);
 
     material.uniforms.uTime.value = t;
     ctx.dt = dt; ctx.t = t; ctx.introT0 = introT0; ctx.exit = exit; ctx.shockT = shockT;
-    for (const p of plates) simulate(p.holder, p.points, p.sim, ctx);
+    ctx.morph = morph > 0 && letterBox() ? morph : 0;
+    for (const p of plates) {
+      if (ctx.morph > 0) {
+        _inv.copy(p.holder.matrixWorld).invert();                 // the box in this plate's space
+        ctx.mp0.copy(_p0).applyMatrix4(_inv);
+        // transformDirection normalises, so the edge lengths are put back
+        ctx.mru.copy(_ru).transformDirection(_inv).multiplyScalar(_ru.length());
+        ctx.mvv.copy(_vv).transformDirection(_inv).multiplyScalar(_vv.length());
+      }
+      simulate(p.holder, p.points, p.sim, ctx);
+    }
 
     lens.render(scene, camera, P);
     if (running) raf = requestAnimationFrame(frame);
@@ -173,6 +200,7 @@ export function createHero(opts: HeroOptions): Hero {
   return {
     setReady() { ready = true; },
     setExit(p) { exit = Math.max(0, Math.min(1, p)); },
+    setMorph(p) { morph = Math.max(0, Math.min(1, p)); },
     strike,
     get fluid() { return fluid; },
     destroy() {

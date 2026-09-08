@@ -16,6 +16,9 @@ export interface SimContext {
   pointer: Pointer;
   introT0: number;
   exit: number;          // 0..1 scroll progress of the exit
+  morph: number;         // 0..1 how far the particles have travelled into the letters
+  /** the wordmark's box in this plate's local space: a corner and two edges */
+  mp0: THREE.Vector3; mru: THREE.Vector3; mvv: THREE.Vector3;
   shockT: number;        // time of the last strike, or < 0
   reduced: boolean;
   cfg: HeroConfig;
@@ -45,20 +48,20 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
     }
   } else S.hadM = false;
 
-  const { home, off, ain, sim, intro, over, seedv, scatter, iDelay, iDur, vel, stiff, damp, jit, gain, total } = S;
+  const { home, off, ain, sim, intro, over, seedv, letter, iDelay, iDur, vel, stiff, damp, jit, gain, total } = S;
   const stagger = ctx.reduced ? 0 : I.stagger, dur = ctx.reduced ? 0.01 : I.duration;
   const it = t - ctx.introT0, building = it < stagger + dur * 1.25 + 0.1;
   const press = (C.rest + speed * C.speed) * dt * 60 * C.gain;
   // one strike impulse per plate per click, and none before the first click
   const shock = hit && ctx.shockT > 0 && S.shockSeen !== ctx.shockT; if (shock) S.shockSeen = ctx.shockT;
   const ex = ctx.exit;
-  // the shape starts opening on the first turn of the wheel and keeps opening
-  // for the whole of the exit — it drifts apart rather than bursting, and the
-  // light drains with it until there is nothing left
+  // the cube loosens as it lets go, the light ducks while the particles are in
+  // flight, and what is left goes out once the name has been read
+  const mo = ctx.morph, M = cfg.morph;
   const loosen = ex > 0 ? sm(0, 0.16, ex) * (1 - sm(0.12, 0.45, ex)) : 0;
-  const burst = ex > 0 ? Math.pow(sm(0, 0.92, ex), 1.25) : 0;
   const fade = ex > 0 ? sm(0.1, 1, ex) : 0;
-  const dip = ex > 0 ? sm(0.03, 0.3, ex) * (1 - sm(0.45, 0.9, ex)) : 0;
+  const dip = mo > 0 ? sm(0.03, 0.3, mo) * (1 - sm(0.45, 0.9, mo)) : 0;
+  const stag = M.stagger;
 
   for (let j = 0; j < total; j++) {
     const i3 = j * 3;
@@ -103,14 +106,28 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
     } else ain[j] = 1;
 
     if (ex > 0) {
-      // the exit, driven by scroll: loosen, then out across the frame, with a
-      // slow per-particle wander so a leaving face never looks rigid
-      const w = X.drift * burst;
-      ox += over[i3] * loosen * X.loosen + scatter[i3] * burst + Math.sin(t * 0.5 + jit[j] * 9.1) * w;
-      oy += over[i3 + 1] * loosen * X.loosen + scatter[i3 + 1] * burst + Math.cos(t * 0.43 + jit[j] * 7.7) * w;
-      oz += over[i3 + 2] * loosen * X.loosen + scatter[i3 + 2] * burst;
-      ain[j] = Math.min(ain[j], 1 - fade * X.dim - dip * X.dip);
+      ox += over[i3] * loosen * X.loosen;
+      oy += over[i3 + 1] * loosen * X.loosen;
+      oz += over[i3 + 2] * loosen * X.loosen;
     }
+
+    if (mo > 0) {
+      // each particle leaves in its own time, then travels to its letter
+      const u = Math.min(1, Math.max(0, (mo * (1 + stag) - stag * ((jit[j] / C.jitter) + 0.5)) ));
+      const e = u * u * (3 - 2 * u);
+      if (e > 0) {
+        const lu = letter[j * 2], lv = letter[j * 2 + 1];
+        const tx = ctx.mp0.x + ctx.mru.x * lu + ctx.mvv.x * lv;
+        const ty = ctx.mp0.y + ctx.mru.y * lu + ctx.mvv.y * lv;
+        const tz = ctx.mp0.z + ctx.mru.z * lu + ctx.mvv.z * lv;
+        const w = X.drift * e;
+        ox += (tx - home[i3] - ox) * e + Math.sin(t * 0.5 + jit[j] * 9.1) * w;
+        oy += (ty - home[i3 + 1] - oy) * e + Math.cos(t * 0.43 + jit[j] * 7.7) * w;
+        oz += (tz - home[i3 + 2] - oz) * e;
+      }
+      ain[j] = Math.min(ain[j], (1 - dip * X.dip) * (1 - (1 - M.hold) * e));
+    }
+    if (ex > 0) ain[j] = Math.min(ain[j], 1 - fade * X.dim);
     off[i3] = ox; off[i3 + 1] = oy; off[i3 + 2] = oz;
   }
   const geo = points.geometry;

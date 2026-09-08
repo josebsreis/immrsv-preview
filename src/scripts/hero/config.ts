@@ -79,20 +79,21 @@ export const HERO_CONFIG = {
     ignore: 'a, button, [data-no-strike]',
   },
 
-  /** the scroll exit: the cube comes apart the way it was assembled — each
-   *  face flips and leaves along its own normal, loosening a little as it goes
-   *  and draining of light until nothing is left */
+  /** the scroll exit: the cube loosens, its particles travel into the letters
+   *  of the name — landing behind the outline in the panel below — and hold
+   *  there before going out */
   exit: {
-    loosen: 1.6,
-    spin: 0.06,       // what is left of the cruise rotation once it has dispersed
-    dim: 1,           // it goes out entirely — nothing is left behind
-    dip: 0.14,        // a small extra duck while the particles are still dense
-    fly: 4.6,         // how far each plate travels out along its own normal
-    flip: 2.3,        // …turning this far about an axis in its own face, rad
-    spread: 0.55,     // the particles loosen as the plate goes, but only a little
-    spreadY: 0.4,
-    spreadZ: 0.2,
-    drift: 0.05,      // a slow wander, so a leaving face never looks rigid
+    loosen: 1.2,
+    spin: 0.04,       // what is left of the cruise rotation once the name is read
+    dim: 1,           // it goes out entirely, once the panel has passed
+    dip: 0.14,        // a small duck while the particles are in flight
+    drift: 0.05,      // a slow wander, so nothing ever looks rigid
+  },
+
+  /** the crossing from cube to wordmark */
+  morph: {
+    stagger: 0.45,    // how much of the run is spent letting particles leave in turn
+    hold: 0.86,       // how bright the letters sit behind the outline
   },
 
   /** the Lusion-style lens: flow map + chromatic post pass on the mark */
