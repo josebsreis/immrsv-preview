@@ -102,14 +102,16 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
     if (hold) hold.style.top = (holdTop - over * vh * HOLD_DRIFT).toFixed(1) + 'px';
     if (scrim) scrim.style.opacity = (over * HOLD_SHADE).toFixed(3);
 
-    // the shutter: the curtain closes while the section itself is arriving. It
-    // starts the moment the light half's own ground reaches the bottom of the
-    // screen, and finishes as the band clears the top; the rows fill from the
-    // foot upward, so the white climbs out of the section below them
+    // The shutter: the curtain closes while the section itself is arriving. It
+    // begins the instant the band crosses the bottom of the screen and is done
+    // as it clears the top, so the first slat of white shows the moment the
+    // dark half starts to hold. Timing it against the band's own height meant
+    // half a screen of scrolling with the shutter already on the page and
+    // every row still shut — the change in scrolling with nothing to show for
+    // it. The rows fill from the foot upward, so the white climbs.
     if (shutter && rows.length > 1) {
       const r = shutter.getBoundingClientRect();
-      const run = Math.max(vh - r.height, 1);
-      const p = clamp01((run - r.top) / run);
+      const p = clamp01((vh - r.top) / vh);
       const n = rows.length;
       for (let k = 0; k < n; k++) {
         const start = ((n - 1 - k) / (n - 1)) * ROW_STAGGER;
