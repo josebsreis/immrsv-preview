@@ -1,31 +1,15 @@
 ---
-/** The name at full width, drawn rather than set: a hairline outline that inks
- *  solid where the cursor passes, column by column, and drains back when the
- *  cursor leaves. The ink is a mask of hard-edged columns, so every edge stays
- *  vector-crisp at any size. Behaviour lives in scripts/ui/wordmarkInk.ts. */
+/** The name at full width, drawn rather than set: a hairline outline whose
+ *  letters are separate objects. Touching one shoves it along the pointer's
+ *  travel, spins it about its centre and fills it; a spring returns it and the
+ *  fill drains. Behaviour lives in scripts/ui/wordmarkLetters.ts. */
 import { LETTERMARK } from '@lib/lettermark';
-
-const COLUMNS = 72;                        // the mask's resolution across the mark
-const { x, y, w, h } = LETTERMARK.box;
-const pad = h * 0.3;                       // columns run past the letters, top and bottom
-const cw = w / COLUMNS;
-const columns = Array.from({ length: COLUMNS }, (_, i) => i);
 ---
 <section class="panel" aria-label="IMMRSV">
   <div class="mark arrives" data-wordmark style="--arrive-delay: .2s">
     <svg viewBox={LETTERMARK.viewBox} role="img" aria-label="IMMRSV">
-      <defs>
-        <g id="immrsv-letters">{LETTERMARK.paths.map((d) => <path d={d} />)}</g>
-        <mask id="immrsv-ink" maskUnits="userSpaceOnUse" x={x} y={y - pad} width={w} height={h + pad * 2}>
-          {columns.map((i) => (
-            <rect class="col" data-col={i} x={x + i * cw} y={y - pad} width={cw + 0.4} height={h + pad * 2} fill="#fff" />
-          ))}
-        </mask>
-      </defs>
-      <use href="#immrsv-letters" class="outline" />
-      <use href="#immrsv-letters" class="solid" mask="url(#immrsv-ink)" />
+      {LETTERMARK.paths.map((d) => <path class="ltr" data-letter d={d} />)}
     </svg>
-    <i class="rule" data-wordmark-rule aria-hidden="true"><b></b><b></b></i>
   </div>
 </section>
 
@@ -36,31 +20,21 @@ const columns = Array.from({ length: COLUMNS }, (_, i) => i);
   .mark { position: relative; width: 100%; color: var(--ink); }
   svg { width: 100%; height: auto; display: block; overflow: visible; }
 
-  /* the outline is a true hairline at any scale */
-  .outline { fill: none; stroke: currentColor; stroke-width: 1px; vector-effect: non-scaling-stroke; opacity: 0.55; }
-  .solid { fill: currentColor; }
-
-  /* each column of ink rises where the cursor has been */
-  .col { transform-box: fill-box; transform-origin: 50% 50%; transform: scaleY(0); opacity: 0;
-         transition: transform 0.18s var(--ease-out), opacity 0.18s var(--ease-out); }
-  .col.on { transform: none; opacity: 1; }
-
-  /* the instrument: a hairline crossing the mark, squared off at both ends */
-  .rule { position: absolute; top: -8%; bottom: -8%; left: 0; width: var(--hairline);
-          background: currentColor; opacity: 0; transform: translateX(var(--x, 0));
-          transition: opacity var(--dur-fast) ease; pointer-events: none; }
-  .mark[data-inking] .rule { opacity: 0.45; }
-  .rule b { position: absolute; left: 50%; width: var(--square); height: var(--square);
-            margin-left: calc(var(--square) / -2); background: currentColor; }
-  .rule b:first-child { top: calc(var(--square) * -1); }
-  .rule b:last-child { bottom: calc(var(--square) * -1); }
-
-  /* nothing to ink without a pointer, so the mark simply stands solid */
-  @media (hover: none) {
-    .outline { display: none; }
-    .col { transform: none; opacity: 1; transition: none; }
-    .rule { display: none; }
+  /* outline at rest, a true hairline at any scale; the interior is the target */
+  .ltr {
+    fill: currentColor; fill-opacity: 0;
+    stroke: currentColor; stroke-width: 1px; vector-effect: non-scaling-stroke;
+    stroke-opacity: 0.55;
+    pointer-events: fill;
+    transform-box: fill-box; transform-origin: 50% 50%;
+    /* touched: fills at once. left alone: drains */
+    transition: fill-opacity 0.9s ease 0.15s, stroke-opacity var(--dur-base) ease;
   }
-  @media (prefers-reduced-motion: reduce) { .col { transition: none; } }
+  .ltr.lit { fill-opacity: 1; stroke-opacity: 1; transition: fill-opacity 0.1s linear, stroke-opacity 0.1s linear; }
+
+  /* nothing to shove without a pointer, so the mark simply stands solid */
+  @media (hover: none), (prefers-reduced-motion: reduce) {
+    .ltr { fill-opacity: 1; stroke-opacity: 1; }
+  }
   @media (max-width: 719px) { .panel { padding: 0 1.25rem; } }
 </style>

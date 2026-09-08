@@ -6,7 +6,7 @@ import { createSmoothScroll } from './ui/smoothScroll';
 import { createScrollChoreography } from './ui/scrollChoreography';
 import { createRotatingWord } from './ui/rotatingWord';
 import { createStatsReel } from './ui/statsReel';
-import { createWordmarkInk } from './ui/wordmarkInk';
+import { createWordmarkLetters } from './ui/wordmarkLetters';
 import { createDirectionalHover } from './ui/directionalHover';
 import { splitChars } from './ui/splitText';
 import { createHoverAudio } from './ui/hoverAudio';
@@ -25,9 +25,12 @@ if (rot) createRotatingWord(rot);
 const reel = document.querySelector<HTMLElement>('[data-stats]');
 if (reel) createStatsReel(reel);
 
-// the name inks in under the cursor
+// the letters of the name are shoved about by the cursor
 const markHost = document.querySelector<HTMLElement>('[data-wordmark]');
-if (markHost && matchMedia('(hover: hover)').matches) createWordmarkInk(markHost);
+if (markHost && matchMedia('(hover: hover) and (pointer: fine)').matches
+    && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  createWordmarkLetters(markHost);
+}
 createDirectionalHover();
 createHoverAudio(site.audio.taps);
 

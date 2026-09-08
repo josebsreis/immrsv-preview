@@ -39,7 +39,7 @@ src/
   scripts/
     hero/             the mark: config.ts (every tunable), mark.ts, sim.ts, lens.ts, pointer.ts, index.ts
     fluid.ts          the WebGL fluid (own canvas, under the hero)
-    ui/               smoothScroll, scrollChoreography, rotatingWord, statsReel, wordmarkInk,
+    ui/               smoothScroll, scrollChoreography, rotatingWord, statsReel, wordmarkLetters,
                       directionalHover, splitText, hoverAudio, loader
     home.ts           the homepage's client entry — wires everything by data attributes
   lib/
