@@ -12,13 +12,22 @@ const { content } = Astro.props;
 /* The studios' own work, as delivered by the client and squeezed down by
    scripts/images.mjs. Where a studio has projects, its card shows them one at
    a time instead of a stock clip; where it has none yet, the clip stands. */
-const FOLDER: Record<string, string> = { architecture: 'architecture-design', media: 'creative-media' };
-const reelFor = (key: string) =>
-  (work as { studio: string; name: string; images: string[] }[])
+const FOLDER: Record<string, string> = { architecture: 'architecture-design', media: 'creative-media', products: 'digital-products' };
+/** every card carries the same count, so the three reels turn at the same
+ *  pace; a studio with fewer than that shows empty frames for the rest,
+ *  and one with more shows its first four */
+const PER_STUDIO = 4;
+const placeholders = Array.from({ length: PER_STUDIO }, (_, i) =>
+  ({ src: `/work/placeholder/0${i + 1}`, name: 'Coming soon' }));
+const reelFor = (key: string) => {
+  const own = (work as { studio: string; name: string; images: string[] }[])
     .filter((p) => p.studio === FOLDER[key])
     // one frame per project: the reel is a list of what they have built, not a
     // contact sheet of every render in a folder
-    .map((p) => ({ src: p.images[0], name: p.name }));
+    .map((p) => ({ src: p.images[0], name: p.name }))
+    .slice(0, PER_STUDIO);
+  return own.concat(placeholders.slice(0, PER_STUDIO - own.length));
+};
 ---
 {content.items.length > 0 && (
   <section class="studios" id="studios">

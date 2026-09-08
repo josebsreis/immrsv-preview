@@ -96,7 +96,10 @@ export function createReel(el: HTMLElement): Reel {
       && pointer.x >= r.left && pointer.x <= r.right && pointer.y >= r.top && pointer.y <= r.bottom;
     // the card under the hand says so, and the roll shows only there
     el.classList.toggle('hovering', inside);
-    if (!inside) return;
+    // A card left behind goes back to its first picture. Otherwise a reel is
+    // whatever frame the hand happened to leave it on, and the first project
+    // — the one chosen to lead — is the one nobody sees at rest.
+    if (!inside) { if (at !== 0) show(0, false); return; }
     // Hysteresis. A hand at rest still trembles, and a page under a still
     // hand moves in steps; either one sitting on the line between two bands
     // would flip the frame back and forth — the flicker to the second picture
