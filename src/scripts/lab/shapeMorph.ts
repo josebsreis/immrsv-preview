@@ -104,7 +104,7 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
   let shape = -1;            // −1 = the cube
   let blend = 0;             // 0..1 toward `shape`
   let target = 0;            // where blend is heading
-  let auto = !reduced, phase = 0, cycle = 0, working = false;
+  let auto = !reduced, phase = 0, cycle = 0, working = false, cursor = -1;
   let spinAngle = 0, introT0 = 0, last: number | undefined;
   let yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
 
@@ -208,7 +208,7 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
                 : phase === 2 ? BEAT.shape : BEAT.cross;
       if (cycle > span) {
         cycle = 0; phase = (phase + 1) % 4;
-        if (phase === 1) show((shape + 1 + SHAPES.length) % SHAPES.length);
+        if (phase === 1) { cursor = (cursor + 1) % SHAPES.length; show(cursor); }
         if (phase === 3) { target = 0; working = true; }
       }
     }

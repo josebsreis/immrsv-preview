@@ -130,6 +130,9 @@ export function createHero(opts: HeroOptions): Hero {
   let shapeTo = 0;       // where it is heading
   let pending = -1;      // a form asked for while another is still standing
   let phase = 0, beat = 0, parked = false;
+  /** where the reel has got to. Not `shape`: that goes back to −1 on every
+   *  interlude, so counting from it would ask for the first form for ever. */
+  let cursor = -1;
   /** true once the mark has started making things: the cube is then an
    *  interlude between two forms rather than the thing on show */
   let working = false;
@@ -274,7 +277,7 @@ export function createHero(opts: HeroOptions): Hero {
                 : phase === 2 ? S.beat.shape : S.beat.cross;
       if (beat > span) {
         beat = 0; phase = (phase + 1) % 4;
-        if (phase === 1) showShape((shape + 1) % SHAPES.length);
+        if (phase === 1) { cursor = (cursor + 1) % SHAPES.length; showShape(cursor); }
         // the cube between two forms is the mark at work, not a thing it is
         // making: it comes back, spins up hard, and throws the next one out
         else if (phase === 3) { shapeTo = 0; working = true; }
