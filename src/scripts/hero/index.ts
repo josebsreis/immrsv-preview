@@ -129,7 +129,7 @@ export function createHero(opts: HeroOptions): Hero {
   let shapeAt = 0;       // 0..1 — how far the cloud has gone into `shape`
   let shapeTo = 0;       // where it is heading
   let pending = -1;      // a form asked for while another is still standing
-  let phase = 0, beat = 0;
+  let phase = 0, beat = 0, parked = false;
 
   /** sample shape `i` for every plate, once: the fields are authored in the
    *  mark's frame, so a plate's targets are those points less its own offset */
@@ -157,15 +157,13 @@ export function createHero(opts: HeroOptions): Hero {
     if (i < 0) { shapeTo = 0; pending = -1; return; }
     // one form never slides into the next: the cloud goes home through the
     // cube, which is the only reading that makes sense of three loose plates
-    if (shapeAt > 0.02 && shape >= 0) { pending = i; shapeTo = 0; phase = 3; beat = 0; announce(-1); return; }
+    if (shapeAt > 0.02 && shape >= 0) { pending = i; shapeTo = 0; phase = 3; beat = 0; spinBoost += cfg.shapes.charge; return; }
     ensureShape(i); shape = i; shapeTo = 1; phase = 1; beat = 0;
     announce(i);
   }
+  /** the page is told what the mark is making, so the headline can name it */
   function announce(i: number) {
     opts.onForm?.(i, i < 0 ? null : SHAPES[i].word);
-    // the mark spins up as it works: the same gesture the page opens with,
-    // so making a figure and making the cube read as one machine
-    spinBoost += cfg.shapes.charge;
   }
   let introT0 = 0, last: number | undefined, yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
 
@@ -238,9 +236,20 @@ export function createHero(opts: HeroOptions): Hero {
       if (beat > span) {
         beat = 0; phase = (phase + 1) % 4;
         if (phase === 1) showShape((shape + 1) % SHAPES.length);
-        else if (phase === 3) { shapeTo = 0; announce(-1); }
+        // the cube between two forms is the mark at work, not a thing it is
+        // making: it spins up, and the headline holds the last word until the
+        // next form has actually stood
+        else if (phase === 3) { shapeTo = 0; spinBoost += cfg.shapes.charge; }
       }
-    } else if (exit > 0) shapeTo = 0;
+    } else if (exit > 0 && !parked) {
+      // scrolling away winds the reel back to its first beat: the hero is left
+      // as it was found, so coming back does not resume half way through a
+      // form, or leave the headline naming one the mark is no longer making
+      parked = true;
+      shapeTo = 0; pending = -1; phase = 0; beat = 0;
+      announce(-1);
+    }
+    if (exit === 0) parked = false;
     if (shapeTo === 0 && shapeAt < 0.02 && pending >= 0) { const q = pending; pending = -1; ensureShape(q); shape = q; shapeTo = 1; phase = 1; beat = 0; announce(q); }
     else if (shapeTo === 0 && shapeAt < 0.002 && shape >= 0) shape = -1;
     const sRate = dt / S.beat.cross;
