@@ -1,0 +1,30 @@
+---
+/** A lab page, not part of the site: the mark as glass, lit the way a black
+ *  object is photographed — a dark room and a few bright strips. */
+import Base from '@layouts/Base.astro';
+---
+<Base theme="dark" title="Lab — glass">
+  <main class="lab">
+    <canvas data-glass></canvas>
+    <p class="note label" data-note>WebGPU · vgpu · glass</p>
+  </main>
+  <script>
+    import { startGlass } from '../../scripts/lab/vgpuGlass';
+    const canvas = document.querySelector<HTMLCanvasElement>('[data-glass]')!;
+    const note = document.querySelector<HTMLElement>('[data-note]')!;
+    const fit = () => {
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      canvas.width = Math.round(innerWidth * dpr);
+      canvas.height = Math.round(innerHeight * dpr);
+    };
+    fit();
+    addEventListener('resize', fit);
+    startGlass(canvas).catch((err) => { note.textContent = String(err.message ?? err); });
+  </script>
+</Base>
+
+<style>
+  .lab { position: fixed; inset: 0; z-index: 10; background: var(--ground); }
+  canvas { width: 100%; height: 100%; display: block; }
+  .note { position: fixed; left: var(--page-x); bottom: var(--page-y); color: var(--ink-3); }
+</style>
