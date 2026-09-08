@@ -33,11 +33,11 @@ const EASE = (t: number) => t * t * (3 - 2 * t);
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
 /** how much of the travel is spent letting particles leave in turn */
-const STAGGER = 0.5;
+const STAGGER = 0.32;
 /** how much of the cursor's push survives once a shape has formed */
 const TOUCH_IN_SHAPE = 0.4;
 /** seconds: cube held, crossing, shape held */
-const BEAT = { first: 2.6, cube: 0.7, cross: 1.4, shape: 4.2 };
+const BEAT = { first: 2.6, cube: 0.7, cross: 0.55, shape: 4.2 };
 
 export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => void): ShapeLab {
   const cfg = HERO_CONFIG;

@@ -99,7 +99,8 @@ export const HERO_CONFIG = {
    *  is downloaded for this. */
   shapes: {
     enabled: true,
-    stagger: 0.5,         // share of the crossing spent letting particles leave in turn
+    stagger: 0.32,        // share of the crossing spent letting particles leave in
+                          //   turn — enough to unfold, not enough to dawdle
     touch: 0.4,           // how much of the cursor's push survives inside a shape
     flat: 0.75,           // how even the points go as a form resolves
     turntable: 0.85,      // the vertical turn, as a share of the cruise spin
@@ -109,7 +110,7 @@ export const HERO_CONFIG = {
     whirl: 16,            // how much faster the mark turns while it is working:
                           //   the cube between two forms is the thing spinning
                           //   them up, not a pose it holds
-    beat: { first: 3.6, cube: 0.7, cross: 1.4, shape: 5 },   // seconds
+    beat: { first: 3.6, cube: 0.7, cross: 0.55, shape: 5 },   // seconds
   },
 
   /** the crossing from cube to wordmark */
