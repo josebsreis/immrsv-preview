@@ -190,7 +190,7 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
 
   const ctx: SimContext = {
     dt: 0, t: 0, camera, pointer: P, introT0: 0, exit: 0, shockT: -9, reduced, cfg,
-    out: 0,
+    out: 0, form: 0,
   };
 
   let running = true, raf = 0;
@@ -241,6 +241,7 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
     ctx.dt = dt; ctx.t = t; ctx.introT0 = introT0;
 
     if (shape >= 0 && e > 0.0005 && SHAPES[shape].skin) pose(shape, t);
+    ctx.form = e;
     for (const pl of plates) {
       simulate(pl.holder, pl.points, pl.sim, ctx);
       if (e > 0.0005 && shape >= 0) {

@@ -24,7 +24,6 @@ export interface SimContext {
 }
 
 const _inv = new THREE.Matrix4(), _lo = new THREE.Vector3(), _ld = new THREE.Vector3(), _m = new THREE.Vector3();
-const _view = new THREE.Vector3(), _mid = new THREE.Vector3(), _far = new THREE.Vector3();
 const _ray = new THREE.Raycaster(), _ndc = new THREE.Vector2();
 const sm = (a: number, b: number, x: number) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 
@@ -52,19 +51,6 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
     if (Math.abs(nd) > 1e-4) {
       const k = (0.5 - (n[0] * _lo.x + n[1] * _lo.y + n[2] * _lo.z)) / nd;
       _m.copy(_ld).multiplyScalar(k).add(_lo);
-      if (form > 0.001) {
-        // the mark's pivot, in this plate's space, and the camera's own
-        // direction carried into it
-        const vc = cfg.mark.voidCentre, sep = cfg.mark.separation;
-        _mid.set(vc - n[0] * sep, vc - n[1] * sep, vc - n[2] * sep);
-        _view.set(0, 0, -1).transformDirection(camera.matrixWorld).transformDirection(_inv).normalize();
-        const vd = _ld.dot(_view);
-        if (Math.abs(vd) > 1e-4) {
-          const t = _mid.clone().sub(_lo).dot(_view) / vd;
-          _far.copy(_ld).multiplyScalar(t).add(_lo);
-          _m.lerp(_far, form);
-        }
-      }
       hit = true;
       if (S.hadM) speed = Math.min(_m.distanceTo(S.mPrev) / Math.max(dt, 1e-3), 6);
       S.mPrev.copy(_m); S.hadM = true;
@@ -87,12 +73,30 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
     let ox = sim[i3], oy = sim[i3 + 1], oz = sim[i3 + 2];
     let vx = vel[i3], vy = vel[i3 + 1], vz = vel[i3 + 2];
     if (hit) {
-      let dx = home[i3] + ox - _m.x, dy = home[i3 + 1] + oy - _m.y, dz = home[i3 + 2] + oz - _m.z;
-      // flat against the plate while the mark is a cube — its particles sit on
-      // that plane, so depth through it is not distance — and in the round once
-      // a form is standing, where the plate means nothing
-      const dn = (dx * n[0] + dy * n[1] + dz * n[2]) * (1 - form);
-      dx -= dn * n[0]; dy -= dn * n[1]; dz -= dn * n[2];
+      const px = home[i3] + ox, py = home[i3 + 1] + oy, pz = home[i3 + 2] + oz;
+      /* Two ways of asking how near the cursor a particle is.
+
+         On the cube: how far across its own plate, the depth through the plate
+         thrown away. Its particles all sit on that plane, so this carves a
+         clean disc out of a sheet.
+
+         On a form: how far from the line of sight itself — the perpendicular
+         distance to the cursor's ray — with the push across the screen rather
+         than through it. That bores a hole straight through the figure from
+         where you are looking, at every depth at once, which is the same
+         gesture the cube gives. Measuring from a point at one depth only
+         shook the parts that happened to be at that depth. */
+      let ax = px - _m.x, ay = py - _m.y, az = pz - _m.z;
+      const an = ax * n[0] + ay * n[1] + az * n[2];
+      ax -= an * n[0]; ay -= an * n[1]; az -= an * n[2];
+
+      let dx = ax, dy = ay, dz = az;
+      if (form > 0.001) {
+        const wx = px - _lo.x, wy = py - _lo.y, wz = pz - _lo.z;
+        const t = wx * _ld.x + wy * _ld.y + wz * _ld.z;
+        const bx = wx - _ld.x * t, by = wy - _ld.y * t, bz = wz - _ld.z * t;
+        dx = ax + (bx - ax) * form; dy = ay + (by - ay) * form; dz = az + (bz - az) * form;
+      }
       const d = Math.hypot(dx, dy, dz);
       const K = cfg.strike;
       // a form stands about twice the cube's size, so the same hand has to
@@ -103,10 +107,16 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
         // the blast falls away over its own radius, so it is a punch landing
         // where the cursor is rather than a shove the whole mark feels
         const a = shock ? K.press * fall * fall * gain[j] / (d + 0.12) : press * fall * fall * gain[j] / Math.max(d, 0.07);
-        const c = Math.cos(jit[j]), s_ = Math.sin(jit[j]);     // rotate the push by this particle's jitter
-        const cx = n[1] * dz - n[2] * dy, cy = n[2] * dx - n[0] * dz, cz = n[0] * dy - n[1] * dx;
+        // the push is turned by this particle's own jitter, about whichever
+        // axis it is being pushed around: the plate's normal on the cube, the
+        // line of sight on a form
+        const c = Math.cos(jit[j]), s_ = Math.sin(jit[j]);
+        const rx = n[0] + (_ld.x - n[0]) * form, ry = n[1] + (_ld.y - n[1]) * form, rz = n[2] + (_ld.z - n[2]) * form;
+        const cx = ry * dz - rz * dy, cy = rz * dx - rx * dz, cz = rx * dy - ry * dx;
         vx += (dx * c + cx * s_) * a; vy += (dy * c + cy * s_) * a; vz += (dz * c + cz * s_) * a;
-        const lift = a * d * C.lift * gain[j];                  // a breath off the surface
+        // a breath off the plate — a form has no surface to lift off, and
+        // lifting toward the camera only reads as wobble
+        const lift = a * d * C.lift * gain[j] * (1 - form);
         vx += n[0] * lift; vy += n[1] * lift; vz += n[2] * lift;
       }
     }

@@ -32,7 +32,7 @@ let scheduled = 0, wired = false;
 function schedule() {
   if (scheduled) return;
   const run = () => { scheduled = 0; reels.forEach((fn) => fn()); };
-  scheduled = document.visibilityState === 'visible' ? requestAnimationFrame(run) : setTimeout(run, 0);
+  scheduled = document.visibilityState === 'visible' ? requestAnimationFrame(run) : (setTimeout(run, 0) as unknown as number);
 }
 
 function wire() {
