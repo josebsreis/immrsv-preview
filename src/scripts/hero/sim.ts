@@ -18,6 +18,8 @@ export interface SimContext {
   exit: number;          // 0..1 scroll progress of the exit
   out: number;           // 0..1 the fade, as the hero goes by
   form: number;          // 0..1 how far a form is standing, not the cube
+  /** how fast the cursor is crossing the screen, in mark units a second */
+  swipe: number;
   shockT: number;        // time of the last strike, or < 0
   reduced: boolean;
   cfg: HeroConfig;
@@ -61,7 +63,15 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
   const { home, off, ain, sim, intro, over, seedv, iDelay, iDur, vel, stiff, damp, jit, gain, total } = S;
   const stagger = ctx.reduced ? 0 : I.stagger, dur = ctx.reduced ? 0.01 : I.duration;
   const it = t - ctx.introT0, building = it < stagger + dur * 1.25 + 0.1;
-  const press = (C.rest + speed * C.speed) * dt * 60 * C.gain;
+  /* How hard the cursor is pressing. On the cube that follows how fast its
+     point travels across the plate — but a plate seen nearly edge-on turns a
+     small movement of the hand into an enormous movement of that point, so
+     while a form is standing the three plates were each being pushed with a
+     different strength from the same hand, and the figure lurched. Once a form
+     is up, the speed is the cursor's own across the screen, which every plate
+     agrees on. */
+  const swipe = speed + (ctx.swipe - speed) * form;
+  const press = (C.rest + swipe * C.speed) * dt * 60 * C.gain;
   // one strike impulse per plate per click, and none before the first click
   const shock = hit && ctx.shockT > 0 && S.shockSeen !== ctx.shockT; if (shock) S.shockSeen = ctx.shockT;
   // The exit is one motion and it belongs to the hero: the throw is applied
@@ -111,7 +121,9 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
         // axis it is being pushed around: the plate's normal on the cube, the
         // line of sight on a form
         const c = Math.cos(jit[j]), s_ = Math.sin(jit[j]);
-        const rx = n[0] + (_ld.x - n[0]) * form, ry = n[1] + (_ld.y - n[1]) * form, rz = n[2] + (_ld.z - n[2]) * form;
+        let rx = n[0] + (_ld.x - n[0]) * form, ry = n[1] + (_ld.y - n[1]) * form, rz = n[2] + (_ld.z - n[2]) * form;
+        const rl = Math.hypot(rx, ry, rz) || 1;                // a half-way axis is short
+        rx /= rl; ry /= rl; rz /= rl;
         const cx = ry * dz - rz * dy, cy = rz * dx - rx * dz, cz = rx * dy - ry * dx;
         vx += (dx * c + cx * s_) * a; vy += (dy * c + cy * s_) * a; vz += (dz * c + cz * s_) * a;
         // a breath off the plate — a form has no surface to lift off, and

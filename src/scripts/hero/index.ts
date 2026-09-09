@@ -119,6 +119,7 @@ export function createHero(opts: HeroOptions): Hero {
   // ── state the page drives ──────────────────────────────────────────
   let released = reduced, exit = 0, out = 0, shockT = -9;
   let spinAngle = 0, spinBoost = cfg.intro.spinBoost;
+  let swipe = 0, lastTx = 0.5, lastTy = 0.5;
 
   // ── the reel ───────────────────────────────────────────────────────
   const reel = cfg.shapes.enabled && !reduced;
@@ -287,7 +288,7 @@ export function createHero(opts: HeroOptions): Hero {
   }
   const ctx = {
     dt: 0, t: 0, camera, pointer: P, introT0: 0, exit: 0, shockT: -9, reduced, cfg,
-    out: 0, form: 0,
+    out: 0, form: 0, swipe: 0,
   };
   function frame(now: number) {
     const t = now / 1000;
@@ -345,6 +346,13 @@ export function createHero(opts: HeroOptions): Hero {
     const floorY = def ? formFloor(def) : 0;
     const invH = def ? 1 / def.scale : 1;
 
+    // How fast the cursor is crossing the screen, in the mark's own units: the
+    // simulation needs one number every plate can agree on, and each plate's
+    // own reading of it depends on how square its face is to the camera.
+    const half = Math.tan((cfg.camera.fov * Math.PI) / 360) * cfg.camera.dist;
+    swipe = dt > 0 ? Math.min(Math.hypot(P.tx - lastTx, P.ty - lastTy) * 2 * half / dt, 6) : 0;
+    lastTx = P.tx; lastTy = P.ty;
+
     // parallax: the mark sways with the cursor inside a hard clamp
     P.x += (P.tx - P.x) * 0.08; P.y += (P.ty - P.y) * 0.08;
     const C = cfg.camera;
@@ -376,6 +384,7 @@ export function createHero(opts: HeroOptions): Hero {
     ctx.dt = dt; ctx.t = t; ctx.introT0 = introT0; ctx.exit = exit; ctx.shockT = shockT;
     ctx.out = out;
     ctx.form = shapeE;
+    ctx.swipe = swipe;
     material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
     material.uniforms.uFlat.value = shapeE * S.flat;
     // an animated form is re-posed once a frame, for every plate at once —

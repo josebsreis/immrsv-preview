@@ -190,7 +190,7 @@ export function startShapeLab(host: HTMLElement, onLabel?: (name: string) => voi
 
   const ctx: SimContext = {
     dt: 0, t: 0, camera, pointer: P, introT0: 0, exit: 0, shockT: -9, reduced, cfg,
-    out: 0, form: 0,
+    out: 0, form: 0, swipe: 0,
   };
 
   let running = true, raf = 0;
