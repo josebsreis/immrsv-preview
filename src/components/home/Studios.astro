@@ -57,14 +57,9 @@ const reelFor = (key: string): Shot[] => {
         <div class="words">
           <h3 data-rise>{s.name}</h3>
           <p class="desc" data-rise style="--i: 1">{s.description}</p>
-          <div class="services" data-marquee data-marquee-speed="24" data-marquee-drag="0.7">
-            <div class="svc-track" data-marquee-track aria-hidden="true">
-              <div class="svc-run">
-                {s.services.map((x) => <span class="svc"><i class="sq" aria-hidden="true"></i>{x}</span>)}
-              </div>
-            </div>
-            <p class="sr">{s.services.join(', ')}.</p>
-          </div>
+          <ul class="services">
+            {s.services.map((x) => <li class="svc">{x}</li>)}
+          </ul>
         </div>
 
         <div class="band" style={`--n: ${reelFor(s.key).length}`}>
@@ -103,17 +98,14 @@ const reelFor = (key: string): Shot[] => {
      from the name above it. The number and the services keep theirs. */
   .desc { margin-top: var(--s-5); max-width: 46ch; font-size: var(--t-body); font-weight: 500;
           line-height: 1.6; color: var(--ink-2); }
-  /* the services run rather than stack: five lines of small caps under a
-     paragraph was a second block of text where a footnote was wanted. It runs
-     the width of the words and stops where the clip starts. */
-  .services { position: relative; margin-top: var(--s-6); overflow: hidden; }
-  .svc-track { display: flex; width: max-content; will-change: transform; }
-  .svc-run { display: flex; flex: none; }
-  .svc { display: flex; align-items: center; gap: 0.7rem; padding-right: 0.7rem; white-space: nowrap;
-         font-size: var(--t-caption); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
-  .svc .sq { flex: none; width: var(--square); height: var(--square); background: var(--marker); }
-  .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
-        overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  /* the services are a row of chips at the foot of the words: a set of things
+     offered, wrapping when the column runs out, rather than a line of running
+     text — the band above is enough motion for one page */
+  .services { list-style: none; margin-top: var(--s-6);
+              display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .svc { padding: 0.45rem 0.7rem; background: var(--glass);
+         font-size: var(--t-caption); letter-spacing: 0.12em; text-transform: uppercase;
+         line-height: 1; color: var(--ink-2); }
 
   .band { position: relative; margin-top: var(--s-6); }
 
