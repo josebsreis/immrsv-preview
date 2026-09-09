@@ -56,6 +56,8 @@ export const HERO_CONFIG = {
   /** per-particle physics — the hover "inverse magnet" */
   sim: {
     reach: 0.36,                  // cursor influence radius, plate units
+    formReach: 1.9,               // …times this while a form stands, which is
+                                  //   about twice the cube's size
     rest: 0.5,                    // pressure from a resting cursor
     speed: 1.15,                  // pressure per unit of cursor speed
     gain: 0.14,                   // overall strength

@@ -17,12 +17,14 @@ export interface SimContext {
   introT0: number;
   exit: number;          // 0..1 scroll progress of the exit
   out: number;           // 0..1 the fade, as the hero goes by
+  form: number;          // 0..1 how far a form is standing, not the cube
   shockT: number;        // time of the last strike, or < 0
   reduced: boolean;
   cfg: HeroConfig;
 }
 
 const _inv = new THREE.Matrix4(), _lo = new THREE.Vector3(), _ld = new THREE.Vector3(), _m = new THREE.Vector3();
+const _view = new THREE.Vector3(), _mid = new THREE.Vector3(), _far = new THREE.Vector3();
 const _ray = new THREE.Raycaster(), _ndc = new THREE.Vector2();
 const sm = (a: number, b: number, x: number) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 
@@ -30,7 +32,16 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
   const { dt, t, camera, pointer: P, cfg } = ctx;
   const n = S.n, C = cfg.sim, I = cfg.intro, X = cfg.exit;
 
-  // cursor ray → this plate's plane, in the holder's local space
+  /* Where the cursor meets the cloud, in this plate's own space.
+
+     For the cube that is the plate's own plane: its particles live on it, and
+     meeting them there is what makes the mark feel like three sheets.
+
+     For a standing form it is the wrong plane entirely — the particles have
+     left their plate and are somewhere else in the round — so the cursor is
+     met on a plane through the middle of the mark, square to the camera. That
+     is the plane a form is spread across from where you are looking. */
+  const form = ctx.form;
   _inv.copy(holder.matrixWorld).invert();
   let hit = false, speed = 0;
   if (P.moved) {
@@ -40,7 +51,21 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
     const nd = n[0] * _ld.x + n[1] * _ld.y + n[2] * _ld.z;
     if (Math.abs(nd) > 1e-4) {
       const k = (0.5 - (n[0] * _lo.x + n[1] * _lo.y + n[2] * _lo.z)) / nd;
-      _m.copy(_ld).multiplyScalar(k).add(_lo); hit = true;
+      _m.copy(_ld).multiplyScalar(k).add(_lo);
+      if (form > 0.001) {
+        // the mark's pivot, in this plate's space, and the camera's own
+        // direction carried into it
+        const vc = cfg.mark.voidCentre, sep = cfg.mark.separation;
+        _mid.set(vc - n[0] * sep, vc - n[1] * sep, vc - n[2] * sep);
+        _view.set(0, 0, -1).transformDirection(camera.matrixWorld).transformDirection(_inv).normalize();
+        const vd = _ld.dot(_view);
+        if (Math.abs(vd) > 1e-4) {
+          const t = _mid.clone().sub(_lo).dot(_view) / vd;
+          _far.copy(_ld).multiplyScalar(t).add(_lo);
+          _m.lerp(_far, form);
+        }
+      }
+      hit = true;
       if (S.hadM) speed = Math.min(_m.distanceTo(S.mPrev) / Math.max(dt, 1e-3), 6);
       S.mPrev.copy(_m); S.hadM = true;
     }
@@ -63,10 +88,16 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
     let vx = vel[i3], vy = vel[i3 + 1], vz = vel[i3 + 2];
     if (hit) {
       let dx = home[i3] + ox - _m.x, dy = home[i3 + 1] + oy - _m.y, dz = home[i3 + 2] + oz - _m.z;
-      const dn = dx * n[0] + dy * n[1] + dz * n[2];            // in-plane distance only
+      // flat against the plate while the mark is a cube — its particles sit on
+      // that plane, so depth through it is not distance — and in the round once
+      // a form is standing, where the plate means nothing
+      const dn = (dx * n[0] + dy * n[1] + dz * n[2]) * (1 - form);
       dx -= dn * n[0]; dy -= dn * n[1]; dz -= dn * n[2];
       const d = Math.hypot(dx, dy, dz);
-      const K = cfg.strike, reach = shock ? K.reach : C.reach;
+      const K = cfg.strike;
+      // a form stands about twice the cube's size, so the same hand has to
+      // reach further to take hold of the same share of it
+      const reach = shock ? K.reach : C.reach * (1 + form * (C.formReach - 1));
       if (d < reach) {
         const fall = 1 - d / reach;
         // the blast falls away over its own radius, so it is a punch landing

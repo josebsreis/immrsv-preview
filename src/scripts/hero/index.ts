@@ -287,7 +287,7 @@ export function createHero(opts: HeroOptions): Hero {
   }
   const ctx = {
     dt: 0, t: 0, camera, pointer: P, introT0: 0, exit: 0, shockT: -9, reduced, cfg,
-    out: 0,
+    out: 0, form: 0,
   };
   function frame(now: number) {
     const t = now / 1000;
@@ -375,6 +375,7 @@ export function createHero(opts: HeroOptions): Hero {
     material.uniforms.uTime.value = t;
     ctx.dt = dt; ctx.t = t; ctx.introT0 = introT0; ctx.exit = exit; ctx.shockT = shockT;
     ctx.out = out;
+    ctx.form = shapeE;
     material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
     material.uniforms.uFlat.value = shapeE * S.flat;
     // an animated form is re-posed once a frame, for every plate at once —
