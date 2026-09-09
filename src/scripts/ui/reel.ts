@@ -38,7 +38,15 @@ function schedule() {
 function wire() {
   if (wired) return;
   wired = true;
-  addEventListener('pointermove', (e) => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.seen = true; schedule(); }, { passive: true });
+  const mark = (e: PointerEvent) => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.seen = true; schedule(); };
+  addEventListener('pointermove', mark, { passive: true });
+  // A pointer that comes back into the window without moving once it is here —
+  // returning from another app, or the page scrolling a new element under a
+  // hand that is holding still — announces itself with `pointerover` and
+  // nothing else. Without this the counter went out when the hand left and
+  // stayed out until it was jiggled.
+  addEventListener('pointerover', mark, { passive: true });
+  addEventListener('pointerdown', mark, { passive: true });
   addEventListener('scroll', schedule, { passive: true });
   addEventListener('resize', schedule, { passive: true });
   // the hand leaving the window is a move to nowhere

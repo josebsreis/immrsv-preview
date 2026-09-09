@@ -137,19 +137,22 @@ const reelFor = (key: string): Shot[] => {
           background: rgb(0 0 0 / 0.26); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
           opacity: 0; transition: opacity 0.25s ease; }
   .studio.hovering .roll { opacity: 1; }
-  /* the track runs from the centre of the first stop to the centre of the
-     last, and the fill is laid along the same line by the script */
+  /* The track and the fill run behind the squares, and the squares are solid:
+     a half-lit square over a half-lit bar showed both, and the overlap read
+     as a mistake. Everything on the strip is either white or the track's own
+     grey — nothing is see-through. */
   .roll::before { content: ''; position: absolute; left: 50%; translate: -50% 0; width: var(--hairline);
                   top: calc(0.6rem + (100% - 1.2rem) / var(--n, 1) / 2);
                   bottom: calc(0.6rem + (100% - 1.2rem) / var(--n, 1) / 2);
-                  background: rgb(255 255 255 / 0.3); }
+                  background: rgb(255 255 255 / 0.32); }
   .fill { position: absolute; left: 50%; translate: -50% 0; width: 2px; height: 0;
           top: calc(0.6rem + (100% - 1.2rem) / var(--n, 1) / 2);
           background: #fff; }
-  .tick { position: relative; align-self: center; justify-self: center;
-          width: 5px; height: 5px; background: rgb(255 255 255 / 0.55);
-          transition: background-color 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-  .tick.on { background: #fff; transform: scale(1.5); }
+  /* the stops sit above the line, opaque, so the bar passes behind them */
+  .tick { position: relative; z-index: 1; align-self: center; justify-self: center;
+          width: 5px; height: 5px; background: #fff;
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+  .tick.on { transform: scale(1.6); }
 
   /* Desktop: the words on the left, the clip on the right and out to the edge
      of the page. The card is as tall as the clip — its ratio sets the height,
