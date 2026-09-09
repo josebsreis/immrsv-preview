@@ -35,7 +35,7 @@ const studios: Studio[] = [
     promise: 'The building, drawn to the last detail.',
     description:
       'Concept through construction drawings for houses, interiors and small commercial work. We draw at real scale from the first sketch, so what gets built is what was agreed — and the decisions are made where they are still cheap to make.',
-    services: ['Concept design', 'Planning and permits', 'Construction drawings', 'Interiors', 'Site supervision'],
+    services: ['Concept design', 'Permits', 'Drawings', 'Interiors', 'Site supervision'],
     media: { kind: 'video', url: '/studios/architecture.mp4', poster: '/studios/architecture.jpg', alt: 'Architecture and design' },
   },
   {
@@ -44,7 +44,7 @@ const studios: Studio[] = [
     promise: 'The image that carries the idea before it exists.',
     description:
       'Stills, film and virtual tours built from the same models the architects work in. Nothing is redrawn to flatter the project, so what a client approves on screen is what they will walk into.',
-    services: ['Architectural visualisation', 'Animation and film', 'Virtual tours', 'Art direction', 'Photography direction'],
+    services: ['Visualisation', 'Animation', 'Film', 'Virtual tours', 'Art direction'],
     media: { kind: 'video', url: '/studios/media.mp4', poster: '/studios/media.jpg', alt: 'Creative media' },
   },
   {
@@ -53,7 +53,7 @@ const studios: Studio[] = [
     promise: 'The interface people actually move through.',
     description:
       'Sites, configurators and internal tools, designed and built by the same team. Shipped and maintained rather than handed over as a mockup, and measured once real people are using them.',
-    services: ['Product design', 'Web development', 'Configurators', 'Design systems', 'Maintenance'],
+    services: ['Product design', 'Web', 'Configurators', 'Design systems', 'Maintenance'],
     media: { kind: 'video', url: '/studios/products.mp4', poster: '/studios/products.jpg', alt: 'Digital products' },
   },
 ];

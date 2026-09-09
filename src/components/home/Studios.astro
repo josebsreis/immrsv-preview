@@ -102,7 +102,11 @@ const reelFor = (key: string): Shot[] => {
      offered, wrapping when the column runs out, rather than a line of running
      text — the band above is enough motion for one page */
   .services { list-style: none; margin-top: var(--s-6);
-              display: flex; flex-wrap: wrap; gap: 0.4rem; }
+              display: flex; flex-wrap: wrap; gap: 0.4rem;
+              /* they wrap well before the column's edge: a list that runs the
+                 full measure reads as a paragraph of small caps, and the
+                 description above it already owns that width */
+              max-width: 26rem; }
   .svc { padding: 0.45rem 0.7rem; background: var(--glass);
          font-size: var(--t-caption); letter-spacing: 0.12em; text-transform: uppercase;
          line-height: 1; color: var(--ink-2); }
