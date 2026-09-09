@@ -67,8 +67,7 @@ const reelFor = (key: string): Shot[] => {
           </div>
         </div>
 
-        {reelFor(s.key).length > 0 ? (
-          <div class="band" style={`--n: ${reelFor(s.key).length}`}>
+        <div class="band" style={`--n: ${reelFor(s.key).length}`}>
             {reelFor(s.key).map((shot, k) => (
               <picture class="frame" data-reel-frame={shot.name}>
                 <source srcset={`${shot.src}.avif`} type="image/avif" />
@@ -77,20 +76,10 @@ const reelFor = (key: string): Shot[] => {
               </picture>
             ))}
             <span class="roll" aria-hidden="true">
+              <b class="fill" data-reel-fill></b>
               {reelFor(s.key).map(() => <i class="tick" data-reel-step></i>)}
-              <b class="mark" data-reel-mark></b>
             </span>
           </div>
-        ) : s.media && (
-          <div class="band" data-rise>
-            {s.media.kind === 'video' ? (
-              <video data-in-view src={s.media.url} poster={s.media.poster} preload="none"
-                     muted loop playsinline aria-label={s.media.alt ?? s.name}></video>
-            ) : (
-              <img src={s.media.url} alt={s.media.alt ?? s.name} loading="lazy" />
-            )}
-          </div>
-        )}
       </article>
     ))}
   </section>
@@ -131,12 +120,6 @@ const reelFor = (key: string): Shot[] => {
   /* the clip fills its frame whatever shape it arrived in: the renders are
      not one ratio, and a band with letterboxing in it is not a band */
   .band video, .band img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  /* While one card is being read the others stand back — pulled to grey and
-     sat down — so the section is one studio at a time rather than three
-     competing for the eye. Nothing is dimmed until a card is taken up. */
-  .band { transition: filter 0.55s ease, opacity 0.55s ease; }
-  .studios.reading .studio:not(.hovering) .band { filter: grayscale(1); opacity: 0.45; }
-  @media (prefers-reduced-motion: reduce) { .band { transition: none; } }
 
   /* Every frame is stacked on the same spot, the first included: a change
      opens a clip from the edge the reel is travelling from, over the frame
@@ -145,18 +128,12 @@ const reelFor = (key: string): Shot[] => {
   .frame { position: absolute; inset: 0; clip-path: inset(0 0 100% 0); }
   .frame:first-of-type { clip-path: inset(0 0 0 0); }
 
-  /* The roll: one tick per project down the side of the picture, each sitting
-     at the centre of the band of card that selects it, and a single marker
-     that slides between them. It is the frame counter on a camera back — you
-     see where you are and where you have come from, and that a hand held
-     still is still turning it. */
   /* The counter: a bar down the inside of the picture with a square for each
-     project on it, and a marker that rides the pointer rather than the frame —
-     so it is between two stops while you are between two pictures, and you can
-     see the next one coming. On a frosted pane, and only while the card is the
-     one under the hand. */
-  /* the bar is the length of its own stops, standing in the middle of the
-     picture's left edge rather than running the whole height of it */
+     project on it. The bar fills from the first square to where you are, and
+     the square it has reached is lit — so you can see the next one coming as
+     the fill closes on it. On a frosted pane, the length of its own stops,
+     centred on the picture's left edge, and only while the card is the one
+     being turned. */
   .roll { position: absolute; top: 50%; translate: 0 -50%; left: var(--s-4);
           width: 1.4rem; height: 7.5rem;
           z-index: 30; pointer-events: none; padding: 0.6rem 0;
@@ -164,15 +141,19 @@ const reelFor = (key: string): Shot[] => {
           background: rgb(0 0 0 / 0.26); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
           opacity: 0; transition: opacity 0.25s ease; }
   .studio.hovering .roll { opacity: 1; }
-  .roll::before { content: ''; position: absolute; top: 0.6rem; bottom: 0.6rem; left: 50%; width: var(--hairline);
+  /* the track runs from the centre of the first stop to the centre of the
+     last, and the fill is laid along the same line by the script */
+  .roll::before { content: ''; position: absolute; left: 50%; translate: -50% 0; width: var(--hairline);
+                  top: calc(0.6rem + (100% - 1.2rem) / var(--n, 1) / 2);
+                  bottom: calc(0.6rem + (100% - 1.2rem) / var(--n, 1) / 2);
                   background: rgb(255 255 255 / 0.3); }
+  .fill { position: absolute; left: 50%; translate: -50% 0; width: 2px; height: 0;
+          top: calc(0.6rem + (100% - 1.2rem) / var(--n, 1) / 2);
+          background: #fff; }
   .tick { position: relative; align-self: center; justify-self: center;
           width: 5px; height: 5px; background: rgb(255 255 255 / 0.55);
-          transition: background-color 0.3s ease; }
-  .tick.on { background: #fff; }
-  /* the marker is placed by the script, in the strip's own inset coordinates */
-  .mark { position: absolute; left: 50%; top: 50%; translate: -50% -50%;
-          width: 9px; height: 9px; background: #fff; }
+          transition: background-color 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+  .tick.on { background: #fff; transform: scale(1.5); }
 
   /* Desktop: the words on the left, the clip on the right and out to the edge
      of the page. The card is as tall as the clip — its ratio sets the height,
