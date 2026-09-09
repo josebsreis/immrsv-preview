@@ -55,10 +55,10 @@ export const HERO_CONFIG = {
 
   /** per-particle physics — the hover "inverse magnet" */
   sim: {
-    reach: 0.3,                   // cursor influence radius, plate units
+    reach: 0.36,                  // cursor influence radius, plate units
     rest: 0.5,                    // pressure from a resting cursor
     speed: 1.15,                  // pressure per unit of cursor speed
-    gain: 0.11,                   // overall strength
+    gain: 0.14,                   // overall strength
     stiffness: [7, 23] as const,  // per-particle spring range
     damping: [2.2, 4.8] as const, // underdamped: a little overshoot on the way home
     jitter: 1.3,                  // ±rad off the radial push
@@ -109,7 +109,10 @@ export const HERO_CONFIG = {
     print: 0.85,          // how much of that order is height rather than chance:
                           //   at 1 the form is laid down from the floor up, the
                           //   way a printer would build it
-    touch: 0.4,           // how much of the cursor's push survives inside a shape
+    touch: 0.78,          // how much of the cursor's push survives inside a form:
+                          //   a standing form used to hold the cloud so tightly
+                          //   that the cursor only rippled it, where the cube
+                          //   scattered under the same hand
     flat: 0.75,           // how even the points go as a form resolves
     turntable: 0.85,      // the vertical turn, as a share of the cruise spin
     // seconds: the logo holds while the page settles, then the forms follow
