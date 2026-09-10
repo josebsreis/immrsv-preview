@@ -28,7 +28,7 @@ const { content } = Astro.props;
 const FOLDER: Record<string, string> = { architecture: 'architecture-design', media: 'creative-media', products: 'digital-products' };
 /** every panel carries the same count, so the three reels read as three of
  *  one thing rather than as three different amounts of work */
-const PER_STUDIO = 4;
+const PER_STUDIO = 3;
 type Shot = { src: string; name: string; slug: string };
 type Delivered = { studio: string; name: string; slug: string; images: { src: string; widths: number[] }[] };
 const projects = work as Delivered[];
@@ -38,8 +38,8 @@ const frame = (im: { src: string; widths: number[] }) => `${im.src}-${im.widths[
 const everything: Shot[] = projects.flatMap((p) => p.images.map((im) => ({ src: frame(im), name: p.name, slug: p.slug })));
 
 /**
- * A studio's four frames: its own projects first, one frame each. A studio
- * with fewer than four borrows — its own spare renders before anyone else's,
+ * A studio's three frames: its own projects first, one frame each. A studio
+ * with fewer than three borrows — its own spare renders before anyone else's,
  * then work from across the practice, spread through the pool rather than
  * taken off the top so the borrowed frames are not all the same building.
  * Stand-ins until the client sends the rest; nothing here is invented.
@@ -93,7 +93,7 @@ const grounds = ['light', 'dark', 'light'] as const;
 
           <div class="foot">
             <!-- the work, stepped by hand; every frame opens its project -->
-            <div class="reel" data-studio-reel data-rise style="--i: 1">
+            <div class="reel" data-studio-reel data-reel-interval="6000" data-rise style="--i: 1">
               <!-- the same instrument as the statement and the client stories:
                    the arrows and the count, then the bar, over the thing it
                    is measuring -->

@@ -51,7 +51,7 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
   .main { position: relative; z-index: var(--z-main); }
   /* the dark half holds once its end meets the bottom of the screen (the top
      offset is set in JS: viewport − height), and the light half rides up over
-     it — the field assembling first, then its own ground */
+     it — the figure being built at its head */
   .dark { position: sticky; top: 0; z-index: 1; }
   /* the dark half is put out as the light one climbs over it */
   /* inside the held half's own stacking context, so it is a local number and
