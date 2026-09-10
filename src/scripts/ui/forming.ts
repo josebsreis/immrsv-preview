@@ -26,10 +26,6 @@ const N = 121;
 const SRC = (i: number) => `/forming/${String(i + 1).padStart(3, '0')}.avif`;
 /** the air the two lines keep from her once they have parted */
 const CLEAR = 26;
-/** and the air between the lower line and the thread that leaves the pane */
-const TAIL = 22;
-/** when the thread draws — after she is finished, before the section ends */
-const DRAW = [0.9, 0.99] as const;
 
 /** where in the scroll each thing happens */
 const T = {
@@ -62,7 +58,6 @@ export function createForming(root: HTMLElement): Forming {
   const canvas = box?.querySelector<HTMLCanvasElement>('canvas');
   if (!track || !win || !box || !canvas) return { update() {}, destroy() {} };
   const halves = [...root.querySelectorAll<HTMLElement>('[data-forming-half]')];
-  const thread = root.querySelector<HTMLElement>('[data-forming-thread]');
   const beats = [...root.querySelectorAll<HTMLElement>('[data-forming-beat]')];
   const ctx = canvas.getContext('2d');
   if (!ctx) return { update() {}, destroy() {} };
@@ -146,15 +141,6 @@ export function createForming(root: HTMLElement): Forming {
       }
     }
 
-    /* The thread starts under the sentence and runs to the foot of the pane,
-       so the studios section below continues the same line. */
-    if (thread && halves[1]) {
-      const lh = halves[1].getBoundingClientRect().height;
-      const top = h / 2 + apart[1] + lh / 2 + TAIL;
-      thread.style.top = `${top.toFixed(1)}px`;
-      thread.style.height = `${Math.max(0, h - top).toFixed(1)}px`;
-    }
-
     /* How far a card may lean in before it would touch her — measured, not
        assumed, because the slot's width answers to the screen's height and a
        short wide screen leaves far less room than a tall one. */
@@ -218,9 +204,6 @@ export function createForming(root: HTMLElement): Forming {
     // the frame
     const f = Math.round(ramp(p, T.play[0], T.play[1]) * (N - 1));
     if (f !== shown) { shown = f; draw(); }
-
-    // and the thread she is left standing on, drawn once she is finished
-    thread?.style.setProperty('--v', ramp(p, DRAW[0], DRAW[1]).toFixed(3));
 
     /* Her four steps, passing where the halves of the line stood: each rises
        through its own half circle — in towards her at the middle of the pass,

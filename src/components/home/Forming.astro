@@ -63,10 +63,6 @@ const {
       <!-- the slot she is built in: a rectangle that opens between the halves -->
       <div class="slot" data-forming-slot aria-hidden="true"><canvas></canvas></div>
 
-      <!-- the thread she is left standing on: it starts under the sentence and
-           runs to the foot of the pane, where the studios pick it up -->
-      <span class="thread" data-forming-thread aria-hidden="true"></span>
-
       <p class="title">
         <span class="half" data-forming-half>{lead}</span>
         <span class="half" data-forming-half>{tail}</span>
@@ -127,14 +123,13 @@ const {
   [data-live] .half { opacity: var(--v);
                       transform: translateY(calc(-50% + var(--dy))); }
 
-  /* The line she is left standing on. It is drawn only once she is finished,
-     runs from under the sentence to the foot of the pane, and is continued by
-     the studios section directly below — one thread from her to the first
-     studio, so the page reads as carrying on rather than starting again. */
-  .thread { position: absolute; left: 50%; width: var(--hairline);
-            background: var(--line); transform-origin: top;
-            transform: scaleX(1) scaleY(var(--v, 0)); opacity: var(--v, 0); }
-  .forming:not([data-live]) .thread { display: none; }
+  /* The thread that carries this section down into the studios is not drawn
+     here. It was — a stub under the sentence, running to the foot of the pane
+     — but that stub is contiguous with the studios' own thread above their
+     name, so the line above the name read longer than the one below it by
+     however much of the pane was left under her, which is a different number
+     on every screen. The studios own the whole line now, in two equal halves,
+     and it emerges from under this pane as that pane rises. */
 
   /* her four steps, in the room at either side that the lines are not using */
   .steps { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
