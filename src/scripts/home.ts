@@ -8,7 +8,7 @@ import { createStatsReel } from './ui/statsReel';
 import { createWordmarkLetters } from './ui/wordmarkLetters';
 import { createDirectionalHover } from './ui/directionalHover';
 import { createMarquee } from './ui/marquee';
-import { createReel } from './ui/reel';
+import { createStudioReel } from './ui/studioReel';
 import { createProcessRail } from './ui/processRail';
 import { createForming } from './ui/forming';
 import { createFaqs } from './ui/faqs';
@@ -59,7 +59,7 @@ onPage('home', () => {
   if (process) add(createProcessRail(process));
   add(createDirectionalHover());
   document.querySelectorAll<HTMLElement>('[data-marquee]').forEach((el) => add(createMarquee(el)));
-  document.querySelectorAll<HTMLElement>('[data-reel]').forEach((el) => add(createReel(el)));
+  document.querySelectorAll<HTMLElement>('[data-studio-reel]').forEach((el) => add(createStudioReel(el)));
   add(createVideoInView());
   add(createHoverAudio(site.audio.taps));
 

@@ -1,8 +1,20 @@
 ---
-/** The three studios, read as one section: the number and the service list on
- *  the left, the name and what it means on the right, and a wide media band
- *  under each. The clips are silent loops that only run on screen
- *  (scripts/ui/videoInView.ts). */
+/** The three studios, one full screen each.
+ *
+ *  A studio is a panel, not a card: its number and name at the top left, what
+ *  it promises and what that means at the top right, its work at the bottom
+ *  left and what it does at the bottom right — with the middle left empty.
+ *  The void is the point. Pinning the content to the top and the foot of the
+ *  screen is what makes three sections of the same shape read as three of one
+ *  thing rather than as a list, and it is the one layout that a practice
+ *  selling precision can hold without looking sparse.
+ *
+ *  The grounds alternate — light, dark, light — so each panel arrives as its
+ *  own place. They butt against one another rather than overlapping: three
+ *  full screens of different ground, in the flow, is the whole effect.
+ *
+ *  The work is links now. Each frame opens the project it shows, which is why
+ *  nothing in the reel follows the pointer — see scripts/ui/studioReel.ts. */
 import type { HomeContent } from '@lib/sanity/types';
 import work from '../../content/work.generated.json';
 
@@ -10,19 +22,18 @@ interface Props { content: HomeContent['studios']; }
 const { content } = Astro.props;
 
 /* The studios' own work, as delivered by the client and squeezed down by
-   scripts/images.mjs. Where a studio has projects, its card shows them one at
-   a time instead of a stock clip; where it has none yet, the clip stands. */
+   scripts/images.mjs. */
 const FOLDER: Record<string, string> = { architecture: 'architecture-design', media: 'creative-media', products: 'digital-products' };
-/** every card carries the same count, so the three reels turn at the same
- *  pace and the section reads as three of one thing */
+/** every panel carries the same count, so the three reels read as three of
+ *  one thing rather than as three different amounts of work */
 const PER_STUDIO = 4;
-type Shot = { src: string; name: string };
-type Delivered = { studio: string; name: string; images: { src: string; widths: number[] }[] };
+type Shot = { src: string; name: string; slug: string };
+type Delivered = { studio: string; name: string; slug: string; images: { src: string; widths: number[] }[] };
 const projects = work as Delivered[];
-/** the reel is a band a third of the page wide: the card width is plenty */
+/** the reel is a band about a third of the page wide: the card width is plenty */
 const frame = (im: { src: string; widths: number[] }) => `${im.src}-${im.widths[0]}`;
 /** every render there is, in delivery order */
-const everything: Shot[] = projects.flatMap((p) => p.images.map((im) => ({ src: frame(im), name: p.name })));
+const everything: Shot[] = projects.flatMap((p) => p.images.map((im) => ({ src: frame(im), name: p.name, slug: p.slug })));
 
 /**
  * A studio's four frames: its own projects first, one frame each. A studio
@@ -33,10 +44,10 @@ const everything: Shot[] = projects.flatMap((p) => p.images.map((im) => ({ src: 
  */
 const reelFor = (key: string): Shot[] => {
   const mine = projects.filter((p) => p.studio === FOLDER[key]);
-  const own: Shot[] = mine.map((p) => ({ src: frame(p.images[0]), name: p.name })).slice(0, PER_STUDIO);
+  const own: Shot[] = mine.map((p) => ({ src: frame(p.images[0]), name: p.name, slug: p.slug })).slice(0, PER_STUDIO);
   if (own.length >= PER_STUDIO) return own;
 
-  const spare: Shot[] = mine.flatMap((p) => p.images.slice(1).map((im) => ({ src: frame(im), name: p.name })));
+  const spare: Shot[] = mine.flatMap((p) => p.images.slice(1).map((im) => ({ src: frame(im), name: p.name, slug: p.slug })));
   const taken = new Set(own.concat(spare).map((s) => s.src));
   const rest = everything.filter((s) => !taken.has(s.src));
   const want = PER_STUDIO - own.length - spare.length;
@@ -46,10 +57,13 @@ const reelFor = (key: string): Shot[] => {
   }
   return own.concat(spare, spread).slice(0, PER_STUDIO);
 };
+
+/** light, dark, light: each panel arrives as its own place */
+const grounds = ['light', 'dark', 'light'] as const;
 ---
 {content.items.length > 0 && (
-  <section class="studios" id="studios">
-    <header class="head">
+  <div class="studios" id="studios">
+    <header class="head" data-theme="light">
       <!-- the thread the handover above leaves off with, carried down through
            the title to the first studio -->
       <span class="thread" data-thread aria-hidden="true"></span>
@@ -58,49 +72,75 @@ const reelFor = (key: string): Shot[] => {
       <span class="thread" data-thread aria-hidden="true"></span>
     </header>
 
-    {content.items.map((s, i) => (
-      <article class="studio" data-reel>
-        <span class="n label">{String(i + 1).padStart(2, '0')}</span>
-        <div class="words">
-          <h3 data-rise>{s.name}</h3>
-          <p class="desc" data-rise style="--i: 1">{s.description}</p>
-          <ul class="services chips">
-            {s.services.map((x) => <li class="chip">{x}</li>)}
-          </ul>
-        </div>
-
-        <div class="band" style={`--n: ${reelFor(s.key).length}`}>
-            {reelFor(s.key).map((shot, k) => (
-              <picture class="frame" data-reel-frame={shot.name}>
-                <source srcset={`${shot.src}.avif`} type="image/avif" />
-                <img src={`${shot.src}.webp`} alt={`${shot.name} — ${s.name}`}
-                     loading={k === 0 ? 'eager' : 'lazy'} decoding="async" />
-              </picture>
-            ))}
-            <span class="roll" aria-hidden="true">
-              <b class="fill" data-reel-fill></b>
-              {reelFor(s.key).map(() => <i class="tick" data-reel-step></i>)}
-            </span>
+    {content.items.map((s, i) => {
+      const shots = reelFor(s.key);
+      return (
+        <section class="studio" data-theme={grounds[i % grounds.length]} aria-labelledby={`studio-${s.key}`}>
+          <div class="top">
+            <div class="mark">
+              <span class="n" data-rise>{String(i + 1).padStart(2, '0')}</span>
+              <h3 id={`studio-${s.key}`} data-rise style="--i: 1">{s.name}</h3>
+            </div>
+            <div class="say">
+              <p class="promise" data-rise style="--i: 2">{s.promise}</p>
+              <p class="desc" data-rise style="--i: 3">{s.description}</p>
+            </div>
           </div>
-      </article>
-    ))}
-  </section>
+
+          <div class="foot">
+            <!-- the work, stepped by hand; every frame opens its project -->
+            <div class="reel" data-studio-reel data-rise style="--i: 1">
+              <div class="band">
+                {shots.map((shot, k) => (
+                  <a class="frame" href={`/work/${shot.slug}`} data-reel-frame data-tap
+                     aria-label={`${shot.name} — ${s.name}`}>
+                    <picture>
+                      <source srcset={`${shot.src}.avif`} type="image/avif" />
+                      <img src={`${shot.src}.webp`} alt={shot.name}
+                           loading={k === 0 ? 'eager' : 'lazy'} decoding="async" />
+                    </picture>
+                    <span class="cap label">{shot.name}</span>
+                  </a>
+                ))}
+              </div>
+
+              <div class="controls">
+                <div class="arrows">
+                  <button type="button" data-reel-prev aria-label={`Previous ${s.name} project`} data-tap>&#8592;</button>
+                  <button type="button" data-reel-next aria-label={`Next ${s.name} project`} data-tap>&#8594;</button>
+                </div>
+                <div class="roll" aria-hidden="true">
+                  <span class="rail"><b class="fill" data-reel-fill></b></span>
+                  <span class="ticks">{shots.map(() => <i class="tick" data-reel-step></i>)}</span>
+                </div>
+                <span class="count label"><span data-reel-now>01</span>/{String(shots.length).padStart(2, '0')}</span>
+              </div>
+            </div>
+
+            <!-- what the studio does, and the way into all of it -->
+            <div class="does" data-rise style="--i: 2">
+              <p class="label tag">What we do</p>
+              <ul class="services">
+                {s.services.map((x) => <li>{x}</li>)}
+              </ul>
+              <a class="all" href={`/work?studio=${s.key}`} data-tap data-dhover-item data-axis="x">
+                <span class="tile" data-dhover-tile aria-hidden="true"></span>
+                <b>See all {s.name} work</b>
+                <i class="arrow" aria-hidden="true">&#8594;</i>
+              </a>
+            </div>
+          </div>
+        </section>
+      );
+    })}
+  </div>
 )}
 
 <style>
-  /* It sits inside the light section, which already holds the page margins.
-     The air above it is the whole gap between the handover and the work: the
-     figure finishes, the screen is quiet for a moment, and then the section
-     that answers her arrives. Two vh of it read as a section falling out of
-     the bottom of a film. */
-  .studios { position: relative; padding-top: 0; padding-bottom: 16vh; }
-
-  /* The head stands on the page's centre line, on the thread the handover
-     hands down: line, name, what it means, line, and then the first studio.
-     Centred rather than set on the narrow column because the thread is the
-     point — a title off to one side would be the line arriving at nothing. */
+  /* the head sits inside the light section, which holds the page margins; the
+     panels below break out of them and hold their own */
   .head { display: flex; flex-direction: column; align-items: center;
-          text-align: center; }
+          text-align: center; padding-bottom: 2vh; }
   /* The same weight as every other rule on the site, and the same length
      above the name as below it. It is drawn downward from the scroll — the
      choreography writes --draw — so it reads as the line above carrying on
@@ -109,120 +149,109 @@ const reelFor = (key: string): Shot[] => {
             transform-origin: top; transform: scaleY(var(--draw, 1)); }
   h2 { margin: var(--s-6) 0 var(--s-4); font-size: var(--t-h2);
        font-weight: var(--w-display); line-height: var(--lh-display);
-       letter-spacing: var(--track-display); color: var(--ink); }
+       letter-spacing: var(--track-display); color: var(--ink); white-space: nowrap; }
   .intro { max-width: 42ch; margin: 0 0 var(--s-6); font-size: var(--t-lead);
            line-height: var(--lh-lead); letter-spacing: var(--track-lead);
            color: var(--ink-3); }
 
-  .studio { padding-top: 12vh; }
-  .n { display: block; color: var(--ink-4); }
-  h3 { font-size: var(--t-statement); font-weight: var(--w-title);
-       line-height: var(--lh-title); letter-spacing: var(--track-title); color: var(--ink); }
-  /* Regular, and let the colour do the separating: the weight was put up when
-     the secondary voice was a warm mid-grey that sat too far back, and with
-     the ramp corrected it is medium-on-grey, which reads as a UI label rather
-     than as something written. Leading up with it — length wants air. */
-  .desc { margin-top: var(--s-5); max-width: 46ch; font-size: var(--t-body);
+  /* ── a panel ─────────────────────────────────────────────────────────
+     A screen each, its content pinned to the top and the foot with the
+     middle left empty, and its own ground under it. It breaks the page's
+     margins because the ground has to reach the edges — three panels of
+     different colour inside a gutter would be three stripes. */
+  .studio { min-height: 100svh; display: flex; flex-direction: column;
+            justify-content: space-between; gap: var(--s-8);
+            margin-inline: calc(var(--page-x) * -1);
+            padding: calc(var(--page-y) + 3vh) var(--page-x) var(--page-y);
+            background: var(--ground); color: var(--ink); }
+
+  .top, .foot { display: grid; grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+                column-gap: var(--s-8); }
+  .foot { align-items: end; }
+
+  /* the number and the name, one over the other and the same size: the panel
+     says which of three it is before it says anything else */
+  .mark { display: flex; flex-direction: column; }
+  .n, .mark h3 { font-size: var(--t-h2); font-weight: var(--w-display);
+                 line-height: var(--lh-display); letter-spacing: var(--track-display); }
+  .n { color: var(--ink-4); }
+  .mark h3 { margin: 0; color: var(--ink); }
+
+  .promise { margin: 0 0 var(--s-5); max-width: 20ch; font-size: var(--t-h3);
+             font-weight: var(--w-display); line-height: var(--lh-title);
+             letter-spacing: var(--track-title); color: var(--ink); }
+  .desc { margin: 0; max-width: 46ch; font-size: var(--t-body);
           line-height: var(--lh-body); color: var(--ink-2); }
-  /* the services are a row of chips at the foot of the words: a set of things
-     offered, wrapping when the column runs out, rather than a line of running
-     text — the band above is enough motion for one page */
-  /* they wrap well before the column's edge: a list that runs the full
-     measure reads as a paragraph of small caps, and the description above it
-     already owns that width */
-  .services { margin-top: var(--s-6); max-width: 26rem; }
 
-  /* the frames inside are absolute and clip-pathed, so the corner comes off
-     the band rather than off any one of them */
-  .band { position: relative; margin-top: var(--s-6);
-          border-radius: var(--radius-media); overflow: hidden; }
-
-  /* the clip fills its frame whatever shape it arrived in: the renders are
-     not one ratio, and a band with letterboxing in it is not a band */
-  .band video, .band img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-  /* Every frame is stacked on the same spot, the first included: a change
-     opens a clip from the edge the reel is travelling from, over the frame
-     before it, which is still sitting underneath. The band carries its own
-     height, so no frame has to stay in flow to give it one. */
-  .frame { position: absolute; inset: 0; clip-path: inset(0 0 100% 0); }
+  /* ── the reel ──────────────────────────────────────────────────────── */
+  .band { position: relative; aspect-ratio: 3 / 2; overflow: hidden;
+          background: var(--glass); border-radius: var(--radius-media); }
+  .frame { position: absolute; inset: 0; display: block; clip-path: inset(0 0 100% 0); }
   .frame:first-of-type { clip-path: inset(0 0 0 0); }
+  .frame picture, .frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  /* the project's name, on the picture, so a click is never a guess */
+  .cap { position: absolute; left: var(--s-4); bottom: var(--s-4);
+         padding: 0.4rem 0.6rem; color: #fff; background: rgb(0 0 0 / 0.32);
+         -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+         border-radius: var(--radius); }
 
-  /* The counter: a bar down the inside of the picture with a square for each
-     project on it. The bar fills from the first square to where you are, and
-     the square it has reached is lit — so you can see the next one coming as
-     the fill closes on it. On a frosted pane, the length of its own stops,
-     centred on the picture's left edge, and only while the card is the one
-     being turned. */
-  .roll { position: absolute; top: 50%; translate: 0 -50%; left: var(--s-4);
-          width: 1.4rem; height: 7.5rem;
-          z-index: 1; pointer-events: none; padding: 0.6rem 0;
-          display: grid; grid-template-rows: repeat(var(--n, 1), 1fr);
-          background: rgb(0 0 0 / 0.26); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-          opacity: 0; transition: opacity 0.25s ease; }
-  .studio.hovering .roll { opacity: 1; }
-  /* The track and the fill run behind the squares, and the squares are solid:
-     a half-lit square over a half-lit bar showed both, and the overlap read
-     as a mistake. Everything on the strip is either white or the track's own
-     grey — nothing is see-through. */
-  .roll::before { content: ''; position: absolute; left: 50%; translate: -50% 0; width: var(--hairline);
-                  top: calc(0.6rem + (100% - 1.2rem) / var(--n, 1) / 2);
-                  bottom: calc(0.6rem + (100% - 1.2rem) / var(--n, 1) / 2);
-                  background: rgb(255 255 255 / 0.32); }
-  .fill { position: absolute; left: 50%; translate: -50% 0; width: 2px; height: 0;
-          top: calc(0.6rem + (100% - 1.2rem) / var(--n, 1) / 2);
-          background: #fff; }
-  /* the stops sit above the line, opaque, so the bar passes behind them */
-  .tick { position: relative; z-index: 1; align-self: center; justify-self: center;
-          width: var(--square); height: var(--square); background: #fff;
-          transition: transform var(--dur-fast) var(--ease-panel); }
-  .tick.on { transform: scale(1.6); }
+  .controls { display: flex; align-items: center; gap: var(--s-5); margin-top: var(--s-4); }
+  .arrows { display: flex; gap: var(--s-4); }
+  .arrows button { font-size: var(--t-body); line-height: 1; color: var(--ink-3);
+                   background: none; border: 0; cursor: pointer;
+                   transition: color var(--dur-fast) ease; }
+  .arrows button:hover { color: var(--ink); }
+  /* the bar says how far through, the squares say which one — and the bar is
+     drawn between them rather than under them, so the two never overlap */
+  .roll { position: relative; flex: 1; height: var(--square); }
+  .rail { position: absolute; inset: 50% var(--square) auto; height: var(--hairline);
+          translate: 0 -50%; background: var(--line-strong); }
+  .fill { position: absolute; inset: 0; transform-origin: left; transform: scaleX(0);
+          background: var(--ink); transition: transform var(--dur-slow) var(--ease-out); }
+  .ticks { position: absolute; inset: 0; display: flex; justify-content: space-between; }
+  .tick { width: var(--square); height: var(--square); background: var(--ink-dim);
+          cursor: pointer; transition: background var(--dur-fast) ease, scale var(--dur-fast) ease; }
+  .tick.on { background: var(--ink); scale: 1.5; }
+  .count { color: var(--ink-4); font-variant-numeric: tabular-nums; }
 
-  /* Desktop: the words on the left, the clip on the right and out to the edge
-     of the page. The card is as tall as the clip — its ratio sets the height,
-     with a floor under it — so there is no padding above or below to leave a
-     band of empty ground the way a fixed screen height did. The cards follow
-     one another down the page; they are still pulled out to the page edges so
-     the clip can reach it. */
-  @media (min-width: 860px) {
-    .studios { padding-bottom: 0; }
-    /* The shared column gap is 18rem — it is sized for the statement layout,
-       where two columns sit either side of a wide gutter, and here it starved
-       the words. This card sets its own: the number close to what it numbers,
-       and the clip a normal gutter away. */
-    .studio { padding: 0 var(--page-x);
-              display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) 42%;
-              column-gap: var(--s-7); align-items: center;
-              margin-inline: calc(var(--page-x) * -1);
-              background: var(--ground);
-              border-top: var(--hairline) solid var(--line); }
-    /* the last one closes the set: every other card is separated from the one
-       above it, and without this the three end on nothing */
-    .studio:last-of-type { border-bottom: var(--hairline) solid var(--line); }
-    /* the number and the name start together at the top; the services are
-       pushed to the foot, so the words hold both edges of the card */
-    .n { align-self: start; padding-top: var(--s-6); }
-    .words { align-self: stretch; display: flex; flex-direction: column;
-             padding-block: var(--s-6); }
-    .services { margin-top: auto; }
-    /* Now that it has a corner it cannot be flush: a radius pressed against
-       the card's own rule above it, and against the edge of the screen at its
-       right, reads as a mistake rather than as a shape. The block margins are
-       its own; the inset from the page edge is the card's padding, because a
-       margin on the clip does not shrink it — the width has to stay the
-       column's, or the ratio and the floor fight over the box and push it off
-       the page. */
-    .band { margin-block: var(--s-6); width: 100%; align-self: stretch;
-            aspect-ratio: 3 / 2; min-height: 22rem; }
+  /* ── what it does ──────────────────────────────────────────────────── */
+  .does { display: flex; flex-direction: column; }
+  .tag { color: var(--ink-3); margin: 0 0 var(--s-4); }
+  .services { list-style: none; margin: 0 0 var(--s-5); padding: 0; }
+  /* a rule under each, the way the questions are ruled: a list of what is on
+     offer reads as a list, where a row of pills reads as metadata */
+  .services li { padding: var(--s-4) 0; font-size: var(--t-lead);
+                 line-height: var(--lh-title); color: var(--ink);
+                 border-bottom: var(--hairline) solid var(--line); }
+
+  /* the way into the rest of it: the page's ink as a slab, its ground as the
+     letters, so it inverts with the panel it is on */
+  .all { position: relative; overflow: hidden; display: flex; align-items: center;
+         justify-content: space-between; gap: var(--s-5);
+         padding: var(--s-5); background: var(--ink); color: var(--ground);
+         border-radius: var(--radius); }
+  .all b { font-weight: var(--w-ui); font-size: var(--t-body); }
+  .all .arrow { font-style: normal; transition: translate var(--dur-base) var(--ease-out); }
+  .all:hover .arrow { translate: 0.35rem 0; }
+  .all .tile { position: absolute; inset: 0; background: rgb(255 255 255 / 0.12);
+               transform: translateX(-100%); will-change: transform;
+               transition: transform var(--dur-base) var(--ease-panel); }
+  .all b, .all .arrow { position: relative; }
+
+  @media (max-width: 1099px) {
+    .top, .foot { column-gap: var(--s-7); }
   }
 
+  /* Stacked: the panel is no longer a screen with a void in it — on a phone
+     the void is just a blank screen — so it becomes a block that runs at its
+     own height, in the same order. */
   @media (max-width: 859px) {
-    .studios { padding-bottom: 12vh; }
+    .studio { min-height: 0; gap: var(--s-7); padding: 12vh var(--page-x); }
+    .top, .foot { grid-template-columns: 1fr; row-gap: var(--s-6); }
+    .n, .mark h3 { font-size: var(--t-h3); }
+    .promise { font-size: var(--t-title); }
+    .desc, .promise { max-width: none; }
+    h2 { white-space: normal; font-size: var(--t-h3); }
     .thread { height: 8vh; }
-    .studio { padding-top: 9vh; }
-    /* stacked, nothing else gives the band a height: the frames are all
-       absolute, so the ratio is what holds it open */
-    .band { aspect-ratio: 3 / 2; }
-    .promise, .desc, .intro { max-width: none; }
   }
 </style>
