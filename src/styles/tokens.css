@@ -85,11 +85,15 @@
        lead      --t-lead                   the line under a heading
        body      --t-body, --t-small        anything with length
 
-     Display is Light: at 40px and up a regular weight states and a light one
-     considers, which is the difference the reference sites trade on. Body
-     stays regular — Inter's Light is too thin to read at 15px. Only small
-     controls go heavier, where the size cannot carry the emphasis itself. */
-  --w-display: 300;
+     Everything down to the controls is Regular. Display was Light, on the
+     reasoning that at 40px and up a regular weight states and a light one
+     considers — but the headings came down in size as the sections were
+     built, and Inter's Light at the size these actually set reads thin
+     rather than considered. The display tier is named separately from the
+     title tier so it can part from it again; today they are the same
+     weight on purpose, not by drift. Only small controls go heavier, where
+     the size cannot carry the emphasis itself. */
+  --w-display: 400;
   --w-title: 400;
   --w-body: 400;
   --w-ui: 500;                    /* buttons and the like, at caption size */
