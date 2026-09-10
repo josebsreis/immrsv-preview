@@ -1,0 +1,95 @@
+---
+/** A lab page, not part of the site: the handover from the dark half of the
+ *  homepage to the light one, as a figure forming. A dark screen stands in
+ *  for the hero above it and a light one for the studios below. */
+import Base from '@layouts/Base.astro';
+
+const beats = [
+  { word: 'Draw', line: 'The building, at real scale, from the first sketch.' },
+  { word: 'Model', line: 'Every surface built, not painted on.' },
+  { word: 'Light', line: 'Real optics, real materials, no flattery.' },
+  { word: 'Build', line: 'Shipped, and kept working.' },
+];
+---
+<Base theme="dark" title="Lab — forming">
+  <main class="lab" data-forming>
+    <section class="before">
+      <p class="label">hero stands here — scroll</p>
+    </section>
+
+    <div class="track" data-track>
+      <div class="pane">
+        <div class="window" data-window>
+          <canvas></canvas>
+        </div>
+        {beats.map((b, i) => (
+          <div class={`beat ${i % 2 ? 'right' : 'left'}`} data-beat>
+            <span class="word">{b.word}</span>
+            <span class="line">{b.line}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <section class="after">
+      <p class="label">studios follow here</p>
+    </section>
+
+    <p class="note label"><span data-p>0.00</span></p>
+  </main>
+
+  <script>
+    import { startForming } from '../../scripts/lab/forming';
+    const root = document.querySelector<HTMLElement>('[data-forming]')!;
+    const out = document.querySelector<HTMLElement>('[data-p]')!;
+    const lab = startForming(root, (p) => { out.textContent = p.toFixed(2); });
+    (window as any).forming = lab;
+    // `?p=0.5` holds the pane at that point of the track, for a still of it
+    const want = Number(new URLSearchParams(location.search).get('p'));
+    if (location.search.includes('p=') && want >= 0 && want <= 1) {
+      root.querySelector<HTMLElement>('.before')!.style.display = 'none';
+      lab.set(want);
+    }
+  </script>
+</Base>
+
+<style>
+  .lab { position: relative; }
+  .before, .after { height: 100vh; display: grid; place-items: center; }
+  .before { background: #060606; color: #727276; }
+  .after { background: #f5f5f7; color: #6e6e73; }
+
+  /* as tall as the scroll it wants; the pane inside holds still */
+  .track { height: 380vh; position: relative; }
+  .pane { position: sticky; top: 0; height: 100vh; overflow: hidden; background: #060606; }
+
+  /* the square, and what is seen through it. Its ground is the video's own,
+     for the frame before the first image has arrived */
+  .window { position: absolute; inset: 0; background: #ebeaec;
+            clip-path: inset(calc(50vh - 2.5px) calc(50vw - 2.5px)); }
+  /* the video's ground is a shade under the site's light one; lifted here so
+     the section that follows continues on the same plane */
+  .window canvas { display: block; filter: brightness(1.045); }
+  /* the foot of the frame is handed to the section's ground, so the two are
+     one plane when the page moves on */
+  .window::after { content: ''; position: absolute; inset: auto 0 0 0; height: 14vh;
+                   background: linear-gradient(to bottom, rgb(245 245 247 / 0), #f5f5f7); }
+
+  .beat { position: absolute; top: 50%; translate: 0 -50%; max-width: 20rem;
+          display: flex; flex-direction: column; gap: 0.6rem; color: #1d1d1f;
+          opacity: var(--v, 0); transform: translateY(calc((1 - var(--v, 0)) * 14px));
+          pointer-events: none; --v: 0; }
+  .beat.left { left: var(--page-x); }
+  .beat.right { right: var(--page-x); text-align: right; align-items: flex-end; }
+  .word { font-size: var(--t-display); font-weight: 500; letter-spacing: -0.03em; line-height: 0.95; }
+  .line { font-size: var(--t-small); color: #6e6e73; max-width: 16rem; line-height: 1.5; }
+
+  @media (max-width: 719px) {
+    .beat { top: auto; bottom: calc(var(--page-y) + 3rem); translate: none; max-width: 70vw; }
+    .beat.right { right: auto; left: var(--page-x); text-align: left; align-items: flex-start; }
+    .word { font-size: 2rem; }
+  }
+
+  .note { position: fixed; right: var(--page-x); bottom: var(--page-y); color: #9c9ca0;
+          mix-blend-mode: difference; pointer-events: none; z-index: 10; }
+</style>
