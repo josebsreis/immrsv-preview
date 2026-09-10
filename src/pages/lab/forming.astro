@@ -20,7 +20,9 @@ const beats = [
     <div class="track" data-track>
       <div class="pane">
         <div class="window" data-window>
-          <canvas></canvas>
+          <div class="box" data-box>
+            <canvas></canvas>
+          </div>
         </div>
         {beats.map((b, i) => (
           <div class={`beat ${i % 2 ? 'right' : 'left'}`} data-beat>
@@ -65,13 +67,19 @@ const beats = [
 
   /* the square, and what is seen through it. Its ground is the video's own,
      for the frame before the first image has arrived */
-  .window { position: absolute; inset: 0; background: #ebeaec;
+  .window { position: absolute; inset: 0; background: #f5f5f7;
             clip-path: inset(calc(50vh - 2.5px) calc(50vw - 2.5px)); }
+  /* the figure is held in a frame at the middle of the screen, not spread
+     across it: the square opens through the frame first, then the ground
+     around it. As wide as the middle of the page, no taller than the room */
+  .box { position: absolute; left: 50%; top: 50%; translate: -50% -50%;
+         width: min(58vw, calc(72vh * 16 / 9)); aspect-ratio: 16 / 9;
+         background: #ebeaec; overflow: hidden; }
   /* the video's ground is a shade under the site's light one; lifted here so
      the section that follows continues on the same plane */
   .window canvas { display: block; filter: brightness(1.045); }
 
-  .beat { position: absolute; top: 50%; translate: 0 -50%; max-width: 20rem;
+  .beat { position: absolute; top: 50%; translate: 0 -50%; max-width: 16rem;
           display: flex; flex-direction: column; gap: 0.6rem; color: #1d1d1f;
           opacity: var(--v, 0); transform: translateY(calc((1 - var(--v, 0)) * 14px));
           pointer-events: none; --v: 0; }
@@ -81,6 +89,7 @@ const beats = [
   .line { font-size: var(--t-small); color: #6e6e73; max-width: 16rem; line-height: 1.5; }
 
   @media (max-width: 719px) {
+    .box { width: 100vw; }
     .beat { top: auto; bottom: calc(var(--page-y) + 3rem); translate: none; max-width: 70vw; }
     .beat.right { right: auto; left: var(--page-x); text-align: left; align-items: flex-start; }
     .word { font-size: 2rem; }

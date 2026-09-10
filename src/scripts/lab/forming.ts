@@ -33,6 +33,8 @@ export function startForming(root: HTMLElement, onProgress?: (p: number) => void
   const track = root.querySelector<HTMLElement>('[data-track]')!;
   const win = root.querySelector<HTMLElement>('[data-window]')!;
   const canvas = root.querySelector<HTMLCanvasElement>('canvas')!;
+  /** the frame the figure is drawn in — the whole window, or a box inside it */
+  const box = (canvas.closest<HTMLElement>('[data-box]') ?? win);
   const beats = [...root.querySelectorAll<HTMLElement>('[data-beat]')];
   const ctx = canvas.getContext('2d')!;
 
@@ -61,14 +63,15 @@ export function startForming(root: HTMLElement, onProgress?: (p: number) => void
   };
 
   /* ── canvas ──────────────────────────────────────────────────────── */
-  let w = 0, h = 0;
+  let w = 0, h = 0, bw = 0, bh = 0;
   const size = () => {
-    const dpr = Math.min(devicePixelRatio || 1, 1.5);
+    const dpr = Math.min(devicePixelRatio || 1, 2);
     // the pane's own box, not the window's: the two disagree under a browser
     // chrome that comes and goes, and the clip is drawn in the pane's frame
     w = win.clientWidth; h = win.clientHeight;
-    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-    canvas.style.width = `${w}px`; canvas.style.height = `${h}px`;
+    bw = box.clientWidth; bh = box.clientHeight;
+    canvas.width = Math.round(bw * dpr); canvas.height = Math.round(bh * dpr);
+    canvas.style.width = `${bw}px`; canvas.style.height = `${bh}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     last = -1;
     draw();
@@ -77,9 +80,9 @@ export function startForming(root: HTMLElement, onProgress?: (p: number) => void
     const im = nearest(shown);
     if (!im) return;
     // cover: the figure is centred in the frame, so a centred crop keeps her
-    const s = Math.max(w / im.naturalWidth, h / im.naturalHeight);
+    const s = Math.max(bw / im.naturalWidth, bh / im.naturalHeight);
     const dw = im.naturalWidth * s, dh = im.naturalHeight * s;
-    ctx.drawImage(im, (w - dw) / 2, (h - dh) / 2, dw, dh);
+    ctx.drawImage(im, (bw - dw) / 2, (bh - dh) / 2, dw, dh);
   };
 
   /* ── the scroll ──────────────────────────────────────────────────── */
