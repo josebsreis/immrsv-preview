@@ -50,8 +50,8 @@ const reelFor = (key: string): Shot[] => {
 {content.items.length > 0 && (
   <section class="studios" id="studios">
     <header class="head">
-      <p class="section-tag"><span class="sq" aria-hidden="true"></span>{content.tag}</p>
-      <p class="intro" data-rise>{content.intro}</p>
+      <h2 data-rise>{content.title}</h2>
+      <p class="intro" data-rise style="--i: 1">{content.intro}</p>
     </header>
 
     {content.items.map((s, i) => (
@@ -84,13 +84,23 @@ const reelFor = (key: string): Shot[] => {
 )}
 
 <style>
-  /* it sits inside the light section, which already holds the page margins */
-  .studios { position: relative; padding-bottom: 16vh; }
+  /* It sits inside the light section, which already holds the page margins.
+     The air above it is the whole gap between the handover and the work: the
+     figure finishes, the screen is quiet for a moment, and then the section
+     that answers her arrives. Two vh of it read as a section falling out of
+     the bottom of a film. */
+  .studios { position: relative; padding-top: 20vh; padding-bottom: 16vh; }
 
+  /* the same head as the client stories below: the name on the narrow
+     column at display scale, the line that says why beside it */
   .head { display: grid; grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
-          column-gap: var(--col-gap); align-items: start; }
-  .intro { max-width: 34ch; font-size: var(--t-lead); line-height: var(--lh-lead);
-           letter-spacing: var(--track-lead); color: var(--ink-2); }
+          column-gap: var(--col-gap); align-items: baseline; }
+  h2 { grid-column: 1; margin: 0; white-space: nowrap;
+       font-size: 3.6rem; font-weight: var(--w-display);
+       line-height: var(--lh-display); letter-spacing: var(--track-display);
+       color: var(--ink); }
+  .intro { grid-column: 2; max-width: 34ch; font-size: var(--t-body);
+           line-height: var(--lh-body); color: var(--ink-3); }
 
   .studio { padding-top: 12vh; }
   .n { display: block; color: var(--ink-4); }
@@ -195,7 +205,11 @@ const reelFor = (key: string): Shot[] => {
   }
 
   @media (max-width: 859px) {
-    .studios { padding-bottom: 12vh; }
+    .studios { padding-top: 14vh; padding-bottom: 12vh; }
+    .head { grid-template-columns: 1fr; gap: var(--s-4); }
+    /* stacked, it has the page: back to the size the other sections use */
+    h2 { grid-column: 1; font-size: var(--t-h2); white-space: normal; }
+    .intro { grid-column: 1; }
     .studio { padding-top: 9vh; }
     /* stacked, nothing else gives the band a height: the frames are all
        absolute, so the ratio is what holds it open */

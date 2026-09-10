@@ -107,6 +107,8 @@ export interface HomeContent {
   };
   studios: {
     tag: string;
+    /** the section's own heading, at display scale */
+    title: string;
     intro: string;
     items: Studio[];
   };

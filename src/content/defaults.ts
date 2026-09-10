@@ -251,7 +251,8 @@ export const defaultHome: HomeContent = {
   },
   studios: {
     tag: 'Studios',
-    intro: 'Three studios under one roof. Work moves between them without a handover, which is the whole point.',
+    title: 'Three studios.',
+    intro: 'Under one roof. Work moves between them without a handover, which is the whole point.',
     items: studios,
   },
   brands: {

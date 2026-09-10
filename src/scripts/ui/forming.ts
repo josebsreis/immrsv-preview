@@ -32,12 +32,15 @@ const T = {
   spread: [0.0, 0.16] as const,               // the mark grows into the light ground
   title: [0.1, 0.17] as const,                // the two lines land, and stay
   part: [0.22, 0.36] as const,                // they part, and she opens in the gap
-  play: [0.3, 0.96] as const,                 // the frames run
-  beat: 0.46,                                 // the first step begins its pass here…
-  step: 0.1,                                  // …and the rest this far apart
-  life: 0.22,                                 // how long one takes to cross — longer
+  play: [0.3, 0.9] as const,                  // the frames run
+  beat: 0.44,                                 // the first step begins its pass here…
+  step: 0.095,                                // …and the rest this far apart
+  life: 0.2,                                  // how long one takes to cross — longer
                                               // than the step, so two are always going
 };
+/* Which leaves the last twelfth of the track to her, finished, with the
+   sentence still standing around her and nothing else moving. A section this
+   long has to land rather than stop. */
 /** how far a card travels up the screen, and how far it leans in at the middle */
 const TRAVEL = 0.46, LEAN = 0.07;
 /** the air a card keeps from her at its innermost */
