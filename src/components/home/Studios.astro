@@ -94,6 +94,17 @@ const grounds = ['light', 'dark', 'light'] as const;
           <div class="foot">
             <!-- the work, stepped by hand; every frame opens its project -->
             <div class="reel" data-studio-reel data-rise style="--i: 1">
+              <!-- the same instrument as the statement and the client stories:
+                   the arrows and the count, then the bar, over the thing it
+                   is measuring -->
+              <div class="controls">
+                <div class="arrows">
+                  <button type="button" data-reel-prev aria-label={`Previous ${s.name} project`} data-tap>&#8592;</button>
+                  <button type="button" data-reel-next aria-label={`Next ${s.name} project`} data-tap>&#8594;</button>
+                </div>
+                <span class="count label"><span data-reel-now>01</span>/{String(shots.length).padStart(2, '0')}</span>
+              </div>
+              <div class="track" aria-hidden="true"><i data-reel-fill></i></div>
               <div class="band">
                 {shots.map((shot, k) => (
                   <a class="frame" href={`/work/${shot.slug}`} data-reel-frame data-tap
@@ -108,17 +119,6 @@ const grounds = ['light', 'dark', 'light'] as const;
                 ))}
               </div>
 
-              <div class="controls">
-                <div class="arrows">
-                  <button type="button" data-reel-prev aria-label={`Previous ${s.name} project`} data-tap>&#8592;</button>
-                  <button type="button" data-reel-next aria-label={`Next ${s.name} project`} data-tap>&#8594;</button>
-                </div>
-                <div class="roll" aria-hidden="true">
-                  <span class="rail"><b class="fill" data-reel-fill></b></span>
-                  <span class="ticks">{shots.map(() => <i class="tick" data-reel-step></i>)}</span>
-                </div>
-                <span class="count label"><span data-reel-now>01</span>/{String(shots.length).padStart(2, '0')}</span>
-              </div>
             </div>
 
             <!-- what the studio does, and the way into all of it -->
@@ -188,7 +188,7 @@ const grounds = ['light', 'dark', 'light'] as const;
             /* the head clears the nav — its height, plus air — rather than the
                page margin alone, because on a panel that fills the screen the
                nav is sitting right on top of it */
-            padding: calc(var(--nav-y) * 2 + var(--pill-h) + 5vh) var(--page-x) var(--page-y);
+            padding: calc(var(--nav-y) * 2 + var(--pill-h) + 2vh) var(--page-x) var(--page-y);
             background: var(--ground); color: var(--ink); }
 
   .top, .foot { display: grid; grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
@@ -221,24 +221,19 @@ const grounds = ['light', 'dark', 'light'] as const;
          -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
          border-radius: var(--radius); }
 
-  .controls { display: flex; align-items: center; gap: var(--s-5); margin-top: var(--s-4); }
+  /* the controls the statement and the client stories use, so a bar and two
+     arrows read as one thing wherever they appear on the page */
+  .controls { display: flex; justify-content: space-between; align-items: center; }
   .arrows { display: flex; gap: var(--s-4); }
   .arrows button { font-size: var(--t-body); line-height: 1; color: var(--ink-3);
                    background: none; border: 0; cursor: pointer;
                    transition: color var(--dur-fast) ease; }
   .arrows button:hover { color: var(--ink); }
-  /* the bar says how far through, the squares say which one — and the bar is
-     drawn between them rather than under them, so the two never overlap */
-  .roll { position: relative; flex: 1; height: var(--square); }
-  .rail { position: absolute; inset: 50% var(--square) auto; height: var(--hairline);
-          translate: 0 -50%; background: var(--line-strong); }
-  .fill { position: absolute; inset: 0; transform-origin: left; transform: scaleX(0);
-          background: var(--ink); transition: transform var(--dur-slow) var(--ease-out); }
-  .ticks { position: absolute; inset: 0; display: flex; justify-content: space-between; }
-  .tick { width: var(--square); height: var(--square); background: var(--ink-dim);
-          cursor: pointer; transition: background var(--dur-fast) ease, scale var(--dur-fast) ease; }
-  .tick.on { background: var(--ink); scale: 1.5; }
   .count { color: var(--ink-4); font-variant-numeric: tabular-nums; }
+  .track { margin: var(--s-4) 0; height: var(--hairline); background: var(--line); overflow: hidden; }
+  .track i { display: block; height: 100%; background: var(--ink);
+             transform-origin: left center; transform: scaleX(0);
+             transition: transform var(--dur-slow) var(--ease-out); }
 
   /* ── what it does ──────────────────────────────────────────────────── */
   .does { display: flex; flex-direction: column; }

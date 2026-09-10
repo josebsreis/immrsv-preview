@@ -66,10 +66,11 @@ export function createStudioReel(el: HTMLElement): StudioReel {
     mark();
   }
 
-  /** the squares, the bar between them, and the count */
+  /** the bar and the count: the bar is how much of the reel has been seen,
+   *  so the first frame is a quarter of it rather than nothing */
   function mark() {
     ticks.forEach((t, k) => t.classList.toggle('on', k === at));
-    if (fill) fill.style.transform = `scaleX(${(at / Math.max(n - 1, 1)).toFixed(4)})`;
+    if (fill) fill.style.transform = `scaleX(${((at + 1) / n).toFixed(4)})`;
     if (now) now.textContent = String(at + 1).padStart(2, '0');
     frames.forEach((f, k) => f.setAttribute('aria-hidden', k === at ? 'false' : 'true'));
     // only the frame on show can be reached by the keyboard: the others are

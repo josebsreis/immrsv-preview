@@ -124,6 +124,7 @@ export function createStudioStack(root: HTMLElement): StudioStack {
       // the stack pulls each panel back over the last; a fixed box with a
       // top of 0 still honours that margin, and would sit a screen too high
       el.style.marginTop = '0';
+      el.style.marginInline = '0';
     }
     let top = n - 1;
     for (let i = 0; i < n - 1; i++) {
