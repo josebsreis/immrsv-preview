@@ -63,6 +63,10 @@ const {
       <!-- the slot she is built in: a rectangle that opens between the halves -->
       <div class="slot" data-forming-slot aria-hidden="true"><canvas></canvas></div>
 
+      <!-- the thread she is left standing on: it starts under the sentence and
+           runs to the foot of the pane, where the studios pick it up -->
+      <span class="thread" data-forming-thread aria-hidden="true"></span>
+
       <p class="title">
         <span class="half" data-forming-half>{lead}</span>
         <span class="half" data-forming-half>{tail}</span>
@@ -103,7 +107,7 @@ const {
   /* she stands in a portrait slot at the middle of the screen. Its ground is
      the video's own, for the frame before the first still has arrived */
   .slot { position: absolute; left: 50%; top: 50%; translate: -50% -50%;
-          height: min(72vh, 132vw); aspect-ratio: 2 / 3;
+          height: min(66vh, 132vw); aspect-ratio: 2 / 3;
           background: #ebeaec; overflow: hidden; clip-path: inset(50%); }
   .forming:not([data-live]) .slot { display: none; }
   /* the render's ground is a shade under the site's light one; lifted here so
@@ -122,6 +126,15 @@ const {
           text-align: center; --v: 1; --dy: 0px; }
   [data-live] .half { opacity: var(--v);
                       transform: translateY(calc(-50% + var(--dy))); }
+
+  /* The line she is left standing on. It is drawn only once she is finished,
+     runs from under the sentence to the foot of the pane, and is continued by
+     the studios section directly below — one thread from her to the first
+     studio, so the page reads as carrying on rather than starting again. */
+  .thread { position: absolute; left: 50%; width: var(--hairline);
+            background: var(--line-strong); transform-origin: top;
+            transform: scaleX(1) scaleY(var(--v, 0)); opacity: var(--v, 0); }
+  .forming:not([data-live]) .thread { display: none; }
 
   /* her four steps, in the room at either side that the lines are not using */
   .steps { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }

@@ -50,8 +50,12 @@ const reelFor = (key: string): Shot[] => {
 {content.items.length > 0 && (
   <section class="studios" id="studios">
     <header class="head">
-      <h2 data-rise>{content.title}</h2>
-      <p class="intro" data-rise style="--i: 1">{content.intro}</p>
+      <!-- the thread the handover above leaves off with, carried down through
+           the title to the first studio -->
+      <span class="thread" data-rise aria-hidden="true"></span>
+      <h2 data-rise style="--i: 1">{content.title}</h2>
+      <p class="intro" data-rise style="--i: 2">{content.intro}</p>
+      <span class="thread tail" data-rise style="--i: 3" aria-hidden="true"></span>
     </header>
 
     {content.items.map((s, i) => (
@@ -89,18 +93,29 @@ const reelFor = (key: string): Shot[] => {
      figure finishes, the screen is quiet for a moment, and then the section
      that answers her arrives. Two vh of it read as a section falling out of
      the bottom of a film. */
-  .studios { position: relative; padding-top: 20vh; padding-bottom: 16vh; }
+  .studios { position: relative; padding-top: 0; padding-bottom: 16vh; }
 
-  /* the same head as the client stories below: the name on the narrow
-     column at display scale, the line that says why beside it */
-  .head { display: grid; grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
-          column-gap: var(--col-gap); align-items: baseline; }
-  h2 { grid-column: 1; margin: 0; white-space: nowrap;
-       font-size: 3.6rem; font-weight: var(--w-display);
-       line-height: var(--lh-display); letter-spacing: var(--track-display);
-       color: var(--ink); }
-  .intro { grid-column: 2; max-width: 34ch; font-size: var(--t-body);
-           line-height: var(--lh-body); color: var(--ink-3); }
+  /* The head stands on the page's centre line, on the thread the handover
+     hands down: line, name, what it means, line, and then the first studio.
+     Centred rather than set on the narrow column because the thread is the
+     point — a title off to one side would be the line arriving at nothing. */
+  .head { display: flex; flex-direction: column; align-items: center;
+          text-align: center; }
+  .thread { width: var(--hairline); height: 13vh; background: var(--line-strong);
+            transform-origin: top; }
+  .thread.tail { height: 9vh; }
+  /* it draws rather than lifts: the same .in the choreography gives everything
+     else, spent on the one property that reads as a line being continued */
+  .thread[data-rise] { opacity: 1; transform: scaleY(0);
+                       transition: transform var(--dur-slow) var(--ease-out);
+                       transition-delay: calc(var(--i, 0) * 0.08s); }
+  .thread[data-rise].in { transform: scaleY(1); }
+  h2 { margin: var(--s-6) 0 var(--s-4); font-size: var(--t-h2);
+       font-weight: var(--w-display); line-height: var(--lh-display);
+       letter-spacing: var(--track-display); color: var(--ink); }
+  .intro { max-width: 42ch; margin: 0 0 var(--s-6); font-size: var(--t-lead);
+           line-height: var(--lh-lead); letter-spacing: var(--track-lead);
+           color: var(--ink-3); }
 
   .studio { padding-top: 12vh; }
   .n { display: block; color: var(--ink-4); }
@@ -205,11 +220,9 @@ const reelFor = (key: string): Shot[] => {
   }
 
   @media (max-width: 859px) {
-    .studios { padding-top: 14vh; padding-bottom: 12vh; }
-    .head { grid-template-columns: 1fr; gap: var(--s-4); }
-    /* stacked, it has the page: back to the size the other sections use */
-    h2 { grid-column: 1; font-size: var(--t-h2); white-space: normal; }
-    .intro { grid-column: 1; }
+    .studios { padding-bottom: 12vh; }
+    .thread { height: 9vh; }
+    .thread.tail { height: 7vh; }
     .studio { padding-top: 9vh; }
     /* stacked, nothing else gives the band a height: the frames are all
        absolute, so the ratio is what holds it open */
