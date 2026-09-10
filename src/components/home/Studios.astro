@@ -10,8 +10,10 @@
  *  selling precision can hold without looking sparse.
  *
  *  The grounds alternate — light, dark, light — so each panel arrives as its
- *  own place. They butt against one another rather than overlapping: three
- *  full screens of different ground, in the flow, is the whole effect.
+ *  own place. And they are stacked rather than laid end to end: all three are
+ *  pinned to the top of the screen with the first one covering, and scrolling
+ *  draws it away to unveil the one beneath. Nothing arrives; something is
+ *  removed (scripts/ui/studioStack.ts).
  *
  *  The work is links now. Each frame opens the project it shows, which is why
  *  nothing in the reel follows the pointer — see scripts/ui/studioReel.ts. */
@@ -72,10 +74,12 @@ const grounds = ['light', 'dark', 'light'] as const;
       <span class="thread" data-thread aria-hidden="true"></span>
     </header>
 
+    <div class="stack" data-studio-stack style={`--n: ${content.items.length}`}>
     {content.items.map((s, i) => {
       const shots = reelFor(s.key);
       return (
-        <section class="studio" data-theme={grounds[i % grounds.length]} aria-labelledby={`studio-${s.key}`}>
+        <section class="studio" data-studio-panel data-panel={grounds[i % grounds.length]}
+                 style={`--z: ${content.items.length - i}`} aria-labelledby={`studio-${s.key}`}>
           <div class="top">
             <div class="mark">
               <span class="n" data-rise>{String(i + 1).padStart(2, '0')}</span>
@@ -133,6 +137,7 @@ const grounds = ['light', 'dark', 'light'] as const;
         </section>
       );
     })}
+    </div>
   </div>
 )}
 
@@ -153,6 +158,14 @@ const grounds = ['light', 'dark', 'light'] as const;
   .intro { max-width: 42ch; margin: 0 0 var(--s-6); font-size: var(--t-lead);
            line-height: var(--lh-lead); letter-spacing: var(--track-lead);
            color: var(--ink-3); }
+
+  /* ── the stack ───────────────────────────────────────────────────────
+     As tall as the panels it holds, so there is a screen of scroll for each
+     handover. Without script — or on a phone, or for a reader who asked for
+     less motion — it is not a stack at all: the panels simply follow one
+     another, which is the same section read the long way. */
+  .stack[data-live] { height: calc(var(--n) * 100svh); position: relative; }
+  .stack[data-live] .studio { position: sticky; top: 0; height: 100svh; z-index: var(--z); }
 
   /* ── a panel ─────────────────────────────────────────────────────────
      A screen each, its content pinned to the top and the foot with the

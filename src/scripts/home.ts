@@ -9,6 +9,7 @@ import { createWordmarkLetters } from './ui/wordmarkLetters';
 import { createDirectionalHover } from './ui/directionalHover';
 import { createMarquee } from './ui/marquee';
 import { createStudioReel } from './ui/studioReel';
+import { createStudioStack } from './ui/studioStack';
 import { createProcessRail } from './ui/processRail';
 import { createForming } from './ui/forming';
 import { createFaqs } from './ui/faqs';
@@ -60,6 +61,8 @@ onPage('home', () => {
   add(createDirectionalHover());
   document.querySelectorAll<HTMLElement>('[data-marquee]').forEach((el) => add(createMarquee(el)));
   document.querySelectorAll<HTMLElement>('[data-studio-reel]').forEach((el) => add(createStudioReel(el)));
+  const stack = document.querySelector<HTMLElement>('[data-studio-stack]');
+  if (stack) add(createStudioStack(stack));
   add(createVideoInView());
   add(createHoverAudio(site.audio.taps));
 

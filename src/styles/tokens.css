@@ -161,7 +161,12 @@
 
 /* ── themes ────────────────────────────────────────────────────────── */
 :root,
-[data-theme="dark"] {
+[data-theme="dark"],
+/* `data-panel` is the same ground under another name, for a section that has
+   to carry a theme without the nav reading it off the page: the studios stack
+   three panels on top of one another and all three cover the nav's probe at
+   once, so the one that is showing tells the nav itself. */
+[data-panel="dark"] {
   color-scheme: dark;
   --ground: #060606;
   --ground-rgb: 6 6 6;
@@ -191,7 +196,8 @@
   --logo-filter: invert(1);        /* client logos ship black; flipped on dark */
 }
 
-[data-theme="light"] {
+[data-theme="light"],
+[data-panel="light"] {
   color-scheme: light;
   /* Not white, and further off it than a tint. A page of pure #fff has
      nothing for a white render or a glass pill to sit on, and reads as an
