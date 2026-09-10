@@ -3,10 +3,11 @@
 
    The frames are a baked sequence, drawn to a canvas from the scroll:
    no video element, no seeking, every frame is a still and the scrub
-   is exact. The window they are seen through starts as the site's own
-   mark — a five-pixel square — and opens to the whole screen; the
-   ground inside it is the video's, which is near-white, so the square
-   opening is the light half of the page arriving.
+   is exact. She is held in a slot — a portrait, 2:3, the way a
+   character stands on a select screen — and the page arrives around
+   her in two openings, both rectangles, both from the middle out:
+   first the mark grows into the slot, then the light ground grows from
+   the slot's edges to the screen. Nothing fades; things open.
 
    One value drives everything: progress through the track, 0 to 1.
    ═══════════════════════════════════════════════════════════════════ */
@@ -18,23 +19,28 @@ const SRC = (i: number) => `/forming/${String(i + 1).padStart(3, '0')}.avif`;
 
 /** where in the scroll each thing happens */
 const T = {
-  open: [0.0, 0.24] as const,     // the square grows to the screen
-  play: [0.06, 0.94] as const,    // the frames run
-  beat: 0.3,                      // the first line lands here…
-  step: 0.17,                     // …and the rest this far apart
-  hold: 0.1,                      // how long a line stays
+  slot: [0.0, 0.18] as const,                 // the mark grows into the slot
+  title: [0.14, 0.2, 0.34, 0.4] as const,     // the line: in, held, out
+  spread: [0.34, 0.5] as const,               // the light ground grows to the screen
+  play: [0.04, 0.96] as const,                // the frames run
+  beat: 0.54,                                 // the first line lands here…
+  step: 0.13,                                 // …and the rest this far apart
+  hold: 0.07,                                 // how long a line stays
 };
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const ramp = (p: number, a: number, b: number) => clamp01((p - a) / (b - a));
 const inOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+/** in over [a,b], held, out over [c,d] */
+const life = (p: number, [a, b, c, d]: readonly [number, number, number, number]) =>
+  ramp(p, a, b) * (1 - ramp(p, c, d));
 
 export function startForming(root: HTMLElement, onProgress?: (p: number) => void): Forming {
   const track = root.querySelector<HTMLElement>('[data-track]')!;
   const win = root.querySelector<HTMLElement>('[data-window]')!;
-  const canvas = root.querySelector<HTMLCanvasElement>('canvas')!;
-  /** the frame the figure is drawn in — the whole window, or a box inside it */
-  const box = (canvas.closest<HTMLElement>('[data-box]') ?? win);
+  const box = root.querySelector<HTMLElement>('[data-box]')!;
+  const canvas = box.querySelector<HTMLCanvasElement>('canvas')!;
+  const title = root.querySelector<HTMLElement>('[data-title]');
   const beats = [...root.querySelectorAll<HTMLElement>('[data-beat]')];
   const ctx = canvas.getContext('2d')!;
 
@@ -62,16 +68,23 @@ export function startForming(root: HTMLElement, onProgress?: (p: number) => void
     return null;
   };
 
-  /* ── canvas ──────────────────────────────────────────────────────── */
-  let w = 0, h = 0, bw = 0, bh = 0;
+  /* ── the boxes ───────────────────────────────────────────────────── */
+  /** the pane, and the slot's place in it — read once, the slot does not move */
+  let w = 0, h = 0, sx = 0, sy = 0, sw = 0, sh = 0;
   const size = () => {
     const dpr = Math.min(devicePixelRatio || 1, 2);
-    // the pane's own box, not the window's: the two disagree under a browser
-    // chrome that comes and goes, and the clip is drawn in the pane's frame
-    w = win.clientWidth; h = win.clientHeight;
-    bw = box.clientWidth; bh = box.clientHeight;
-    canvas.width = Math.round(bw * dpr); canvas.height = Math.round(bh * dpr);
-    canvas.style.width = `${bw}px`; canvas.style.height = `${bh}px`;
+    const pr = win.getBoundingClientRect();
+    w = pr.width; h = pr.height;
+    // the slot is placed by fractions of the screen; it is pinned to whole
+    // pixels here so its edge and the light plane's edge are the same edge
+    let br = box.getBoundingClientRect();
+    box.style.width = `${Math.round(br.width)}px`; box.style.height = `${Math.round(br.height)}px`;
+    box.style.left = `${Math.round(br.left - pr.left)}px`; box.style.top = `${Math.round(br.top - pr.top)}px`;
+    box.style.translate = 'none';
+    br = box.getBoundingClientRect();
+    sx = br.left - pr.left; sy = br.top - pr.top; sw = br.width; sh = br.height;
+    canvas.width = Math.round(sw * dpr); canvas.height = Math.round(sh * dpr);
+    canvas.style.width = `${sw}px`; canvas.style.height = `${sh}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     last = -1;
     draw();
@@ -80,9 +93,9 @@ export function startForming(root: HTMLElement, onProgress?: (p: number) => void
     const im = nearest(shown);
     if (!im) return;
     // cover: the figure is centred in the frame, so a centred crop keeps her
-    const s = Math.max(bw / im.naturalWidth, bh / im.naturalHeight);
+    const s = Math.max(sw / im.naturalWidth, sh / im.naturalHeight);
     const dw = im.naturalWidth * s, dh = im.naturalHeight * s;
-    ctx.drawImage(im, (bw - dw) / 2, (bh - dh) / 2, dw, dh);
+    ctx.drawImage(im, (sw - dw) / 2, (sh - dh) / 2, dw, dh);
   };
 
   /* ── the scroll ──────────────────────────────────────────────────── */
@@ -96,22 +109,33 @@ export function startForming(root: HTMLElement, onProgress?: (p: number) => void
     if (p === last) return;
     last = p;
 
-    // the window: a square of the mark's size growing until it covers the
-    // screen, eased so it leaves slowly and arrives slowly
-    const o = inOut(ramp(p, T.open[0], T.open[1]));
-    const side = 5 + (Math.max(w, h) - 5) * o;
-    const top = (h - side) / 2, left = (w - side) / 2;
-    win.style.clipPath = o >= 1 ? 'none' : `inset(${top.toFixed(1)}px ${left.toFixed(1)}px)`;
+    // the slot: from the mark's five pixels to its own size, both ways at
+    // once, so it is a growing rectangle and not a square that then stretches
+    const o = inOut(ramp(p, T.slot[0], T.slot[1]));
+    const cw = 5 + (sw - 5) * o, ch = 5 + (sh - 5) * o;
+    box.style.clipPath = o >= 1 ? 'none' : `inset(${((sh - ch) / 2).toFixed(1)}px ${((sw - cw) / 2).toFixed(1)}px)`;
+
+    // the ground: the light plane is the slot's opening — exactly, a pixel
+    // inside it, so no edge of it shows before its time — and from there it
+    // grows until its four edges have left the screen
+    const g = inOut(ramp(p, T.spread[0], T.spread[1]));
+    const k = 1 - g;
+    const ox = sx + (sw - cw) / 2 + 1, oy = sy + (sh - ch) / 2 + 1, ow = cw - 2, oh = ch - 2;
+    win.style.clipPath = g >= 1 ? 'none'
+      : `inset(${(oy * k).toFixed(1)}px ${((w - ox - ow) * k).toFixed(1)}px ${((h - oy - oh) * k).toFixed(1)}px ${(ox * k).toFixed(1)}px)`;
 
     // the frame
     const f = Math.round(ramp(p, T.play[0], T.play[1]) * (N - 1));
     if (f !== shown) { shown = f; draw(); }
 
-    // the lines: each rises in, holds, and leaves, in its own slot
+    // the line that names the section, and the four that follow. Each
+    // carries how present it is (--v) and where it is in its life (--t),
+    // so a line can pass through rather than only appear and go
+    title?.style.setProperty('--v', life(p, T.title).toFixed(3));
     beats.forEach((b, i) => {
       const at = T.beat + i * T.step;
-      const v = ramp(p, at - 0.05, at) * (1 - ramp(p, at + T.hold, at + T.hold + 0.05));
-      b.style.setProperty('--v', v.toFixed(3));
+      b.style.setProperty('--v', life(p, [at - 0.04, at, at + T.hold, at + T.hold + 0.04]).toFixed(3));
+      b.style.setProperty('--t', ramp(p, at - 0.04, at + T.hold + 0.04).toFixed(3));
     });
 
     onProgress?.(p);
