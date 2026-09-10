@@ -166,6 +166,13 @@ const grounds = ['light', 'dark', 'light'] as const;
      another, which is the same section read the long way. */
   .stack[data-live] { height: calc(var(--n) * 100svh); position: relative; }
   .stack[data-live] .studio { position: sticky; top: 0; height: 100svh; z-index: var(--z); }
+  /* Every panel has to be pinned at once, and sticky only pins a thing within
+     its own place in the flow — the second panel would not pin until a whole
+     screen had been scrolled, so the first would be cut away to reveal nothing
+     behind it. Pulling each one back over the last puts all three at the same
+     place in the flow, and the stack's own height is what holds the scroll
+     open. */
+  .stack[data-live] .studio + .studio { margin-top: -100svh; }
 
   /* ── a panel ─────────────────────────────────────────────────────────
      A screen each, its content pinned to the top and the foot with the
