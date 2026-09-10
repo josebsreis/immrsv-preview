@@ -20,8 +20,15 @@ export const HERO_CONFIG = {
   },
 
   renderer: {
-    dpr: 1.5,
-    dprMobile: 1.25,
+    /* The ceiling on device pixels drawn per CSS pixel. These are not a
+       quality setting so much as a match: a 2× display drawn at 1.5× is
+       stretched by a third and every point goes soft, which on a tablet
+       read as the whole hero being blurred the moment it loaded. Two is the
+       common Retina ratio, so nothing on a desktop or a tablet is scaled;
+       phones — three-times displays with small batteries — take a little
+       less, which at their size is not visible. */
+    dpr: 2,
+    dprMobile: 1.5,
     ground: 0x060606,             // must match --ground in tokens.css (dark)
     exposure: 1.1,
   },
