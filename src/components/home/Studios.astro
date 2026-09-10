@@ -185,7 +185,10 @@ const grounds = ['light', 'dark', 'light'] as const;
   .studio { min-height: 100svh; display: flex; flex-direction: column;
             justify-content: space-between; gap: var(--s-8);
             margin-inline: calc(var(--page-x) * -1);
-            padding: calc(var(--page-y) + 3vh) var(--page-x) var(--page-y);
+            /* the head clears the nav — its height, plus air — rather than the
+               page margin alone, because on a panel that fills the screen the
+               nav is sitting right on top of it */
+            padding: calc(var(--nav-y) * 2 + var(--pill-h) + 5vh) var(--page-x) var(--page-y);
             background: var(--ground); color: var(--ink); }
 
   .top, .foot { display: grid; grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
