@@ -3,24 +3,24 @@
 
    The usual stack has each panel ride up over the one before it. This
    is the other way round: all three are pinned to the top of the screen
-   with the first one covering, and scrolling draws it away to unveil
-   the one that was underneath all along. Nothing arrives; something is
-   removed. It is the same gesture the rest of the site is made of — a
-   clip opening — run backwards.
+   with the first one covering, and scrolling lifts it — the whole panel,
+   as one piece — up and off the top of the screen, so the one that was
+   underneath all along is simply there. Nothing arrives; something is
+   taken away, like the top card off a deck.
 
-   The panel is taken from its head down, the way a card is drawn up off
-   a deck: what survives longest is its foot, and the panel underneath
-   arrives name first. Taken the other way round it reads badly — the
-   leaving panel's name sits over the arriving panel's foot, so you meet
-   a studio's service list before you are told whose it is.
+   Each panel arrives by ordinary scrolling, sits whole for a moment
+   once it has hit the top, and then goes. It moves as a unit rather
+   than being masked: a mask leaves half of one panel over half of the
+   next, and the page reads as two studios at once.
 
    One value drives it: how far the stack has been scrolled, 0 to 1.
    ═══════════════════════════════════════════════════════════════════ */
 
 export interface StudioStack { destroy(): void }
 
-/** how much of each panel's turn is spent standing still before it goes */
-const HOLD = 0.42;
+/** how much of each panel's turn is spent standing whole, once it has hit
+ *  the top of the screen, before it is lifted away */
+const HOLD = 0.2;
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
@@ -38,8 +38,21 @@ export function createStudioStack(root: HTMLElement): StudioStack {
   let on = false;
   let last = -1, current = -1;
 
+  /* A panel that is pinned behind another never scrolls into view, so the
+     watcher that lifts everything else into place never sees it arrive and
+     its content stays at nothing. It is unfolded from here instead, the
+     moment the panel above it starts to lift — so it is settling as it is
+     exposed, not after. Once each; the class is the same one the watcher
+     would have given it. */
+  const unfolded = new Set<HTMLElement>();
+  const unfold = (panel: HTMLElement) => {
+    if (unfolded.has(panel)) return;
+    unfolded.add(panel);
+    panel.querySelectorAll<HTMLElement>('[data-rise]').forEach((el) => el.classList.add('in'));
+  };
+
   const clear = () => {
-    for (const el of panels) el.style.clipPath = '';
+    for (const el of panels) el.style.transform = '';
     root.removeAttribute('data-live');
     root.removeAttribute('data-theme');
   };
@@ -53,14 +66,16 @@ export function createStudioStack(root: HTMLElement): StudioStack {
     if (p === last) return;
     last = p;
 
-    /* Each panel but the last has a turn: it stands, then it is taken away
-       from its foot up. The turns are laid end to end across the stack's
-       whole travel, so the reveals are evenly spaced however many there are. */
+    /* Each panel but the last has a turn: it stands, then it is lifted off
+       the top of the screen, whole. The turns are laid end to end across the
+       stack's travel, so the handovers are evenly spaced however many there
+       are. The last panel never goes — the page scrolls on past it. */
     let top = n - 1;
     for (let i = 0; i < n - 1; i++) {
       const local = clamp01(p * (n - 1) - i);
       const leave = clamp01((local - HOLD) / (1 - HOLD));
-      panels[i].style.clipPath = leave <= 0 ? 'none' : `inset(${(leave * 100).toFixed(2)}% 0 0 0)`;
+      panels[i].style.transform = leave <= 0 ? '' : `translateY(${(-leave * 100).toFixed(2)}%)`;
+      if (leave > 0) unfold(panels[i + 1]);
       if (leave < 1 && top === n - 1) top = i;
     }
     // whichever is showing tells the nav what it is standing on: all three
@@ -111,9 +126,11 @@ export function createStudioStack(root: HTMLElement): StudioStack {
     for (let i = 0; i < n - 1; i++) {
       const local = clamp01(at * (n - 1) - i);
       const leave = clamp01((local - HOLD) / (1 - HOLD));
-      panels[i].style.clipPath = leave <= 0 ? 'none' : `inset(${(leave * 100).toFixed(2)}% 0 0 0)`;
+      panels[i].style.transform = leave <= 0 ? '' : `translateY(${(-leave * 100).toFixed(2)}%)`;
+      if (leave > 0) unfold(panels[i + 1]);
       if (leave < 1 && top === n - 1) top = i;
     }
+    unfold(panels[0]);
     root.dataset.theme = panels[top].dataset.panel ?? 'light';
   };
   if (import.meta.env.DEV) {

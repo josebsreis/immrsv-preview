@@ -12,8 +12,8 @@
  *  The grounds alternate — light, dark, light — so each panel arrives as its
  *  own place. And they are stacked rather than laid end to end: all three are
  *  pinned to the top of the screen with the first one covering, and scrolling
- *  draws it away to unveil the one beneath. Nothing arrives; something is
- *  removed (scripts/ui/studioStack.ts).
+ *  lifts it, whole, off the top to leave the one beneath. Nothing arrives;
+ *  something is taken away (scripts/ui/studioStack.ts).
  *
  *  The work is links now. Each frame opens the project it shows, which is why
  *  nothing in the reel follows the pointer — see scripts/ui/studioReel.ts. */
@@ -165,7 +165,8 @@ const grounds = ['light', 'dark', 'light'] as const;
      less motion — it is not a stack at all: the panels simply follow one
      another, which is the same section read the long way. */
   .stack[data-live] { height: calc(var(--n) * 100svh); position: relative; }
-  .stack[data-live] .studio { position: sticky; top: 0; height: 100svh; z-index: var(--z); }
+  .stack[data-live] .studio { position: sticky; top: 0; height: 100svh; z-index: var(--z);
+                              will-change: transform; }
   /* Every panel has to be pinned at once, and sticky only pins a thing within
      its own place in the flow — the second panel would not pin until a whole
      screen had been scrolled, so the first would be cut away to reveal nothing
