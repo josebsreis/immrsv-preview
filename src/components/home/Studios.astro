@@ -193,7 +193,10 @@ const grounds = ['light', 'dark', 'light'] as const;
 
   .top, .foot { display: grid; grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
                 column-gap: var(--s-8); }
-  .foot { align-items: end; }
+  /* the two columns are one height — the reel's — so the label at the head
+     of the list sits level with the reel's controls and the slab at its foot
+     sits level with the picture's bottom edge */
+  .foot { align-items: stretch; }
 
   /* the number and the name, one over the other and the same size: the panel
      says which of three it is before it says anything else */
@@ -236,9 +239,9 @@ const grounds = ['light', 'dark', 'light'] as const;
              transition: transform var(--dur-slow) var(--ease-out); }
 
   /* ── what it does ──────────────────────────────────────────────────── */
-  .does { display: flex; flex-direction: column; }
+  .does { display: flex; flex-direction: column; justify-content: space-between; }
   .tag { color: var(--ink-3); margin: 0 0 var(--s-4); }
-  .services { list-style: none; margin: 0 0 var(--s-5); padding: 0; }
+  .services { list-style: none; margin: 0; padding: 0; }
   /* a rule under each, the way the questions are ruled: a list of what is on
      offer reads as a list, where a row of pills reads as metadata */
   .services li { padding: var(--s-4) 0; font-size: var(--t-lead);
@@ -248,6 +251,7 @@ const grounds = ['light', 'dark', 'light'] as const;
   /* the way into the rest of it: the page's ink as a slab, its ground as the
      letters, so it inverts with the panel it is on */
   .all { position: relative; overflow: hidden; display: flex; align-items: center;
+         margin-top: var(--s-5);
          justify-content: space-between; gap: var(--s-5);
          padding: var(--s-5); background: var(--ink); color: var(--ground);
          border-radius: var(--radius); }
