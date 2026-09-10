@@ -8,7 +8,9 @@
  *  of the line stood.
  *
  *  It is the argument of the practice said once, in a picture: everything
- *  here is built before it exists. The studios that follow are the proof.
+ *  here is built before it exists. The four steps she passes are how that is
+ *  done — this section is the practice's method, which is why there is no
+ *  separate one. The studios that follow are the proof.
  *
  *  The pane starts on the dark half's own ground, so the seam where the
  *  light half rides up over the dark one never shows — what crosses the
@@ -21,7 +23,7 @@ interface Props {
   /** the two halves of the line, which part to make room for her */
   lead?: string;
   tail?: string;
-  steps?: { word: string; studio: string; line: string }[];
+  steps?: { word: string; line: string }[];
 }
 
 /** One mark for each step, drawn in the page's own language: hairline,
@@ -30,25 +32,25 @@ interface Props {
 const marks = [
   /* a plan, with the dimension line above it */
   '<rect x="3.5" y="9.5" width="17" height="11"/><path d="M3.5 5.5h17M3.5 4v3M20.5 4v3"/>',
-  /* the same thing, built: a wireframe solid */
+  /* built: a wireframe solid */
   '<path d="M12 2.5l8.5 4.75v9.5L12 21.5l-8.5-4.75v-9.5L12 2.5z"/><path d="M12 12l8.5-4.75M12 12L3.5 7.25M12 12v9.5"/>',
   /* the sun, the thing it falls on, and the shadow that proves it */
   '<circle cx="18" cy="6" r="2.6"/><path d="M15.6 8.4 12 12"/><rect x="4.5" y="11.5" width="7.5" height="9"/><path d="M12 20.5h7.5"/>',
-  /* shipped: a window, with a life after it */
+  /* delivered, and still running */
   '<rect x="3.5" y="5" width="17" height="14"/><path d="M3.5 9.5h17M6.5 7.2h1.2M9.5 7.2h1.2"/>',
 ];
 const {
   lead = 'Before it exists,',
   tail = "we've already built it.",
   steps = [
-    { word: 'Draw', studio: 'Architecture + Design',
-      line: 'Concept to construction drawings, modelled at real scale from the first sketch — so the decisions are made where they are still cheap to make.' },
-    { word: 'Model', studio: 'Creative Media',
-      line: 'Every surface built rather than painted on, from the same model the architects work in. Nothing is redrawn to flatter the project.' },
-    { word: 'Light', studio: 'Creative Media',
-      line: 'Real optics, real materials, and no flattery the building cannot deliver. Lit like a photograph, not like a render.' },
-    { word: 'Build', studio: 'Digital Products',
-      line: 'Sites, configurators and tools shipped and maintained — measured once real people are using them, not when they demo well.' },
+    { word: 'Understand',
+      line: 'What the project has to do, who moves through it and where the real constraint sits — settled before anything is drawn, while the decisions are still cheap to change.' },
+    { word: 'Build',
+      line: 'One team draws it, models it and builds it. Nothing is handed over halfway, so the drawing, the render and the interface stay the same idea throughout.' },
+    { word: 'Show',
+      line: 'The image is made from the model rather than around it. Real optics, real materials, and no flattery the thing cannot deliver.' },
+    { word: 'Refine',
+      line: 'We stay with it after delivery. What gets used tells us more than what got approved, and the work is corrected against that.' },
   ],
 } = Astro.props;
 ---

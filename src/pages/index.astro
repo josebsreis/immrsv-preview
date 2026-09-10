@@ -5,7 +5,6 @@ import Hero from '@components/hero/Hero.astro';
 import Marquee from '@components/home/Marquee.astro';
 import Manifesto from '@components/home/Manifesto.astro';
 import Studios from '@components/home/Studios.astro';
-import Process from '@components/home/Process.astro';
 import Testimonials from '@components/home/Testimonials.astro';
 import Brands from '@components/home/Brands.astro';
 import ProjectGrid from '@components/work/ProjectGrid.astro';
@@ -30,7 +29,10 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
       <Forming />
       <section class="next" id="work" data-next data-theme="light">
         <Studios content={home.studios} />
-        <Process content={home.process} />
+        {/* The process section is off the page: the handover above says the
+            same thing, in a picture, and saying it twice made the second one
+            read as filler. Component and content are both still here — put
+            <Process content={home.process} /> back to restore it. */}
         <Testimonials content={home.testimonials} />
         <header class="head">
           <span class="label">Selected work</span>
