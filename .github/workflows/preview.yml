@@ -1,0 +1,57 @@
+# The preview build: what is on main, published to GitHub Pages so it can be
+# opened on a phone. Pages serves a project site from /<repo>/, and the site is
+# written root-relative because that is where it will really live — so the
+# build is moved under that prefix on the way out (scripts/rebase.mjs) and
+# nothing in src has to know about it.
+name: Preview
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# what deploy-pages needs, and no more
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# one at a time, and a push while one is running wins
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # it tells us the sub-path the site will be served from
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Build
+        run: npm run build
+
+      - name: Move the build under the sub-path
+        run: node scripts/rebase.mjs "${{ steps.pages.outputs.base_path }}"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
