@@ -128,5 +128,14 @@ export interface HomeContent {
     intro: string;
     steps: Step[];
   };
+  /** what a client wants to know before they commit, and who to ask */
+  faqs: {
+    tag: string;
+    title: string;
+    /** the line under the founder's picture, and the way to reach him */
+    aside: string;
+    cta: Cta;
+    items: { q: string; a: string }[];
+  };
   featuredProject?: Project;
 }

@@ -6,6 +6,7 @@ import Marquee from '@components/home/Marquee.astro';
 import Manifesto from '@components/home/Manifesto.astro';
 import Studios from '@components/home/Studios.astro';
 import Testimonials from '@components/home/Testimonials.astro';
+import Faqs from '@components/home/Faqs.astro';
 import Brands from '@components/home/Brands.astro';
 import ProjectGrid from '@components/work/ProjectGrid.astro';
 import { getHome, getProjects } from '@lib/sanity/queries';
@@ -39,6 +40,7 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
           <a class="label all" href="/work" data-tap>All projects →</a>
         </header>
         <ProjectGrid projects={projects.slice(0, 6)} />
+        <Faqs content={home.faqs} person={home.about.founder} />
       </section>
     </div>
   </main>

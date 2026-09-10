@@ -124,8 +124,16 @@ export async function getHome(): Promise<HomeContent> {
         ...raw.about,
         founder: founder ? { ...founder, portrait: mapImage(founder.portrait) } : defaultHome.about.founder,
       },
+      /* the defaults first, so a field the studio has not filled in — its
+         heading, say — falls back rather than coming through undefined */
       studios: studioItems.length
-        ? { tag: raw.studios?.tag ?? defaultHome.studios.tag, intro: raw.studios?.intro ?? defaultHome.studios.intro, items: studioItems }
+        ? {
+            ...defaultHome.studios,
+            tag: raw.studios?.tag ?? defaultHome.studios.tag,
+            title: raw.studios?.title ?? defaultHome.studios.title,
+            intro: raw.studios?.intro ?? defaultHome.studios.intro,
+            items: studioItems,
+          }
         : defaultHome.studios,
       testimonials: raw.testimonials?.items?.length
         ? {
@@ -136,6 +144,9 @@ export async function getHome(): Promise<HomeContent> {
       process: raw.process?.steps?.length
         ? { ...defaultHome.process, ...raw.process }
         : defaultHome.process,
+      faqs: raw.faqs?.items?.length
+        ? { ...defaultHome.faqs, ...raw.faqs }
+        : defaultHome.faqs,
       brands: brandItems.length
         ? { tag: raw.brands?.tag ?? defaultHome.brands.tag, items: brandItems }
         : defaultHome.brands,

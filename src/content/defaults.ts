@@ -312,6 +312,42 @@ export const defaultHome: HomeContent = {
       },
     ],
   },
+  faqs: {
+    tag: 'FAQs',
+    title: "What you'll want to know before working with us.",
+    aside: 'Something not answered here?\nAsk Oscar directly.',
+    cta: { label: 'Book a call', href: '#contact' },
+    items: [
+      {
+        q: 'Who actually works on my project?',
+        a: 'Oscar leads every project — the drawings, the direction and the decisions — and he is who you speak to throughout.\n\nA small group of people he has worked with for years comes in where a project needs them. The team changes size; the standard does not.',
+      },
+      {
+        q: 'How long does a project take?',
+        a: 'A set of images is usually two to four weeks from the model being ready. A building drawn from concept to construction runs in months rather than weeks, and depends far more on approvals than on us.\n\nWe give a date at the start and tell you the moment it is at risk, which is earlier than most people expect to hear it.',
+      },
+      {
+        q: 'Can you do the drawings and the images, or only one?',
+        a: 'Either, and the reason to do both with us is that they come from the same model. Nothing is rebuilt to make a picture, so what is approved on screen is what the contractor is handed.\n\nPlenty of clients arrive with an architect already. We work to their drawings without complaint.',
+      },
+      {
+        q: 'What do you need from me to start?',
+        a: 'What the project has to do, whatever drawings or references already exist, and one person who can approve things.\n\nIf that is all still unsettled, say so — deciding it is the first part of the work, and it is cheaper to do at the start than halfway through.',
+      },
+      {
+        q: 'What happens after it is delivered?',
+        a: 'Files are yours, in the formats you can actually use, with nothing withheld.\n\nFor a site or a tool we stay with it — what people do with it once it is live tells us more than what was approved, and we correct against that.',
+      },
+      {
+        q: 'Do you work with clients outside your region?',
+        a: 'Most of the work is remote and always has been. Time zones are a scheduling problem, not a quality one.\n\nWhere a project needs someone on site we say so before it starts rather than after.',
+      },
+      {
+        q: 'What does a project cost?',
+        a: 'It depends on scope, and anyone who quotes before hearing the scope is guessing.\n\nTell us what you have in mind and you will get a fixed price against a written scope, not a rate card and an estimate that moves.',
+      },
+    ],
+  },
   process: {
     tag: 'Our process',
     title: 'How we work',

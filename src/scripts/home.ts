@@ -11,6 +11,7 @@ import { createMarquee } from './ui/marquee';
 import { createReel } from './ui/reel';
 import { createProcessRail } from './ui/processRail';
 import { createForming } from './ui/forming';
+import { createFaqs } from './ui/faqs';
 import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
 import { createHoverAudio } from './ui/hoverAudio';
@@ -52,6 +53,8 @@ onPage('home', () => {
   }
   const forming = document.querySelector<HTMLElement>('[data-forming]');
   if (forming) add(createForming(forming));
+  const faqs = document.querySelector<HTMLElement>('[data-faqs]');
+  if (faqs) add(createFaqs(faqs));
   const process = document.querySelector<HTMLElement>('[data-process]');
   if (process) add(createProcessRail(process));
   add(createDirectionalHover());
