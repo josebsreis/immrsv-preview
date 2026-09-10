@@ -6,8 +6,9 @@
    is exact. She is held in a slot — a portrait, 2:3, the way a
    character stands on a select screen — and the page arrives around
    her in two openings, both rectangles, both from the middle out:
-   first the mark grows into the slot, then the light ground grows from
-   the slot's edges to the screen. Nothing fades; things open.
+   first the mark grows into the light ground until it is the whole
+   screen, then, on that ground, a slot opens and she forms in it.
+   Nothing fades; things open.
 
    One value drives everything: progress through the track, 0 to 1.
    ═══════════════════════════════════════════════════════════════════ */
@@ -19,12 +20,12 @@ const SRC = (i: number) => `/forming/${String(i + 1).padStart(3, '0')}.avif`;
 
 /** where in the scroll each thing happens */
 const T = {
-  slot: [0.0, 0.18] as const,                 // the mark grows into the slot
-  title: [0.14, 0.2, 0.34, 0.4] as const,     // the line: in, held, out
-  spread: [0.34, 0.5] as const,               // the light ground grows to the screen
-  play: [0.04, 0.96] as const,                // the frames run
-  beat: 0.54,                                 // the first line lands here…
-  step: 0.13,                                 // …and the rest this far apart
+  spread: [0.0, 0.2] as const,                // the mark grows into the light ground
+  title: [0.12, 0.18, 0.3, 0.36] as const,    // the line: in, held, out
+  slot: [0.24, 0.34] as const,                // the slot opens, on the light
+  play: [0.3, 0.96] as const,                 // the frames run
+  beat: 0.42,                                 // the first line lands here…
+  step: 0.14,                                 // …and the rest this far apart
   hold: 0.07,                                 // how long a line stays
 };
 
@@ -113,16 +114,17 @@ export function startForming(root: HTMLElement, onProgress?: (p: number) => void
     // once, so it is a growing rectangle and not a square that then stretches
     const o = inOut(ramp(p, T.slot[0], T.slot[1]));
     const cw = 5 + (sw - 5) * o, ch = 5 + (sh - 5) * o;
-    box.style.clipPath = o >= 1 ? 'none' : `inset(${((sh - ch) / 2).toFixed(1)}px ${((sw - cw) / 2).toFixed(1)}px)`;
+    // nothing of it before its time: the mark it opens from is the light
+    // ground's, not a second dot on the dark
+    box.style.clipPath = o <= 0 ? 'inset(50%)' : o >= 1 ? 'none' : `inset(${((sh - ch) / 2).toFixed(1)}px ${((sw - cw) / 2).toFixed(1)}px)`;
 
-    // the ground: the light plane is the slot's opening — exactly, a pixel
-    // inside it, so no edge of it shows before its time — and from there it
-    // grows until its four edges have left the screen
+    // the ground: the light plane starts as the mark's five pixels at the
+    // middle of the screen and grows until its four edges have left it
     const g = inOut(ramp(p, T.spread[0], T.spread[1]));
     const k = 1 - g;
-    const ox = sx + (sw - cw) / 2 + 1, oy = sy + (sh - ch) / 2 + 1, ow = cw - 2, oh = ch - 2;
+    const ox = (w - 5) / 2, oy = (h - 5) / 2;
     win.style.clipPath = g >= 1 ? 'none'
-      : `inset(${(oy * k).toFixed(1)}px ${((w - ox - ow) * k).toFixed(1)}px ${((h - oy - oh) * k).toFixed(1)}px ${(ox * k).toFixed(1)}px)`;
+      : `inset(${(oy * k).toFixed(1)}px ${((w - ox - 5) * k).toFixed(1)}px ${((h - oy - 5) * k).toFixed(1)}px ${(ox * k).toFixed(1)}px)`;
 
     // the frame
     const f = Math.round(ramp(p, T.play[0], T.play[1]) * (N - 1));

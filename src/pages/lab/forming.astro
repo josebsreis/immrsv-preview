@@ -24,7 +24,7 @@ const beats = [
 
     <div class="track" data-track>
       <div class="pane" data-pane>
-        <!-- the light ground: a rectangle that starts as the slot and grows -->
+        <!-- the light ground: a rectangle that starts as the mark and grows -->
         <div class="window" data-window></div>
         <!-- the slot: a rectangle that starts as the mark and grows -->
         <div class="slot" data-box>
@@ -85,15 +85,13 @@ const beats = [
   .slot { position: absolute; left: var(--slot-x); top: 50%; translate: -50% -50%;
           height: var(--slot-h); aspect-ratio: 2 / 3;
           background: #ebeaec; overflow: hidden;
-          clip-path: inset(calc(50% - 2.5px)); }
+          clip-path: inset(50%); }
   /* the video's ground is a shade under the site's light one; lifted here so
      the two are one plane once the ground has spread */
   .slot canvas { display: block; filter: brightness(1.045); }
 
-  /* the line that names the section. It lands on the dark and is still
-     there when the light spreads past it, so it is drawn as the opposite of
-     whatever it is on rather than in a colour */
-  .title { position: absolute; margin: 0; white-space: nowrap; color: #fff; mix-blend-mode: difference;
+  /* the line that names the section, on the light */
+  .title { position: absolute; margin: 0; white-space: nowrap; color: #1d1d1f;
            font-size: var(--t-lead); font-weight: 500; letter-spacing: -0.01em;
            opacity: var(--v, 0); transform: translateY(calc((1 - var(--v, 0)) * 10px)); --v: 0; }
   /* under the slot when she is in the middle; beside her, where the lines
