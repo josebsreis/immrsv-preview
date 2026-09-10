@@ -114,6 +114,23 @@ h1, h2, h3 { font-weight: var(--w-title); }
 }
 .glass:hover { background-image: linear-gradient(var(--glass-hover), var(--glass-hover)); }
 
+/* The reel's instrument: two arrows and a count, then a hairline that fills
+   for the life of a slide, sitting over the thing it measures. The statement,
+   the client stories and the studios all carry it, and three copies had
+   already drifted apart by a property each — so it is one object, named for
+   the reel rather than left as `.track`, which the handover also uses for
+   something else entirely. */
+.reel-controls { display: flex; justify-content: space-between; align-items: center; }
+.reel-arrows { display: flex; gap: var(--s-4); }
+.reel-arrows button { font-size: var(--t-body); line-height: 1; color: var(--ink-3);
+                      background: none; border: 0; padding: 0; cursor: pointer;
+                      transition: color var(--dur-fast) ease; }
+.reel-arrows button:hover { color: var(--ink); }
+.reel-count { color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.reel-track { margin-top: var(--s-4); height: var(--hairline); background: var(--line); overflow: hidden; }
+.reel-track i { display: block; height: 100%; background: var(--ink);
+                transform-origin: left center; transform: scaleX(0); }
+
 /* a page-edge anchored row: hero bottom, etc. */
 .anchored { position: absolute; z-index: var(--z-ui); }
 

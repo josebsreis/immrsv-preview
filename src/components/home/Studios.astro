@@ -18,6 +18,7 @@
  *  The work is links now. Each frame opens the project it shows, which is why
  *  nothing in the reel follows the pointer — see scripts/ui/studioReel.ts. */
 import type { HomeContent } from '@lib/sanity/types';
+import Button from '@components/ui/Button.astro';
 import work from '../../content/work.generated.json';
 
 interface Props { content: HomeContent['studios']; }
@@ -97,14 +98,14 @@ const grounds = ['light', 'dark', 'light'] as const;
               <!-- the same instrument as the statement and the client stories:
                    the arrows and the count, then the bar, over the thing it
                    is measuring -->
-              <div class="controls">
-                <div class="arrows">
+              <div class="reel-controls">
+                <div class="reel-arrows">
                   <button type="button" data-reel-prev aria-label={`Previous ${s.name} project`} data-tap>&#8592;</button>
                   <button type="button" data-reel-next aria-label={`Next ${s.name} project`} data-tap>&#8594;</button>
                 </div>
-                <span class="count label"><span data-reel-now>01</span>/{String(shots.length).padStart(2, '0')}</span>
+                <span class="reel-count label"><span data-reel-now>01</span>/{String(shots.length).padStart(2, '0')}</span>
               </div>
-              <div class="track" aria-hidden="true"><i data-reel-fill></i></div>
+              <div class="reel-track" aria-hidden="true"><i data-reel-fill></i></div>
               <div class="band">
                 {shots.map((shot, k) => (
                   <a class="frame" href={`/work/${shot.slug}`} data-reel-frame data-tap
@@ -114,7 +115,7 @@ const grounds = ['light', 'dark', 'light'] as const;
                       <img src={`${shot.src}.webp`} alt={shot.name}
                            loading={k === 0 ? 'eager' : 'lazy'} decoding="async" />
                     </picture>
-                    <span class="cap label">{shot.name}</span>
+                    <span class="cap chip glass">{shot.name}</span>
                   </a>
                 ))}
               </div>
@@ -127,11 +128,7 @@ const grounds = ['light', 'dark', 'light'] as const;
               <ul class="services">
                 {s.services.map((x) => <li>{x}</li>)}
               </ul>
-              <a class="all" href={`/work?studio=${s.key}`} data-tap data-dhover-item data-axis="x">
-                <span class="tile" data-dhover-tile aria-hidden="true"></span>
-                <b>See all {s.name} work</b>
-                <i class="arrow" aria-hidden="true">&#8594;</i>
-              </a>
+              <Button class="all" href={`/work?studio=${s.key}`} label={`See all ${s.name} work`} wide />
             </div>
           </div>
         </section>
@@ -218,25 +215,10 @@ const grounds = ['light', 'dark', 'light'] as const;
   .frame { position: absolute; inset: 0; display: block; clip-path: inset(0 0 100% 0); }
   .frame:first-of-type { clip-path: inset(0 0 0 0); }
   .frame picture, .frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
-  /* the project's name, on the picture, so a click is never a guess */
-  .cap { position: absolute; left: var(--s-4); bottom: var(--s-4);
-         padding: 0.4rem 0.6rem; color: #fff; background: rgb(0 0 0 / 0.32);
-         -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-         border-radius: var(--radius); }
+  /* the project's name, on the picture, so a click is never a guess: the
+     site's chip, on the site's glass */
+  .cap { position: absolute; left: var(--s-4); bottom: var(--s-4); color: var(--ink); }
 
-  /* the controls the statement and the client stories use, so a bar and two
-     arrows read as one thing wherever they appear on the page */
-  .controls { display: flex; justify-content: space-between; align-items: center; }
-  .arrows { display: flex; gap: var(--s-4); }
-  .arrows button { font-size: var(--t-body); line-height: 1; color: var(--ink-3);
-                   background: none; border: 0; cursor: pointer;
-                   transition: color var(--dur-fast) ease; }
-  .arrows button:hover { color: var(--ink); }
-  .count { color: var(--ink-4); font-variant-numeric: tabular-nums; }
-  .track { margin: var(--s-4) 0; height: var(--hairline); background: var(--line); overflow: hidden; }
-  .track i { display: block; height: 100%; background: var(--ink);
-             transform-origin: left center; transform: scaleX(0);
-             transition: transform var(--dur-slow) var(--ease-out); }
 
   /* ── what it does ──────────────────────────────────────────────────── */
   .does { display: flex; flex-direction: column; justify-content: space-between; }
@@ -248,20 +230,8 @@ const grounds = ['light', 'dark', 'light'] as const;
                  line-height: var(--lh-title); color: var(--ink);
                  border-bottom: var(--hairline) solid var(--line); }
 
-  /* the way into the rest of it: the page's ink as a slab, its ground as the
-     letters, so it inverts with the panel it is on */
-  .all { position: relative; overflow: hidden; display: flex; align-items: center;
-         margin-top: var(--s-5);
-         justify-content: space-between; gap: var(--s-5);
-         padding: var(--s-5); background: var(--ink); color: var(--ground);
-         border-radius: var(--radius); }
-  .all b { font-weight: var(--w-ui); font-size: var(--t-body); }
-  .all .arrow { font-style: normal; transition: translate var(--dur-base) var(--ease-out); }
-  .all:hover .arrow { translate: 0.35rem 0; }
-  .all .tile { position: absolute; inset: 0; background: rgb(255 255 255 / 0.12);
-               transform: translateX(-100%); will-change: transform;
-               transition: transform var(--dur-base) var(--ease-panel); }
-  .all b, .all .arrow { position: relative; }
+  /* the way into the rest of it */
+  .all { margin-top: var(--s-5); }
 
   @media (max-width: 1099px) {
     .top, .foot { column-gap: var(--s-7); }

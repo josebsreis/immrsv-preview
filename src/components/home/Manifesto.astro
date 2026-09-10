@@ -15,14 +15,14 @@ const total = String(stats.length).padStart(2, '0');
 
     {stats.length > 0 && (
       <>
-        <div class="controls">
-          <div class="arrows">
+        <div class="reel-controls">
+          <div class="reel-arrows">
             <button type="button" data-stats-prev aria-label="Previous figure" data-tap>&#8592;</button>
             <button type="button" data-stats-next aria-label="Next figure" data-tap>&#8594;</button>
           </div>
-          <span class="count label"><span data-stats-index>01</span>/{total}</span>
+          <span class="reel-count label"><span data-stats-index>01</span>/{total}</span>
         </div>
-        <div class="track"><i data-stats-bar></i></div>
+        <div class="reel-track"><i data-stats-bar></i></div>
         <ul class="slides">
           {stats.map((s) => (
             <li class="slide" data-stat>
@@ -59,14 +59,6 @@ const total = String(stats.length).padStart(2, '0');
   .tag { display: block; color: var(--ink-3); margin-bottom: var(--s-5); }
   /* the same order the testimonials use: the controls, then the bar over
      what it measures */
-  .track { margin-top: var(--s-4); height: var(--hairline);
-           background: var(--line); overflow: hidden; }
-  .track i { display: block; height: 100%; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; }
-  .controls { display: flex; align-items: center; justify-content: space-between; }
-  .arrows { display: flex; gap: var(--s-4); }
-  .arrows button { font-size: var(--t-body); line-height: 1; color: var(--ink-3); transition: color var(--dur-fast) ease; }
-  .arrows button:hover { color: var(--ink); }
-  .count { color: var(--ink-4); font-variant-numeric: tabular-nums; }
 
   /* every slide in the same cell, so the block is as tall as the longest */
   .slides { list-style: none; display: grid; margin-top: var(--s-7); }
@@ -79,7 +71,7 @@ const total = String(stats.length).padStart(2, '0');
   /* no autoplay for a reader who asked for less motion — show them all */
   .reel[data-stats-still] .slides { grid-auto-flow: row; row-gap: var(--s-6); }
   .reel[data-stats-still] .slide { grid-area: auto; opacity: 1; filter: none; }
-  .reel[data-stats-still] .track, .reel[data-stats-still] .controls { display: none; }
+  .reel[data-stats-still] .reel-track, .reel[data-stats-still] .reel-controls { display: none; }
 
   /* ── the statement ────────────────────────────────────────────── */
   /* held to a readable measure rather than the width of the column */

@@ -33,14 +33,14 @@ const SIZES = '4rem';
            control at the top of a column, and as an afterthought under it. -->
       <div class="pane">
       <div class="step">
-        <div class="controls">
-          <div class="arrows">
+        <div class="reel-controls">
+          <div class="reel-arrows">
             <button type="button" data-stats-prev aria-label="Previous testimonial" data-tap>&#8592;</button>
             <button type="button" data-stats-next aria-label="Next testimonial" data-tap>&#8594;</button>
           </div>
-          <span class="count label"><span data-stats-index>01</span>/{total}</span>
+          <span class="reel-count label"><span data-stats-index>01</span>/{total}</span>
         </div>
-        <div class="track"><i data-stats-bar></i></div>
+        <div class="reel-track"><i data-stats-bar></i></div>
       </div>
 
       <nav class="names" aria-label="Testimonials">
@@ -157,16 +157,6 @@ const SIZES = '4rem';
      bar, and the bar sits directly over the list it is measuring. It used to
      be the other way about, which left the bar between two things it had
      nothing to do with. */
-  .track { margin-top: var(--s-4); height: var(--hairline);
-           background: var(--line); overflow: hidden; }
-  .track i { display: block; height: 100%; background: var(--ink);
-             transform-origin: left center; transform: scaleX(0); }
-  .controls { display: flex; justify-content: space-between; align-items: center; }
-  .arrows { display: flex; gap: var(--s-4); }
-  .arrows button { font-size: var(--t-body); line-height: 1; color: var(--ink-3);
-                   transition: color var(--dur-fast) ease; }
-  .arrows button:hover { color: var(--ink); }
-  .count { color: var(--ink-4); font-variant-numeric: tabular-nums; }
 
   /* ── what they said ───────────────────────────────────────────────── */
   /* every slide is stacked on the same cell, so the section keeps one height
