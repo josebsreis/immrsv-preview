@@ -8,10 +8,9 @@ import Studios from '@components/home/Studios.astro';
 import Testimonials from '@components/home/Testimonials.astro';
 import Faqs from '@components/home/Faqs.astro';
 import Brands from '@components/home/Brands.astro';
-import ProjectGrid from '@components/work/ProjectGrid.astro';
-import { getHome, getProjects } from '@lib/sanity/queries';
+import { getHome } from '@lib/sanity/queries';
 
-const [home, projects] = await Promise.all([getHome(), getProjects()]);
+const home = await getHome();
 ---
 <Base theme="dark">
   <main class="main" data-page="home">
@@ -35,11 +34,9 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
             read as filler. Component and content are both still here — put
             <Process content={home.process} /> back to restore it. */}
         <Testimonials content={home.testimonials} />
-        <header class="head">
-          <span class="label">Selected work</span>
-          <a class="label all" href="/work" data-tap>All projects →</a>
-        </header>
-        <ProjectGrid projects={projects.slice(0, 6)} />
+        {/* No grid of selected work here: each studio panel already carries
+            its own projects and a way into the rest of them, so a second set
+            of the same pictures under the client stories only repeated them. */}
         <Faqs content={home.faqs} person={home.about.founder} />
       </section>
     </div>
@@ -64,8 +61,4 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
      the page and the studios pick it up at their first pixel — two vh here is
      a visible break in a line that is meant to be one */
   .next { background: var(--ground); color: var(--ink); padding: 0 var(--page-x) 12vh; }
-  .head { display: flex; justify-content: space-between; align-items: baseline;
-          padding-top: var(--s-6); margin-bottom: var(--s-7); color: var(--ink-3);
-          border-top: var(--hairline) solid var(--line); }
-  .all { color: var(--ink); }
 </style>
