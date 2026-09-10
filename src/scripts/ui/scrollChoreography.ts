@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    The homepage's scroll story: the veil that dims the mark as the hero
    leaves; the statement read a character at a time; the rule drawing
-   across; the square field spreading at the end of the dark half; and the
-   nav following whichever ground it is over.
+   across; the thread that carries the handover down into the studios; and
+   the nav following whichever ground it is over.
    ═══════════════════════════════════════════════════════════════════ */
 import type { Hero } from '../hero';
 
@@ -19,6 +19,12 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
   const veil = document.querySelector<HTMLElement>('[data-veil]');
   const readable = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal-words]'));
   const rule = document.querySelector<HTMLElement>('[data-rule]');
+  /* The hairline that runs from under the figure down through the studios'
+     name to the first studio. It is drawn from the scroll rather than lifted
+     into place on arrival: a line that appears all at once is a divider, and
+     one that draws downward as you go is the page carrying on. */
+  const threads = Array.from(document.querySelectorAll<HTMLElement>('[data-thread]'));
+  const drawn: string[] = threads.map(() => '');
   const field = document.querySelector<HTMLElement>('[data-square-field]');
   const next = document.querySelector<HTMLElement>('[data-next]');
   /* Anything that lifts into place is watched by the browser rather than
@@ -99,6 +105,15 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
     }
 
     if (rule) rule.classList.toggle('in', rule.getBoundingClientRect().top < vh * 0.88);
+
+    // each thread is full by the time its foot reaches the same line the rule
+    // answers to, and empty until its head gets there
+    for (let i = 0; i < threads.length; i++) {
+      const el = threads[i];
+      const p = clamp01((vh * 0.88 - el.getBoundingClientRect().top) / Math.max(1, el.offsetHeight));
+      const q = (Math.round(p * 100) / 100).toFixed(2);
+      if (q !== drawn[i]) { drawn[i] = q; el.style.setProperty('--draw', q); }
+    }
 
     // how far the light half has climbed over the held one: 0 as its head
     // reaches the bottom of the screen, 1 once it owns the whole of it
