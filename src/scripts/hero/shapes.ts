@@ -166,7 +166,7 @@ export const SHAPES: readonly ShapeDef[] = [TREE, FIGURE, SCREEN];
 /* ── sampling ─────────────────────────────────────────────────────── */
 
 /** the mark's pivot: shapes are centred here so they turn on the spot */
-const PIVOT = 1 / 3;
+export const PIVOT = 1 / 3;
 /** the height a form's foot sits at, in the mark's own coordinates */
 export const formFloor = (def: ShapeDef) => PIVOT + def.lift * def.scale;
 

@@ -1,14 +1,23 @@
 ---
 import ProjectCard from './ProjectCard.astro';
 import type { Project } from '@lib/sanity/types';
-interface Props { projects: Project[]; }
-const { projects } = Astro.props;
+interface Props { projects: Project[]; /** how many across on a full screen */ columns?: number; }
+const { projects, columns = 3 } = Astro.props;
 ---
-<div class="grid">
-  {projects.map((p, i) => <ProjectCard project={p} eager={i < 2} />)}
+<div class="grid" data-filter-grid style={`--cols: ${columns}`}>
+  {projects.map((p, i) => <ProjectCard project={p} eager={i < columns} />)}
 </div>
 
 <style>
-  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s-7) var(--s-6); }
-  @media (max-width: 719px) { .grid { grid-template-columns: 1fr; gap: var(--s-6); } }
+
+  /* three across by default, and the parent can ask for a different number.
+     It gives up a column at a time on the way down rather than jumping
+     straight to one, so the cards never grow to fill half a screen. */
+  /* the rows are wider than the columns because a caption sits in them: the
+     channel between two pictures is --gap-media, the space under a name is
+     not the same thing */
+  .grid { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+          gap: var(--s-5) var(--gap-media); }
+  @media (max-width: 1099px) { .grid { grid-template-columns: repeat(min(var(--cols, 3), 2), minmax(0, 1fr)); } }
+  @media (max-width: 719px) { .grid { grid-template-columns: 1fr; gap: var(--s-5); } }
 </style>

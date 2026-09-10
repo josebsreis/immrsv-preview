@@ -17,12 +17,18 @@ const runs = [0, 1];
     {runs.map(() => (
       <div class="run">
         {items.map((item) => (
-          <span class="item"><span class="dot"></span>{item}</span>
+          <span class="item">
+            <span class="pips" aria-hidden="true">
+              <i class="sq"></i><i class="sq"></i><i class="sq"></i>
+              <i class="sq"></i><i class="sq"></i><i class="sq"></i>
+            </span>
+            {item}
+          </span>
         ))}
       </div>
     ))}
   </div>
-  <p class="sr">{items.join(', ')}.</p>
+  <p class="visually-hidden">{items.join(', ')}.</p>
 </section>
 
 <style>
@@ -47,24 +53,63 @@ const runs = [0, 1];
   .item { display: flex; align-items: center; gap: 1.5em;
           padding-right: 1.5em;
           font-size: clamp(1.5rem, 4vw, 3rem);
-          font-weight: 500; letter-spacing: -0.02em; line-height: 1;
+          font-weight: var(--w-title); letter-spacing: var(--track-display); line-height: 1;
           white-space: nowrap; color: var(--ink-2); }
-  /* the squares of the lattice, at the scale of a word. They stand on their
-     corner when the band turns round — a square rotated by anything but 45°
-     is a square, so this is the one angle that shows */
-  .dot { flex: none; width: 0.26em; height: 0.26em; background: var(--ink-4);
-         transition: transform 0.5s cubic-bezier(0.625, 0.05, 0, 1), background-color 0.5s ease; }
-  [data-marquee-status="inverted"] .dot { transform: rotate(45deg); background: var(--ink-2); }
+  /* Six of the site's square rather than one blown up to the size of a word:
+     the marker is --square everywhere it appears, and a word-high one here was
+     the only place it was not. Laid out on a grid they make a double chevron
+     — « — which points the way the band is running, so the mark says what it
+     is for instead of merely sitting between two words.
+
+         · X · X        columns 2 and 4 hold the two backs,
+         X · X ·        columns 1 and 3 the two points
+         · X · X
+
+     Reading down runs the band left and it points left; reading back up turns
+     the band round and the whole cluster mirrors. That is the entire state:
+     one scaleX, which is what a chevron changing sides actually is.
+
+     A pulse runs back-to-point, and needs no second version for the mirrored
+     state — the flip carries the squares' identities with their positions, so
+     the same order still reads tail first. */
+  .pips { flex: none; display: grid;
+          grid-template-columns: repeat(4, var(--square));
+          grid-template-rows: repeat(3, var(--square));
+          gap: 0.1875rem;
+          color: var(--ink-4);
+          transform: scaleX(1); transform-origin: center;
+          transition: transform 0.5s cubic-bezier(0.625, 0.05, 0, 1),
+                      color 0.5s ease; }
+  /* the near chevron */
+  .pips .sq:nth-child(1) { grid-area: 1 / 2; }
+  .pips .sq:nth-child(2) { grid-area: 2 / 1; }
+  .pips .sq:nth-child(3) { grid-area: 3 / 2; }
+  /* and the one behind it */
+  .pips .sq:nth-child(4) { grid-area: 1 / 4; }
+  .pips .sq:nth-child(5) { grid-area: 2 / 3; }
+  .pips .sq:nth-child(6) { grid-area: 3 / 4; }
+
+  .pips .sq { animation: glimmer 2.2s ease-in-out infinite; }
+  /* the back one lights first, then the point */
+  .pips .sq:nth-child(n + 4) { animation-delay: 0s; }
+  .pips .sq:nth-child(-n + 3) { animation-delay: 0.22s; }
+
+  /* turned round: the chevron mirrors and comes up a shade */
+  [data-marquee-status="inverted"] .pips { transform: scaleX(-1); color: var(--ink-2); }
+
+  @keyframes glimmer {
+    0%, 45%, 100% { opacity: 0.42; }
+    18% { opacity: 1; }
+  }
 
   @keyframes run { to { transform: translateX(-50%); } }
 
   /* nothing moves for a reader who asked for less; the band still separates */
   @media (prefers-reduced-motion: reduce) {
     .track { animation: none; }
+    .pips .sq { animation: none; opacity: 0.7; }
   }
 
   @media (max-width: 719px) { .band { margin: calc(8vh - var(--page-y)) 0 8vh; } }
 
-  .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
-        overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 </style>

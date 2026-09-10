@@ -1,18 +1,190 @@
 ---
+/** The foot of every page: a black band, the invitation, the ways in, and
+ *  the name drawn once at full width.
+ *
+ *  PLACEHOLDER. The shape is right, but the address, the number and the
+ *  accounts are stand-ins until the client sends the real ones — everything
+ *  marked below is meant to be replaced, not kept. */
+import Button from '@components/ui/Button.astro';
 import { site } from '@lib/site';
+import mark from '../../content/wordmark.generated.json';
+
 const year = new Date().getFullYear();
+
+/* placeholder — the practice's own accounts and details */
+const social = [
+  { label: 'LinkedIn', href: '#' },
+  { label: 'Instagram', href: '#' },
+  { label: 'Behance', href: '#' },
+  { label: 'Dribbble', href: '#' },
+];
+const enquiry = [
+  { k: 'E', label: 'hello@immrsv.studio', href: 'mailto:hello@immrsv.studio' },
+  { k: 'P', label: '+1 (310) 000 0000', href: 'tel:+13100000000' },
+];
+const acts = [
+  { label: 'Discuss your project', href: 'mailto:hello@immrsv.studio' },
+  { label: 'Book a 30-minute call', href: 'mailto:hello@immrsv.studio' },
+];
+
+/** the name, worked out from the artwork by scripts/wordmark.mjs */
+const { cols, lines } = mark as { cols: number; rows: number; lines: { y: number; runs: [number, number][] }[] };
+/* The raster is the artwork's own box, which has air above and below the
+   letters; the box drawn here is the ink only, so the name can sit on the
+   foot of the page with nothing under it. */
+const top = lines[0].y;
+const bottom = lines[lines.length - 1].y + 1;
+const tall = bottom - top;
+/** a line is thinner than its row, which is what leaves the gaps between them */
+const WEIGHT = 0.52;
 ---
-<footer class="footer" id="contact" data-theme="light">
-  <div class="row">
-    <span class="label">{site.name}</span>
-    <a class="label" href="mailto:hello@immrsv.studio" data-tap>hello@immrsv.studio</a>
-    <span class="label muted">© {year}</span>
+<footer class="footer" id="contact" data-theme="dark">
+  <div class="top">
+    <span class="label">Let's build something that lasts.</span>
+    <span class="label when" data-clock aria-hidden="true"></span>
+  </div>
+
+  <div class="invite">
+    <h2 class="ask">Ready to build<br />something that lasts?</h2>
+    <div class="acts">
+      {acts.map((a) => <Button href={a.href} label={a.label} />)}
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="col say">
+      <span class="label muted">© {site.name} {year}</span>
+      <span class="label muted">Architecture · Creative media · Digital products</span>
+    </div>
+    <div class="col">
+      <span class="label head">Business enquiry</span>
+      <ul>
+        {enquiry.map((e) => (
+          <li><span class="k">{e.k}.</span><a href={e.href} data-tap>{e.label}</a></li>
+        ))}
+      </ul>
+    </div>
+    <div class="col">
+      <span class="label head">Social</span>
+      <ul class="pairs">
+        {social.map((sx) => <li><a href={sx.href} data-tap>{sx.label}</a></li>)}
+      </ul>
+    </div>
+  </div>
+
+  <!-- the name, one row of lines at a time; the cursor combs it -->
+  <div class="mark" data-wordmark-lines data-rows={tall} data-top={top}>
+    <svg viewBox={`0 ${top} ${cols} ${tall}`} role="img" aria-label={site.name} preserveAspectRatio="xMidYMid meet">
+      {lines.map((row) => (
+        <g data-line={row.y} style={`--i: ${row.y}`}>
+          {row.runs.map(([x, w]) => (
+            <rect x={x} y={row.y + (1 - WEIGHT) / 2} width={w} height={WEIGHT} />
+          ))}
+        </g>
+      ))}
+    </svg>
   </div>
 </footer>
 
+<script>
+  import { createWordmarkLines } from '../../scripts/ui/wordmarkLines';
+
+  /* The footer is on every page, so it wires itself rather than waiting for a
+     page's own entry — and it has to unwire itself too. The footer is not
+     persisted across a navigation, so without this the mark's loop would go
+     on writing to a discarded element and a second loop would start beside
+     it on the next page. */
+  let mark: { destroy(): void } | null = null;
+  let clock: ReturnType<typeof setInterval> | undefined;
+
+  const start = () => {
+    const el = document.querySelector<HTMLElement>('[data-wordmark-lines]');
+    mark = el ? createWordmarkLines(el) : null;
+
+    const face = document.querySelector<HTMLElement>('[data-clock]');
+    if (!face) return;
+    const tick = () => {
+      const t = new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit', minute: '2-digit', timeZone: 'America/Los_Angeles',
+      }).format(new Date());
+      face.textContent = `Los Angeles → ${t}`;
+    };
+    tick();
+    clock = setInterval(tick, 30_000);
+  };
+
+  const stop = () => {
+    mark?.destroy();
+    mark = null;
+    if (clock) clearInterval(clock);
+  };
+
+  document.addEventListener('astro:page-load', start);
+  document.addEventListener('astro:before-swap', stop);
+</script>
+
 <style>
   /* over the hero's fixed canvases, which live inside main */
-  .footer { position: relative; z-index: var(--z-ui); background: var(--ground); color: var(--ink); padding: var(--s-8) var(--page-x) var(--s-6); border-top: var(--hairline) solid var(--line); }
-  .row { display: flex; justify-content: space-between; gap: var(--s-4); flex-wrap: wrap; }
-  .muted { color: var(--ink-3); }
+  /* A screen of its own on a desktop: the invitation at the top, the details
+     at the foot, and the name filling what is left. `min-height` rather than
+     `height` so a long address list grows it instead of overflowing. */
+  .footer { position: relative; z-index: var(--z-ui);
+            background: var(--ground); color: var(--ink);
+            padding: var(--s-8) var(--page-x) 0;
+            display: flex; flex-direction: column; }
+  @media (min-width: 860px) { .footer { min-height: 100vh; } }
+
+  .top { display: flex; justify-content: space-between; gap: var(--s-4);
+         color: var(--ink-3); }
+  .when { font-variant-numeric: tabular-nums; color: var(--ink-4); }
+
+  /* the question, and the two ways in directly under it — they answer it, so
+     they read better beneath it than sent to the far side of the page */
+  .invite { margin-top: var(--s-8); }
+  .ask { font-size: var(--t-h2); font-weight: var(--w-display);
+         line-height: var(--lh-display); letter-spacing: var(--track-display); }
+
+  /* the site's own button — the same slab the hero offers, with the square
+     that walks to the far end of it */
+  .acts { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-top: var(--s-6); }
+
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, minmax(0, 14rem));
+          gap: var(--s-6) var(--s-7); margin-top: auto; padding-top: var(--s-8);
+          align-items: start; }
+  .col { display: grid; gap: var(--s-4); align-content: start; }
+  .say { gap: var(--s-3); }
+  .head { color: var(--ink-4); }
+  .muted { color: var(--ink-4); }
+  .col ul { list-style: none; display: grid; gap: 0.55rem; }
+  .pairs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem var(--s-4); }
+  .col li { display: flex; gap: 0.5em; font-size: var(--t-body); color: var(--ink-2); }
+  .k { color: var(--ink-4); }
+  .col a { color: var(--ink-2); transition: color var(--dur-fast) ease; }
+  .col a:hover { color: var(--ink); }
+
+  /* ── the name ─────────────────────────────────────────────────────── */
+  /* It is the last thing on the page and the largest, so it is given the
+     page's full width and nothing else. Each row is its own group, moved by
+     a single custom property the loop writes — no element is rebuilt and no
+     layout is read while it runs. */
+  .mark { margin-top: var(--s-8); }
+  .mark svg { display: block; width: 100%; height: auto; fill: var(--ink); }
+  .mark g { transform: translateX(calc(var(--dx, 0) * 1px)); }
+
+  /* on a screen that cannot hover the rows arrive instead, one after another */
+  .mark g { opacity: 0; transition: opacity var(--dur-slow) var(--ease-out); }
+  .mark[data-in] g { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mark g { transition: none; }
+    .act::after { transition: none; }
+  }
+
+  @media (max-width: 859px) {
+    .footer { padding-top: var(--s-7); }
+    .top { flex-direction: column; gap: var(--s-2); }
+    .acts { flex-direction: column; align-items: flex-start; gap: var(--s-3); }
+    .cols { grid-template-columns: 1fr; gap: var(--s-6); padding-top: 10vh; }
+    .mark { margin-top: 10vh; }
+  }
 </style>

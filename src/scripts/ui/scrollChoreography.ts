@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    The homepage's scroll story: the veil that dims the mark as the hero
    leaves; the statement read a character at a time; the rule drawing
-   across; the shutter's rows closing at the end of the dark half; and the
+   across; the square field spreading at the end of the dark half; and the
    nav following whichever ground it is over.
    ═══════════════════════════════════════════════════════════════════ */
 import type { Hero } from '../hero';
@@ -9,22 +9,18 @@ import type { Hero } from '../hero';
 export interface ScrollChoreography { update(): void; destroy(): void; }
 
 const REVEAL_BAND = 0.2;      // how much of a passage is mid-transition at once
-const ROW_STAGGER = 0.55;     // how much of the shutter's run is spent handing over
 const HOLD_DRIFT = 0.22;      // how far the held half creeps up as the next one climbs, in screens
 const HOLD_SHADE = 0.62;      // how far it is put out by the time it is covered
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
-const smooth = (u: number) => u * u * (3 - 2 * u);
 
 /** The hero is loaded late, so it is read through a getter rather than held. */
 export function createScrollChoreography(getHero: () => Hero | null): ScrollChoreography {
   const veil = document.querySelector<HTMLElement>('[data-veil]');
   const readable = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal-words]'));
   const rule = document.querySelector<HTMLElement>('[data-rule]');
-  const shutter = document.querySelector<HTMLElement>('[data-shutter-scroll]');
-  const rows = shutter ? (Array.from(shutter.children) as HTMLElement[]) : [];
+  const field = document.querySelector<HTMLElement>('[data-square-field]');
   const next = document.querySelector<HTMLElement>('[data-next]');
-  const themed = document.querySelectorAll<HTMLElement>('[data-theme-follows]');
   /* Anything that lifts into place is watched by the browser rather than
      measured on every scroll: it reports the moment an element crosses the
      lower part of the screen, whether or not a scroll event ever reached us,
@@ -35,11 +31,15 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
   document.querySelectorAll<HTMLElement>('[data-rise]').forEach((el) => rising.observe(el));
   const hold = document.querySelector<HTMLElement>('[data-hold]');
   const scrim = document.querySelector<HTMLElement>('[data-scrim]');
-  const light = document.querySelector<HTMLElement>('[data-shutter-scroll]')?.parentElement ?? null;
+  /* the light half is whatever holds the field: its head is the field's head,
+     so one measurement answers for both */
+  const light = field?.parentElement ?? null;
 
   // sticky with a negative top: the block scrolls normally until its end meets
   // the bottom of the screen, then holds there while the next half rides over
   let holdTop = 0;
+  /** the last value written to the field, so an unchanged frame writes nothing */
+  let front = '';
   const fitHold = () => {
     if (!hold) return;
     holdTop = Math.min(0, innerHeight - hold.offsetHeight);
@@ -107,26 +107,21 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
     if (hold) hold.style.top = (holdTop - over * vh * HOLD_DRIFT).toFixed(1) + 'px';
     if (scrim) scrim.style.opacity = (over * HOLD_SHADE).toFixed(3);
 
-    // The shutter: the curtain closes while the section itself is arriving. It
-    // begins the instant the band crosses the bottom of the screen and is done
-    // as it clears the top, so the first slat of white shows the moment the
-    // dark half starts to hold. Timing it against the band's own height meant
-    // half a screen of scrolling with the shutter already on the page and
-    // every row still shut — the change in scrolling with nothing to show for
-    // it. The rows fill from the foot upward, so the white climbs.
-    if (shutter && rows.length > 1) {
-      const r = shutter.getBoundingClientRect();
-      const p = clamp01((vh - r.top) / vh);
-      const n = rows.length;
-      for (let k = 0; k < n; k++) {
-        const start = ((n - 1 - k) / (n - 1)) * ROW_STAGGER;
-        const u = clamp01((p - start) / (1 - ROW_STAGGER));
-        rows[k].style.transform = `scaleY(${smooth(u).toFixed(4)})`;
-      }
-      // the nav takes the ground it is standing on
-      const onLight = r.top <= vh * 0.06 || (next ? next.getBoundingClientRect().top <= vh * 0.06 : false);
-      themed.forEach((el) => { el.dataset.theme = onLight ? 'light' : 'dark'; });
+    // The field: it spreads while the section itself is arriving, and it is
+    // handed the same number the held half is going out on, because the two
+    // are one movement — the dark leaving as the light assembles. One property
+    // for the whole grid; the cells work out their own part of it in CSS.
+    // Written in steps rather than continuously: a frame that has not moved
+    // the front by a hundredth of its run has nothing to redraw, and this
+    // invalidates a few hundred elements each time it changes.
+    if (field) {
+      const p = (Math.round(over * 200) / 200).toFixed(3);
+      if (p !== front) { front = p; field.style.setProperty('--p', p); }
     }
+
+    /* the nav's colour is not decided here: it reads the section under it,
+       wherever it is, which is the only way it can also answer to the black
+       footer at the end of a white page (scripts/lifecycle) */
   }
 
   const onResize = () => { fitHold(); update(); };

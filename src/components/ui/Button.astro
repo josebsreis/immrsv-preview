@@ -18,18 +18,18 @@ const { href, label, class: cls } = Astro.props;
     position: relative; overflow: hidden;
     display: inline-flex; align-items: center;
     height: 2.375rem; padding: 0 var(--pr) 0 var(--pl);
-    font-size: var(--t-caption); letter-spacing: var(--track-label); text-transform: uppercase;
+    font-size: var(--t-caption); letter-spacing: var(--track-caps); text-transform: uppercase;
     color: var(--ink);
     transition: scale 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
   /* the panel replaces the plain background change; a slab this short only
      reads the horizontal edges, so the item is pinned to the x axis */
-  .btn:hover { background: var(--glass); }
+  .btn:hover { background-image: linear-gradient(var(--glass), var(--glass)); }
   .tile { position: absolute; inset: 0; background: var(--glass-hover);
           transform: translateX(-100%); will-change: transform;
-          transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+          transition: transform var(--dur-base) var(--ease-panel); }
   .btn:active { scale: 0.97; }
-  .btn b { position: relative; font-weight: 500; white-space: nowrap; }
+  .btn b { position: relative; font-weight: var(--w-ui); white-space: nowrap; }
   .btn .sq { position: absolute; left: var(--gap); top: 50%; margin-top: calc(var(--square) / -2); transition: left 0.66s 0.05s var(--ease-snap); }
   .btn :global(.ch) { display: inline-block; white-space: pre; transition: translate 0.66s calc(var(--i) * 0.016s + 0.05s) var(--ease-snap); }
   @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {

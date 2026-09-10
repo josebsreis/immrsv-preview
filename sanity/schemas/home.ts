@@ -78,6 +78,55 @@ export const home = defineType({
         }),
       ],
     }),
+    defineField({
+      name: 'testimonials',
+      title: 'Client stories',
+      type: 'object',
+      description: 'One at a time, on a reel. The words are the client\'s — do not edit them for length.',
+      fields: [
+        defineField({ name: 'tag', title: 'Heading', type: 'string', initialValue: 'Client stories' }),
+        defineField({
+          name: 'items',
+          type: 'array',
+          of: [{
+            type: 'object',
+            fields: [
+              defineField({ name: 'label', type: 'string',
+                description: 'What the chooser on the left calls this one — a word from the quote itself. Falls back to the name.' }),
+              defineField({ name: 'quote', type: 'text', rows: 5 }),
+              defineField({ name: 'name', type: 'string' }),
+              defineField({ name: 'role', type: 'string', description: 'e.g. "Principal | Wolcott Architecture"' }),
+              defineField({ name: 'portrait', type: 'image', options: { hotspot: true },
+                fields: [defineField({ name: 'alt', type: 'string', title: 'Alt text' })] }),
+            ],
+            preview: { select: { title: 'name', subtitle: 'role', media: 'portrait' } },
+          }],
+        }),
+      ],
+    }),
+    defineField({
+      name: 'process',
+      title: 'How we work',
+      type: 'object',
+      description: 'Read one step at a time as the section is scrolled. Three or four steps; more and the bar has nothing left to say between them.',
+      fields: [
+        defineField({ name: 'tag', type: 'string', initialValue: 'Our process' }),
+        defineField({ name: 'title', type: 'string', initialValue: 'How we work' }),
+        defineField({ name: 'intro', type: 'text', rows: 2, description: 'A line break here is kept.' }),
+        defineField({
+          name: 'steps',
+          type: 'array',
+          of: [{
+            type: 'object',
+            fields: [
+              defineField({ name: 'title', type: 'string' }),
+              defineField({ name: 'body', type: 'text', rows: 4 }),
+            ],
+            preview: { select: { title: 'title', subtitle: 'body' } },
+          }],
+        }),
+      ],
+    }),
     defineField({ name: 'featuredProject', type: 'reference', to: [{ type: 'project' }] }),
   ],
   preview: { prepare: () => ({ title: 'Homepage' }) },

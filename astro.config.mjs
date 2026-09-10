@@ -29,5 +29,15 @@ export default defineConfig({
   ],
   vite: {
     ssr: { noExternal: ['three'] },
+    build: {
+      /* What the CSS is minified for. Without it the minifier assumes a
+         browser set that needs no vendor prefixes and collapses a
+         prefixed/standard pair down to one — which quietly cost us the blur
+         on the glass: it kept whichever of -webkit-backdrop-filter and
+         backdrop-filter came last, so one engine or the other lost it.
+         Safari below 18 wants the prefix and Firefox only takes the standard
+         property, so both have to survive. */
+      cssTarget: ['chrome100', 'safari15', 'firefox103', 'edge100'],
+    },
   },
 });

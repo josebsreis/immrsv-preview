@@ -15,7 +15,6 @@ const total = String(stats.length).padStart(2, '0');
 
     {stats.length > 0 && (
       <>
-        <div class="track"><i data-stats-bar></i></div>
         <div class="controls">
           <div class="arrows">
             <button type="button" data-stats-prev aria-label="Previous figure" data-tap>&#8592;</button>
@@ -23,6 +22,7 @@ const total = String(stats.length).padStart(2, '0');
           </div>
           <span class="count label"><span data-stats-index>01</span>/{total}</span>
         </div>
+        <div class="track"><i data-stats-bar></i></div>
         <ul class="slides">
           {stats.map((s) => (
             <li class="slide" data-stat>
@@ -47,7 +47,7 @@ const total = String(stats.length).padStart(2, '0');
 </section>
 
 <style>
-  /* above the hero's fixed layers, under the shutter */
+  /* above the hero's fixed layers, under the field */
   /* a narrow column for the reel, a wide gap, and the statement running out
      to the page edge */
   .manifesto { position: relative; z-index: var(--z-ui);
@@ -57,9 +57,12 @@ const total = String(stats.length).padStart(2, '0');
 
   /* ── the reel ─────────────────────────────────────────────────── */
   .tag { display: block; color: var(--ink-3); margin-bottom: var(--s-5); }
-  .track { height: var(--hairline); background: var(--line); overflow: hidden; }
+  /* the same order the testimonials use: the controls, then the bar over
+     what it measures */
+  .track { margin-top: var(--s-4); height: var(--hairline);
+           background: var(--line); overflow: hidden; }
   .track i { display: block; height: 100%; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; }
-  .controls { display: flex; align-items: center; justify-content: space-between; margin-top: var(--s-4); }
+  .controls { display: flex; align-items: center; justify-content: space-between; }
   .arrows { display: flex; gap: var(--s-4); }
   .arrows button { font-size: var(--t-body); line-height: 1; color: var(--ink-3); transition: color var(--dur-fast) ease; }
   .arrows button:hover { color: var(--ink); }
@@ -71,8 +74,8 @@ const total = String(stats.length).padStart(2, '0');
            opacity: 0; filter: blur(6px); pointer-events: none;
            transition: opacity var(--dur-base) ease, filter var(--dur-base) ease; }
   .slide.on { opacity: 1; filter: none; pointer-events: auto; }
-  .value { font-size: var(--t-figure); line-height: 1; letter-spacing: -0.035em; color: var(--ink); }
-  .cap { font-size: var(--t-body); line-height: 1.5; color: var(--ink-3); max-width: 22ch; }
+  .value { font-size: var(--t-figure); line-height: 1; letter-spacing: var(--track-display); color: var(--ink); }
+  .cap { font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-3); max-width: 22ch; }
   /* no autoplay for a reader who asked for less motion — show them all */
   .reel[data-stats-still] .slides { grid-auto-flow: row; row-gap: var(--s-6); }
   .reel[data-stats-still] .slide { grid-area: auto; opacity: 1; filter: none; }
@@ -80,7 +83,10 @@ const total = String(stats.length).padStart(2, '0');
 
   /* ── the statement ────────────────────────────────────────────── */
   /* held to a readable measure rather than the width of the column */
-  .say p { max-width: 34ch; font-size: var(--t-statement); line-height: 1.22; letter-spacing: -0.025em; color: var(--ink); }
+  /* the one title-sized thing that is read rather than named, so it keeps a
+     leading of its own — 1.05 would set a paragraph solid */
+  .say p { max-width: 34ch; font-size: var(--t-statement); line-height: 1.22;
+           letter-spacing: var(--track-title); color: var(--ink); }
   .say p + p { margin-top: 1.1em; }
   /* the sweep lights the statement a character at a time, in a soft band */
   .say :global(.rv) { color: var(--ink-dim); transition: color 0.18s linear; }
@@ -90,13 +96,15 @@ const total = String(stats.length).padStart(2, '0');
       color: color-mix(in oklab, var(--ink-dim), var(--ink) calc(var(--l, 0) * 100%));
     }
   }
-  .by { display: flex; align-items: center; gap: var(--s-4); margin-top: var(--s-8); color: var(--ink-3); font-size: var(--t-small); line-height: 1.45; }
-  .by b { color: var(--ink-2); font-weight: 400; }
-  .portrait { width: 2.75rem; height: 2.75rem; object-fit: cover; filter: grayscale(1); }
+  .by { display: flex; align-items: center; gap: var(--s-4); margin-top: var(--s-8); color: var(--ink-3); font-size: var(--t-small); line-height: var(--lh-lead); }
+  .by b { color: var(--ink-2); font-weight: var(--w-body); }
+  /* a picture, so it takes the corner every other picture on the site takes */
+  .portrait { width: 2.75rem; height: 2.75rem; object-fit: cover; filter: grayscale(1);
+              border-radius: var(--radius-media); }
   .by :global(.sq) { color: var(--ink-4); }
 
   @media (max-width: 859px) {
-    .manifesto { grid-template-columns: 1fr; row-gap: var(--s-7); padding: 0 1.25rem 10vh; }
+    .manifesto { grid-template-columns: 1fr; row-gap: var(--s-7); padding: 0 var(--page-x) 10vh; }
     .cap, .say p { max-width: none; }
   }
 </style>

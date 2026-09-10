@@ -1,30 +1,67 @@
 ---
 import Base from '@layouts/Base.astro';
 import ProjectGrid from '@components/work/ProjectGrid.astro';
+import StudioFilter from '@components/work/StudioFilter.astro';
 import { getProjects } from '@lib/sanity/queries';
 const projects = await getProjects();
 ---
 <Base theme="light" title="Work">
-  <main class="page">
+  <main class="page" data-page="work">
     <header class="head">
-      <span class="label tag">Work</span>
-      <h1>Selected projects across architecture, creative media and digital products.</h1>
+      <h1>Selected works</h1>
+      <div class="filter">
+        <StudioFilter projects={projects} />
+        <!-- not shown: the tally is only there to be read out when the
+             filter changes what is on the page -->
+        <span class="visually-hidden" data-filter-count aria-live="polite"></span>
+      </div>
     </header>
+
     <ProjectGrid projects={projects} />
+    <p class="empty label" data-filter-empty hidden>Nothing in this studio yet.</p>
   </main>
   <script>
+    import { onPage } from '../../scripts/lifecycle';
     import { createSmoothScroll } from '../../scripts/ui/smoothScroll';
     import { createHoverAudio } from '../../scripts/ui/hoverAudio';
+    import { createDirectionalHover } from '../../scripts/ui/directionalHover';
+    import { createWorkFilter } from '../../scripts/ui/workFilter';
+    import { splitChars } from '../../scripts/ui/splitText';
     import { site } from '../../lib/site';
-    document.body.classList.add('ready');
-    createSmoothScroll();
-    createHoverAudio(site.audio.taps);
+    onPage('work', () => {
+      document.body.classList.add('ready');
+      /* the footer's buttons are on this page too, and their letters slip */
+      document.fonts.ready.then(() => splitChars());
+      return [
+        createSmoothScroll(),
+        createHoverAudio(site.audio.taps),
+        createDirectionalHover(),
+        createWorkFilter(),
+      ];
+    });
   </script>
 </Base>
 
 <style>
-  .page { padding: 22vh var(--page-x) 16vh; }
-  .head { margin-bottom: var(--s-8); max-width: 26em; }
-  .tag { display: block; color: var(--ink-3); margin-bottom: var(--s-4); }
-  h1 { font-size: var(--t-h2); line-height: 1.04; letter-spacing: -0.025em; font-weight: 400; }
+  .page { padding: 18vh var(--page-x) 16vh; }
+  /* the name of the page and the filter share one line, out to both edges,
+     over a rule — one bar across the top of the work */
+  .head { display: flex; justify-content: space-between; align-items: flex-end;
+          gap: var(--s-7); margin-bottom: var(--s-7);
+          padding-bottom: var(--s-5); border-bottom: var(--hairline) solid var(--line); }
+  /* the display tier, the same size the homepage sets "How we work" in: this
+     is the name of a page, not the name of a thing on it */
+  h1 { font-size: var(--t-h2); font-weight: var(--w-display);
+       line-height: var(--lh-display); letter-spacing: var(--track-display); color: var(--ink); }
+  .filter { display: flex; flex-direction: column; align-items: flex-end; }
+  /* it is one line, not a set, so it goes as a block */
+  .empty { margin-top: var(--s-7); color: var(--ink-3);
+           transition: opacity 0.75s var(--ease-out); }
+  .empty[data-swap] { opacity: 0; transition-duration: 0.3s; }
+  @media (prefers-reduced-motion: reduce) { .empty { transition: none; } }
+
+  @media (max-width: 859px) {
+    .head { flex-direction: column; align-items: stretch; gap: var(--s-5); }
+    .filter { align-items: flex-start; }
+  }
 </style>

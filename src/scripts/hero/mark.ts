@@ -22,6 +22,9 @@ const L_OUTLINE: [number, number][] = [[0, 0], [1, 0], [1, 2 / 3], [2 / 3, 2 / 3
 /** per-plate simulation state, all flat typed arrays */
 export interface PlateSim {
   total: number;
+  /** how many of them, from the front, are in the round rather than on a
+   *  plate: none of a plate's, all of the cloud's. `j < face` is the test. */
+  face: number;
   n: Vec3;
   home: Float32Array;     // rest positions
   off: Float32Array;      // the attribute the shader reads (sim + intro + exit)
@@ -42,16 +45,22 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
   const D = cfg.mark.depth;
   return new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { uTime: { value: 0 }, uPx: { value: cfg.mark.pointPx }, uFlat: { value: 0 } },
+    uniforms: { uTime: { value: 0 }, uPx: { value: cfg.mark.pointPx }, uFlat: { value: 0 }, uChurn: { value: 0 }, uScale: { value: 1 } },
     vertexShader: `
       attribute float aSeed; attribute float aTint; attribute vec3 aOff; attribute float aIn;
-      uniform float uTime, uPx, uFlat;   // uFlat: 1 while the cloud is standing as a form
+      attribute float aCore;   // 1 on the cloud's particles, 0 on the cube's
+      uniform float uTime, uPx, uFlat, uChurn, uScale;  // uFlat: a form is standing; uChurn: how far the cloud wanders; uScale: how big the cube is
       varying float vA; varying vec3 vC; varying float vB;
       void main(){
         vec3 p = position + aOff;
         float ph = aSeed * 6.28318;
-        // micro drift — each point wanders a hair around home
-        p += 0.0055 * vec3( sin(uTime*0.9 + ph), cos(uTime*0.7 + ph*1.3), sin(uTime*1.1 + ph*0.7) );
+        // Drift. On the cube a hair, so a point is never quite still; on the
+        // cloud as much as it is given — two sines a point, at different
+        // rates, which is what keeps a few thousand of them from ever settling
+        // into a shape. Done here because here it is free.
+        float amp = 0.0055 + uChurn * aCore;
+        p += amp * vec3( sin(uTime*0.9 + ph), cos(uTime*0.7 + ph*1.3), sin(uTime*1.1 + ph*0.7) );
+        p += amp * 0.6 * vec3( sin(uTime*2.3 + ph*2.1), sin(uTime*1.9 + ph*3.3), cos(uTime*2.7 + ph*1.7) );
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         vec4 clip = projectionMatrix * mv;
         // displaced particles glow a little brighter and larger
@@ -62,7 +71,14 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
         // depth there is comes from the focal plane below.
         // Depth. Nothing here reads as a volume without it: the far side of a
         // cloud has to fall away, or every point sits on the same pane of glass.
-        float dep = clamp((-mv.z - ${D.near.toFixed(3)}) / ${(D.far - D.near).toFixed(3)}, 0.0, 1.0);
+        // The cube's depth range grows with the cube: scaled up three times,
+        // its far corner would otherwise be past the fog's far plane and its
+        // back plate a dim smear. The range is opened about the camera
+        // distance by the same factor, so it is the same cube, only larger.
+        float ds = mix(1.0, uScale, 1.0 - aCore);
+        float nearD = ${cfg.camera.dist.toFixed(3)} - ${(cfg.camera.dist - D.near).toFixed(3)} * ds;
+        float farD  = ${cfg.camera.dist.toFixed(3)} + ${(D.far - cfg.camera.dist).toFixed(3)} * ds;
+        float dep = clamp((-mv.z - nearD) / (farD - nearD), 0.0, 1.0);
         float lit = mix(1.0, ${D.dim.toFixed(2)}, dep);
         // A focal plane, the way a lens has one: points away from it spread and
         // dim rather than staying the same crisp dot at every distance. This is
@@ -72,10 +88,20 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
         // properly far from it goes soft
         float blur = off * off;
         vB = blur;
-        float tn = mix(aTint, 0.86, uFlat * ${D.even.toFixed(2)});
-        gl_PointSize = uPx / clip.w * (1.0 + f*0.22) * (1.0 + blur * ${D.bokeh.toFixed(2)});
+        // the cube never flattens: it is the mark, and evening it out with the
+        // form would put the logo and the thing it made in the same voice
+        float fl = uFlat * aCore;
+        float tn = mix(aTint, 0.86, fl * ${D.even.toFixed(2)});
+        // the cube's points go down as it grows: the open cube is a frame
+        // and a frame is quiet
+        float big = (uScale - 1.0) * (1.0 - aCore);
+        gl_PointSize = uPx / clip.w * (1.0 + f*0.22) * (1.0 + blur * ${D.bokeh.toFixed(2)}) * (1.0 + big * ${cfg.open.grow.toFixed(2)});
         // the same light spread over a wider disc is a fainter disc
-        vA = (0.58 + 0.16*f) * mix(0.10, 1.0, aIn) * (1.0 + ${D.lift.toFixed(2)}*uFlat) * lit
+        // the cube starts its intro as a faint dot and the cloud starts as
+        // nothing at all, which is the difference in the floor here
+        float floor_ = 0.10 * (1.0 - aCore);
+        vA = (0.58 + 0.16*f) * mix(floor_, 1.0, aIn) * (1.0 + ${D.lift.toFixed(2)}*fl) * lit
+             / (1.0 + big * ${cfg.open.fade.toFixed(2)})
              / (1.0 + blur * ${(D.bokeh * 0.55).toFixed(2)});
         vec3 c0 = vec3(${base.join(',')}), c1 = vec3(${mid.join(',')}), c2 = vec3(${high.join(',')});
         vec3 col = tn < 0.5 ? mix(c0, c1, tn*2.0) : mix(c1, c2, (tn-0.5)*2.0);
@@ -136,6 +162,7 @@ export function buildPlate(i: number, cfg: HeroConfig, material: THREE.Material,
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
   g.setAttribute('aTint', new THREE.BufferAttribute(tint, 1));
+  g.setAttribute('aCore', new THREE.BufferAttribute(new Float32Array(total), 1));   // the cube's: 0
   const off = new THREE.BufferAttribute(new Float32Array(total * 3), 3); off.setUsage(THREE.DynamicDrawUsage);
   const ain = new THREE.BufferAttribute(new Float32Array(total), 1); ain.setUsage(THREE.DynamicDrawUsage);
   g.setAttribute('aOff', off); g.setAttribute('aIn', ain);
@@ -173,11 +200,89 @@ export function buildPlate(i: number, cfg: HeroConfig, material: THREE.Material,
   }
 
   const sim: PlateSim = {
-    total, n: b.n, home: pos, off: off.array as Float32Array, ain: ain.array as Float32Array, sim: new Float32Array(total * 3),
+    total, face: 0, n: b.n, home: pos, off: off.array as Float32Array, ain: ain.array as Float32Array, sim: new Float32Array(total * 3),
     vel, stiff, damp, jit: jitA, gain, intro, over, seedv, iDelay, iDur,
     mPrev: new THREE.Vector3(), hadM: false, shockSeen: -1, settled: false,
   };
   return { points, sim };
+}
+
+/**
+ * The cloud: its own particles, in the void. Built in the mark's frame with
+ * the pivot where the shapes are — the same coordinates a form is authored in,
+ * so a target is a point and not a transform.
+ *
+ * Not a ball. A few clumps of different sizes, scattered about the pivot, each
+ * crowded at its middle and thinning to stragglers — and no clump quite where
+ * another is — so the whole thing is lumpy, open, and never reads as an object
+ * with a skin. The churn that keeps it moving is the shader's; what is laid
+ * down here is only where each point calls home.
+ */
+export function buildCloud(count: number, cfg: HeroConfig, material: THREE.Material, pivot: number): { points: THREE.Points; sim: PlateSim; wide: Float32Array; band: Uint8Array } {
+  const F = cfg.core;
+  const pos = new Float32Array(count * 3), seed = new Float32Array(count), tint = new Float32Array(count);
+  const wide = new Float32Array(count * 3), band = new Uint8Array(count);
+  // the clumps
+  const lobes: { x: number; y: number; z: number; r: number; w: number }[] = [];
+  for (let l = 0; l < F.lobes; l++) {
+    const th = Math.random() * 6.2832, ph = Math.acos(2 * Math.random() - 1);
+    const d = F.radius * F.lobeSpread * Math.cbrt(Math.random());
+    const r = F.radius * (0.3 + Math.random() * 0.55);
+    lobes.push({ x: Math.sin(ph) * Math.cos(th) * d, y: Math.cos(ph) * d * F.flatten, z: Math.sin(ph) * Math.sin(th) * d, r, w: r * r });
+  }
+  const wsum = lobes.reduce((a, l) => a + l.w, 0);
+  for (let j = 0; j < count; j++) {
+    // a clump, the bigger the likelier; then a point in it, near its middle
+    let pick = Math.random() * wsum, L = lobes[0];
+    for (const l of lobes) { if (pick <= l.w) { L = l; break; } pick -= l.w; }
+    const th = Math.random() * 6.2832, ph = Math.acos(2 * Math.random() - 1);
+    const r = L.r * Math.pow(Math.random(), F.density);
+    const x = L.x + Math.sin(ph) * Math.cos(th) * r;
+    const y = L.y + Math.cos(ph) * r * F.flatten;
+    const z = L.z + Math.sin(ph) * Math.sin(th) * r;
+    pos[j * 3] = pivot + x; pos[j * 3 + 1] = pivot + y; pos[j * 3 + 2] = pivot + z;
+    seed[j] = Math.random();
+    tint[j] = Math.pow(Math.random(), 1.4);
+    band[j] = Math.min(F.bands - 1, (Math.hypot(x, z) / F.radius * F.bands) | 0);
+    // where it comes in from: well outside, in its own direction, so the
+    // cloud gathers out of the dark rather than switching on
+    const far = F.radius * (1.6 + Math.random() * 2.2);
+    wide[j * 3] = Math.sin(ph) * Math.cos(th) * far; wide[j * 3 + 1] = Math.cos(ph) * far; wide[j * 3 + 2] = Math.sin(ph) * Math.sin(th) * far;
+  }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+  g.setAttribute('aTint', new THREE.BufferAttribute(tint, 1));
+  g.setAttribute('aCore', new THREE.BufferAttribute(new Float32Array(count).fill(1), 1));
+  const off = new THREE.BufferAttribute(new Float32Array(count * 3), 3); off.setUsage(THREE.DynamicDrawUsage);
+  const ain = new THREE.BufferAttribute(new Float32Array(count), 1); ain.setUsage(THREE.DynamicDrawUsage);
+  g.setAttribute('aOff', off); g.setAttribute('aIn', ain);
+  const points = new THREE.Points(g, material);
+  points.frustumCulled = false;
+
+  const S = cfg.sim;
+  const vel = new Float32Array(count * 3), stiff = new Float32Array(count), damp = new Float32Array(count), jitA = new Float32Array(count), gain = new Float32Array(count);
+  const over = new Float32Array(count * 3);
+  for (let j = 0; j < count; j++) {
+    stiff[j] = S.stiffness[0] + Math.random() * (S.stiffness[1] - S.stiffness[0]);
+    damp[j] = S.damping[0] + Math.random() * (S.damping[1] - S.damping[0]);
+    jitA[j] = (Math.random() - 0.5) * S.jitter;
+    gain[j] = S.gainRange[0] + Math.random() * (S.gainRange[1] - S.gainRange[0]);
+    // the exit throws it outward from the pivot, each point on its own line
+    const ov = cfg.intro.over * (0.6 + Math.random() * 0.8) * 2.5;
+    over[j * 3] = (pos[j * 3] - pivot) * ov; over[j * 3 + 1] = (pos[j * 3 + 1] - pivot) * ov; over[j * 3 + 2] = (pos[j * 3 + 2] - pivot) * ov;
+  }
+  // no arrival of its own: the intro arrays are left at zero and the flight
+  // time at nothing, so the cube's intro passes over these without moving them
+  const sim: PlateSim = {
+    total: count, face: count, n: [0, 1, 0], home: pos, off: off.array as Float32Array, ain: ain.array as Float32Array, sim: new Float32Array(count * 3),
+    vel, stiff, damp, jit: jitA, gain,
+    intro: new Float32Array(count * 3), over, seedv: new Float32Array(count * 3),
+    iDelay: new Float32Array(count), iDur: new Float32Array(count).fill(0.001),
+    mPrev: new THREE.Vector3(), hadM: false, shockSeen: -1, settled: false,
+  };
+  return { points, sim, wide, band };
 }
 
 /** Spin about the cube's diagonal: the mark has 3-fold symmetry around the

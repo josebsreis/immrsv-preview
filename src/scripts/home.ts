@@ -9,51 +9,76 @@ import { createWordmarkLetters } from './ui/wordmarkLetters';
 import { createDirectionalHover } from './ui/directionalHover';
 import { createMarquee } from './ui/marquee';
 import { createReel } from './ui/reel';
+import { createProcessRail } from './ui/processRail';
 import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
 import { createHoverAudio } from './ui/hoverAudio';
 import { site } from '@lib/site';
+import { onPage } from './lifecycle';
 import type { Hero } from './hero';
 
-const host = document.querySelector<HTMLElement>('[data-hero-canvas]');
-let hero: Hero | null = null;
+/* The homepage is wired inside onPage: with the client router in, this
+   module runs once for the whole visit, but the page it wires up is rebuilt
+   every time it is returned to. Everything made here is handed back to be
+   taken down again on the way out — the hero above all, which holds a WebGL
+   context that will not be collected on its own. */
+onPage('home', () => {
+  const host = document.querySelector<HTMLElement>('[data-hero-canvas]');
+  let hero: Hero | null = null;
+  let gone = false;                       // the page left before the engine landed
 
-createSmoothScroll();
-const choreography = createScrollChoreography(() => hero);
-document.fonts.ready.then(() => splitChars());
-const rot = document.querySelector<HTMLElement>('[data-rotating-word]');
-if (rot) createRotatingWord(rot);
-const reel = document.querySelector<HTMLElement>('[data-stats]');
-if (reel) createStatsReel(reel);
+  const made: { destroy(): void }[] = [];
+  const add = <T extends { destroy(): void } | null | undefined>(thing: T) => {
+    if (thing) made.push(thing);
+    return thing;
+  };
 
-// the letters of the name are shoved about by the cursor
-const markHost = document.querySelector<HTMLElement>('[data-wordmark]');
-if (markHost && markHost.dataset.outline !== 'off'
-    && matchMedia('(hover: hover) and (pointer: fine)').matches
-    && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  createWordmarkLetters(markHost);
-}
-createDirectionalHover();
-document.querySelectorAll<HTMLElement>('[data-marquee]').forEach(createMarquee);
-document.querySelectorAll<HTMLElement>('[data-reel]').forEach(createReel);
-createVideoInView();
-createHoverAudio(site.audio.taps);
+  add(createSmoothScroll());
+  const choreography = add(createScrollChoreography(() => hero))!;
+  document.fonts.ready.then(() => splitChars());
+  const rot = document.querySelector<HTMLElement>('[data-rotating-word]');
+  if (rot) add(createRotatingWord(rot));
+  /* two of them now — the statement's figures and the testimonials — and the
+     same driver turns both */
+  document.querySelectorAll<HTMLElement>('[data-stats]').forEach((el) => add(createStatsReel(el)));
 
-// no loading screen: the page arrives as soon as the fonts have settled
-document.fonts.ready.then(() => document.body.classList.add('ready'));
+  // the letters of the name are shoved about by the cursor
+  const markHost = document.querySelector<HTMLElement>('[data-wordmark]');
+  if (markHost && markHost.dataset.outline !== 'off'
+      && matchMedia('(hover: hover) and (pointer: fine)').matches
+      && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    add(createWordmarkLetters(markHost));
+  }
+  const process = document.querySelector<HTMLElement>('[data-process]');
+  if (process) add(createProcessRail(process));
+  add(createDirectionalHover());
+  document.querySelectorAll<HTMLElement>('[data-marquee]').forEach((el) => add(createMarquee(el)));
+  document.querySelectorAll<HTMLElement>('[data-reel]').forEach((el) => add(createReel(el)));
+  add(createVideoInView());
+  add(createHoverAudio(site.audio.taps));
 
-/* The hero engine is by far the heaviest thing here, so it is not in this
-   bundle: it is fetched once the page has painted and the browser is idle,
-   and not at all for a reader who asked for less motion. Everything above
-   works without it. */
-if (host && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  const load = () =>
-    import('./hero')
-      .then(({ createHero }) => {
-        hero = createHero({ host });
-        return document.fonts.ready.then(() => { hero?.setReady(); choreography.update(); });
-      })
-      .catch(() => {});
-  if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 1500 });
-  else setTimeout(load, 200);
-}
+  // no loading screen: the page arrives as soon as the fonts have settled
+  document.fonts.ready.then(() => document.body.classList.add('ready'));
+
+  /* The hero engine is by far the heaviest thing here, so it is not in this
+     bundle: it is fetched once the page has painted and the browser is idle,
+     and not at all for a reader who asked for less motion. Everything above
+     works without it. */
+  if (host && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const load = () =>
+      import('./hero')
+        .then(({ createHero }) => {
+          if (gone) return;               // it arrived after the reader left
+          hero = createHero({ host });
+          return document.fonts.ready.then(() => { hero?.setReady(); choreography.update(); });
+        })
+        .catch(() => {});
+    if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 1500 });
+    else setTimeout(load, 200);
+  }
+
+  return [
+    ...made,
+    { destroy() { gone = true; hero?.destroy(); hero = null; } },
+  ];
+});

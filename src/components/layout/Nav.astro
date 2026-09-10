@@ -3,7 +3,18 @@ import Wordmark from '@components/ui/Wordmark.astro';
 interface Props { items: readonly { label: string; href: string }[]; }
 const { items } = Astro.props;
 ---
-<header class="nav arrives" data-theme-follows style="--arrive-delay: .5s">
+<!--
+  The bar that never leaves. Three things, and it needs all three:
+  `persist` carries this exact node into the next page instead of rebuilding
+  it; `name` lifts it out of the page's snapshot, which would otherwise
+  cross-fade it along with everything else it is sitting on top of; and
+  `animate="none"` means its own snapshot is not animated either. What is
+  left is a bar that holds still while the pages change under it, and only
+  follows the ground's colour. All three have to sit on the element — on the
+  <Nav /> tag the directives are not forwarded to it.
+-->
+<header class="nav arrives" data-theme-follows style="--arrive-delay: .5s"
+        transition:persist="nav" transition:name="nav" transition:animate="none">
   <a class="home" href="/" aria-label="IMMRSV — home" data-tap><Wordmark /></a>
   <nav class="menu" aria-label="Primary">
     {items.map((it) => (
@@ -29,16 +40,17 @@ const { items } = Astro.props;
   .home :global(svg) { height: 2.125rem; width: auto; color: var(--ink); transition: color var(--dur-base) ease; }
   .menu { display: flex; gap: 2px; pointer-events: auto; }
   /* the pills answer the way the buttons do: a panel from the edge crossed */
-  .item { position: relative; overflow: hidden; display: flex; align-items: center; height: 2.125rem; padding: 0 1rem;
+  .item { position: relative; overflow: hidden; display: flex; align-items: center; height: var(--pill-h); padding: 0 var(--s-4);
           color: var(--ink); transition: color var(--dur-base) ease; }
-  .item:hover { background: var(--glass); }
+  /* the tint only — the shorthand would take the veil under it with it */
+  .item:hover { background-image: linear-gradient(var(--glass), var(--glass)); }
   .tile { position: absolute; inset: 0; background: var(--glass-hover);
           transform: translateX(-100%); will-change: transform;
-          transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+          transition: transform var(--dur-base) var(--ease-panel); }
   .txt { position: relative; }
   @media (prefers-reduced-motion: reduce) { .tile { transition: none; } }
   @media (max-width: 719px) {
-    .nav { padding: 1.125rem 1.25rem; }
+    .nav { padding: 1.125rem var(--page-x); }
     .home :global(svg) { height: 1.6875rem; }
     .menu { display: none; }
   }

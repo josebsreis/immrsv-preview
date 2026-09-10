@@ -5,9 +5,9 @@
    ═══════════════════════════════════════════════════════════════════ */
 import * as THREE from 'three';
 import { HERO_CONFIG, type HeroConfig } from './config';
-import { FACE_BASES, SPIN_AXIS, buildPlate, makeParticleMaterial, type PlateSim } from './mark';
+import { FACE_BASES, SPIN_AXIS, buildCloud, buildPlate, makeParticleMaterial, type PlateSim } from './mark';
 import { simulate } from './sim';
-import { SHAPES, cloudFor, formFloor, loadCloud, poseInto, shapeTargets, skinnedIndices } from './shapes';
+import { PIVOT, SHAPES, cloudFor, formFloor, loadCloud, poseInto, shapeTargets, skinnedIndices } from './shapes';
 import { loadSkin, skinFor } from './skin';
 import { createLens } from './lens';
 import { createPointer } from './pointer';
@@ -27,7 +27,7 @@ export interface Hero {
   setExit(p: number): void;
   /** a strike at viewport coords (0..1, y up) */
   strike(x: number, y: number): void;
-  /** stand as shape `i`, or go back to the cube with −1 */
+  /** make form `i` next: whatever is standing falls back to the cloud first */
   showShape(i: number): void;
   destroy(): void;
 }
@@ -70,21 +70,7 @@ export function createHero(opts: HeroOptions): Hero {
   // ── the mark ───────────────────────────────────────────────────────
   const material = makeParticleMaterial(cfg);
   material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
-  interface Plate {
-    holder: THREE.Group; points: THREE.Points; sim: PlateSim; axis: THREE.Vector3; out: THREE.Vector3;
-    /** the plate's rest positions in the mark's own frame — what the shape
-     *  fields are authored against */
-    homeInner: Float32Array;
-    /** one array of targets per shape, sampled the first time it is asked for */
-    targets: (Float32Array | null)[];
-    /** for an animated shape: which of its points each particle takes */
-    src: (Uint16Array | null)[];
-    /** 0..1 per particle: when it leaves, so a form unfolds rather than snaps */
-    when: Float32Array;
-    /** where the particles were the instant a new form was asked for: a
-     *  crossing interrupted mid-way carries on from here rather than jumping */
-    hold: Float32Array;
-  }
+  interface Plate { holder: THREE.Group; points: THREE.Points; sim: PlateSim; }
   const plates: Plate[] = [];
   const inner = new THREE.Group();                                    // pivots on the void
   const vc = cfg.mark.voidCentre;
@@ -95,48 +81,76 @@ export function createHero(opts: HeroOptions): Hero {
     holder.add(points);
     holder.position.set(b.n[0], b.n[1], b.n[2]).multiplyScalar(cfg.mark.separation);
     inner.add(holder);
-    // the way out: straight along its own normal, turning about an axis that
-    // lies in its face — the plate flips as it leaves
-    const out = new THREE.Vector3(b.n[0], b.n[1], b.n[2]).normalize();
-    const axis = out.clone().cross(SPIN_AXIS).normalize();
-    const nP = sim.total, homeInner = new Float32Array(nP * 3), when = new Float32Array(nP);
-    for (let j = 0; j < nP; j++) {
-      homeInner[j * 3] = sim.home[j * 3] + holder.position.x;
-      homeInner[j * 3 + 1] = sim.home[j * 3 + 1] + holder.position.y;
-      homeInner[j * 3 + 2] = sim.home[j * 3 + 2] + holder.position.z;
-      when[j] = Math.random();
-    }
-    plates.push({ holder, points, sim, axis, out, homeInner, when, targets: SHAPES.map(() => null), src: SHAPES.map(() => null), hold: new Float32Array(sim.total * 3) });
+    plates.push({ holder, points, sim });
   });
   const L0 = new THREE.Group(); L0.add(inner); scene.add(L0);
 
+  // ── the cloud ──────────────────────────────────────────────────────
+  /* Its own thing, beside the cube rather than inside it: the cube turns on
+     its diagonal and the cloud must not, or everything it makes would tumble.
+     So it hangs off the scene on a pivot of its own, offset the same way the
+     cube's inner frame is — the shapes' pivot lands on the origin, where the
+     void is — and turns slowly about the vertical, carrying whatever it is. */
+  const F = cfg.core;
+  const cloudN = mobile() ? F.countMobile : F.count;
+  const cloud = buildCloud(cloudN, cfg, material, PIVOT);
+  const cloudRoot = new THREE.Group(); cloudRoot.position.set(-vc, -vc, -vc); cloudRoot.add(cloud.points);
+  const cloudPivot = new THREE.Group(); cloudPivot.add(cloudRoot);
+  /** one array of targets per shape, in the cloud's frame, sampled once */
+  const targets: (Float32Array | null)[] = SHAPES.map(() => null);
+  /** for an animated shape: which of its points each particle takes */
+  const src: (Uint16Array | null)[] = SHAPES.map(() => null);
+  /** how far out in that shape each particle lands, 0..1 — a form blooms from
+   *  the middle of the cloud outward, which is the one ordering that matches
+   *  where it is coming from */
+  const rank: (Float32Array | null)[] = SHAPES.map(() => null);
+  /** per-particle chance, mixed into every ordering so no front is straight */
+  const when = new Float32Array(cloudN);
+  for (let j = 0; j < cloudN; j++) when[j] = Math.random();
+  /** the swirl's cosine and sine, one pair per speed band, rewritten a frame */
+  const bandC = new Float32Array(F.bands), bandS = new Float32Array(F.bands);
+
   const qSpin = new THREE.Quaternion(), qTilt = new THREE.Quaternion();
-  const AX = new THREE.Vector3(1, 0, 0), UP = new THREE.Vector3(0, 1, 0);
-  /** the axis the mark turns on: the cube's diagonal, tilting up to vertical
-   *  as a form stands. Both lean the same way, so the turn never reverses. */
-  const _axis = new THREE.Vector3();
+  const AX = new THREE.Vector3(1, 0, 0);
 
   // ── state the page drives ──────────────────────────────────────────
   let released = reduced, exit = 0, out = 0, shockT = -9;
   let spinAngle = 0, spinBoost = cfg.intro.spinBoost;
+  let pace = cfg.mark.spinShut;    // the turn's current multiple of cruise, eased
   let swipe = 0, lastTx = 0.5, lastTy = 0.5;
 
   // ── the reel ───────────────────────────────────────────────────────
+  /* The whole of it, in order and once per visit:
+   *
+   *   arrive    the cube flies in and lands, closed and whole
+   *   gather    the cloud comes together in the void out of the dark
+   *   settle    it churns there — and this is the wait, the one point in the
+   *             visit where something is actually being loaded
+   *   bloom     the cloud opens out into a form, and the cube swells up around
+   *             it to give it room
+   *   hold      the form stands
+   *   collapse  it falls back to the cloud, the cube comes part way in, and
+   *             settle → bloom go again
+   *
+   * The cube shuts once. After that it breathes with the reel, and the cloud
+   * is what changes inside it — which is the reason for the arrangement: the
+   * mark is never the thing that goes away. */
+  type Phase = 'arrive' | 'gather' | 'settle' | 'bloom' | 'hold' | 'collapse';
   const reel = cfg.shapes.enabled && !reduced;
-  let shape = -1;        // −1 is the cube
-  let shapeAt = 0;       // 0..1 — how far the cloud has gone into `shape`
-  let shapeTo = 0;       // where it is heading
-  let prev = -1;         // the form being crossed out of, while `mix` < 1
-  let held = false;      // …and whether that is a snapshot rather than a form
-  let mix = 1;           // 0..1 across a direct crossing from `prev` to `shape`
-  let phase = 0, beat = 0, parked = false;
-  /** where the reel has got to. Not `shape`: that goes back to −1 on every
-   *  interlude, so counting from it would ask for the first form for ever. */
-  let cursor = -1;
+  // asked for less motion, there is no reel and so no cloud: the cube arrives
+  // and stays, and the cloud's particles are never drawn or integrated
+  if (reel) scene.add(cloudPivot);
+  let phase: Phase = 'arrive';
+  let beat = 0, parked = false;
+  let coreAt = 0;        // 0..1 — the cloud, from nothing to there
+  let formAt = 0;        // 0..1 — the cloud, from a cloud to the form it is making
+  let shape = 0;         // the form the cloud is bound to
+  let cursor = -1;       // where the reel has got to
+  let queued = -1;       // a form asked for out of turn — by a click
 
-  /** sample shape `i` for every plate, once. A shape baked from a model waits
-   *  for its cloud to arrive; if that never comes, its field stands in, so the
-   *  reel is never held up by the network. */
+  /** sample shape `i`, once. A shape baked from a model waits for its cloud to
+   *  arrive; if that never comes, its field stands in, so the reel is never
+   *  held up by the network. */
   const asked = new Set<number>();
   function ensureShape(i: number) {
     const def = SHAPES[i];
@@ -150,94 +164,63 @@ export function createHero(opts: HeroOptions): Hero {
     }
     buildShape(i);
   }
-  /** the fields are authored in the mark's frame, so a plate's targets are
-   *  those points less its own offset along its normal */
+  function rankShape(i: number) {
+    const tg = targets[i]; if (!tg) return;
+    const r = new Float32Array(cloudN);
+    let far = 1e-6;
+    for (let j = 0; j < cloudN; j++) {
+      r[j] = Math.hypot(tg[j * 3] - PIVOT, tg[j * 3 + 1] - PIVOT, tg[j * 3 + 2] - PIVOT);
+      if (r[j] > far) far = r[j];
+    }
+    for (let j = 0; j < cloudN; j++) r[j] = (r[j] / far) * 0.82 + when[j] * 0.18;
+    rank[i] = r;
+  }
   function buildShape(i: number) {
+    if (targets[i]) return;
     const def = SHAPES[i], skin = def.skin ? skinFor(def.skin) : null;
     if (skin) {
       // an animated form is not a fixed set of targets: each particle is given
       // one of the cloud's points to follow, and where that point is depends
       // on the frame
-      for (const p of plates) {
-        if (p.src[i]) continue;
-        p.src[i] = skinnedIndices(skin.bind, p.homeInner, p.sim.total);
-        p.targets[i] = new Float32Array(p.sim.total * 3);
-      }
+      src[i] = skinnedIndices(skin.bind, cloud.sim.home, cloudN);
+      targets[i] = new Float32Array(cloudN * 3);
       poseShape(i, 0);
-      return;
+    } else {
+      targets[i] = shapeTargets(def, cloud.sim.home, cloudN);
     }
-    for (const p of plates) {
-      if (p.targets[i]) continue;
-      const n = p.sim.total, t = shapeTargets(SHAPES[i], p.homeInner, n);
-      for (let j = 0; j < n; j++) {
-        t[j * 3] -= p.holder.position.x;
-        t[j * 3 + 1] -= p.holder.position.y;
-        t[j * 3 + 2] -= p.holder.position.z;
-      }
-      p.targets[i] = t;
-    }
+    rankShape(i);
   }
-  /** the fields are built one idle slice at a time: ~50ms each, and never on
-   *  the way to first paint — the hero itself is already there by then */
+  const ready = (i: number) => i >= 0 && !!targets[i] && !!rank[i];
+
+  /* The first form is asked for straight away — it is the thing the loader is
+     waiting on, so leaving it to an idle slice would make the cloud churn for
+     no reason. The rest can wait for a gap. */
   if (reel) {
+    ensureShape(0);
     const idle = (fn: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 4000 }) : setTimeout(fn, 600));
-    SHAPES.forEach((_, i) => idle(() => ensureShape(i)));
+    SHAPES.forEach((_, i) => { if (i > 0) idle(() => ensureShape(i)); });
   }
 
   /** move an animated form to where it is at `t` seconds */
   function poseShape(i: number, t: number) {
     const def = SHAPES[i], skin = def.skin ? skinFor(def.skin) : null;
-    if (!skin) return;
+    const sr = src[i], tg = targets[i];
+    if (!skin || !sr || !tg) return;
     skin.update(t);
-    for (const p of plates) {
-      const src = p.src[i], tg = p.targets[i];
-      if (src && tg) poseInto(def, skin.pose, src, tg, p.holder.position.x, p.holder.position.y, p.holder.position.z);
-    }
+    poseInto(def, skin.pose, sr, tg, 0, 0, 0);
   }
 
+  /** Ask for a form out of turn. It is queued rather than switched to: the
+   *  cloud is the only way from one form to another, so whatever is standing
+   *  falls back in first. */
   function showShape(i: number) {
-    if (!reel || i === shape) return;
-    if (i < 0) { shapeTo = 0; return; }
+    if (!reel || i < 0 || i >= SHAPES.length || coreAt < 1) return;
     ensureShape(i);
-    // A form standing hands straight over to the next one: the particles travel
-    // from one skin to the other and never pass through the cube. Going home
-    // between every pair made each change three events instead of one.
-    //
-    // Asked again mid-crossing — clicking twice quickly — it leaves from where
-    // the particles actually are, not from where the last form would have been:
-    // a snapshot of this instant becomes the thing being crossed out of.
-    if (shapeAt > 0.9 && shape >= 0 && ready(shape) && ready(i)) {
-      snapshot();
-      prev = shape; held = true; shape = i; mix = 0; beat = 0; phase = 2;
-      return;
-    }
-    prev = -1; held = false; mix = 1;
-    shape = i; shapeTo = 1; phase = 1; beat = 0;
+    queued = i;
+    if (phase === 'hold' || phase === 'bloom') { phase = 'collapse'; beat = 0; }
   }
-  /** has this shape's targets, on every plate */
-  const ready = (i: number) => i >= 0 && plates.every((p) => p.targets[i]);
 
-  /** freeze where every particle is bound this instant, so a crossing can be
-   *  interrupted without anything jumping */
-  function snapshot() {
-    const c = mix * mix * (3 - 2 * mix), S = cfg.shapes;
-    for (const p of plates) {
-      const tg = shape >= 0 ? p.targets[shape] : null;
-      const tp = prev >= 0 ? (held ? p.hold : p.targets[prev]) : null;
-      if (!tg) continue;
-      const { hold, when, total } = { hold: p.hold, when: p.when, total: p.sim.total };
-      for (let j = 0; j < total; j++) {
-        const i3 = j * 3;
-        if (!tp) { hold[i3] = tg[i3]; hold[i3 + 1] = tg[i3 + 1]; hold[i3 + 2] = tg[i3 + 2]; continue; }
-        const u = clamp(c * (1 + S.stagger) - S.stagger * when[j], 0, 1);
-        const e = u * u * (3 - 2 * u);
-        hold[i3] = tp[i3] + (tg[i3] - tp[i3]) * e;
-        hold[i3 + 1] = tp[i3 + 1] + (tg[i3 + 1] - tp[i3 + 1]) * e;
-        hold[i3 + 2] = tp[i3 + 2] + (tg[i3 + 2] - tp[i3 + 2]) * e;
-      }
-    }
-  }
-  let introT0 = 0, last: number | undefined, yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
+  let introT0 = 0, begun = false, last: number | undefined, yaw = cfg.camera.isoYaw, tilt = cfg.camera.isoTilt;
 
   function strike(x: number, y: number) {
     P.tx = x; P.ty = y; P.moved = true;
@@ -248,9 +231,9 @@ export function createHero(opts: HeroOptions): Hero {
     for (const p of plates) p.sim.hadM = false;
     shockT = performance.now() / 1000;
     spinBoost += cfg.strike.spin;
-    // a click is a blast, and what settles out of it is the next thing: the
-    // reel's own clock starts again from here
-    if (reel && exit === 0 && released) { cursor = (cursor + 1) % SHAPES.length; showShape(cursor); beat = 0; }
+    // a click is a blast, and what settles out of it is the next thing —
+    // once there is a cloud to make it out of
+    if (reel && exit === 0 && released) showShape((cursor + 1) % SHAPES.length);
   }
   const onDown = (e: PointerEvent) => {
     const el = e.target instanceof Element ? e.target : null;
@@ -293,22 +276,53 @@ export function createHero(opts: HeroOptions): Hero {
   function frame(now: number) {
     const t = now / 1000;
     const dt = Math.max(0, Math.min((now - (last ?? now)) / 1000, 0.05));
-    if (last === undefined || !released) introT0 = t;                      // the intro waits to be released
+    // The intro waits to be released, and then it is on the clock: its start
+    // is never moved again. It used to be re-stamped whenever the last frame
+    // time was cleared, which is also what a tab coming back does — so a page
+    // hidden during the intro replayed it from the first frame on every
+    // return, and in a browser that hides the page between every tool call
+    // it never got past that frame at all.
+    if (!released || !begun) { introT0 = t; begun = released; }
     last = now;
 
-    // the reel turns on its own: cube, crossing, form, crossing, next form.
-    // Scrolling takes precedence — nothing changes shape on the way out.
-    const S = cfg.shapes;
+    // The reel turns on its own. Scrolling takes precedence — nothing changes
+    // shape on the way out.
+    const S = cfg.shapes, O = cfg.open;
     if (reel && exit === 0 && released) {
       beat += dt;
-      const span = phase === 0 ? S.beat.first : phase === 2 ? S.beat.shape : S.beat.cross;
-      if (beat > span) {
-        beat = 0;
-        // the logo holds while the page settles; after that one form follows
-        // another for as long as you stay, and the mark never goes home again
-        if (phase === 0) { phase = 1; cursor = 0; showShape(0); }
-        else if (phase === 2) { cursor = (cursor + 1) % SHAPES.length; showShape(cursor); }
-        else phase = 2;
+      switch (phase) {
+        case 'arrive':
+          // the cube lands, whole, and is allowed to be the logo for a moment
+          if (beat > S.beat.first) { phase = 'gather'; beat = 0; }
+          break;
+        case 'gather':
+          coreAt = clamp(coreAt + dt / F.gather, 0, 1);
+          if (coreAt >= 1) { phase = 'settle'; beat = 0; }
+          break;
+        case 'settle': {
+          // The wait, and the only one. The cloud churns until the form it is
+          // about to make has been sampled — the first time round that is the
+          // page loading; after it, it is the beat where the cloud is just a
+          // cloud. `patience` is the floor under a shape that never arrives.
+          const next = queued >= 0 ? queued : (cursor + 1) % SHAPES.length;
+          ensureShape(next);
+          if (beat > F.settle && (ready(next) || beat > F.patience)) {
+            cursor = next; shape = next; queued = -1;
+            phase = 'bloom'; beat = 0;
+          }
+          break;
+        }
+        case 'bloom':
+          formAt = clamp(formAt + dt / F.bloom, 0, 1);
+          if (formAt >= 1) { phase = 'hold'; beat = 0; }
+          break;
+        case 'hold':
+          if (beat > S.beat.shape) { phase = 'collapse'; beat = 0; }
+          break;
+        case 'collapse':
+          formAt = clamp(formAt - dt / F.collapse, 0, 1);
+          if (formAt <= 0) { phase = 'settle'; beat = 0; }
+          break;
       }
     } else if (exit > 0 && !parked) {
       // scrolling away stops the reel where it stands. Whatever is up is what
@@ -317,14 +331,29 @@ export function createHero(opts: HeroOptions): Hero {
       parked = true;
     }
     if (exit === 0) parked = false;
-    if (shapeTo === 0 && shapeAt < 0.002 && shape >= 0) { shape = -1; prev = -1; held = false; mix = 1; }
-    const sRate = dt / S.beat.cross;
-    shapeAt = clamp(shapeAt + (shapeTo > shapeAt ? sRate : -sRate), 0, 1);
-    const shapeE = shapeAt * shapeAt * (3 - 2 * shapeAt);
-    // the direct crossing from one form to the next
-    if (mix < 1) mix = clamp(mix + dt / S.beat.cross, 0, 1);
-    if (mix >= 1) { prev = -1; held = false; }
-    const cross = mix * mix * (3 - 2 * mix);
+    const coreE = coreAt * coreAt * (3 - 2 * coreAt);
+    // The form's easing is not the same both ways. Blooming, it is all at the
+    // start — fast out and slow to land, a burst; collapsing, the curve is
+    // turned round, so the form holds almost whole and is then taken into
+    // the ball in the last stretch. Creation, and the undoing of it, do not
+    // look alike, and a single symmetric ease made them the same event.
+    const rising = phase === 'bloom' || phase === 'hold';
+    const formE = rising ? 1 - Math.pow(1 - formAt, 3) : formAt * formAt * formAt;
+    // The cube follows. To `rest` as the cloud gathers; the last of the way as
+    // the form comes, springing a little past and settling (easeOutBack); and
+    // back in as the form is taken, on exactly that curve inverted — a little
+    // past its rest size, then up to it. One movement, forwards and backwards.
+    const back = (x: number) => { const u = x - 1, c1 = O.overshoot, c3 = c1 + 1; return 1 + c3 * u * u * u + c1 * u * u; };
+    const cubeE = rising ? back(formAt) : 1 - back(1 - formAt);
+    const openE = O.rest * coreE + (1 - O.rest) * cubeE;
+    // The ball draws in through the settle and the burst opens from there:
+    // while it waits it tightens (eased, so it is a gathering rather than a
+    // shrink), and as the form comes the tightness is let go with the form's
+    // own curve, so nothing steps.
+    const sqT = phase === 'settle' ? clamp(beat / F.settle, 0, 1) : 0;
+    const squeeze = phase === 'settle' ? sqT * sqT * (3 - 2 * sqT) : rising ? 1 - formE : 0;
+    const tight = 1 - F.squeeze * squeeze;
+
     // The throw: one curve from the first pixel of scroll to gone. It used to
     // be two — a loosening that swelled and settled, and this — and the second
     // began while the first was still pulling back, so the cloud opened,
@@ -339,7 +368,7 @@ export function createHero(opts: HeroOptions): Hero {
     // object and something standing there. The wave is worked out once a frame
     // and each particle takes its own share of it, so it costs no trigonometry
     // per point.
-    const def = shape >= 0 ? SHAPES[shape] : null;
+    const def = SHAPES[shape];
     const swayX = def?.sway ? def.sway * Math.sin(t * 0.62) : 0;
     const swayZ = def?.sway ? def.sway * 0.7 * Math.cos(t * 0.47) : 0;
     const bobY = def?.bob ? def.bob * Math.sin(t * 0.55) : 0;
@@ -362,90 +391,117 @@ export function createHero(opts: HeroOptions): Hero {
     camera.position.set(Math.sin(yaw) * Math.cos(tilt), Math.sin(tilt), Math.cos(yaw) * Math.cos(tilt)).multiplyScalar(dist);
     camera.lookAt(0, 0, 0);
 
+    // ── the cube: its turn, and its size ───────────────────────────────
     // the revolution about the diagonal; faster after a strike, and as it drains away on scroll
     spinBoost *= Math.exp(-cfg.intro.spinDecay * dt);
     // once the mark is leaving, the revolution eases down to a drift rather
     // than carrying the whole frame around with it
     const spinFade = 1 - (1 - cfg.exit.spin) * Math.min(1, exit / 0.5);
-    // One turn, always the same way round. The diagonal tumble only ever
-    // existed to hide the cube's hollow back; a form has a front and a floor,
-    // so the axis leans up to vertical as one stands — the mark keeps turning
-    // through the change instead of stopping and picking a new direction.
-    const rate = (cfg.mark.spin + spinBoost) * spinFade * (1 - shapeE) + cfg.mark.spin * S.turntable * shapeE;
-    spinAngle += rate * dt;
-    _axis.copy(SPIN_AXIS).lerp(UP, shapeE).normalize();
-    qSpin.setFromAxisAngle(_axis, spinAngle);
-    qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble * (1 - shapeE));
+    // The wind-up and the release. Shut and tightening, the turn builds; the
+    // burst lets it go. The pace chases a target set by what the reel is
+    // doing rather than by the size, at two speeds: winding up is slow and
+    // letting go is quick, which is the shape of any release.
+    const M = cfg.mark;
+    const paceTo = rising ? M.spinOpen : M.spinShut;
+    pace += (paceTo - pace) * (1 - Math.exp(-(rising ? M.spinRelease : M.spinWind) * dt));
+    spinAngle += (M.spin * pace + spinBoost) * spinFade * dt;
+    qSpin.setFromAxisAngle(SPIN_AXIS, spinAngle);
+    qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble);
     L0.quaternion.copy(qSpin).multiply(qTilt);
-
+    // The open cube is the closed one, larger. How much larger is the config's
+    // number, held back on a screen without the room: the closed cube reaches
+    // `reach` across the screen, the room is the shorter half of the viewport,
+    // and the scale may take the one up to `fill` of the other and no further.
+    const halfH = Math.tan((C.fov * Math.PI) / 360) * dist;
+    const room = Math.min(halfH, halfH * camera.aspect) * O.fill;
+    const scaleMax = Math.min(O.scale, room / O.reach);
+    L0.scale.setScalar(1 + (scaleMax - 1) * openE);
     L0.updateMatrixWorld(true);
+    material.uniforms.uScale.value = L0.scale.x;
 
+    // ── the cloud: its turn, its churn ─────────────────────────────────
+    // What the cube's turn cannot do for it, the cloud does for itself: one
+    // slow turn on the spot, about the vertical, carrying whatever it is.
+    cloudPivot.rotation.y = t * S.turn;
+    cloudPivot.updateMatrixWorld(true);
     material.uniforms.uTime.value = t;
+    // the wander is the cloud's; a standing form keeps a quarter of it, which
+    // is the difference between a statue and something alive
+    material.uniforms.uChurn.value = F.drift * coreE * (1 - 0.75 * formE) * (1 + 0.8 * squeeze);
+    material.uniforms.uFlat.value = formE * S.flat;
+    material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
+    // The swirl, once per band rather than once per particle. The middle of
+    // the cloud turns fastest and the outside trails, which is what stops a
+    // ball of points from reading as a solid object being rotated.
+    for (let k = 0; k < F.bands; k++) {
+      const a = (t * F.churn) / (0.4 + (k + 0.5) / F.bands);
+      bandC[k] = Math.cos(a); bandS[k] = Math.sin(a);
+    }
+    // an animated form is re-posed once a frame
+    if (formE > 0.0005 && SHAPES[shape].skin) poseShape(shape, t);
+
     ctx.dt = dt; ctx.t = t; ctx.introT0 = introT0; ctx.exit = exit; ctx.shockT = shockT;
     ctx.out = out;
-    ctx.form = shapeE;
+    ctx.form = coreE;
     ctx.swipe = swipe;
-    material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
-    material.uniforms.uFlat.value = shapeE * S.flat;
-    // an animated form is re-posed once a frame, for every plate at once —
-    // both of them while one is crossing into the other
-    if (shapeE > 0.0005) {
-      if (shape >= 0 && SHAPES[shape].skin) poseShape(shape, t);
-      if (prev >= 0 && !held && SHAPES[prev].skin) poseShape(prev, t);
-    }
-    for (const p of plates) {
-      simulate(p.holder, p.points, p.sim, ctx);
-      const tg = shape >= 0 ? p.targets[shape] : null;
-      const tp = prev >= 0 ? (held ? p.hold : p.targets[prev]) : null;
-      if (shapeE > 0.0005 && tg) {
-        const { off, home, total } = p.sim, when = p.when;
-        for (let j = 0; j < total; j++) {
-          const i3 = j * 3;
-          // The order particles arrive in. Chance alone gives a cloud that
-          // condenses; ordering it by how high the point sits gives a form
-          // laid down from the floor up, the way a printer builds one — which
-          // is the difference between a cloud settling and a thing being made.
-          const key = def
-            ? when[j] * (1 - S.print) + clamp((tg[i3 + 1] - floorY) * invH, 0, 1) * S.print
-            : when[j];
-          const u = clamp(shapeE * (1 + S.stagger) - S.stagger * key, 0, 1);
-          const w = u * u * (3 - 2 * u);
-          if (w <= 0) continue;
-          // where this particle is bound: one form, or somewhere along the
-          // line between the one it is leaving and the one it is joining
-          let tx = tg[i3], ty = tg[i3 + 1], tz = tg[i3 + 2];
-          if (tp) {
-            // each particle crosses in its own time, so the cloud shears from
-            // one form into the other rather than sliding across as a block
-            const c = clamp(cross * (1 + S.stagger) - S.stagger * key, 0, 1);
-            const e = c * c * (3 - 2 * c);
-            tx = tp[i3] + (tx - tp[i3]) * e;
-            ty = tp[i3 + 1] + (ty - tp[i3 + 1]) * e;
-            tz = tp[i3 + 2] + (tz - tp[i3 + 2]) * e;
-          }
-          if (def && w > 0.02) {
+
+    for (const p of plates) simulate(p.holder, p.points, p.sim, ctx);
+    if (reel) {
+      simulate(cloudRoot, cloud.points, cloud.sim, ctx);
+      const { off, home, ain } = cloud.sim, { wide, band } = cloud;
+      const tg = formE > 0.0005 ? targets[shape] : null;
+      const rk = tg ? rank[shape] : null;
+      const dim = 1 - out * cfg.exit.dim;
+      for (let j = 0; j < cloudN; j++) {
+        const i3 = j * 3;
+        // how far this particle has arrived at all: from the dark, in its turn
+        const g = clamp(coreE * (1 + F.spread) - F.spread * when[j], 0, 1);
+        const w = g * g * (3 - 2 * g);
+        ain[j] = w * dim;
+        if (w <= 0) { off[i3] = wide[i3]; off[i3 + 1] = wide[i3 + 1]; off[i3 + 2] = wide[i3 + 2]; continue; }
+        // where the cloud holds it, turning
+        const k = band[j], ca = bandC[k], sa = bandS[k];
+        const ux = (home[i3] - PIVOT) * tight, uz = (home[i3 + 2] - PIVOT) * tight;
+        let Tx = PIVOT + ux * ca - uz * sa;
+        let Ty = PIVOT + (home[i3 + 1] - PIVOT) * tight;
+        let Tz = PIVOT + ux * sa + uz * ca;
+        if (tg && rk) {
+          // …and where the form wants it. Each particle crosses in its own
+          // time, ordered from the middle out, so the cloud opens into the
+          // form rather than sliding into it as a block.
+          const u = clamp(formE * (1 + F.spread) - F.spread * rk[j], 0, 1);
+          const e = u * u * (3 - 2 * u);
+          Tx += (tg[i3] - Tx) * e;
+          Ty += (tg[i3 + 1] - Ty) * e;
+          Tz += (tg[i3 + 2] - Tz) * e;
+          if (def && e > 0.02) {
             // rooted at the foot, loosest at the head — and each particle
             // takes a slightly different share, so the form bends rather
             // than sliding
-            const h = clamp((ty - floorY) * invH, 0, 1);
-            const lean = h * h * (0.7 + 0.6 * when[j]) * w;
-            tx += swayX * lean;
-            tz += swayZ * lean;
-            ty += bobY * w;
+            const h = clamp((Ty - floorY) * invH, 0, 1);
+            const lean = h * h * (0.7 + 0.6 * when[j]) * e;
+            Tx += swayX * lean;
+            Tz += swayZ * lean;
+            Ty += bobY * e;
           }
-          // some of the cursor's push survives, so a standing form is still
-          // something you can put your hand through
-          const keep = 1 - w * (1 - S.touch);
-          off[i3] = off[i3] * keep + (tx - home[i3]) * w;
-          off[i3 + 1] = off[i3 + 1] * keep + (ty - home[i3 + 1]) * w;
-          off[i3 + 2] = off[i3 + 2] * keep + (tz - home[i3 + 2]) * w;
         }
+        // still on its way in: the rest of the road from where it started
+        const far = 1 - w;
+        // some of the cursor's push survives, so the cloud is still
+        // something you can put your hand through
+        const keep = S.touch;
+        off[i3] = off[i3] * keep + (Tx - home[i3]) + wide[i3] * far;
+        off[i3 + 1] = off[i3 + 1] * keep + (Ty - home[i3 + 1]) + wide[i3 + 1] * far;
+        off[i3 + 2] = off[i3 + 2] * keep + (Tz - home[i3 + 2]) + wide[i3 + 2] * far;
       }
-      // and last, the exit: every particle thrown outward from wherever it
-      // ended up, form or no form. `over` is each one's own radial, so the
-      // cloud comes apart rather than sliding away as a block.
-      if (burst > 0) {
-        const { off, over, total } = p.sim;
+      (cloud.points.geometry.attributes.aIn as THREE.BufferAttribute).needsUpdate = true;
+    }
+    // and last, the exit: every particle thrown outward from wherever it
+    // ended up, form or no form. `over` is each one's own radial, so the
+    // cloud comes apart rather than sliding away as a block.
+    if (burst > 0) {
+      for (const sim of [...plates.map((p) => p.sim), cloud.sim]) {
+        const { off, over, total } = sim;
         for (let j = 0; j < total; j++) {
           const i3 = j * 3;
           off[i3] += over[i3] * burst;
@@ -464,9 +520,18 @@ export function createHero(opts: HeroOptions): Hero {
     }
     if (running) raf = requestAnimationFrame(frame);
   }
+  /* A hidden tab gets no animation frames, so there is nothing to stop on the
+     way out. What matters is the way back: forget the last frame time, or the
+     first frame after an absence would integrate the whole of it — and make
+     sure the loop is going, because a page that was hidden while it was asleep
+     and scrolled back meanwhile has been asked for the mark and not answered.
+     It used to cancel itself on hide and count on the matching show to start
+     it again; in one embedded browser that show never came, and the hero
+     stood at the first frame of its intro for as long as the page was open. */
   const onVisibility = () => {
-    if (document.hidden) { running = false; cancelAnimationFrame(raf); }
-    else if (!running) { running = true; last = undefined; raf = requestAnimationFrame(frame); }
+    if (document.hidden) return;
+    last = undefined;
+    if (!running && !asleep) { running = true; raf = requestAnimationFrame(frame); }
   };
   document.addEventListener('visibilitychange', onVisibility);
   raf = requestAnimationFrame(frame);
@@ -483,6 +548,7 @@ export function createHero(opts: HeroOptions): Hero {
       document.removeEventListener('visibilitychange', onVisibility);
       destroyPointer(); lens.dispose();
       for (const p of plates) p.points.geometry.dispose();
+      cloud.points.geometry.dispose();
       material.dispose(); renderer.dispose(); renderer.domElement.remove();
     },
   };

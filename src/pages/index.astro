@@ -1,10 +1,12 @@
 ---
 import Base from '@layouts/Base.astro';
-import ShutterScroll from '@components/transitions/ShutterScroll.astro';
+import SquareField from '@components/transitions/SquareField.astro';
 import Hero from '@components/hero/Hero.astro';
 import Marquee from '@components/home/Marquee.astro';
 import Manifesto from '@components/home/Manifesto.astro';
 import Studios from '@components/home/Studios.astro';
+import Process from '@components/home/Process.astro';
+import Testimonials from '@components/home/Testimonials.astro';
 import Brands from '@components/home/Brands.astro';
 import ProjectGrid from '@components/work/ProjectGrid.astro';
 import { getHome, getProjects } from '@lib/sanity/queries';
@@ -12,7 +14,7 @@ import { getHome, getProjects } from '@lib/sanity/queries';
 const [home, projects] = await Promise.all([getHome(), getProjects()]);
 ---
 <Base theme="dark">
-  <main class="main">
+  <main class="main" data-page="home">
     <div class="dark" data-hold>
       <Hero content={home.hero} featured={home.featuredProject} />
       <Marquee items={home.studios.items.map((s) => s.name)} />
@@ -21,16 +23,19 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
       <div class="scrim" data-scrim aria-hidden="true"></div>
     </div>
 
-    <!-- the light half travels over the dark one, its shutter leading it -->
+    <!-- the light half travels over the dark one, the field of squares
+         assembling ahead of it -->
     <div class="light">
-      <ShutterScroll rows={7} height="1.9rem" />
+      <SquareField height="52vh" />
       <section class="next" id="work" data-next data-theme="light">
         <Studios content={home.studios} />
+        <Process content={home.process} />
+        <Testimonials content={home.testimonials} />
         <header class="head">
           <span class="label">Selected work</span>
           <a class="label all" href="/work" data-tap>All projects →</a>
         </header>
-        <ProjectGrid projects={projects.slice(0, 4)} />
+        <ProjectGrid projects={projects.slice(0, 6)} />
       </section>
     </div>
   </main>
@@ -41,10 +46,14 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
   .main { position: relative; z-index: var(--z-main); }
   /* the dark half holds once its end meets the bottom of the screen (the top
      offset is set in JS: viewport − height), and the light half rides up over
-     it — the shutter's rows leading, then its own ground */
+     it — the field assembling first, then its own ground */
   .dark { position: sticky; top: 0; z-index: 1; }
   /* the dark half is put out as the light one climbs over it */
-  .scrim { position: fixed; inset: 0; z-index: 6; background: var(--ground); opacity: 0; pointer-events: none; }
+  /* inside the held half's own stacking context, so it is a local number and
+     not a page layer — it only has to sit over the panels in there, which
+     ride at --z-ui */
+  .scrim { position: fixed; inset: 0; z-index: calc(var(--z-ui) + 1);
+           background: var(--ground); opacity: 0; pointer-events: none; }
   .light { position: relative; z-index: var(--z-ui); }
   .next { background: var(--ground); color: var(--ink); padding: 2vh var(--page-x) 12vh; }
   .head { display: flex; justify-content: space-between; align-items: baseline;

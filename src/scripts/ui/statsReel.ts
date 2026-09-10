@@ -17,6 +17,10 @@ export function createStatsReel(root: HTMLElement): StatsReel {
   const readout = root.querySelector<HTMLElement>('[data-stats-index]');
   const prev = root.querySelector<HTMLElement>('[data-stats-prev]');
   const next = root.querySelector<HTMLElement>('[data-stats-next]');
+  /* an optional way in that is not a step: a list of the slides by name,
+     each of which jumps straight to its own. It marks itself the way the
+     slides do, so the list reads as the position and not only as a menu. */
+  const jumps = Array.from(root.querySelectorAll<HTMLElement>('[data-stats-go]'));
   const period = Number(root.dataset.statsInterval ?? 6000);
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -26,6 +30,10 @@ export function createStatsReel(root: HTMLElement): StatsReel {
     i = (n + slides.length) % slides.length;
     t = 0;
     slides.forEach((s, k) => { s.classList.toggle('on', k === i); s.setAttribute('aria-hidden', String(k !== i)); });
+    jumps.forEach((j, k) => {
+      j.classList.toggle('on', k === i);
+      j.setAttribute('aria-current', String(k === i));
+    });
     if (readout) readout.textContent = pad(i + 1);
   }
 
@@ -43,8 +51,14 @@ export function createStatsReel(root: HTMLElement): StatsReel {
   const step = (d: number) => { show(i + d); last = performance.now(); };
   const onPrev = () => step(-1);
   const onNext = () => step(1);
+  const onJump = (e: Event) => {
+    const j = (e.currentTarget as HTMLElement);
+    show(Number(j.dataset.statsGo));
+    last = performance.now();          // the slide it was given gets a full turn
+  };
   prev?.addEventListener('click', onPrev);
   next?.addEventListener('click', onNext);
+  jumps.forEach((j) => j.addEventListener('click', onJump));
 
   const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; last = performance.now(); }, { threshold: 0.35 });
   io.observe(root);
@@ -58,6 +72,7 @@ export function createStatsReel(root: HTMLElement): StatsReel {
       cancelAnimationFrame(raf); io.disconnect();
       prev?.removeEventListener('click', onPrev);
       next?.removeEventListener('click', onNext);
+      jumps.forEach((j) => j.removeEventListener('click', onJump));
     },
   };
 }

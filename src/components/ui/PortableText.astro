@@ -18,7 +18,7 @@ const text = (b: Block) => (b.children ?? []).map((s) => s.text).join('');
 
 <style>
   .pt { max-width: 62ch; }
-  .pt p { font-size: var(--t-body); line-height: 1.7; color: var(--ink-2); margin-bottom: 1.2em; }
-  .pt h2, .pt h3 { margin: 2em 0 0.6em; letter-spacing: -0.02em; }
-  .pt h2 { font-size: 1.5rem; } .pt h3 { font-size: 1.125rem; }
+  .pt p { font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-2); margin-bottom: 1.2em; }
+  .pt h2, .pt h3 { margin: 2em 0 0.6em; line-height: var(--lh-title); letter-spacing: var(--track-title); }
+  .pt h2 { font-size: var(--t-statement); } .pt h3 { font-size: var(--t-lead); }
 </style>

@@ -4,7 +4,16 @@
     "name": "Cedar Park",
     "slug": "cedar-park",
     "images": [
-      "/work/architecture-design/cedar-park/01"
+      {
+        "src": "/work/architecture-design/cedar-park/01",
+        "w": 2200,
+        "h": 1396,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      }
     ]
   },
   {
@@ -12,8 +21,26 @@
     "name": "Delphi",
     "slug": "delphi",
     "images": [
-      "/work/architecture-design/delphi/01",
-      "/work/architecture-design/delphi/02"
+      {
+        "src": "/work/architecture-design/delphi/01",
+        "w": 2200,
+        "h": 1467,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      },
+      {
+        "src": "/work/architecture-design/delphi/02",
+        "w": 2200,
+        "h": 1467,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      }
     ]
   },
   {
@@ -21,11 +48,56 @@
     "name": "Fitness Center",
     "slug": "fitness-center",
     "images": [
-      "/work/architecture-design/fitness-center/01",
-      "/work/architecture-design/fitness-center/02",
-      "/work/architecture-design/fitness-center/03",
-      "/work/architecture-design/fitness-center/04",
-      "/work/architecture-design/fitness-center/05"
+      {
+        "src": "/work/architecture-design/fitness-center/01",
+        "w": 2200,
+        "h": 1238,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      },
+      {
+        "src": "/work/architecture-design/fitness-center/02",
+        "w": 2200,
+        "h": 1238,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      },
+      {
+        "src": "/work/architecture-design/fitness-center/03",
+        "w": 2200,
+        "h": 1238,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      },
+      {
+        "src": "/work/architecture-design/fitness-center/04",
+        "w": 2200,
+        "h": 1238,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      },
+      {
+        "src": "/work/architecture-design/fitness-center/05",
+        "w": 2200,
+        "h": 1238,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      }
     ]
   },
   {
@@ -33,8 +105,26 @@
     "name": "Mishawaka",
     "slug": "mishawaka",
     "images": [
-      "/work/architecture-design/mishawaka/01",
-      "/work/architecture-design/mishawaka/02"
+      {
+        "src": "/work/architecture-design/mishawaka/01",
+        "w": 2200,
+        "h": 1238,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      },
+      {
+        "src": "/work/architecture-design/mishawaka/02",
+        "w": 2200,
+        "h": 1238,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      }
     ]
   },
   {
@@ -42,7 +132,16 @@
     "name": "Pacific Palisades Residence",
     "slug": "pacific-palisades-residence",
     "images": [
-      "/work/architecture-design/pacific-palisades-residence/01"
+      {
+        "src": "/work/architecture-design/pacific-palisades-residence/01",
+        "w": 2200,
+        "h": 1228,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      }
     ]
   },
   {
@@ -50,10 +149,46 @@
     "name": "Racel Residence",
     "slug": "racel-residence",
     "images": [
-      "/work/architecture-design/racel-residence/01",
-      "/work/architecture-design/racel-residence/02",
-      "/work/architecture-design/racel-residence/03",
-      "/work/architecture-design/racel-residence/04"
+      {
+        "src": "/work/architecture-design/racel-residence/01",
+        "w": 2200,
+        "h": 1228,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      },
+      {
+        "src": "/work/architecture-design/racel-residence/02",
+        "w": 2200,
+        "h": 1395,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      },
+      {
+        "src": "/work/architecture-design/racel-residence/03",
+        "w": 2200,
+        "h": 1395,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      },
+      {
+        "src": "/work/architecture-design/racel-residence/04",
+        "w": 2200,
+        "h": 1395,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      }
     ]
   },
   {
@@ -61,8 +196,26 @@
     "name": "Rogers Cafe",
     "slug": "rogers-cafe",
     "images": [
-      "/work/architecture-design/rogers-cafe/01",
-      "/work/architecture-design/rogers-cafe/02"
+      {
+        "src": "/work/architecture-design/rogers-cafe/01",
+        "w": 2200,
+        "h": 1395,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      },
+      {
+        "src": "/work/architecture-design/rogers-cafe/02",
+        "w": 2200,
+        "h": 1396,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      }
     ]
   },
   {
@@ -70,8 +223,26 @@
     "name": "RuthChris Bar",
     "slug": "ruthchris-bar",
     "images": [
-      "/work/architecture-design/ruthchris-bar/01",
-      "/work/architecture-design/ruthchris-bar/02"
+      {
+        "src": "/work/architecture-design/ruthchris-bar/01",
+        "w": 2200,
+        "h": 1755,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      },
+      {
+        "src": "/work/architecture-design/ruthchris-bar/02",
+        "w": 2200,
+        "h": 1394,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      }
     ]
   },
   {
@@ -79,7 +250,16 @@
     "name": "Swing Suite",
     "slug": "swing-suite",
     "images": [
-      "/work/architecture-design/swing-suite/01"
+      {
+        "src": "/work/architecture-design/swing-suite/01",
+        "w": 2200,
+        "h": 1375,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      }
     ]
   },
   {
@@ -87,7 +267,16 @@
     "name": "Anaconda",
     "slug": "anaconda",
     "images": [
-      "/work/creative-media/anaconda/01"
+      {
+        "src": "/work/creative-media/anaconda/01",
+        "w": 2200,
+        "h": 1228,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      }
     ]
   },
   {
@@ -95,8 +284,26 @@
     "name": "Grubhub",
     "slug": "grubhub",
     "images": [
-      "/work/creative-media/grubhub/01",
-      "/work/creative-media/grubhub/02"
+      {
+        "src": "/work/creative-media/grubhub/01",
+        "w": 2200,
+        "h": 1350,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      },
+      {
+        "src": "/work/creative-media/grubhub/02",
+        "w": 2200,
+        "h": 1350,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      }
     ]
   },
   {
@@ -104,8 +311,34 @@
     "name": "Spiderman",
     "slug": "spiderman",
     "images": [
-      "/work/creative-media/spiderman/01",
-      "/work/creative-media/spiderman/02"
+      {
+        "src": "/work/creative-media/spiderman/01",
+        "w": 2200,
+        "h": 2200,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      },
+      {
+        "src": "/work/creative-media/spiderman/02",
+        "w": 2200,
+        "h": 2200,
+        "widths": [
+          900,
+          1400,
+          2200
+        ]
+      }
+    ],
+    "videos": [
+      {
+        "src": "/work/creative-media/spiderman/v01.mp4",
+        "poster": "/work/creative-media/spiderman/v01.jpg",
+        "w": 1920,
+        "h": 1080
+      }
     ]
   }
 ]

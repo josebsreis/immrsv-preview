@@ -4,7 +4,7 @@
    follows; no component owns a raw value.
 
    Themes: any element can declare `data-theme="dark|light"` and everything
-   inside it re-resolves. The hero is dark; the section after the shutter is
+   inside it re-resolves. The hero is dark; the section after the field is
    light; the nav flips by having its attribute switched from JS.
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -17,9 +17,15 @@
   font-size: clamp(16px, 8px + 0.5556vw, 26px);
 
   /* ── page geometry ─────────────────────────────────────────────── */
-  --page-x: 2rem;                 /* edge margin — every anchored element uses it */
+  /* The edge margin, and it is one value: every page, panel and anchored row
+     reads it, and it tightens on a phone rather than each component reaching
+     for its own smaller number — six of them used to. */
+  --page-x: 2rem;
   --page-y: 2.125rem;             /* bottom margin for the hero's anchored row */
   --nav-y: 1.625rem;
+  /* the height every pill in the site stands at — the nav's and the work
+     filter's are the same object and were the same magic number twice */
+  --pill-h: 2.125rem;
   /* the page's two-column split: a narrow left column and the gap after it.
      Every panel that uses it starts its right column on the same line. */
   --col-side: 20rem;
@@ -35,28 +41,106 @@
   --s-7: 3rem;
   --s-8: 4.5rem;
 
+  /* The channel between two pictures. Its own value, and a small one: images
+     laid close read as a set and as one surface, and the wide gutters of a
+     text grid pull them apart into separate things. Everything that stacks or
+     tiles media uses it, so the work page, the homepage strip and a project's
+     own column all breathe alike. */
+  --gap-media: 0.75rem;
+
   /* ── type ──────────────────────────────────────────────────────── */
-  --font-sans: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  /* Inter first (see global.css). The old stack stays behind it as the
+     fallback the page is drawn in while the file arrives — and on a Mac that
+     fallback is real Helvetica Neue, which is close enough in width that the
+     swap does not throw the layout about. */
+  --font-sans: InterVariable, "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  /* The reading sizes run small and the display sizes stay large: the gap
+     between them is the effect. Set at a comfortable 15px, body copy reads
+     as a website; at 14 with the leading left open it reads as an interface,
+     which is the register the work is being shown in. The two smallest
+     sizes are unchanged — they are already at the floor. */
   --t-label: 0.625rem;            /* 10px — nav, tags, meta */
   --t-caption: 0.6875rem;         /* 11px — buttons, small caps */
-  --t-small: 0.875rem;            /* 14px */
-  --t-body: 0.9375rem;            /* 15px */
-  --t-lead: clamp(1rem, 1.35vw, 1.25rem);
+  --t-small: 0.8125rem;           /* 13px */
+  --t-body: 0.875rem;             /* 14px */
+  --t-lead: clamp(0.9375rem, 1.2vw, 1.125rem);
   --t-h2: clamp(1.875rem, 4.6vw, 4.625rem);
-  --t-statement: clamp(1.375rem, 2.4vw, 2.25rem);   /* the spoken statement */
+  --t-statement: clamp(1.25rem, 2.1vw, 1.875rem);   /* the spoken statement */
   --t-figure: clamp(2.5rem, 4vw, 3.75rem);          /* a stat's number */
   --t-display: clamp(2.375rem, 4.4vw, 4rem);
-  --track-label: 0.16em;
+  /* ── the type system ─────────────────────────────────────────────
+     Four tiers, and every piece of text on the site belongs to one of them.
+     A tier owns its weight, its tracking and its leading together, because
+     they only work as a set: light display type needs tight tracking and
+     almost no leading; body copy needs neither.
+
+       display   --t-display, --t-h2        the big lines
+       title     --t-statement, --t-figure  names of things
+       lead      --t-lead                   the line under a heading
+       body      --t-body, --t-small        anything with length
+
+     Display is Light: at 40px and up a regular weight states and a light one
+     considers, which is the difference the reference sites trade on. Body
+     stays regular — Inter's Light is too thin to read at 15px. Only small
+     controls go heavier, where the size cannot carry the emphasis itself. */
+  --w-display: 300;
+  --w-title: 400;
+  --w-body: 400;
+  --w-ui: 500;                    /* buttons and the like, at caption size */
+
+  /* Tracking is negative above body size and positive below it: large type
+     sets too loose at its natural spacing and small capitals too tight.
+     Inter is drawn for UI, so body itself wants none. */
+  --track-display: -0.03em;
+  --track-title: -0.025em;
+  --track-lead: -0.01em;
+  --track-caps: 0.12em;           /* 11px uppercase: chips, tabs, buttons */
+  --track-label: 0.16em;          /* 10px uppercase: nav, tags, meta */
   --track-wide: 0.26em;
 
+  /* Leading closes as the type grows: a display line is nearly solid, body
+     copy is open. 1.7 rather than 1.5 on body is most of the air on a page
+     that has few other things in it. */
+  --lh-display: 0.98;
+  --lh-title: 1.05;
+  --lh-lead: 1.45;
+  --lh-body: 1.7;
+
   /* ── shape ─────────────────────────────────────────────────────── */
-  --radius: 0;                    /* the whole site is square */
-  --square: 0.25rem;              /* the 4px square, the site's marker */
+  /* Two radii, both small, and the larger one on the larger surface: 4px off
+     a pill or a chip, 6px off a picture. Small enough that neither reads as
+     rounded — the site is still square — and enough that nothing has a hard
+     corner against the grey ground. Fixed pixels, like --square: these are
+     drawn details, not measures, and should not grow with the type.
+     The marker itself stays square. It is 5px across; a radius on it would
+     be a blur, not a corner. */
+  --radius: 4px;                  /* the UI: buttons, pills, chips, glass */
+  --radius-media: 6px;            /* pictures and clips */
+  /* The marker. Fixed pixels, and an odd number of them, which is the whole
+     reason for the value: it is centred on a 1px hairline everywhere it
+     appears — the process rule, the brands lattice, the studio reel — and
+     an odd square straddles an odd line on whole pixels (2 + 1 + 2). At 4px
+     its edges landed on half pixels and it drew soft. In rem it was worse:
+     the root scales past 1440, so the mark was 4.7px at 1920 and 6.5px at
+     3000 — fractional at almost every width. It sits with --hairline rather
+     than with the spacing scale because it is a drawn mark, not a measure. */
+  --square: 5px;
   --hairline: 1px;
-  --glass-blur: 14px;
+  --glass-blur: 18px;
+  /* What a floating control puts between itself and whatever it is over.
+     `--glass` alone is a 5% tint: it gives a pill its shape against the page,
+     and does nothing at all for dark ink crossing a dark photograph. This is
+     the page's own ground at most of its strength, so a control carries a
+     piece of the page with it and its label is legible over anything. It is
+     written once and resolves per theme, because --ground-rgb does. */
+  --veil: rgb(var(--ground-rgb) / 0.62);
 
   /* ── motion ────────────────────────────────────────────────────── */
   --ease-out: cubic-bezier(0.22, 0.8, 0.2, 1);
+  /* the panel that crosses a pill or a slab from the edge the cursor met:
+     it leaves fast and lands slowly, which is what makes it read as a sheet
+     being pushed rather than a colour changing */
+  --ease-panel: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-snap: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --dur-fast: 0.3s;
@@ -68,7 +152,6 @@
   --z-canvas: 1;
   --z-veil: 2;
   --z-main: 3;
-  --z-shutter: 4;
   --z-ui: 5;
   --z-nav: 6;
 }
@@ -79,6 +162,7 @@
   color-scheme: dark;
   --ground: #060606;
   --ground-rgb: 6 6 6;
+  --surface: #101012;
   --ink: #f3f3f4;
   --ink-2: #b9b9bd;               /* secondary text */
   --ink-3: #9c9ca0;               /* muted text */
@@ -95,15 +179,31 @@
 
 [data-theme="light"] {
   color-scheme: light;
-  --ground: #ffffff;
-  --ground-rgb: 255 255 255;
-  --ink: #0d1017;
-  /* the secondary voice runs warm rather than blue-grey: on a white ground a
-     cool grey reads as unset body copy, a warm one reads as chosen */
-  --ink-2: #6b645c;               /* secondary text */
-  --ink-3: #8b847b;               /* muted text */
-  --ink-4: #a8a29a;               /* dim: rule cross, meta */
-  --ink-dim: #d2cec8;
+  /* Not white, and further off it than a tint. A page of pure #fff has
+     nothing for a white render or a glass pill to sit on, and reads as an
+     empty document rather than as a made thing. This is the grey the
+     reference sites run — theirs is #f0f0f0, this is a step back from that
+     so the renders stay the brightest thing on the page. */
+  --ground: #f5f5f7;
+  --ground-rgb: 245 245 247;
+  /* one plane above the ground, for anything the page holds rather than
+     merely prints: the project page's written column is the first of them */
+  --surface: #ffffff;
+
+  /* Three steps, not two. The pair these come from runs headline / body /
+     meta, and the mistake is setting body copy in the lightest of them —
+     that is what makes a page read thin rather than soft. So the given light
+     grey sits at --ink-3, where it labels and annotates, and the body voice
+     is a step darker: dark enough to read (4.9:1 on this ground, AA), light
+     enough never to compete with the headline. Cool, where these used to run
+     warm — the argument for warm was that a cool grey reads as unset copy on
+     white, and the argument against is that these are the greys the eye is
+     trained on. */
+  --ink: #1d1d1f;                 /* the near-black everything is set in */
+  --ink-2: #6e6e73;               /* secondary text — anything with length */
+  --ink-3: #86868d;               /* muted text: meta, labels, the quiet line */
+  --ink-4: #a1a1a6;               /* dim: rule cross, meta */
+  --ink-dim: #d2d2d7;
   --glass: rgb(0 0 0 / 0.05);
   --glass-hover: rgb(0 0 0 / 0.09);
   --line: rgb(0 0 0 / 0.08);
@@ -116,6 +216,11 @@
 /* the split tightens before the panels stack */
 @media (max-width: 1099px) {
   :root { --col-side: 14rem; --col-gap: 7rem; }
+}
+
+/* and the page's own edge comes in on a phone */
+@media (max-width: 719px) {
+  :root { --page-x: 1.25rem; }
 }
 
 /* ── breakpoints (documented; CSS can't read custom props in @media) ──

@@ -1,5 +1,5 @@
-import { sanity, imageUrl } from './client';
-import type { HomeContent, Project, ImageRef } from './types';
+import { sanity, imageUrl, imageSrcset } from './client';
+import type { HomeContent, Project, ImageRef, Media } from './types';
 import { defaultHome, defaultProjects } from '@/content/defaults';
 
 /* ── GROQ ──────────────────────────────────────────────────────────── */
@@ -7,8 +7,15 @@ const imageFields = `{ asset, alt, "lqip": asset->metadata.lqip, "width": asset-
 
 const projectFields = `{
   _id, title, "slug": slug.current, year, location, studios, summary, featured,
+  challenge, approach, outcome, whatWeDid, liveUrl,
+  "services": coalesce(services, []),
   "cover": cover ${imageFields},
   "gallery": coalesce(gallery[] ${imageFields}, []),
+  "media": coalesce(media[]{
+    _type,
+    _type == "clip" => { "url": coalesce(file.asset->url, url), "poster": poster ${imageFields}, alt },
+    _type == "image" => ${imageFields}
+  }, []),
   "body": coalesce(body, [])
 }`;
 
@@ -18,6 +25,8 @@ const homeQuery = `*[_type == "home"][0]{
   studios{ tag, intro, "items": items[]{ key, name, promise, description, services,
     "media": media{ kind, "url": coalesce(file.asset->url, url), "poster": poster ${imageFields}, alt } } },
   brands{ tag, "items": items[]{ name, "logo": logo ${imageFields} } },
+  process{ tag, title, intro, "steps": coalesce(steps[]{ title, body }, []) },
+  testimonials{ tag, "items": coalesce(items[]{ label, quote, name, role, "portrait": portrait ${imageFields} }, []) },
   "featuredProject": featuredProject-> ${projectFields}
 }`;
 
@@ -25,12 +34,45 @@ const projectsQuery = `*[_type == "project"] | order(coalesce(order, 999) asc, y
 const projectBySlugQuery = `*[_type == "project" && slug.current == $slug][0] ${projectFields}`;
 
 /* ── mappers ───────────────────────────────────────────────────────── */
+/** the same ladder scripts/images.mjs writes for the local files, so a page
+ *  behaves the same whichever the picture came from */
+const WIDTHS = [900, 1400, 2200];
+
 function mapImage(raw: any, fallback?: ImageRef): ImageRef | undefined {
   if (!raw?.asset) return fallback;
-  return { url: imageUrl(raw)!, alt: raw.alt, lqip: raw.lqip, width: raw.width, height: raw.height };
+  return {
+    url: imageUrl(raw)!,
+    alt: raw.alt,
+    lqip: raw.lqip,
+    width: raw.width,
+    height: raw.height,
+    /* one srcset, not two: every URL is auto=format, so the CDN answers each
+       with AVIF or WebP by what the browser asked for */
+    webpSrcset: imageSrcset(raw, WIDTHS, raw.width),
+  };
+}
+
+/** One entry of the project's media list. A still keeps its whole ladder and
+ *  its own pixels; a clip keeps its poster, which is also what holds the room
+ *  open before it loads. An entry with nothing behind it is dropped. */
+function mapMedia(raw: any): Media | undefined {
+  if (raw?._type === 'clip') {
+    if (!raw.url) return undefined;
+    const poster = mapImage(raw.poster);
+    return { kind: 'video', url: raw.url, poster: poster?.url, alt: raw.alt ?? poster?.alt,
+             width: poster?.width, height: poster?.height };
+  }
+  const img = mapImage(raw);
+  if (!img) return undefined;
+  return { kind: 'image', url: img.url, alt: img.alt, webpSrcset: img.webpSrcset,
+           width: img.width, height: img.height };
 }
 
 function mapProject(raw: any): Project {
+  const cover = mapImage(raw.cover);
+  const gallery = (raw.gallery ?? []).map((g: any) => mapImage(g)).filter(Boolean);
+  /* the Media field is the page; the old gallery stands in until it is filled */
+  const media: Media[] = (raw.media ?? []).map(mapMedia).filter(Boolean);
   return {
     _id: raw._id,
     title: raw.title,
@@ -39,8 +81,20 @@ function mapProject(raw: any): Project {
     location: raw.location,
     studios: raw.studios ?? [],
     summary: raw.summary,
-    cover: mapImage(raw.cover),
-    gallery: (raw.gallery ?? []).map((g: any) => mapImage(g)).filter(Boolean),
+    challenge: raw.challenge,
+    approach: raw.approach,
+    outcome: raw.outcome,
+    whatWeDid: raw.whatWeDid,
+    liveUrl: raw.liveUrl,
+    services: raw.services ?? [],
+    cover,
+    gallery,
+    media: media.length
+      ? media
+      : [cover, ...gallery].filter(Boolean).map((img: any) => ({
+          kind: 'image' as const, url: img.url, alt: img.alt,
+          webpSrcset: img.webpSrcset, width: img.width, height: img.height,
+        })),
     body: raw.body ?? [],
     featured: raw.featured,
   };
@@ -73,6 +127,15 @@ export async function getHome(): Promise<HomeContent> {
       studios: studioItems.length
         ? { tag: raw.studios?.tag ?? defaultHome.studios.tag, intro: raw.studios?.intro ?? defaultHome.studios.intro, items: studioItems }
         : defaultHome.studios,
+      testimonials: raw.testimonials?.items?.length
+        ? {
+            tag: raw.testimonials.tag ?? defaultHome.testimonials.tag,
+            items: raw.testimonials.items.map((t: any) => ({ ...t, portrait: mapImage(t.portrait) })),
+          }
+        : defaultHome.testimonials,
+      process: raw.process?.steps?.length
+        ? { ...defaultHome.process, ...raw.process }
+        : defaultHome.process,
       brands: brandItems.length
         ? { tag: raw.brands?.tag ?? defaultHome.brands.tag, items: brandItems }
         : defaultHome.brands,

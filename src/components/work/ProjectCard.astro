@@ -1,34 +1,97 @@
 ---
 import type { Project } from '@lib/sanity/types';
-import { site } from '@lib/site';
 interface Props { project: Project; eager?: boolean; }
 const { project, eager = false } = Astro.props;
-const studios = project.studios.map((k) => site.studios.find((s) => s.key === k)?.label).filter(Boolean).join(' · ');
+
+/* What a card is really worth on screen, so the browser takes the width it
+   needs rather than the one that happens to be first. It has to follow the
+   grid: three across over 1099, two down to 720, one below that, inside the
+   page margins and the gaps between them. */
+const SIZES = [
+  '(max-width: 719px) calc(100vw - 4rem)',
+  '(max-width: 1099px) calc((100vw - 5rem) / 2)',
+  'calc((100vw - 6rem) / 3)',
+].join(', ');
 ---
-<a class="card" href={`/work/${project.slug}`} data-tap>
+<a class="card" href={`/work/${project.slug}`} data-tap data-studios={project.studios.join(' ')}>
   <div class="media">
     {project.cover
-      ? <img src={project.cover.url} alt={project.cover.alt ?? project.title} loading={eager ? 'eager' : 'lazy'} decoding="async" style={project.cover.lqip ? `background:url(${project.cover.lqip}) center/cover` : undefined} />
+      ? <picture>
+          {project.cover.avifSrcset && <source srcset={project.cover.avifSrcset} sizes={SIZES} type="image/avif" />}
+          <img src={project.cover.url} srcset={project.cover.webpSrcset} sizes={SIZES}
+               alt={project.cover.alt ?? project.title}
+               width={project.cover.width} height={project.cover.height}
+               loading={eager ? 'eager' : 'lazy'} decoding="async"
+               style={project.cover.lqip ? `background:url(${project.cover.lqip}) center/cover` : undefined} />
+        </picture>
       : <div class="placeholder" />}
-    <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
   </div>
   <div class="meta">
     <span class="title">{project.title}</span>
-    <span class="label sub">{[project.location, project.year].filter(Boolean).join(' — ')}</span>
+    <i class="go" aria-hidden="true">→</i>
   </div>
-  {studios && <span class="label studios">{studios}</span>}
 </a>
 
 <style>
-  .card { display: block; color: var(--ink); }
-  .media { position: relative; overflow: hidden; background: var(--glass); }
-  img, .placeholder { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transition: transform 1.2s ease; }
-  .card:hover img { transform: scale(1.03); }
-  .c { position: absolute; width: var(--square); height: var(--square); background: var(--marker); opacity: 0; transition: opacity var(--dur-fast) ease; }
-  .tl { left: 0; top: 0; } .tr { right: 0; top: 0; } .bl { left: 0; bottom: 0; } .br { right: 0; bottom: 0; }
-  .card:hover .c { opacity: 1; }
-  .meta { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-4); margin-top: var(--s-3); }
-  .title { font-size: var(--t-body); letter-spacing: -0.005em; }
-  .sub { color: var(--ink-3); letter-spacing: 0.14em; }
-  .studios { display: block; margin-top: var(--s-1); color: var(--ink-4); }
+  /* Picking one up: the card gives a little as the picture inside it pushes
+     out. Two speeds on purpose — the card settles quickly, the way a thing
+     answers a touch, and the image keeps travelling long after, which is what
+     makes it read as depth rather than as a hover state. The card scales, so
+     its name comes with it and the whole tile moves as one object. */
+  /* Leaving and arriving: fading and shrinking a beat after the card before
+     it — `--n` is its place in the wave, dealt out by workFilter.ts, and the
+     delay is capped so a full grid does not take an age to clear. Out is
+     quicker than in, the way the hero's rotating word goes and comes.
+
+     The swap owns `scale` and the hover owns `transform`: that is the only
+     reason both can sit on the card at once, since they are separate
+     properties and they compose — and it is why `transform` has to be in the
+     transition list too, or the hover has nothing to animate and snaps.
+     Only the second and third of these carry the wave's delay.
+     300/30/5 are the numbers workFilter.ts counts with. */
+  .card { display: block; color: var(--ink);
+          transition: transform 0.6s var(--ease-out),
+                      scale 0.75s var(--ease-out), opacity 0.75s var(--ease-out);
+          transition-delay: 0s, calc(min(var(--n, 0), 5) * 30ms), calc(min(var(--n, 0), 5) * 30ms); }
+  .card[data-swap] { opacity: 0; scale: 0.965;
+                     transition-duration: 0.6s, var(--dur-fast), var(--dur-fast); }
+
+  @media (hover: hover) and (pointer: fine) {
+    .card:hover { transform: scale(0.985); }
+    .card:hover img { transform: scale(1.06); }
+    .card:hover .go { opacity: 1; translate: 0 0; color: var(--ink); }
+  }
+  .media { position: relative; overflow: hidden; background: var(--glass);
+           border-radius: var(--radius-media); }
+  /* The grid forces one ratio on every project, whatever shape it arrived in,
+     so the rows read as rows — the project's own page is where nothing is
+     cropped. 3:2 rather than 4:3: the renders arrive between 1.57 and 1.79,
+     so the squarer frame was cutting the sides off work that was composed
+     wide. `height: auto` is what lets the ratio win over the pixel height on
+     the tag, which is only there to hold the room open. */
+  img, .placeholder { width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover;
+                      transition: transform 1.4s var(--ease-out); }
+
+  /* the name and nothing else — the studio is what the filter is for */
+  .meta { display: flex; align-items: baseline; justify-content: space-between;
+          gap: var(--s-4); margin-top: var(--s-3); }
+  .title { font-size: var(--t-body); }
+  /* The way in, at the far end of the name's own line: it travels in from
+     behind the name and back out the same way, rather than fading on the
+     spot — the card reads as offering something rather than lighting up.
+     It comes to rest where it belongs and stays there; a drift past its own
+     place was a second idea about the same move, and left the arrow sitting
+     off its line. It holds its width while away, so the name never shifts. */
+  .go { font-style: normal; font-size: var(--t-body); line-height: 1;
+        color: var(--ink-3); opacity: 0; translate: -0.6rem 0;
+        transition: opacity 0.35s var(--ease-out), translate 0.45s var(--ease-snap),
+                    color 0.35s ease; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card, img, .go { transition: none; }
+    .card:hover { transform: none; }
+    .card:hover img { transform: none; }
+    /* it still says the card is a link; it just does not travel to say it */
+    .go { translate: none; }
+  }
 </style>

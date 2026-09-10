@@ -1,68 +1,350 @@
 ---
+/** A project, read as two halves: a fixed column on the left that holds
+ *  everything written about it and the way out of it, and the media on the
+ *  right, which is the only thing that moves. Scrolling anywhere on the page
+ *  runs the media past; when it ends, the footer follows. */
 import Base from '@layouts/Base.astro';
-import PortableText from '@components/ui/PortableText.astro';
 import Button from '@components/ui/Button.astro';
+import PortableText from '@components/ui/PortableText.astro';
 import { getProjects } from '@lib/sanity/queries';
-import { site } from '@lib/site';
-import type { Project } from '@lib/sanity/types';
+import type { Media, Project } from '@lib/sanity/types';
 
 export async function getStaticPaths() {
   const projects = await getProjects();
-  return projects.map((project) => ({ params: { slug: project.slug }, props: { project } }));
+  return projects.map((project, i) => ({
+    params: { slug: project.slug },
+    props: {
+      project,
+      /* where it sits in the work, and how much work there is: the one hard
+         number the column can always carry, whatever the client has sent */
+      index: i + 1,
+      total: projects.length,
+      /* the order of the Work page, wrapped: there is always a next */
+      prev: projects[(i - 1 + projects.length) % projects.length],
+      next: projects[(i + 1) % projects.length],
+    },
+  }));
 }
-const { project } = Astro.props as { project: Project };
-const studios = project.studios.map((k) => site.studios.find((s) => s.key === k)?.label).filter(Boolean);
+
+const { project, prev, next, index, total } = Astro.props as
+  { project: Project; prev: Project; next: Project; index: number; total: number };
+const pad = (n: number) => String(n).padStart(2, '0');
+/** the media list, or the stills we have if a project never got one */
+const media: Media[] = project.media.length
+  ? project.media
+  : [project.cover, ...project.gallery].filter(Boolean)
+      .map((img) => ({ kind: 'image' as const, url: img!.url, alt: img!.alt, width: img!.width, height: img!.height }));
+/* what the column is actually worth on screen, so the browser picks the width
+   it needs rather than the biggest one there is. It matches the grid below:
+   the media has the page to itself when the halves stack. */
+const SIZES = '(max-width: 859px) 100vw, 72vw';
+const facts = [
+  project.location && { k: 'Location', v: project.location },
+  project.year && { k: 'Year', v: String(project.year) },
+].filter(Boolean) as { k: string; v: string }[];
+
+/* The project in four turns, read one at a time. A turn with nothing behind
+   it is not offered, so a project with no write-up simply has fewer names in
+   the row — never an empty panel. */
+const turns = [
+  project.challenge && { key: 'challenge', label: 'The challenge', body: project.challenge },
+  project.approach && { key: 'approach', label: 'Approach', body: project.approach },
+  project.outcome && { key: 'outcome', label: 'Outcome', body: project.outcome },
+  project.whatWeDid && { key: 'did', label: 'What we did', body: project.whatWeDid },
+].filter(Boolean) as { key: string; label: string; body: string }[];
 ---
 <Base theme="light" title={project.title} description={project.summary}>
-  <main class="page">
-    <header class="head">
-      <a class="label back" href="/work" data-tap>← Work</a>
-      <h1>{project.title}</h1>
-      {project.summary && <p class="summary">{project.summary}</p>}
-      <dl class="facts">
-        {project.location && <div><dt class="label">Location</dt><dd>{project.location}</dd></div>}
-        {project.year && <div><dt class="label">Year</dt><dd>{project.year}</dd></div>}
-        {studios.length > 0 && <div><dt class="label">Studios</dt><dd>{studios.join(', ')}</dd></div>}
-      </dl>
-    </header>
+  <main class="project" data-page="project">
+    <!-- the written half: fixed, and the only place the page is left from -->
+    <aside class="side">
+      <a class="label back" href="/work" data-tap>Back to work</a>
 
-    {project.cover && <figure class="cover"><img src={project.cover.url} alt={project.cover.alt ?? project.title} loading="eager" /></figure>}
+      <!-- the name stays at the top of the column, where it is looked for -->
+      <div class="named">
+        <h1>{project.title}</h1>
+        {project.summary && <p class="summary">{project.summary}</p>}
 
-    {project.body.length > 0 && <div class="story"><PortableText blocks={project.body} /></div>}
+        {facts.length > 0 && (
+          <dl class="facts">
+            {facts.map((f) => <div><dt class="label">{f.k}</dt><dd>{f.v}</dd></div>)}
+          </dl>
+        )}
+      </div>
 
-    {project.gallery.length > 0 && (
-      <div class="gallery">{project.gallery.map((g) => <img src={g.url} alt={g.alt ?? ''} loading="lazy" decoding="async" />)}</div>
-    )}
+      <!-- and what is said about it sits in the middle of what is left -->
+      <div class="words">
+        {turns.length > 0 && (
+          <div class="turns" data-tabs>
+            <div class="names" role="tablist" aria-label="About this project">
+              {turns.map((t, i) => (
+                <button type="button" class="name" role="tab" data-tab={t.key}
+                        id={`tab-${t.key}`} aria-controls={`panel-${t.key}`}
+                        aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}
+                        data-tap>{t.label}</button>
+              ))}
+            </div>
+            <div class="panels" data-panels>
+              {turns.map((t, i) => (
+                <div class="panel" role="tabpanel" data-panel={t.key}
+                     id={`panel-${t.key}`} aria-labelledby={`tab-${t.key}`} hidden={i !== 0}>
+                  <p>{t.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-    <footer class="end">
-      <Button href="/#contact" label="Discuss a project like this" />
-    </footer>
+        {project.body.length > 0 && <div class="story"><PortableText blocks={project.body} /></div>}
+      </div>
+
+      <div class="foot">
+        {project.services.length > 0 && (
+          <ul class="tags chips" aria-label="Services">
+            {project.services.map((x) => <li class="chip">{x}</li>)}
+          </ul>
+        )}
+        {project.liveUrl && <Button href={project.liveUrl} label="View live" />}
+      </div>
+
+      <nav class="ends" aria-label="Projects">
+        <a class="label" href={`/work/${prev.slug}`} data-tap>Previous</a>
+        <a class="label next" href={`/work/${next.slug}`} data-tap>Next</a>
+      </nav>
+    </aside>
+
+    <!-- the moving half -->
+    <div class="media">
+      {media.map((m, i) =>
+        m.kind === 'video' ? (
+          <video class="item" data-in-view data-src={m.url} muted loop playsinline preload="none"
+                 poster={m.poster} width={m.width} height={m.height}
+                 aria-label={m.alt ?? project.title}></video>
+        ) : (
+          <picture class="item">
+            {m.avif && <source srcset={m.avifSrcset ?? m.avif} sizes={SIZES} type="image/avif" />}
+            <img src={m.url} srcset={m.webpSrcset} sizes={SIZES} alt={m.alt ?? project.title}
+                 width={m.width} height={m.height}
+                 loading={i === 0 ? 'eager' : 'lazy'} decoding="async" />
+          </picture>
+        )
+      )}
+      {media.length === 0 && <p class="label none">Media for this project is still to come.</p>}
+    </div>
   </main>
+
+  <!-- Stacked, the column's own way out scrolls off the top with it, so the
+       same three moves ride the foot of the screen instead — until the footer
+       comes up, which has its own way out and does not want a bar over it. -->
+  <nav class="dock" data-dock aria-label="Projects">
+    <Button href={`/work/${prev.slug}`} label="Previous" />
+    <Button href="/work" label="All work" />
+    <Button href={`/work/${next.slug}`} label="Next" />
+  </nav>
+
   <script>
+    import { onPage } from '../../scripts/lifecycle';
     import { createSmoothScroll } from '../../scripts/ui/smoothScroll';
     import { createHoverAudio } from '../../scripts/ui/hoverAudio';
+    import { createVideoInView } from '../../scripts/ui/videoInView';
+    import { createTabs } from '../../scripts/ui/tabs';
+    import { createDirectionalHover } from '../../scripts/ui/directionalHover';
     import { splitChars } from '../../scripts/ui/splitText';
     import { site } from '../../lib/site';
-    document.body.classList.add('ready');
-    createSmoothScroll();
-    createHoverAudio(site.audio.taps);
-    document.fonts.ready.then(() => splitChars());
+    onPage('project', () => {
+      document.body.classList.add('ready');
+      /* the sources are held back until the clip is near, so a project with
+         five loops in it does not download five loops */
+      document.querySelectorAll<HTMLVideoElement>('video[data-src]').forEach((v) => {
+        v.src = v.dataset.src!;
+      });
+      const turns = document.querySelector<HTMLElement>('[data-tabs]');
+      /* the dock steps out as soon as any of the footer is on screen, and
+         back when it has gone */
+      const dock = document.querySelector<HTMLElement>('[data-dock]');
+      const footer = document.querySelector<HTMLElement>('footer');
+      let watch: IntersectionObserver | null = null;
+      if (dock && footer) {
+        watch = new IntersectionObserver(([e]) => dock.toggleAttribute('data-away', e.isIntersecting));
+        watch.observe(footer);
+      }
+      /* the button is a glass slab whose square travels and whose letters slip
+         on hover — both are wired here, as they are on the homepage */
+      document.fonts.ready.then(() => splitChars());
+      return [
+        createSmoothScroll(),
+        createHoverAudio(site.audio.taps),
+        createVideoInView(),
+        createDirectionalHover(),
+        turns && createTabs(turns),
+        { destroy() { watch?.disconnect(); } },
+      ];
+    });
   </script>
 </Base>
 
 <style>
-  .page { padding: 18vh var(--page-x) 16vh; }
-  .head { display: grid; grid-template-columns: 1fr 18rem; gap: var(--s-6); align-items: end; margin-bottom: var(--s-7); }
-  .back { grid-column: 1 / -1; color: var(--ink-3); }
-  h1 { font-size: var(--t-h2); line-height: 1.02; letter-spacing: -0.03em; font-weight: 400; max-width: 14em; }
-  .summary { grid-column: 1; font-size: var(--t-lead); color: var(--ink-3); max-width: 40ch; }
-  .facts { grid-column: 2; grid-row: 2 / 4; display: grid; gap: var(--s-3); }
-  .facts dt { color: var(--ink-4); margin-bottom: 0.2em; }
-  .facts dd { font-size: var(--t-body); }
-  .cover img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
-  .story { padding: var(--s-8) 0; }
-  .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s-4); }
-  .gallery img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
-  .end { padding-top: var(--s-8); }
-  @media (max-width: 859px) { .head { grid-template-columns: 1fr; } .facts { grid-column: 1; grid-row: auto; } .gallery { grid-template-columns: 1fr; } }
+  /* Two columns, one of which never moves. The left is sticky rather than
+     fixed so it keeps its place in the flow and lets the footer past it. */
+  .project { display: grid; grid-template-columns: var(--side) minmax(0, 1fr); align-items: start; }
+  /* Not a proportion: a width. The four names have to sit on one line, and
+     the row measures 382px — beside the card's own 64px of padding and the
+     32px it is inset from the page edge, that is 478 before any slack. 31rem
+     gives it 18px, enough for a fallback face with wider capitals, and the
+     page stacks below 1100 rather than squeezing the card. In rem it keeps
+     its share as the root grows past 1440: about a third of that screen, a
+     quarter of a 1920 one. Widen the labels and you widen this. */
+  .project { --side: 31rem; --media-top: 6.5rem; }
+
+  /* no rule down the middle: the gap between the words and the media is the
+     division, and the media's own edge draws it */
+  /* The written half is a panel, not a margin: it begins on the same line as
+     the first picture, takes the same corner off, and is only as tall as what
+     is in it. A full-height column reads as furniture; a card the size of its
+     contents reads as one of the things on the page, which is what it is.
+     It stands the height of the screen it is on, less the line it starts on
+     and a matching sit at the foot, and holds there while the media runs
+     past. A write-up long enough to outgrow it scrolls inside the card
+     rather than pushing the way out off the bottom. */
+  .side { position: sticky; top: var(--media-top);
+          margin: var(--media-top) 0 var(--s-8) var(--page-x);
+          height: calc(100vh - var(--media-top) - var(--s-6));
+          display: flex; flex-direction: column;
+          padding: var(--s-6);
+          background: var(--surface);
+          border-radius: var(--radius-media); }
+
+  .back { color: var(--ink-3); padding-bottom: var(--s-4);
+          border-bottom: var(--hairline) solid var(--line);
+          transition: color var(--dur-fast) ease; }
+  .back:hover { color: var(--ink); }
+
+  /* the name at the top, what is said about it in the middle of what is left,
+     and at the foot what was ours and the way out. `safe` is what keeps a
+     long turn reachable — a centred flex child that overflows cannot be
+     scrolled back to its own top without it. */
+  /* the name at the top, what is said about it in the middle of what is left,
+     and at the foot what was ours and the way out. `safe` is what keeps a
+     long turn reachable — a centred flex child that overflows cannot be
+     scrolled back to its own top without it. */
+  .named { padding-top: var(--s-5); }
+  .words { flex: 1; min-height: 0; overflow: auto; padding-block: var(--s-6);
+           display: flex; flex-direction: column; justify-content: safe center;
+           scrollbar-width: none; }
+  .words::-webkit-scrollbar { display: none; }
+
+  h1 { font-size: var(--t-statement); font-weight: var(--w-title);
+       line-height: var(--lh-title); letter-spacing: var(--track-title); }
+  .summary { margin-top: var(--s-4); font-size: var(--t-body); line-height: var(--lh-body);
+             color: var(--ink-3); max-width: 34ch; }
+
+  .facts { margin-top: var(--s-6); display: grid; gap: var(--s-3); }
+  .facts dt { color: var(--ink-4); margin-bottom: 0.25em; }
+  .facts dd { font-size: var(--t-body); color: var(--ink); }
+
+  /* The four turns. The names are a row the width of the column, so they
+     wrap rather than scroll; the chosen one is inked and underlined and the
+     rest sit back. Uppercase but only lightly tracked — the site's --label is
+     10px and heavily spaced, which is right for a tag and too quiet for a
+     control you are meant to press. */
+  .turns { width: 100%; }
+  .names { display: flex; flex-wrap: wrap; gap: var(--s-4); }
+  .name { position: relative; padding: 0 0 0.45em; font-size: var(--t-caption);
+          letter-spacing: var(--track-caps); text-transform: uppercase; line-height: 1;
+          white-space: nowrap;
+          color: var(--ink-4); transition: color var(--dur-fast) ease; }
+  .name:hover { color: var(--ink-2); }
+  .name[aria-selected="true"] { color: var(--ink); }
+  /* the rule is the width of the name it belongs to, and arrives with it */
+  .name::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+                 height: var(--hairline); background: var(--ink);
+                 transform: scaleX(0); transform-origin: left center;
+                 transition: transform var(--dur-fast) var(--ease-out); }
+  .name[aria-selected="true"]::after { transform: scaleX(1); }
+
+  /* The panels are held at the height of the longest of them, measured once
+     the face has settled (scripts/ui/tabs.ts). Without it the names walk up
+     and down the card as each turn is read — a turn one line longer than the
+     last moves everything above it, which reads as the page flinching. */
+  .panels { margin-top: var(--s-5); }
+  .panel { margin: 0; }
+  /* the same grey as the line under the title: in a column this short the two
+     are read as one voice, and a step between them looked like a mistake
+     rather than a hierarchy */
+  .panel p { font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-3); max-width: 40ch; }
+
+  .story { margin-top: var(--s-6); font-size: var(--t-small); color: var(--ink-2); }
+
+  /* what is on offer at the foot: what was ours, and the thing itself */
+  .foot { display: flex; flex-direction: column; align-items: flex-start;
+          gap: var(--s-5); margin-bottom: var(--s-5); }
+
+
+  .ends { display: flex; justify-content: space-between; gap: var(--s-4);
+          padding-top: var(--s-4); border-top: var(--hairline) solid var(--line); }
+  .ends a { color: var(--ink-3); transition: color var(--dur-fast) ease; }
+  .ends a:hover { color: var(--ink); }
+
+  /* The dock: hidden while the column is fixed beside the media and carries
+     the same links itself. Below that it is a row pinned to the foot of the
+     screen, three buttons across, in front of everything and clear of the
+     home bar on a phone. It slides down out of the way while the footer is
+     on screen. */
+  .dock { display: none; }
+  @media (max-width: 1099px) {
+    .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--z-ui);
+            display: flex; justify-content: space-between; gap: var(--s-3);
+            padding: var(--s-3) var(--page-x) calc(var(--s-3) + env(safe-area-inset-bottom, 0px));
+            transition: translate var(--dur-base) var(--ease-panel), opacity var(--dur-base) ease; }
+    .dock[data-away] { translate: 0 100%; opacity: 0; pointer-events: none; }
+    /* three across a phone, and plainer than the slab elsewhere: no square,
+       since its travel on hover is nothing a thumb ever sees, and the label
+       centred in an even padding */
+    .dock :global(.btn) { --pl: 1.25rem; --pr: 1.25rem; flex: 1 1 0; justify-content: center; }
+    .dock :global(.sq) { display: none; }
+    .dock :global(.btn:first-child), .dock :global(.btn:last-child) { flex: 0 1 auto; }
+    /* the column's own links are gone: the dock is them */
+    .back, .ends { display: none; }
+  }
+  @media (max-width: 1099px) and (prefers-reduced-motion: reduce) { .dock { transition: none; } }
+
+  /* On a phone the four names hold one line: the row is spread across the
+     column rather than gapped, and the type comes down a step and the
+     tracking with it — at 11px and the caps tracking the row wants 383px and
+     the column gives 335. */
+  @media (max-width: 719px) {
+    .names { flex-wrap: nowrap; justify-content: space-between; gap: var(--s-2); }
+    .name { font-size: var(--t-label); letter-spacing: 0.06em; }
+  }
+
+  /* the media is the page's scroll: its own height is what there is to read */
+  /* the first frame and the panel beside it start on the same line, which is
+     also what puts them clear of the fixed nav */
+  .media { display: grid; gap: var(--gap-media);
+           padding: var(--media-top) var(--page-x) var(--s-8) var(--gap-media); }
+  .item { display: block; width: 100%; }
+  .media img, .media video { width: 100%; height: auto; display: block;
+                             background: var(--glass); border-radius: var(--radius-media); }
+  .none { padding: var(--s-8) 0; color: var(--ink-3); }
+
+  /* stacked: the written half stops holding still and becomes the head of
+     the page, and the media runs under it */
+  /* Below the width that holds both, the column becomes the head of the page:
+     everything written, full width, and the media running under it. */
+  @media (max-width: 1099px) {
+    .project { grid-template-columns: 1fr; --side: auto; }
+    .side { position: static; max-height: none; margin: 0;
+            padding: 6.5rem var(--page-x) var(--s-6);
+            background: none; border-radius: 0; }
+    .words { overflow: visible; }
+    /* the name is the head of the page now, not a line at the top of a
+       column: it takes the section-heading size */
+    h1 { font-size: var(--t-h2); }
+    /* nothing is pushing them to a foot here — the column has no height of
+       its own to fill — so they take their own space above the way out */
+    .foot { margin-top: var(--s-7); }
+    .ends { margin-top: var(--s-7); }
+    /* the foot clears the dock, so the last frame can be scrolled out from
+       under it before the footer takes over */
+    .media { padding: var(--s-4) var(--page-x) calc(var(--s-7) + 4rem); gap: var(--gap-media); }
+  }
 </style>

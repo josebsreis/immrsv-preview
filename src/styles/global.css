@@ -1,5 +1,22 @@
 @import './tokens.css';
 
+/* ── the face ──────────────────────────────────────────────────────────
+   Inter, self-hosted and subset to latin — one 103KB file carrying both of
+   its axes: weight 100–900, and an optical size from 14 to 32. The optical
+   axis is why there is no second file for headings: `font-optical-sizing`
+   is on by default, so a display-sized line is drawn with the display cut —
+   tighter apertures and spacing, which is most of why a large heading reads
+   as expensive rather than merely big.
+   `swap` because the page is readable in the fallback and a blank heading
+   is worse than a substituted one. */
+@font-face {
+  font-family: InterVariable;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/InterVariable.woff2') format('woff2');
+}
+
 /* ── reset / base ──────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -12,6 +29,8 @@ body {
   background: var(--ground);
   color: var(--ink);
   font-family: var(--font-sans);
+  font-weight: var(--w-body);
+  line-height: var(--lh-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   transition: background var(--dur-base) ease, color var(--dur-base) ease;
@@ -19,7 +38,8 @@ body {
 img, svg, video, canvas { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
-h1, h2, h3 { font-weight: 500; }
+/* the title tier's weight; a display-sized heading asks for --w-display */
+h1, h2, h3 { font-weight: var(--w-title); }
 
 :focus-visible { outline: var(--hairline) solid var(--ink); outline-offset: 3px; }
 
@@ -39,15 +59,49 @@ h1, h2, h3 { font-weight: 500; }
   flex: none;
 }
 
-/* frosted glass — nav pills, buttons, the featured card */
-.glass {
+/* A service, a discipline, a thing that was done: the same object wherever it
+   appears, so it is defined once. Two components carried it at slightly
+   different padding and gap, which is the drift a shared class prevents. */
+.chip {
+  padding: 0.4rem 0.65rem;
   background: var(--glass);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-radius: var(--radius);
+  font-size: var(--t-caption);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--ink-2);
+}
+/* and the row they sit in */
+.chips { list-style: none; display: flex; flex-wrap: wrap; gap: 0.375rem; }
+
+/* The square and the word that name a section. Not `.tag`: that name is
+   already taken by a plain label elsewhere, and a primitive that collides
+   with an existing class silently restyles it. */
+.section-tag { display: flex; align-items: center; gap: 0.75rem;
+               font-size: var(--t-body); color: var(--ink); }
+.section-tag .sq { color: var(--ink-4); }
+
+/* Frosted glass — the nav's pills, the buttons, the studio filter: the
+   controls that float over whatever the page is showing. Two layers, and both
+   are needed: the veil is the page's own ground, which is what keeps a label
+   readable when it crosses a photograph, and the tint over it is what gives
+   the pill an edge against the plain page where the veil is invisible.
+   The saturate is the frosted part — a blur alone greys out the colour it is
+   standing on, and pulling it back is what makes it read as glass rather than
+   as fog. */
+.glass {
+  background-color: var(--veil);
+  background-image: linear-gradient(var(--glass), var(--glass));
+  /* prefix first, standard last: the build's minifier collapses the pair and
+     keeps whichever it sees as the winner, and with the order the other way
+     round it kept only -webkit-, which is no blur at all in Firefox */
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
   border-radius: var(--radius);
   transition: background var(--dur-fast) ease;
 }
-.glass:hover { background: var(--glass-hover); }
+.glass:hover { background-image: linear-gradient(var(--glass-hover), var(--glass-hover)); }
 
 /* a page-edge anchored row: hero bottom, etc. */
 .anchored { position: absolute; z-index: var(--z-ui); }
@@ -63,6 +117,34 @@ body.ready .arrives { animation: arrive var(--dur-slow) ease both; animation-del
   transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
   transition-delay: calc(var(--i, 0) * 0.08s); }
 [data-rise].in { opacity: 1; transform: none; }
+
+/* ── between pages ─────────────────────────────────────────────────────
+   One page goes out, the next comes in over it — no slide, no wipe: the
+   site's own transitions are all in the scroll, and a page that travels
+   would be a second idea about movement. The new page is a touch slower
+   than the old one so the ground never shows through. The nav is persisted
+   and so takes no part in this. */
+::view-transition-old(root) { animation: page-out 0.38s var(--ease-out) both; }
+::view-transition-new(root) { animation: page-in 0.62s var(--ease-out) both; }
+/* The page that is leaving lifts a little as it goes and the one arriving
+   comes up from under it — the same move `[data-rise]` makes everywhere on
+   the site, so a whole page arrives the way a paragraph does. They travel
+   the same way rather than crossing, which reads as one thing replacing
+   another instead of two things swapping. */
+@keyframes page-out { to { opacity: 0; translate: 0 -0.75rem; } }
+@keyframes page-in { from { opacity: 0; translate: 0 1.25rem; } }
+
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+  ::view-transition-group(*) { animation: none; }
+}
+
+/* filtered out — the Work page's studio filter. It leaves rather than fades,
+   and takes its space with it, so the grid closes up behind it. Here with the
+   other behaviour attributes rather than in the card: what is hidden is the
+   filter's business, not the card's. */
+[data-off] { display: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
   .arrives, body.ready .arrives { animation: none; opacity: 1; }

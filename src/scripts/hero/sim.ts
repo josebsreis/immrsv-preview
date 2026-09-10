@@ -42,7 +42,7 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
      left their plate and are somewhere else in the round — so the cursor is
      met on a plane through the middle of the mark, square to the camera. That
      is the plane a form is spread across from where you are looking. */
-  const form = ctx.form;
+  const formAll = ctx.form;
   _inv.copy(holder.matrixWorld).invert();
   let hit = false, speed = 0;
   if (P.moved) {
@@ -60,7 +60,7 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
   } else S.hadM = false;
 
   const ex = ctx.exit;
-  const { home, off, ain, sim, intro, over, seedv, iDelay, iDur, vel, stiff, damp, jit, gain, total } = S;
+  const { home, off, ain, sim, intro, over, seedv, iDelay, iDur, vel, stiff, damp, jit, gain, total, face } = S;
   const stagger = ctx.reduced ? 0 : I.stagger, dur = ctx.reduced ? 0.01 : I.duration;
   const it = t - ctx.introT0, building = it < stagger + dur * 1.25 + 0.1;
   /* How hard the cursor is pressing. On the cube that follows how fast its
@@ -70,7 +70,7 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
      different strength from the same hand, and the figure lurched. Once a form
      is up, the speed is the cursor's own across the screen, which every plate
      agrees on. */
-  const swipe = speed + (ctx.swipe - speed) * form;
+  const swipe = speed + (ctx.swipe - speed) * formAll;
   const press = (C.rest + swipe * C.speed) * dt * 60 * C.gain;
   // one strike impulse per plate per click, and none before the first click
   const shock = hit && ctx.shockT > 0 && S.shockSeen !== ctx.shockT; if (shock) S.shockSeen = ctx.shockT;
@@ -80,6 +80,11 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
 
   for (let j = 0; j < total; j++) {
     const i3 = j * 3;
+    /* Only the face particles are ever anywhere but on this plate. The
+       outline stays a flat sheet however far a form has come, so it keeps the
+       cube's own gesture — a disc carved out of a plane — while the cloud in
+       the middle answers to the line of sight instead. */
+    const form = j < face ? formAll : 0;
     let ox = sim[i3], oy = sim[i3 + 1], oz = sim[i3 + 2];
     let vx = vel[i3], vy = vel[i3 + 1], vz = vel[i3 + 2];
     if (hit) {
