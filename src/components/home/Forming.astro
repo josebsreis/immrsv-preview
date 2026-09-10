@@ -108,21 +108,20 @@ const {
      the two read as one plane */
   .slot canvas { display: block; filter: brightness(1.045); }
 
-  /* The line, level with her middle, so the slot opens between its halves.
-     They are laid out where they end up — out at the page's margins — and
-     the distance back to the middle is measured from there and handed to
-     CSS as --dx, so the join is exact at any width. */
+  /* The argument, as two lines at the middle of the screen. They arrive
+     together, part one up and one down to make the gap she is built in, and
+     then stay: the claim is held above and below her for the whole passage
+     rather than leaving once it has been read. Where each line stands, joined
+     and parted, is measured from her and handed here as --dy. */
   .title { position: absolute; inset: 0; margin: 0; pointer-events: none;
-           font-size: var(--t-lead); font-weight: 500; letter-spacing: -0.01em;
-           color: var(--ink); }
-  .half { position: absolute; top: 50%; translate: 0 -50%; white-space: nowrap;
-          --v: 1; --x: 1; --dx: 0px; }
-  .half:first-child { right: 50%; text-align: right; }
-  .half:last-child { left: 50%; }
+           font-size: var(--t-lead); font-weight: var(--w-ui);
+           letter-spacing: var(--track-lead); color: var(--ink); }
+  .half { position: absolute; left: var(--page-x); right: var(--page-x); top: 50%;
+          text-align: center; --v: 1; --dy: 0px; }
   [data-live] .half { opacity: var(--v);
-                      transform: translateX(calc(var(--dx) * (1 - var(--x)))); }
+                      transform: translateY(calc(-50% + var(--dy))); }
 
-  /* her four steps, where the halves of the line stood */
+  /* her four steps, in the room at either side that the lines are not using */
   .steps { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
   .forming:not([data-live]) .steps { display: none; }
   /* Each step is a card, and it does not blink on and off: it travels a half
@@ -153,14 +152,7 @@ const {
     /* she sits a little above centre, to leave the foot of the screen to the
        card that is passing */
     .slot { height: min(56vh, 128vw); top: 42%; }
-    /* the line is two lines, above her, and the halves never part: there is
-       no beside on a phone */
-    .title { inset: 6vh var(--page-x) auto; text-align: center;
-             font-size: var(--t-small); }
-    .half, .half:first-child, .half:last-child {
-      position: static; translate: none; white-space: normal;
-      display: block; text-align: center; left: auto; right: auto; }
-    [data-live] .half { transform: none; }
+    .title { font-size: var(--t-small); }
     .beat { top: auto; bottom: var(--page-y); width: calc(100% - var(--page-x) * 2);
             left: var(--page-x); right: auto;
             transform: translateY(var(--ay)); }

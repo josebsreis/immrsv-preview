@@ -130,13 +130,6 @@
   --square: 5px;
   --hairline: 1px;
   --glass-blur: 18px;
-  /* What a floating control puts between itself and whatever it is over.
-     `--glass` alone is a 5% tint: it gives a pill its shape against the page,
-     and does nothing at all for dark ink crossing a dark photograph. This is
-     the page's own ground at most of its strength, so a control carries a
-     piece of the page with it and its label is legible over anything. It is
-     written once and resolves per theme, because --ground-rgb does. */
-  --veil: rgb(var(--ground-rgb) / 0.62);
 
   /* ── motion ────────────────────────────────────────────────────── */
   --ease-out: cubic-bezier(0.22, 0.8, 0.2, 1);
@@ -165,6 +158,17 @@
   color-scheme: dark;
   --ground: #060606;
   --ground-rgb: 6 6 6;
+
+  /* What a floating control puts between itself and whatever it is over.
+     `--glass` alone is a 5% tint: it gives a pill its shape against the page,
+     and does nothing at all for dark ink crossing a dark photograph. This is
+     the page's own ground at most of its strength, so a control carries a
+     piece of the page with it and its label is legible over anything.
+     It is declared in each theme rather than once against --ground-rgb: a
+     custom property is substituted where it is *declared*, not where it is
+     used, so one written up in :root freezes to the dark ground and every
+     light section inherits dark pills. */
+  --veil: rgb(6 6 6 / 0.62);
   --surface: #101012;
   --ink: #f3f3f4;
   --ink-2: #b9b9bd;               /* secondary text */
@@ -189,6 +193,7 @@
      so the renders stay the brightest thing on the page. */
   --ground: #f5f5f7;
   --ground-rgb: 245 245 247;
+  --veil: rgb(245 245 247 / 0.62);
   /* one plane above the ground, for anything the page holds rather than
      merely prints: the project page's written column is the first of them */
   --surface: #ffffff;

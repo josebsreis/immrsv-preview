@@ -4,11 +4,12 @@
    under it.
 
    Everything is one rectangle opening from the middle. The mark grows
-   into the light ground until the screen is white; a line lands on it;
-   the line parts, and a slot opens between its halves with the figure
-   forming inside; her four steps then arrive where the halves stood.
-   Nothing fades in from nothing — things open, which is the same
-   language as the square the whole page is marked with.
+   into the light ground until the screen is white; the practice's
+   argument lands on it as two lines; the two lines part, one up and one
+   down, and she is built in the gap they make. The sentence does not
+   leave — it stands above and below her for the whole passage, which is
+   the point: the claim is held while the proof is made. Her four steps
+   then pass at either side, in the room the lines are no longer using.
 
    The frames are a baked sequence drawn to a canvas from the scroll:
    no video element and no seeking, so the scrub is exact and costs the
@@ -23,16 +24,14 @@ export interface Forming { update(): void; destroy(): void }
 /** how many frames were baked, and where they live */
 const N = 121;
 const SRC = (i: number) => `/forming/${String(i + 1).padStart(3, '0')}.avif`;
-/** the space left between the halves of the line while they are still one line */
-const JOIN = 12;
-/** and the air they keep from the slot once they have parted */
-const CLEAR = 44;
+/** the air the two lines keep from her once they have parted */
+const CLEAR = 26;
 
 /** where in the scroll each thing happens */
 const T = {
   spread: [0.0, 0.16] as const,               // the mark grows into the light ground
-  title: [0.1, 0.17, 0.38, 0.44] as const,    // the line: in, held, out
-  part: [0.22, 0.34] as const,                // its halves part, and the slot opens between them
+  title: [0.1, 0.17] as const,                // the two lines land, and stay
+  part: [0.22, 0.36] as const,                // they part, and she opens in the gap
   play: [0.3, 0.96] as const,                 // the frames run
   beat: 0.46,                                 // the first step begins its pass here…
   step: 0.1,                                  // …and the rest this far apart
@@ -47,9 +46,7 @@ const SHY = 24;
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const ramp = (p: number, a: number, b: number) => clamp01((p - a) / (b - a));
 const inOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-/** in over [a,b], held, out over [c,d] */
-const life = (p: number, [a, b, c, d]: readonly [number, number, number, number]) =>
-  ramp(p, a, b) * (1 - ramp(p, c, d));
+
 
 export function createForming(root: HTMLElement): Forming {
   const track = root.querySelector<HTMLElement>('[data-forming-track]');
@@ -104,6 +101,8 @@ export function createForming(root: HTMLElement): Forming {
      pixels, because its edge and the light ground's edge have to be the
      same edge: half a pixel of disagreement is a grey hairline. */
   let w = 0, h = 0, sx = 0, sy = 0, sw = 0, sh = 0, leanMax = 0;
+  /** where each of the two lines stands, joined and parted */
+  const joined = [0, 0], apart = [0, 0];
   const size = () => {
     const dpr = Math.min(devicePixelRatio || 1, 2);
     const pr = win.getBoundingClientRect();
@@ -123,23 +122,19 @@ export function createForming(root: HTMLElement): Forming {
     canvas.style.width = `${sw}px`; canvas.style.height = `${sh}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    /* The halves end up either side of the slot — close enough to it to still
-       read as one sentence — so they are put there, and the distance each has
-       to travel back to the middle to be one line is measured from there and
-       handed to CSS. Narrow, they are stacked above her by the styles and
-       nothing is placed from here. */
+    /* Where each line sits when the two are still one sentence, and where it
+       sits once they have parted — half a line either side of the middle, and
+       then clear of her head and her foot. Both are measured: a line's height
+       is the face's business, her height is the screen's, and she does not
+       always stand at the middle of it — on a phone she is lifted to leave
+       the foot of the screen to the card that is passing. */
     if (halves.length === 2) {
-      const wide = w > 719;
-      for (const el of halves) {
-        el.style.setProperty('--dx', '0px');
-        el.style.left = el.style.right = '';
-      }
-      if (wide) {
-        halves[0].style.right = `${(w - sx + CLEAR).toFixed(1)}px`;
-        halves[1].style.left = `${(sx + sw + CLEAR).toFixed(1)}px`;
-        const a = halves[0].getBoundingClientRect(), b = halves[1].getBoundingClientRect();
-        halves[0].style.setProperty('--dx', `${(pr.left + w / 2 - JOIN / 2 - a.right).toFixed(1)}px`);
-        halves[1].style.setProperty('--dx', `${(pr.left + w / 2 + JOIN / 2 - b.left).toFixed(1)}px`);
+      const mid = sy + sh / 2 - h / 2;
+      for (let i = 0; i < 2; i++) {
+        const el = halves[i], sign = i ? 1 : -1;
+        const lh = el.getBoundingClientRect().height;
+        joined[i] = sign * lh * 0.55;
+        apart[i] = mid + sign * (sh / 2 + CLEAR + lh / 2);
       }
     }
 
@@ -190,17 +185,18 @@ export function createForming(root: HTMLElement): Forming {
     const ground = g > 0.5 ? 'light' : 'dark';
     if (root.dataset.theme !== ground) root.dataset.theme = ground;
 
-    // the slot, between the halves of the line: a rectangle from the mark's
-    // five pixels to its own size, both ways at once. Nothing of it before
-    // its time — the mark it opens from is the ground's, not a second one
+    // she opens in the gap the two lines make: a sliver at the middle, grown
+    // to her full height. Nothing of her before her time
     const o = inOut(ramp(p, T.part[0], T.part[1]));
-    const cw = 5 + (sw - 5) * o, ch = 5 + (sh - 5) * o;
-    box.style.clipPath = o <= 0 ? 'inset(50%)' : o >= 1 ? 'none'
-      : `inset(${((sh - ch) / 2).toFixed(1)}px ${((sw - cw) / 2).toFixed(1)}px)`;
+    box.style.clipPath = o <= 0 ? 'inset(50% 0)' : o >= 1 ? 'none'
+      : `inset(${((sh / 2) * (1 - o)).toFixed(1)}px 0)`;
 
-    // the line, and its halves parting to make room for her
-    const v = life(p, T.title).toFixed(3);
-    for (const el of halves) { el.style.setProperty('--v', v); el.style.setProperty('--x', o.toFixed(3)); }
+    // the two lines: they arrive together, part one up and one down, and stay
+    const v = ramp(p, T.title[0], T.title[1]).toFixed(3);
+    halves.forEach((el, i) => {
+      el.style.setProperty('--v', v);
+      el.style.setProperty('--dy', `${(joined[i] + (apart[i] - joined[i]) * o).toFixed(1)}px`);
+    });
 
     // the frame
     const f = Math.round(ramp(p, T.play[0], T.play[1]) * (N - 1));
