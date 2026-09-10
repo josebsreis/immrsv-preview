@@ -68,6 +68,9 @@
   /* a card's or a step's own title: the rung between the lead and the
      statement, which the scale did not have and two components wanted */
   --t-title: clamp(1.125rem, 1.5vw, 1.375rem);
+  /* a section heading that is not the page's largest — the questions, and
+     anything else that wants to be clearly a heading without taking a screen */
+  --t-h3: clamp(1.5rem, 2.8vw, 2.5rem);
   --t-statement: clamp(1.25rem, 2.1vw, 1.875rem);   /* the spoken statement */
   --t-figure: clamp(2.5rem, 4vw, 3.75rem);          /* a stat's number */
   --t-display: clamp(2.375rem, 4.4vw, 4rem);
