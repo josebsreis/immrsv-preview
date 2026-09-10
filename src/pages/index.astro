@@ -1,6 +1,6 @@
 ---
 import Base from '@layouts/Base.astro';
-import SquareField from '@components/transitions/SquareField.astro';
+import Forming from '@components/home/Forming.astro';
 import Hero from '@components/hero/Hero.astro';
 import Marquee from '@components/home/Marquee.astro';
 import Manifesto from '@components/home/Manifesto.astro';
@@ -23,10 +23,11 @@ const [home, projects] = await Promise.all([getHome(), getProjects()]);
       <div class="scrim" data-scrim aria-hidden="true"></div>
     </div>
 
-    <!-- the light half travels over the dark one, the field of squares
-         assembling ahead of it -->
-    <div class="light">
-      <SquareField height="52vh" />
+    <!-- the light half travels over the dark one, the figure being built at
+         its head: the ground opens from the mark, and the section arrives
+         inside that opening -->
+    <div class="light" data-light>
+      <Forming />
       <section class="next" id="work" data-next data-theme="light">
         <Studios content={home.studios} />
         <Process content={home.process} />

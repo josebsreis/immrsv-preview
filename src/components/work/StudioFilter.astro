@@ -1,0 +1,49 @@
+---
+/** The Work page's studio filter: All, then one pill per studio that has
+ *  work in it — a filter that leads to an empty page is not offered. The
+ *  chosen one is written into the URL by scripts/ui/workFilter.ts, so a
+ *  filtered page is a link. */
+import { site } from '@lib/site';
+import type { Project } from '@lib/sanity/types';
+
+interface Props { projects: Project[]; }
+const { projects } = Astro.props;
+
+/** only to know whether a studio is worth a pill; the count is never shown */
+const tally = (key: string) => projects.filter((p) => p.studios.includes(key as any)).length;
+const options = [
+  { key: 'all', label: 'All', n: projects.length },
+  ...site.studios.map((s) => ({ key: s.key, label: s.label, n: tally(s.key) })),
+].filter((o) => o.n > 0);
+---
+<div class="bar" data-filter role="group" aria-label="Filter projects by studio">
+  {options.map((o) => (
+    <button type="button" class="pill glass label" data-filter-key={o.key} aria-pressed="false"
+            data-tap data-dhover-item data-axis="x">
+      <span class="tile" data-dhover-tile aria-hidden="true"></span>
+      <span class="txt">{o.label}</span>
+    </button>
+  ))}
+</div>
+
+<style>
+  .bar { display: flex; flex-wrap: wrap; gap: 2px; }
+  /* the nav's pill, given a state: the unchosen sit back on glass, and the
+     chosen one inverts — the page's ink as its ground, the page's ground as
+     its letters. It reads as chosen at a glance and it follows the theme,
+     so it is a black pill on the light page and a white one on the dark. */
+  .pill { position: relative; overflow: hidden; display: flex; align-items: center;
+          height: var(--pill-h); padding: 0 var(--s-4); color: var(--ink-3);
+          transition: color var(--dur-fast) ease, background var(--dur-fast) ease; }
+  .pill:hover { color: var(--ink); background-image: linear-gradient(var(--glass), var(--glass)); }
+  /* the chosen one is solid: it wants no veil and no tint under it */
+  .pill[data-on], .pill[data-on]:hover { color: var(--ground); background: var(--ink); }
+  .tile { position: absolute; inset: 0; background: var(--glass-hover);
+          transform: translateX(-100%); will-change: transform;
+          transition: transform var(--dur-base) var(--ease-panel); }
+  /* nothing crosses the chosen pill: it is already filled */
+  .pill[data-on] .tile { display: none; }
+  .txt { position: relative; }
+
+  @media (prefers-reduced-motion: reduce) { .tile { transition: none; } }
+</style>

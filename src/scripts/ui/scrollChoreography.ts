@@ -31,9 +31,9 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
   document.querySelectorAll<HTMLElement>('[data-rise]').forEach((el) => rising.observe(el));
   const hold = document.querySelector<HTMLElement>('[data-hold]');
   const scrim = document.querySelector<HTMLElement>('[data-scrim]');
-  /* the light half is whatever holds the field: its head is the field's head,
-     so one measurement answers for both */
-  const light = field?.parentElement ?? null;
+  /* the light half of the page: its head is where the handover begins, and
+     how far it has climbed is what puts the dark half out */
+  const light = document.querySelector<HTMLElement>('[data-light]') ?? field?.parentElement ?? null;
 
   // sticky with a negative top: the block scrolls normally until its end meets
   // the bottom of the screen, then holds there while the next half rides over

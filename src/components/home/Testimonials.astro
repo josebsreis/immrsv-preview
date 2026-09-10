@@ -1,0 +1,245 @@
+---
+/** What clients said, one at a time.
+ *
+ *  The same instrument as the statement panel above it — a bar that fills for
+ *  the life of a slide, arrows to step it by hand, and a count — so the page
+ *  has one way of turning a set of things rather than two. What it turns is
+ *  different: a quote is too much text to hang in a column on its own, so the
+ *  person who said it stands beside it. The portrait is the picture the
+ *  section needed, and it is also the evidence: these are real people at
+ *  firms whose marks are in the grid further down. */
+import type { HomeContent } from '@lib/sanity/types';
+
+interface Props { content: HomeContent['testimonials']; }
+const { content } = Astro.props;
+const items = content.items;
+const total = String(items.length).padStart(2, '0');
+/** the portraits are written by scripts/images.mjs conventions: an
+ *  extension-less path with a width and a format hung off it */
+const shot = (url: string, w: number, ext: string) => `${url}-${w}.${ext}`;
+const SIZES = '4rem';
+---
+{items.length > 0 && (
+  <section class="says" id="testimonials" data-stats data-stats-interval="9000">
+    <div class="head">
+      <h2>{content.tag}</h2>
+      <p class="intro">Great work is built on partnership. Here is what the people we build it with say.</p>
+    </div>
+
+    <div class="body">
+      <!-- The left column, in the order it is used: how far through, the way
+           through, and then who there is to go to. The names come last
+           because they are the long list — a bar and two arrows read as one
+           control at the top of a column, and as an afterthought under it. -->
+      <div class="pane">
+      <div class="step">
+        <div class="controls">
+          <div class="arrows">
+            <button type="button" data-stats-prev aria-label="Previous testimonial" data-tap>&#8592;</button>
+            <button type="button" data-stats-next aria-label="Next testimonial" data-tap>&#8594;</button>
+          </div>
+          <span class="count label"><span data-stats-index>01</span>/{total}</span>
+        </div>
+        <div class="track"><i data-stats-bar></i></div>
+      </div>
+
+      <nav class="names" aria-label="Testimonials">
+        {items.map((t, i) => (
+          <button type="button" class="name label" data-stats-go={i}
+                  aria-current={i === 0 ? 'true' : 'false'} data-tap>
+            <i class="sq" aria-hidden="true"></i><span>{t.label ?? t.name}</span>
+          </button>
+        ))}
+      </nav>
+      </div>
+
+      <ul class="slides">
+        {items.map((t, i) => (
+          <li class="slide" data-stat aria-hidden={i !== 0 ? 'true' : 'false'}>
+            <blockquote class="words">
+              <svg class="quote open" viewBox="0 0 100 80" aria-hidden="true" fill="currentColor">
+                <polygon points="98.33 78.36 98.33 36.38 78.57 36.38 98.33 1.64 77.84 1.64 58.1 36.38 58.1 78.36 98.33 78.36"/>
+                <polygon points="41.9 78.36 41.9 36.38 22.14 36.38 41.9 1.64 21.41 1.64 1.67 36.38 1.67 78.36 41.9 78.36"/>
+              </svg>
+              <p>{t.quote}</p>
+              <!-- the client's own closing pair, not the opening one turned
+                   round: the two are drawn as a set, each with its tails
+                   running the way that mark's tails run -->
+              <svg class="quote close" viewBox="0 0 100 80" aria-hidden="true" fill="currentColor">
+                <polygon points="1.67 1.64 1.67 43.62 21.43 43.62 1.67 78.36 22.16 78.36 41.9 43.62 41.9 1.64 1.67 1.64"/>
+                <polygon points="58.1 1.64 58.1 43.62 77.86 43.62 58.1 78.36 78.59 78.36 98.33 43.62 98.33 1.64 58.1 1.64"/>
+              </svg>
+              <footer class="by">
+                {t.portrait && (
+                  <picture class="portrait">
+                    <source srcset={`${shot(t.portrait.url, 420, 'avif')} 420w, ${shot(t.portrait.url, 840, 'avif')} 840w`}
+                            sizes={SIZES} type="image/avif" />
+                    <img src={shot(t.portrait.url, 420, 'webp')}
+                         srcset={`${shot(t.portrait.url, 420, 'webp')} 420w, ${shot(t.portrait.url, 840, 'webp')} 840w`}
+                         sizes={SIZES} alt={t.portrait.alt ?? t.name}
+                         width="420" height="420" loading="lazy" decoding="async" />
+                  </picture>
+                )}
+                <span class="who"><b>{t.name}</b><span class="role">{t.role}</span></span>
+              </footer>
+            </blockquote>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+)}
+
+<style>
+  /* it sits inside the light section, which already holds the page margins */
+  .says { position: relative; padding: 14vh 0; }
+
+  /* The head is cut on the same tracks as the body under it, so the line that
+     says why the section is here starts exactly where the quotes start, and
+     the name sits beside it on that line rather than over it.
+     That is what sets the name's size: at display scale it wants 637px and
+     the narrow column plus its gutter give 608, so it would either wrap or
+     run into the line beside it. At the title scale it fits the column, and
+     `nowrap` keeps it on one line at the widths where the column tightens —
+     it has the gutter to lean into and nothing is in there. */
+  .head { display: grid; grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
+          column-gap: var(--col-gap); align-items: baseline; }
+  /* Display scale, sized by the room it has rather than by the viewport: the
+     name has the narrow column and the gutter beside it to fill — 38rem up
+     here, 21rem once the split tightens — and "Client stories" sets 9.9em
+     wide, so these are the largest sizes that clear the line beside it.
+     Rename the section and this wants checking; `nowrap` keeps it on one
+     line, which means a longer name leans into the gutter rather than
+     wrapping into the quotes. */
+  h2 { grid-column: 1; white-space: nowrap;
+       font-size: 3.6rem; font-weight: var(--w-display);
+       line-height: var(--lh-display); letter-spacing: var(--track-display);
+       color: var(--ink); }
+  .intro { grid-column: 2; }
+  .intro { max-width: 34ch; font-size: var(--t-body); line-height: var(--lh-body);
+           color: var(--ink-3); }
+
+  .body { margin-top: var(--s-8); display: grid;
+          grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
+          column-gap: var(--col-gap); align-items: start; }
+  /* One cell, not two rows: the quotes are the tall thing here, and a column
+     spanning both rows hands its height to them — which pushed the names a
+     screen away from the control they belong to. */
+  .pane { grid-column: 1; }
+
+  /* ── who said it: the list is the position, not only a menu ───────── */
+  .names { margin-top: var(--s-5);
+           display: flex; flex-direction: column;
+           align-items: flex-start; gap: var(--s-3); }
+  .name { position: relative; display: block; text-align: left;
+          color: var(--ink-dim); transition: color var(--dur-fast) ease; }
+  .name:hover { color: var(--ink-3); }
+  .name.on { color: var(--ink); }
+
+  /* The marker takes no room in the row — it is out of the flow, so a name
+     that is not being read begins exactly where the square would be. The one
+     being read steps forward to let it in, and the square slides in behind
+     it from the left; both reverse when the reel moves on. The step is the
+     square's own width plus the space after it, so nothing is guessed. */
+  .name .sq { position: absolute; left: 0; top: 50%;
+              margin-top: calc(var(--square) / -2);
+              opacity: 0; translate: -0.5rem 0;
+              transition: opacity var(--dur-fast) ease,
+                          translate var(--dur-base) var(--ease-panel); }
+  .name span { display: inline-block;
+               transition: translate var(--dur-base) var(--ease-panel); }
+  .name.on .sq { opacity: 1; translate: 0 0; }
+  .name.on span { translate: calc(var(--square) + 0.6em) 0; }
+
+  /* ── the way through, over the names ──────────────────────────────── */
+
+  /* The way through reads top down: the arrows and the count first, then the
+     bar, and the bar sits directly over the list it is measuring. It used to
+     be the other way about, which left the bar between two things it had
+     nothing to do with. */
+  .track { margin-top: var(--s-4); height: var(--hairline);
+           background: var(--line); overflow: hidden; }
+  .track i { display: block; height: 100%; background: var(--ink);
+             transform-origin: left center; transform: scaleX(0); }
+  .controls { display: flex; justify-content: space-between; align-items: center; }
+  .arrows { display: flex; gap: var(--s-4); }
+  .arrows button { font-size: var(--t-body); line-height: 1; color: var(--ink-3);
+                   transition: color var(--dur-fast) ease; }
+  .arrows button:hover { color: var(--ink); }
+  .count { color: var(--ink-4); font-variant-numeric: tabular-nums; }
+
+  /* ── what they said ───────────────────────────────────────────────── */
+  /* every slide is stacked on the same cell, so the section keeps one height
+     whatever length a quote runs to */
+  .slides { grid-column: 2; list-style: none; display: grid; }
+  .slide { grid-area: 1 / 1; display: flex;
+           opacity: 0; visibility: hidden; translate: 0 0.75rem;
+           transition: opacity 0.6s var(--ease-out), translate 0.6s var(--ease-out),
+                       visibility 0s linear 0.6s; }
+  .slide.on { opacity: 1; visibility: visible; translate: none;
+              transition-delay: 0s, 0s, 0s; }
+
+  /* A long measure, because a quote is long-form and set large: at 40ch it
+     broke at seven words a line and read as a column rather than as speech.
+     64ch takes most of the column it is given without letting the line run
+     past what the eye can carry back. */
+  /* Every slide is as tall as the longest of them, and the marks hold the top
+     and the foot of that space whichever quote is being read — so the frame
+     never moves and only what is inside it changes. The paragraph takes the
+     slack as equal margins above and below, which centres it between the two;
+     otherwise a short quote left all of its air under the closing mark and
+     the section looked as though it had been cut off. */
+  .words { margin: 0; max-width: 64ch; width: 100%;
+           display: flex; flex-direction: column; }
+  .words p { margin: auto 0; }
+  /* the pair frames what was said: one opening above it on the left, one
+     closing under it on the right, at the end of the measure */
+  .quote { display: block; flex: none; width: 1.75rem; height: auto; color: var(--ink-dim); }
+  .open { margin-bottom: var(--s-5); }
+  .close { margin: var(--s-5) 0 0 auto; }
+  .words p { font-size: var(--t-statement); font-weight: var(--w-title);
+             line-height: 1.3; letter-spacing: var(--track-title); color: var(--ink); }
+
+  /* The face belongs to the name, not to the quote: small, level with the two
+     lines it labels, and starting on the quote's own left edge so the three
+     read as one attribution rather than as a picture with text beside it. */
+  /* the attribution rides at the foot with the closing mark, so the face sits
+     on the same line from one testimonial to the next */
+  .by { flex: none; display: flex; align-items: center; gap: var(--s-4); margin-top: var(--s-7); }
+  .portrait { flex: none; display: block; width: 4rem; }
+  /* `height: auto` is not optional: the tag carries width and height so the
+     row holds its space before the face arrives, and without it that pixel
+     height wins over the ratio and the portrait draws 64 by 420 */
+  .portrait img { width: 100%; height: auto; aspect-ratio: 1 / 1; object-fit: cover;
+                  border-radius: var(--radius-media); filter: grayscale(1); }
+  .who { display: flex; flex-direction: column; gap: 0.1rem;
+         font-size: var(--t-small); line-height: var(--lh-lead); }
+  .who b { font-weight: var(--w-body); color: var(--ink-2); }
+  .role { color: var(--ink-4); }
+
+  /* the split tightens to 14rem + 7rem, so the name comes down with it */
+  @media (max-width: 1099px) {
+    h2 { font-size: 2rem; }
+    .words { max-width: none; }
+  }
+
+  /* stacked: the section's name, the quote, then who said it and the way
+     through under them — the list of names goes, since the row of arrows and
+     the count already say where you are and there is no column to hold it */
+  @media (max-width: 859px) {
+    .says { padding: 12vh 0; }
+    .head, .body { grid-template-columns: 1fr; }
+    .head { gap: var(--s-4); }
+    /* stacked, it has the page: back to the size the other sections use */
+    h2 { grid-column: 1; font-size: var(--t-h2); white-space: normal; }
+    .intro { grid-column: 1; }
+    .names { display: none; }
+    .slides { grid-column: 1; grid-row: 1; }
+    .pane { grid-column: 1; grid-row: 2; margin-top: var(--s-7); }
+  }
+
+  /* asked for less motion: no fade between slides, just the change */
+  @media (prefers-reduced-motion: reduce) {
+    .slide, .name .sq, .name span { transition: none; }
+  }
+</style>

@@ -10,6 +10,7 @@ import { createDirectionalHover } from './ui/directionalHover';
 import { createMarquee } from './ui/marquee';
 import { createReel } from './ui/reel';
 import { createProcessRail } from './ui/processRail';
+import { createForming } from './ui/forming';
 import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
 import { createHoverAudio } from './ui/hoverAudio';
@@ -49,6 +50,8 @@ onPage('home', () => {
       && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     add(createWordmarkLetters(markHost));
   }
+  const forming = document.querySelector<HTMLElement>('[data-forming]');
+  if (forming) add(createForming(forming));
   const process = document.querySelector<HTMLElement>('[data-process]');
   if (process) add(createProcessRail(process));
   add(createDirectionalHover());

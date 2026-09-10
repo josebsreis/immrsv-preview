@@ -1,0 +1,172 @@
+---
+/** How we work: the label out at the page's edge, the heading and its line
+ *  beside it, then the steps across the foot with a rule under them. The
+ *  section holds still while it is scrolled through — the rule fills and the
+ *  steps ink in as it goes (scripts/ui/processRail.ts). */
+import type { HomeContent } from '@lib/sanity/types';
+
+interface Props { content: HomeContent['process']; }
+const { content } = Astro.props;
+const steps = content.steps;
+/* the rule carries a square at the head of every step and one more closing
+   its end, the way a scale is marked at both ends and not only at its stops */
+const marks = steps.length + 1;
+---
+{steps.length > 0 && (
+  <section class="process" id="process" data-process style={`--steps: ${steps.length}`}>
+    <!-- as tall as the scroll it wants; the pane inside it holds still -->
+    <div class="track" data-process-track>
+      <div class="pane">
+        <header class="head">
+          <span class="label tag">{content.tag}</span>
+          <div class="ttl">
+            <h2>{content.title}</h2>
+            {content.intro && (
+              <p class="intro">{content.intro.split('\n').map((line, i) => (
+                <>{i > 0 && <br />}{line}</>
+              ))}</p>
+            )}
+          </div>
+        </header>
+
+        <!-- the steps and the rule that measures them: side by side across the
+             page, or the rule down their left when they stack -->
+        <div class="body">
+          <ol class="steps" data-process-steps>
+            {steps.map((s, i) => (
+              <li class="step" data-process-step>
+                <span class="label n">Step — {String(i + 1).padStart(2, '0')}</span>
+                <h3>{s.title}</h3>
+                <p>{s.body}</p>
+              </li>
+            ))}
+          </ol>
+
+          <div class="rail" data-process-rail aria-hidden="true">
+            <span class="fill" data-process-fill></span>
+            {Array.from({ length: marks }).map((_, i) => (
+              <i class="mark" data-process-mark style={`--at: ${i}`}></i>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  /* it sits inside the light section, which already holds the page margins */
+  .process { position: relative; }
+
+  /* The travel: a screen for the section to be read in, plus half a screen
+     per step for the rule to cross. The pane inside holds at the top of the
+     screen for the whole of it. */
+  .track { height: calc(100vh + var(--steps, 3) * 55vh); }
+  .pane { position: sticky; top: 0; min-height: 100vh;
+          display: flex; flex-direction: column; justify-content: center;
+          padding: 12vh 0; }
+
+  /* the label out at the edge, the heading in the wide column beside it —
+     a shallower indent than the statement's, because three columns of steps
+     have to live under it */
+  .head { display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
+          column-gap: var(--s-7); align-items: start; }
+  .tag { color: var(--ink-3); padding-top: 0.5em; }
+  h2 { font-size: var(--t-h2); font-weight: var(--w-display);
+       line-height: var(--lh-display); letter-spacing: var(--track-display); color: var(--ink); }
+  .intro { margin-top: var(--s-5); font-size: var(--t-lead); line-height: var(--lh-lead);
+           letter-spacing: var(--track-lead); color: var(--ink-3); max-width: 24ch; }
+
+  /* the steps start where the heading does */
+  .body { position: relative; margin-top: 14vh; margin-left: calc(9rem + var(--s-7)); }
+  .steps { list-style: none;
+           display: grid; grid-template-columns: repeat(var(--steps, 3), minmax(0, 1fr));
+           column-gap: var(--s-7); align-items: start; }
+
+  /* Brought in by the rail: --lit runs 0 → 1 as the fill crosses the step, and
+     the step arrives on it — up from below and out of nothing, the same move
+     [data-rise] makes everywhere else, driven by the scroll rather than by a
+     crossing. Nothing is dimmed: a step is either not here yet or it is here. */
+  .step { --lit: 0; opacity: var(--lit);
+          translate: 0 calc((1 - var(--lit)) * 1.5rem);
+          will-change: opacity, translate; }
+  .n { display: block; color: var(--ink-3); }
+  .step h3 { margin-top: var(--s-6); font-size: var(--t-statement); font-weight: var(--w-title);
+             line-height: var(--lh-title); letter-spacing: var(--track-title); color: var(--ink); }
+  .step p { margin-top: var(--s-5); max-width: 34ch;
+            font-size: var(--t-body); line-height: var(--lh-body);
+            color: var(--ink-2); }
+
+  /* The rule along the foot. There is no track waiting to be filled: the line
+     is only ever as long as it has grown, so the section opens on a single
+     square with nothing drawn from it yet. */
+  /* Nothing here centres itself with `translate`, and the fill in particular
+     must not: the build's minifier drops the `translate` property from any
+     rule that also declares `transform`, so the line silently lost its half
+     pixel and sat off the square in production while looking right in source.
+     The offsets are arithmetic instead — and being arithmetic they land on
+     whole pixels: (5 − 1) / 2 = 2 above the line and 2 below it. */
+  .rail { position: relative; margin-top: 12vh; height: var(--square); }
+  .fill { position: absolute; left: 0; right: 0;
+          top: calc((var(--square) - var(--hairline)) / 2);
+          height: var(--hairline);
+          background: var(--ink); transform: scaleX(0); transform-origin: left center;
+          will-change: transform; }
+
+  /* the site's own square, at the head of each step and one closing the end —
+     which is why the stops are spaced by the step count and not by their own
+     number. Each arrives as the line reaches it. */
+  .mark { position: absolute; top: 0; left: calc(var(--at) / var(--steps) * 100%);
+          margin-left: calc(var(--square) / -2);
+          width: var(--square); height: var(--square);
+          background: var(--ink);
+          opacity: 0; scale: 0.3;
+          transition: opacity var(--dur-fast) ease, scale var(--dur-fast) var(--ease-out); }
+  .mark[data-on] { opacity: 1; scale: 1; }
+
+  @media (max-width: 1099px) {
+    .head { grid-template-columns: minmax(0, 7rem) minmax(0, 1fr); column-gap: var(--s-6); }
+    .body { margin-left: calc(7rem + var(--s-6)); }
+    .steps { column-gap: var(--s-6); }
+  }
+
+  /* Stacked, the same rule turned on its side: it runs down the left of the
+     steps and grows as they are scrolled past, a square at the head of each.
+     Nothing pins — there is no room to hold a screen still on a phone — so
+     the page's own scroll does the reading. The marks are put against the
+     steps' real tops from JS: down the page they are not evenly spaced the
+     way three columns across are. */
+  @media (max-width: 859px) {
+    .track { height: auto; }
+    .pane { position: static; min-height: 0; padding: 12vh 0; }
+    .head { grid-template-columns: 1fr; }
+    .tag { padding-top: 0; margin-bottom: var(--s-4); }
+    .intro { max-width: none; }
+
+    .body { margin-left: 0; margin-top: 10vh; }
+    .steps { grid-template-columns: 1fr; row-gap: var(--s-8); padding-left: 2.5rem; }
+    .step p { max-width: none; }
+
+    /* it starts at the first square, not above it: the rule's top is the top
+       of the first step, which is where JS puts that square */
+    .rail { position: absolute; left: 0; top: 0; bottom: 0.45em;
+            margin: 0; width: var(--square); height: auto; }
+    .fill { right: auto; top: 0; bottom: 0;
+            left: calc((var(--square) - var(--hairline)) / 2);
+            width: var(--hairline); height: 100%;
+            transform: scaleY(0); transform-origin: center top; }
+    /* the rail is exactly one square wide, so flush left is centred; the
+       vertical position comes from JS, because down the page the steps are
+       not evenly spaced the way three columns across are */
+    .mark { left: 0; margin-left: 0; top: 0; }
+  }
+
+  /* asked for less motion: everything lit, the rule drawn, nothing pinned */
+  @media (prefers-reduced-motion: reduce) {
+    .track { height: auto; }
+    .pane { position: static; min-height: 0; }
+    .step { --lit: 1; translate: none; }
+    .fill { transform: scaleX(1); }
+    .mark { opacity: 1; scale: 1; }
+  }
+</style>
