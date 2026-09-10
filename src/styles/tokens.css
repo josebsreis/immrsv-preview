@@ -65,6 +65,9 @@
   --t-body: 0.875rem;             /* 14px */
   --t-lead: clamp(0.9375rem, 1.2vw, 1.125rem);
   --t-h2: clamp(1.875rem, 4.6vw, 4.625rem);
+  /* a card's or a step's own title: the rung between the lead and the
+     statement, which the scale did not have and two components wanted */
+  --t-title: clamp(1.125rem, 1.5vw, 1.375rem);
   --t-statement: clamp(1.25rem, 2.1vw, 1.875rem);   /* the spoken statement */
   --t-figure: clamp(2.5rem, 4vw, 3.75rem);          /* a stat's number */
   --t-display: clamp(2.375rem, 4.4vw, 4rem);

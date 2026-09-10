@@ -32,8 +32,8 @@ const marks = [
   '<rect x="3.5" y="9.5" width="17" height="11"/><path d="M3.5 5.5h17M3.5 4v3M20.5 4v3"/>',
   /* the same thing, built: a wireframe solid */
   '<path d="M12 2.5l8.5 4.75v9.5L12 21.5l-8.5-4.75v-9.5L12 2.5z"/><path d="M12 12l8.5-4.75M12 12L3.5 7.25M12 12v9.5"/>',
-  /* a lamp, and what it lands on */
-  '<path d="M8.5 3.5h7l2.5 4.5h-12l2.5-4.5z"/><path d="M6.2 8L3.5 20.5M17.8 8l2.7 12.5"/><path d="M3 20.5h18"/>',
+  /* the sun, the thing it falls on, and the shadow that proves it */
+  '<circle cx="18" cy="6" r="2.6"/><path d="M15.6 8.4 12 12"/><rect x="4.5" y="11.5" width="7.5" height="9"/><path d="M12 20.5h7.5"/>',
   /* shipped: a window, with a life after it */
   '<rect x="3.5" y="5" width="17" height="14"/><path d="M3.5 9.5h17M6.5 7.2h1.2M9.5 7.2h1.2"/>',
 ];
@@ -68,11 +68,12 @@ const {
 
       <ol class="steps">
         {steps.map((s, i) => (
-          <li class={`beat ${i % 2 ? 'right' : 'left'}`} data-forming-beat>
-            <svg class="mark" viewBox="0 0 24 24" aria-hidden="true" set:html={marks[i % marks.length]} />
-            <span class="label n">{String(i + 1).padStart(2, '0')} — {s.studio}</span>
-            <span class="word">{s.word}</span>
-            <span class="line">{s.line}</span>
+          <li class={`beat panel ${i % 2 ? 'right' : 'left'}`} data-forming-beat>
+            <div class="head">
+              <h3 class="word">{s.word}</h3>
+              <svg class="mark" viewBox="0 0 24 24" aria-hidden="true" set:html={marks[i % marks.length]} />
+            </div>
+            <p class="line">{s.line}</p>
           </li>
         ))}
       </ol>
@@ -129,20 +130,20 @@ const {
      its pass and back out as it leaves — so the four read as things going by
      rather than as a list being ticked. The arc is written from script as two
      offsets, because the page is one place where a sine is worth the read. */
-  .beat { position: absolute; top: 50%; width: min(21rem, 30vw);
-          display: flex; flex-direction: column; align-items: flex-start; gap: 0.55rem;
-          padding: var(--s-5); background: var(--surface);
-          border: var(--hairline) solid var(--line);
+  .beat { position: absolute; top: 50%; width: min(22rem, 31vw);
           color: var(--ink); pointer-events: none;
           opacity: var(--v, 0); --v: 0; --ax: 0px; --ay: 0px;
           transform: translate(var(--ax), calc(-50% + var(--ay))); }
   .beat.left { left: var(--page-x); }
   .beat.right { right: var(--page-x); }
-  .mark { width: 1.5rem; height: 1.5rem; margin-bottom: 0.15rem;
-          fill: none; stroke: var(--ink); stroke-width: 1.1; }
-  .n { color: var(--ink-3); }
-  .word { font-size: var(--t-h2); font-weight: 500; letter-spacing: -0.03em; line-height: 0.95; }
-  .line { font-size: var(--t-small); color: var(--ink-2); line-height: 1.55; }
+  /* the word, and its mark drawn large and thin beside it */
+  .head { display: flex; align-items: center; justify-content: space-between;
+          gap: var(--s-5); margin-bottom: 0.7rem; }
+  .word { margin: 0; font-size: var(--t-title); font-weight: var(--w-title);
+          letter-spacing: var(--track-title); line-height: var(--lh-title); }
+  .mark { flex: none; width: 2.5rem; height: 2.5rem;
+          fill: none; stroke: var(--ink); stroke-width: 0.7; }
+  .line { margin: 0; font-size: var(--t-small); color: var(--ink-2); line-height: var(--lh-body); }
 
   /* Narrow: she takes the width, the line reads as two stacked halves above
      her, and her steps sit at the foot rather than beside her — there is no
@@ -163,6 +164,6 @@ const {
     .beat { top: auto; bottom: var(--page-y); width: calc(100% - var(--page-x) * 2);
             left: var(--page-x); right: auto;
             transform: translateY(var(--ay)); }
-    .word { font-size: 2rem; }
+
   }
 </style>
