@@ -31,13 +31,18 @@ const CLEAR = 44;
 /** where in the scroll each thing happens */
 const T = {
   spread: [0.0, 0.16] as const,               // the mark grows into the light ground
-  title: [0.1, 0.17, 0.4, 0.46] as const,     // the line: in, held, out
+  title: [0.1, 0.17, 0.38, 0.44] as const,    // the line: in, held, out
   part: [0.22, 0.34] as const,                // its halves part, and the slot opens between them
   play: [0.3, 0.96] as const,                 // the frames run
-  beat: 0.5,                                  // the first step lands here…
-  step: 0.115,                                // …and the rest this far apart
-  hold: 0.05,                                 // how long a step stays
+  beat: 0.46,                                 // the first step begins its pass here…
+  step: 0.1,                                  // …and the rest this far apart
+  life: 0.22,                                 // how long one takes to cross — longer
+                                              // than the step, so two are always going
 };
+/** how far a card travels up the screen, and how far it leans in at the middle */
+const TRAVEL = 0.46, LEAN = 0.07;
+/** the air a card keeps from her at its innermost */
+const SHY = 24;
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const ramp = (p: number, a: number, b: number) => clamp01((p - a) / (b - a));
@@ -98,7 +103,7 @@ export function createForming(root: HTMLElement): Forming {
      The slot is placed in fractions of the screen and then pinned to whole
      pixels, because its edge and the light ground's edge have to be the
      same edge: half a pixel of disagreement is a grey hairline. */
-  let w = 0, h = 0, sx = 0, sy = 0, sw = 0, sh = 0;
+  let w = 0, h = 0, sx = 0, sy = 0, sw = 0, sh = 0, leanMax = 0;
   const size = () => {
     const dpr = Math.min(devicePixelRatio || 1, 2);
     const pr = win.getBoundingClientRect();
@@ -136,6 +141,16 @@ export function createForming(root: HTMLElement): Forming {
         halves[0].style.setProperty('--dx', `${(pr.left + w / 2 - JOIN / 2 - a.right).toFixed(1)}px`);
         halves[1].style.setProperty('--dx', `${(pr.left + w / 2 + JOIN / 2 - b.left).toFixed(1)}px`);
       }
+    }
+
+    /* How far a card may lean in before it would touch her — measured, not
+       assumed, because the slot's width answers to the screen's height and a
+       short wide screen leaves far less room than a tall one. */
+    const card = beats[0];
+    if (card) {
+      card.style.setProperty('--ax', '0px');
+      const cr = card.getBoundingClientRect();
+      leanMax = Math.max(0, sx - (cr.left - pr.left) - cr.width - SHY);
     }
 
     last = -1;
@@ -191,10 +206,23 @@ export function createForming(root: HTMLElement): Forming {
     const f = Math.round(ramp(p, T.play[0], T.play[1]) * (N - 1));
     if (f !== shown) { shown = f; draw(); }
 
-    // her four steps, where the halves of the line stood
+    /* Her four steps, passing where the halves of the line stood: each rises
+       through its own half circle — in towards her at the middle of the pass,
+       out again as it goes — and they overlap, so one is always arriving
+       while another leaves. */
+    /* Narrow, they come one at a time and barely move: there is only one place
+       for a card to be, and two of them in it is a pile. */
+    const narrow = w <= 719;
+    const span = narrow ? T.step * 0.95 : T.life;
+    const rise = h * (narrow ? 0.06 : TRAVEL);
+    const lean = narrow ? 0 : Math.min(w * LEAN, 96, leanMax);
     beats.forEach((b, i) => {
       const at = T.beat + i * T.step;
-      b.style.setProperty('--v', life(p, [at - 0.04, at, at + T.hold, at + T.hold + 0.04]).toFixed(3));
+      const t = ramp(p, at, at + span);
+      const v = Math.min(1, ramp(p, at, at + span * 0.2), 1 - ramp(p, at + span * 0.78, at + span));
+      b.style.setProperty('--v', v.toFixed(3));
+      b.style.setProperty('--ay', `${((0.5 - t) * rise).toFixed(1)}px`);
+      b.style.setProperty('--ax', `${(Math.sin(t * Math.PI) * lean * (i % 2 ? -1 : 1)).toFixed(1)}px`);
     });
   };
 

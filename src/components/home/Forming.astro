@@ -21,16 +21,34 @@ interface Props {
   /** the two halves of the line, which part to make room for her */
   lead?: string;
   tail?: string;
-  steps?: { word: string; line: string }[];
+  steps?: { word: string; studio: string; line: string }[];
 }
+
+/** One mark for each step, drawn in the page's own language: hairline,
+ *  square-cornered, geometric. They are the only ornament on the site and
+ *  they earn their place by saying what the step is before the word does. */
+const marks = [
+  /* a plan, with the dimension line above it */
+  '<rect x="3.5" y="9.5" width="17" height="11"/><path d="M3.5 5.5h17M3.5 4v3M20.5 4v3"/>',
+  /* the same thing, built: a wireframe solid */
+  '<path d="M12 2.5l8.5 4.75v9.5L12 21.5l-8.5-4.75v-9.5L12 2.5z"/><path d="M12 12l8.5-4.75M12 12L3.5 7.25M12 12v9.5"/>',
+  /* a lamp, and what it lands on */
+  '<path d="M8.5 3.5h7l2.5 4.5h-12l2.5-4.5z"/><path d="M6.2 8L3.5 20.5M17.8 8l2.7 12.5"/><path d="M3 20.5h18"/>',
+  /* shipped: a window, with a life after it */
+  '<rect x="3.5" y="5" width="17" height="14"/><path d="M3.5 9.5h17M6.5 7.2h1.2M9.5 7.2h1.2"/>',
+];
 const {
   lead = 'Before it exists,',
   tail = "we've already built it.",
   steps = [
-    { word: 'Draw', line: 'The building, at real scale, from the first sketch.' },
-    { word: 'Model', line: 'Every surface built, not painted on.' },
-    { word: 'Light', line: 'Real optics, real materials, no flattery.' },
-    { word: 'Build', line: 'Shipped, and kept working.' },
+    { word: 'Draw', studio: 'Architecture + Design',
+      line: 'Concept to construction drawings, modelled at real scale from the first sketch — so the decisions are made where they are still cheap to make.' },
+    { word: 'Model', studio: 'Creative Media',
+      line: 'Every surface built rather than painted on, from the same model the architects work in. Nothing is redrawn to flatter the project.' },
+    { word: 'Light', studio: 'Creative Media',
+      line: 'Real optics, real materials, and no flattery the building cannot deliver. Lit like a photograph, not like a render.' },
+    { word: 'Build', studio: 'Digital Products',
+      line: 'Sites, configurators and tools shipped and maintained — measured once real people are using them, not when they demo well.' },
   ],
 } = Astro.props;
 ---
@@ -51,7 +69,8 @@ const {
       <ol class="steps">
         {steps.map((s, i) => (
           <li class={`beat ${i % 2 ? 'right' : 'left'}`} data-forming-beat>
-            <span class="label n">{String(i + 1).padStart(2, '0')}</span>
+            <svg class="mark" viewBox="0 0 24 24" aria-hidden="true" set:html={marks[i % marks.length]} />
+            <span class="label n">{String(i + 1).padStart(2, '0')} — {s.studio}</span>
             <span class="word">{s.word}</span>
             <span class="line">{s.line}</span>
           </li>
@@ -105,35 +124,45 @@ const {
   /* her four steps, where the halves of the line stood */
   .steps { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
   .forming:not([data-live]) .steps { display: none; }
-  .beat { position: absolute; top: 50%; max-width: 17rem;
-          display: flex; flex-direction: column; gap: 0.5rem;
+  /* Each step is a card, and it does not blink on and off: it travels a half
+     circle past her — up the screen, leaning in towards her at the middle of
+     its pass and back out as it leaves — so the four read as things going by
+     rather than as a list being ticked. The arc is written from script as two
+     offsets, because the page is one place where a sine is worth the read. */
+  .beat { position: absolute; top: 50%; width: min(21rem, 30vw);
+          display: flex; flex-direction: column; align-items: flex-start; gap: 0.55rem;
+          padding: var(--s-5); background: var(--surface);
+          border: var(--hairline) solid var(--line);
           color: var(--ink); pointer-events: none;
-          opacity: var(--v, 0); --v: 0;
-          transform: translateY(calc(-50% + (1 - var(--v)) * 14px)); }
+          opacity: var(--v, 0); --v: 0; --ax: 0px; --ay: 0px;
+          transform: translate(var(--ax), calc(-50% + var(--ay))); }
   .beat.left { left: var(--page-x); }
-  .beat.right { right: var(--page-x); text-align: right; align-items: flex-end; }
+  .beat.right { right: var(--page-x); }
+  .mark { width: 1.5rem; height: 1.5rem; margin-bottom: 0.15rem;
+          fill: none; stroke: var(--ink); stroke-width: 1.1; }
   .n { color: var(--ink-3); }
-  .word { font-size: var(--t-display); font-weight: 500; letter-spacing: -0.03em; line-height: 0.95; }
-  .line { font-size: var(--t-small); color: var(--ink-2); line-height: 1.5; }
+  .word { font-size: var(--t-h2); font-weight: 500; letter-spacing: -0.03em; line-height: 0.95; }
+  .line { font-size: var(--t-small); color: var(--ink-2); line-height: 1.55; }
 
   /* Narrow: she takes the width, the line reads as two stacked halves above
      her, and her steps sit at the foot rather than beside her — there is no
      beside on a phone. */
   @media (max-width: 719px) {
     [data-live] .track { height: 380vh; }
-    .slot { height: min(56vh, 128vw); }
+    /* she sits a little above centre, to leave the foot of the screen to the
+       card that is passing */
+    .slot { height: min(56vh, 128vw); top: 42%; }
     /* the line is two lines, above her, and the halves never part: there is
        no beside on a phone */
-    .title { inset: 12vh var(--page-x) auto; text-align: center;
+    .title { inset: 6vh var(--page-x) auto; text-align: center;
              font-size: var(--t-small); }
     .half, .half:first-child, .half:last-child {
       position: static; translate: none; white-space: normal;
       display: block; text-align: center; left: auto; right: auto; }
     [data-live] .half { transform: none; }
-    .beat { top: auto; bottom: var(--page-y); max-width: none; width: calc(100% - var(--page-x) * 2);
-            left: var(--page-x) !important; right: auto !important;
-            text-align: left !important; align-items: flex-start !important;
-            transform: translateY(calc((1 - var(--v)) * 10px)); }
+    .beat { top: auto; bottom: var(--page-y); width: calc(100% - var(--page-x) * 2);
+            left: var(--page-x); right: auto;
+            transform: translateY(var(--ay)); }
     .word { font-size: 2rem; }
   }
 </style>
