@@ -47,11 +47,11 @@ export const HERO_CONFIG = {
     spinRelease: 2.6,             // …and how quickly it lets go
     wobble: 0.03,                 // slow tilt so the turn never feels like a loop
     tint: {                       // particle colours, dark→light along aTint
-      base: [0.56, 0.58, 0.66],   // the low end runs cool: a cloud of pure
-      mid: [0.84, 0.85, 0.89],    //   greys reads as paper, not as light.
-      high: [1, 1, 1],            //   Kept cool, but lifted — at the old
-    },                            //   values the mass read as smoke against
-                                  //   the ground rather than as a form.
+      base: [0.72, 0.74, 0.80],   // the low end runs cool: a cloud of pure
+      mid: [0.92, 0.92, 0.95],    //   greys reads as paper, not as light.
+      high: [1, 1, 1],            //   Lifted again — the cube is white, and
+    },                            //   it is depth and growth that take it
+                                  //   down, not the colour it starts from.
     /** how the cloud is read as a volume rather than a sheet */
     depth: {
       near: 7.6,                  // camera distance at which nothing is dimmed

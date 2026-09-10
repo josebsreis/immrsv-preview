@@ -100,7 +100,11 @@ export function makeParticleMaterial(cfg: HeroConfig): THREE.ShaderMaterial {
         // the cube starts its intro as a faint dot and the cloud starts as
         // nothing at all, which is the difference in the floor here
         float floor_ = 0.10 * (1.0 - aCore);
-        vA = (0.58 + 0.16*f) * mix(floor_, 1.0, aIn) * (1.0 + ${D.lift.toFixed(2)}*fl) * lit
+        // At rest a point is nearly full white: the mark is the brightest thing
+        // on the page and it was reading as a grey haze. What takes it down is
+        // depth, and growing — the open cube is a frame and a frame is quiet —
+        // not its starting point.
+        vA = (0.92 + 0.08*f) * mix(floor_, 1.0, aIn) * (1.0 + ${D.lift.toFixed(2)}*fl) * lit
              / (1.0 + big * ${cfg.open.fade.toFixed(2)})
              / (1.0 + blur * ${(D.bokeh * 0.55).toFixed(2)});
         vec3 c0 = vec3(${base.join(',')}), c1 = vec3(${mid.join(',')}), c2 = vec3(${high.join(',')});
