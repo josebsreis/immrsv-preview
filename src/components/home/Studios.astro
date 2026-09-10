@@ -180,6 +180,8 @@ const grounds = ['light', 'dark', 'light'] as const;
      middle left empty, and its own ground under it. It breaks the page's
      margins because the ground has to reach the edges — three panels of
      different colour inside a gutter would be three stripes. */
+  /* the thread from the head lands on a rule, not on an open panel */
+  .stack .studio:first-child { border-top: var(--hairline) solid var(--line); }
   .studio { min-height: 100svh; display: flex; flex-direction: column;
             justify-content: space-between; gap: var(--s-8);
             margin-inline: calc(var(--page-x) * -1);
