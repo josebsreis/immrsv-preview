@@ -109,7 +109,7 @@ const grounds = ['light', 'dark', 'light'] as const;
                 </div>
                 <!-- the name of the project on show, between the arrows and
                      the count; the script rewrites it as the reel turns -->
-                <span class="reel-name" data-reel-name aria-live="polite">{shots[0]?.name}</span>
+                <span class="reel-name label" data-reel-name aria-live="polite">{shots[0]?.name}</span>
                 <span class="reel-count label"><span data-reel-now>01</span>/{String(shots.length).padStart(2, '0')}</span>
               </div>
               <div class="reel-track" aria-hidden="true"><i data-reel-fill></i></div>
@@ -229,9 +229,11 @@ const grounds = ['light', 'dark', 'light'] as const;
      site's chip, on the site's glass */
   /* the name sits in the instrument, not on the picture: the picture stays
      a picture, and the row above it already reads as "where you are" */
+  /* the same label as the count beside it — size, tracking, case, grey — so
+     the two sit on one baseline and read as one readout */
   .reel-name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
                margin-left: auto; padding: 0 var(--s-4); text-align: right;
-               font-size: var(--t-small); letter-spacing: var(--track-lead); color: var(--ink-4); }
+               color: var(--ink-4); }
 
 
   /* ── what it does ──────────────────────────────────────────────────── */
