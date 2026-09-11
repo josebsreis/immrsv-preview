@@ -57,8 +57,6 @@ onPage('home', () => {
   }
   const forming = document.querySelector<HTMLElement>('[data-forming]');
   if (forming) { add(createForming(forming)); add(createFormingMarks(forming)); }
-  const pileMarks = document.querySelector<HTMLElement>('[data-pile]');
-  if (pileMarks) add(createFormingMarks(pileMarks));
   const faqs = document.querySelector<HTMLElement>('[data-faqs]');
   if (faqs) add(createFaqs(faqs));
   const process = document.querySelector<HTMLElement>('[data-process]');

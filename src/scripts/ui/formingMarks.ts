@@ -64,7 +64,6 @@ export function createFormingMarks(root: HTMLElement): FormingMarks {
     visible = e.isIntersecting;
     if (visible && !raf) raf = requestAnimationFrame(frame);
   });
-  // …and a root with no pane — the pile's figure — is watched as itself
   io.observe(root.querySelector('[data-forming-pane]') ?? root);
 
   return {
