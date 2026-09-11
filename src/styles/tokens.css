@@ -156,6 +156,7 @@
   --z-main: 3;
   --z-ui: 5;
   --z-nav: 6;
+  --z-cursor: 7;                  /* the word beside the pointer, over everything */
 }
 
 /* ── themes ────────────────────────────────────────────────────────── */

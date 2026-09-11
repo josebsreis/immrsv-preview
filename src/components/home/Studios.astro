@@ -116,6 +116,7 @@ const grounds = ['light', 'dark', 'light'] as const;
               <div class="band">
                 {shots.map((shot, k) => (
                   <a class="frame" href={`/work/${shot.slug}`} data-reel-frame data-reel-frame-name={shot.name} data-tap
+                     data-cursor-hover data-cursor-text="Explore project"
                      aria-label={`${shot.name} — ${s.name}`}>
                     <picture>
                       <source srcset={`${shot.src}.avif`} type="image/avif" />
@@ -225,6 +226,10 @@ const grounds = ['light', 'dark', 'light'] as const;
   .frame { position: absolute; inset: 0; display: block; clip-path: inset(0 0 0 100%); }
   .frame:first-of-type { clip-path: inset(0 0 0 0); }
   .frame picture, .frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  /* under the pointer the picture eases in a touch, inside a frame that
+     holds still — the same answer the cards in the pile give */
+  .frame img { transition: scale var(--dur-base) var(--ease-panel); }
+  @media (hover: hover) and (pointer: fine) { .frame:hover img { scale: 1.03; } }
   /* the project's name, on the picture, so a click is never a guess: the
      site's chip, on the site's glass */
   /* the name sits in the instrument, not on the picture: the picture stays

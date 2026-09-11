@@ -18,6 +18,7 @@ import { createFaqs } from './ui/faqs';
 import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
 import { createHoverAudio } from './ui/hoverAudio';
+import { createCursor } from './ui/cursor';
 import { site } from '@lib/site';
 import { onPage } from './lifecycle';
 import type { Hero } from './hero';
@@ -69,6 +70,7 @@ onPage('home', () => {
   if (pile) add(createWorkPile(pile));
   add(createVideoInView());
   add(createHoverAudio(site.audio.taps));
+  add(createCursor());
 
   // no loading screen: the page arrives as soon as the fonts have settled
   document.fonts.ready.then(() => document.body.classList.add('ready'));

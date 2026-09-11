@@ -63,7 +63,7 @@ const dial = RINGS.map((r, k) => {
     <svg class="dial" viewBox="-1000 -1000 2000 2000" aria-hidden="true" focusable="false">
       <path d={dial} />
     </svg>
-    <ul class="list" data-pile-list aria-roledescription="carousel">
+    <ul class="list" data-pile-list aria-roledescription="carousel" data-cursor-hover data-cursor-text="Drag" data-cursor-kind="drag">
       {cards.map((p, i) => {
         const d = offset(i, 0, n);
         const pose = poseFor(d);

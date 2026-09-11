@@ -1,5 +1,6 @@
 ---
 import '@styles/global.css';
+import Cursor from '@components/ui/Cursor.astro';
 import { ClientRouter } from 'astro:transitions';
 import Nav from '@components/layout/Nav.astro';
 import Footer from '@components/layout/Footer.astro';
@@ -40,5 +41,6 @@ const fullTitle = title ? `${title} — ${site.name}` : `${site.name} — Design
     {!noNav && <Nav items={site.nav} />}
     <slot />
     {!noFooter && <Footer />}
+    <Cursor />
   </body>
 </html>
