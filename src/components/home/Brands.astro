@@ -52,6 +52,10 @@ const { content } = Astro.props;
      weight to it */
   .grid { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr);
           gap: var(--hairline); background: var(--line);
+          /* the line colour is translucent, and the background ran on under
+             the border, so the outline was the line drawn twice — darker than
+             the lines inside. Kept to the padding box, it is drawn once. */
+          background-clip: padding-box;
           border: var(--hairline) solid var(--line);
           border-radius: 0 var(--radius) var(--radius) var(--radius); overflow: hidden; }
   .grid li { position: relative; display: grid; place-items: center;
