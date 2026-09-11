@@ -34,14 +34,15 @@ const SIZES = '(max-width: 859px) 82vw, 42vw';
 
 const note = content.tag.split('\n');
 
-/* The dial behind the pile, after Osmo's: two rings of close-set ticks
-   pointing at the card in the middle, as one path — just outside the card,
+/* The dial behind the pile, after Osmo's: two rings of small ticks
+   pointing at the card in the middle, as one path — wide enough that both
+   run off the section's edges rather than sitting inside it as a drawing,
    dense enough to read as a scale rather than as a scatter of marks. Each
    ring is ticked at the same spacing along its arc, and the outer one is
    set half a step round so the ticks do not line up into spokes. Units are
    the viewBox's; the stroke is a hairline whatever the size it is drawn at. */
-const RINGS = [330, 420];
-const SPACING = 13, TICK = 22;
+const RINGS = [445, 540];
+const SPACING = 20, TICK = 12;
 const dial = RINGS.map((r, k) => {
   const count = Math.round((2 * Math.PI * r) / SPACING);
   const phase = k % 2 ? Math.PI / count : 0;
@@ -154,8 +155,8 @@ const dial = RINGS.map((r, k) => {
           width: 200vmax; height: 200vmax; max-width: none; translate: -50% -50%;
           rotate: var(--dial, 0deg); pointer-events: none;
           fill: none; stroke: var(--ink-dim); stroke-width: 1;
-          -webkit-mask-image: radial-gradient(closest-side, #000 35%, transparent 80%);
-          mask-image: radial-gradient(closest-side, #000 35%, transparent 80%);
+          -webkit-mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
+          mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
           transition: rotate var(--dur-slow) var(--ease-panel); }
   .dial path { vector-effect: non-scaling-stroke; }
   .pile[data-drag] .dial { transition: none; }
