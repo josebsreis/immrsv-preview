@@ -1,6 +1,7 @@
 ---
 /** The clients, as their own marks, set in one lattice: neighbouring cells
- *  share their line and the square that sits on every crossing. Hovering
+ *  share their line. No squares on the crossings — the marker is for naming
+ *  things, and here it was decoration. Hovering
  *  slides a panel in from whichever edge the cursor crossed
  *  (scripts/ui/directionalHover.ts). The files are black artwork, so the
  *  theme supplies the filter that flips them. */
@@ -12,15 +13,11 @@ const { content } = Astro.props;
   <section class="brands" aria-label={content.tag}>
     <!-- the name of the section is a cell of the lattice itself: one column
          wide, standing on the first mark, sharing its line and its corners -->
-    <p class="lead section-tag" data-rise>
-      <i class="c tl"></i><i class="c tr"></i>
-      <span class="sq" aria-hidden="true"></span>{content.tag}
-    </p>
+    <p class="lead" data-rise>{content.tag}</p>
     <ul class="grid" data-dhover>
       {content.items.map((b, i) => (
         <li data-dhover-item data-rise style={`--i: ${i}`}>
           <span class="clip" aria-hidden="true"><span class="tile" data-dhover-tile></span></span>
-          <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
           <img src={b.logo.url} alt={b.logo.alt ?? b.name} loading="lazy" />
         </li>
       ))}
@@ -41,8 +38,8 @@ const { content } = Astro.props;
           border-top: var(--hairline) solid var(--line);
           border-left: var(--hairline) solid var(--line);
           border-right: var(--hairline) solid var(--line);
-          margin: 0; font-size: var(--t-small); color: var(--ink-2); }
-  /* only its head's corners are its own: its foot's are the grid's, already drawn */
+          margin: 0; display: flex; align-items: center;
+          font-size: var(--t-small); color: var(--ink-2); }
 
   /* one lattice: the container draws the top and left, each cell the line to
      its right and below, so every inner line is shared by two cells */
@@ -61,17 +58,6 @@ const { content } = Astro.props;
   .tile { position: absolute; inset: 0; background: var(--glass-hover);
           transform: translateY(-100%); will-change: transform;
           transition: transform var(--dur-base) var(--ease-panel); }
-
-  /* the square sits centred on each crossing, so neighbours share it */
-  .c { position: absolute; width: var(--square); height: var(--square); background: var(--marker);
-       pointer-events: none; transition: background var(--dur-fast) ease; }
-  /* the right and bottom lines belong to this cell, so those corners step out
-     by the hairline — that puts both neighbours' squares on the same point */
-  .tl { left: 0; top: 0; translate: -50% -50%; }
-  .tr { right: calc(var(--hairline) * -1); top: 0; translate: 50% -50%; }
-  .bl { left: 0; bottom: calc(var(--hairline) * -1); translate: -50% 50%; }
-  .br { right: calc(var(--hairline) * -1); bottom: calc(var(--hairline) * -1); translate: 50% 50%; }
-  .grid li:hover .c { background: var(--marker-hover); }
 
   img { position: relative; max-height: 3.25rem; max-width: 100%; width: auto; object-fit: contain;
         filter: var(--logo-filter); opacity: 0.82; transition: opacity var(--dur-fast) ease; }
