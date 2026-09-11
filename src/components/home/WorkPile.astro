@@ -32,6 +32,26 @@ const studioName = (p: Project) => site.studios.find((s) => s.key === p.studios[
 const words = content.title.split(/\s+/);
 /** the card is about half the page wide, and the whole screen on a phone */
 const SIZES = '(max-width: 859px) 82vw, 52vw';
+
+/* The dial behind the pile, after Osmo's: rings of short ticks pointing at
+   the card in the middle, as one path. Each ring is ticked at about the same
+   spacing along its arc, so the outer rings carry more of them rather than
+   the same few spread thin, and every other ring is set half a step round
+   so the ticks do not line up into spokes. Units are the viewBox's; the
+   stroke is a hairline whatever the size it is drawn at. */
+const RINGS = [300, 390, 490, 600, 720, 850, 990];
+const SPACING = 56, TICK = 11;
+const dial = RINGS.map((r, k) => {
+  const count = Math.round((2 * Math.PI * r) / SPACING);
+  const phase = k % 2 ? Math.PI / count : 0;
+  let d = '';
+  for (let t = 0; t < count; t++) {
+    const a = phase + (t / count) * Math.PI * 2;
+    const c = Math.cos(a), s = Math.sin(a);
+    d += `M${(c * r).toFixed(1)} ${(s * r).toFixed(1)}L${(c * (r + TICK)).toFixed(1)} ${(s * (r + TICK)).toFixed(1)}`;
+  }
+  return d;
+}).join('');
 ---
 {n > 0 && (
   <section class="pile" id="selected-work" data-pile data-theme="dark" aria-labelledby="pile-title">
@@ -40,6 +60,11 @@ const SIZES = '(max-width: 859px) 82vw, 52vw';
       {words.map((w) => <span>{w}</span>)}
     </h2>
 
+    <!-- the table: the dial underneath, and the pile on it -->
+    <div class="table">
+    <svg class="dial" viewBox="-1000 -1000 2000 2000" aria-hidden="true" focusable="false">
+      <path d={dial} />
+    </svg>
     <ul class="list" data-pile-list aria-roledescription="carousel">
       {cards.map((p, i) => {
         const d = offset(i, 0, n);
@@ -75,6 +100,7 @@ const SIZES = '(max-width: 859px) 82vw, 52vw';
         );
       })}
     </ul>
+    </div>
 
     <div class="more" data-rise>
       <Button href={content.cta.href} label={content.cta.label} />
@@ -85,10 +111,11 @@ const SIZES = '(max-width: 859px) 82vw, 52vw';
 <style>
   /* The page's margins are the light section's; the ground has to reach the
      edges, so the section steps out of them and puts them back inside. It
-     clips sideways only — the tipped cards reach past the screen's edges,
-     and a clip on both axes would cut their raised corners off at the top. */
+     clips on both axes: the dial behind the pile is far bigger than the
+     section and must not run on into the sections either side, and the
+     tipped cards are well inside its padding. */
   .pile { position: relative; margin-inline: calc(var(--page-x) * -1);
-          padding: 22vh var(--page-x) 20vh; overflow-x: clip;
+          padding: 22vh var(--page-x) 20vh; overflow: clip;
           background: var(--ground); color: var(--ink);
           /* the card, its frame and the foot of the frame */
           --card-w: min(52vw, 58rem); --frame: var(--s-2); --foot: 4rem; }
@@ -100,8 +127,27 @@ const SIZES = '(max-width: 859px) 82vw, 52vw';
   /* Every card in one cell of a grid, so they lie on top of one another and
      the list is as tall as one card. The room under it is the frame's foot
      and the chip, which hang below the card rather than inside it. */
-  .list { list-style: none; display: grid; justify-items: center;
-          margin-top: var(--s-8);
+  .table { position: relative; margin-top: var(--s-8); }
+
+  /* The dial, centred on the card in the middle — half a card's height down
+     the table, the cards being 16:10 — and larger than the screen either
+     way, so its rings leave the section rather than end inside it. It fades
+     out towards its edge, where it would otherwise stop on the section's
+     border as a hard line. It turns with the pile: a few degrees a card, and
+     with the hand while it is being dragged (--dial, from the script). */
+  .dial { position: absolute; left: 50%; top: calc(var(--card-w) * 0.3125);
+          /* the page caps pictures at their column; this one is meant to
+             run off the screen, so it is let out of that */
+          width: 200vmax; height: 200vmax; max-width: none; translate: -50% -50%;
+          rotate: var(--dial, 0deg); pointer-events: none;
+          fill: none; stroke: var(--ink-dim); stroke-width: 1;
+          -webkit-mask-image: radial-gradient(closest-side, #000 35%, transparent 80%);
+          mask-image: radial-gradient(closest-side, #000 35%, transparent 80%);
+          transition: rotate var(--dur-slow) var(--ease-panel); }
+  .dial path { vector-effect: non-scaling-stroke; }
+  .pile[data-drag] .dial { transition: none; }
+
+  .list { position: relative; list-style: none; display: grid; justify-items: center;
           padding-bottom: calc(var(--foot) + var(--s-7));
           touch-action: pan-y; user-select: none; -webkit-user-select: none; }
   .pile[data-live] .list { cursor: grab; }
@@ -159,10 +205,10 @@ const SIZES = '(max-width: 859px) 82vw, 52vw';
   @media (max-width: 859px) {
     .pile { padding: 14vh var(--page-x); --card-w: 82vw; --foot: 3.5rem; }
     .title { font-size: var(--t-h3); }
-    .list { margin-top: var(--s-7); }
+    .table { margin-top: var(--s-7); }
     .name { font-size: var(--t-lead); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .plate, .bar > *, .studio { transition: none; }
+    .plate, .bar > *, .studio, .dial { transition: none; }
   }
 </style>

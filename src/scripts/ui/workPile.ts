@@ -74,6 +74,8 @@ const MIN = 7;
 /** a tenth of the width, and the throw goes through */
 const THRESHOLD = 0.1;
 const MS = 600;
+/** how far the dial behind the pile turns for one card */
+const TURN = 4;
 
 /* GSAP's elastic.out(1.2, 1): one overshoot past the mark and back, which is
    the card landing rather than bouncing */
@@ -96,6 +98,11 @@ export function createWorkPile(root: HTMLElement): WorkPile {
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   let at = 0;
+  /** every card the pile has moved on by, both ways, so the dial behind it
+   *  keeps turning the way the pile went rather than running back round when
+   *  the count wraps */
+  let turns = 0;
+  const turnDial = (by: number) => root.style.setProperty('--dial', `${(-by * TURN).toFixed(2)}deg`);
   let now: Pose[] = cards.map((_, i) => poseFor(offset(i, 0, n)));
   let from: Pose[] = now, to: Pose[] = now;
   let start = 0, raf = 0;
@@ -117,7 +124,10 @@ export function createWorkPile(root: HTMLElement): WorkPile {
 
   /** lay the pile out around card `index`, from wherever the cards are now */
   function settle(index: number) {
-    at = ((index % n) + n) % n;
+    const target = ((index % n) + n) % n;
+    turns += offset(target, at, n);
+    at = target;
+    turnDial(turns);
     cards.forEach((card, i) => {
       const d = offset(i, at, n);
       card.dataset.pileStatus = statusFor(d);
@@ -177,6 +187,7 @@ export function createWorkPile(root: HTMLElement): WorkPile {
     const next = at + (raw > 0 ? -1 : 1);
     now = cards.map((_, i) => mix(poseFor(offset(i, at, n)), poseFor(offset(i, next, n)), k));
     cards.forEach((_, i) => paint(i));
+    turnDial(turns + (next - at) * k);
   };
 
   const onUp = () => {
