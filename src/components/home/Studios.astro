@@ -226,10 +226,20 @@ const grounds = ['light', 'dark', 'light'] as const;
   .frame { position: absolute; inset: 0; display: block; clip-path: inset(0 0 0 100%); }
   .frame:first-of-type { clip-path: inset(0 0 0 0); }
   .frame picture, .frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
-  /* under the pointer the picture eases in a touch, inside a frame that
-     holds still — the same answer the cards in the pile give */
-  .frame img { transition: scale var(--dur-base) var(--ease-panel); }
-  @media (hover: hover) and (pointer: fine) { .frame:hover img { scale: 1.03; } }
+  /* Under the pointer the band draws back a touch while the picture inside
+     it grows — the work grid's move, without its arrow: the two run in
+     opposite directions, and the picture's is the slower, which is what
+     makes it read as depth rather than as a hover state. */
+  .band { transition: transform 0.6s var(--ease-out); }
+  .frame img { transition: transform 1.4s var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) {
+    .band:hover { transform: scale(0.985); }
+    .band:hover .frame img { transform: scale(1.06); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .band, .frame img { transition: none; }
+    .band:hover, .band:hover .frame img { transform: none; }
+  }
   /* the project's name, on the picture, so a click is never a guess: the
      site's chip, on the site's glass */
   /* the name sits in the instrument, not on the picture: the picture stays
