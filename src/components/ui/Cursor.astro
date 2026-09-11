@@ -10,9 +10,9 @@
   <!-- the drag kind's two discs stand outside the pill, one each side: the
        two ways it can be pulled, and they lean out a little, by turns -->
   <span class="row">
-    <i class="disc l"></i>
+    <i class="disc l"><b class="ball"></b></i>
     <span class="bubble"><span class="label" data-cursor-text-target></span></span>
-    <i class="disc r"></i>
+    <i class="disc r"><b class="ball"></b></i>
   </span>
 </div>
 
@@ -30,10 +30,14 @@
               height: var(--pill-h); padding: 0 var(--s-4);
               background: var(--surface); color: var(--ink); border-radius: var(--radius);
               white-space: nowrap; }
-    /* the drag kind's discs: white, outside the pill, and each leans out its
-       own way and back, one after the other */
-    .disc { display: none; width: 0.625rem; height: 0.625rem; border-radius: 50%;
-            background: var(--surface);
+    /* The drag kind's discs: white, outside the pill, and each leans out
+       its own way and back, one after the other. Two boxes a disc: the
+       outer carries the lean, which is a running animation, and the inner
+       carries the press, which is a transition — one property on each, so
+       neither ever snaps the other. Stopping the lean is pausing it, which
+       holds it where it is; ending it would drop it to nothing in a frame. */
+    .disc { display: none; width: 0.625rem; height: 0.625rem; }
+    .ball { display: block; width: 100%; height: 100%; border-radius: 50%; background: var(--surface);
             transition: translate var(--dur-fast) var(--ease-panel), scale var(--dur-fast) var(--ease-panel); }
     [data-cursor-kind="drag"] .disc { display: block; animation: lean 1.6s ease-in-out infinite; }
     .disc.l { --out: -3px; }
@@ -43,15 +47,15 @@
       50% { translate: var(--out) 0; }
     }
     /* Pressed: the whole thing draws in a touch, the discs spring out to
-       either side — the lean stops, they are held out — and once the hand
-       has set off, the disc on that side grows and the other shrinks, so
-       the pill points where the cards are going. */
+       either side — the lean holds where it was — and once the hand has
+       set off, the disc on that side grows and the other shrinks, so the
+       pill points where the cards are going. */
     [data-press] .row { scale: 0.86; }
-    [data-press] .disc { animation: none; }
-    [data-press] .disc.l { translate: -10px 0; }
-    [data-press] .disc.r { translate: 10px 0; }
-    [data-press][data-dir="l"] .disc.l, [data-press][data-dir="r"] .disc.r { scale: 1.5; }
-    [data-press][data-dir="l"] .disc.r, [data-press][data-dir="r"] .disc.l { scale: 0.6; }
+    [data-press] .disc { animation-play-state: paused; }
+    [data-press] .disc.l .ball { translate: -10px 0; }
+    [data-press] .disc.r .ball { translate: 10px 0; }
+    [data-press][data-dir="l"] .disc.l .ball, [data-press][data-dir="r"] .disc.r .ball { scale: 1.5; }
+    [data-press][data-dir="l"] .disc.r .ball, [data-press][data-dir="r"] .disc.l .ball { scale: 0.6; }
   }
-  @media (prefers-reduced-motion: reduce) { .row, .disc { transition: none; } .disc { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .row, .ball { transition: none; } .disc { animation: none; } }
 </style>
