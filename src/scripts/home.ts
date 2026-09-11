@@ -13,6 +13,7 @@ import { createStudioStack } from './ui/studioStack';
 import { createWorkPile } from './ui/workPile';
 import { createProcessRail } from './ui/processRail';
 import { createForming } from './ui/forming';
+import { createFormingMarks } from './ui/formingMarks';
 import { createFaqs } from './ui/faqs';
 import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
@@ -54,7 +55,7 @@ onPage('home', () => {
     add(createWordmarkLetters(markHost));
   }
   const forming = document.querySelector<HTMLElement>('[data-forming]');
-  if (forming) add(createForming(forming));
+  if (forming) { add(createForming(forming)); add(createFormingMarks(forming)); }
   const faqs = document.querySelector<HTMLElement>('[data-faqs]');
   if (faqs) add(createFaqs(faqs));
   const process = document.querySelector<HTMLElement>('[data-process]');
