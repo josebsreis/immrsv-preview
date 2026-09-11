@@ -75,11 +75,15 @@ const grounds = ['light', 'dark', 'light'] as const;
       <span class="thread" data-thread aria-hidden="true"></span>
     </header>
 
-    <div class="stack" data-studio-stack style={`--n: ${content.items.length}`}>
+    <!-- the stack carries a ground from the start: the nav reads the page's
+         themed sections once, before any script has run, so a ground the
+         stack only gave itself later was never read at all -->
+    <div class="stack" data-studio-stack data-theme="light" style={`--n: ${content.items.length}`}>
     {content.items.map((s, i) => {
       const shots = reelFor(s.key);
       return (
         <section class="studio" data-studio-panel data-panel={grounds[i % grounds.length]}
+                 data-theme={grounds[i % grounds.length]}
                  style={`--z: ${content.items.length - i}`} aria-labelledby={`studio-${s.key}`}>
           <div class="top">
             <div class="mark">

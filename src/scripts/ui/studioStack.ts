@@ -16,6 +16,8 @@
    One value drives it: how far the stack has been scrolled, 0 to 1.
    ═══════════════════════════════════════════════════════════════════ */
 
+import { syncNavTheme } from '../lifecycle';
+
 export interface StudioStack { destroy(): void }
 
 /** how much of each panel's turn is spent standing whole, once it has hit
@@ -37,6 +39,13 @@ export function createStudioStack(root: HTMLElement): StudioStack {
 
   let on = false;
   let last = -1, current = -1;
+  /** the line the nav reads its ground from — half its height, as the nav
+   *  itself measures it — so a panel counts as under the nav exactly while
+   *  it is, and not until the last pixel of it has gone */
+  let navLine = 0;
+  const measureNav = () => {
+    navLine = (document.querySelector<HTMLElement>('[data-theme-follows]')?.getBoundingClientRect().height ?? 0) * 0.5;
+  };
 
   /* A panel that is pinned behind another never scrolls into view, so the
      watcher that lifts everything else into place never sees it arrive and
@@ -51,10 +60,24 @@ export function createStudioStack(root: HTMLElement): StudioStack {
     panel.querySelectorAll<HTMLElement>('[data-rise]').forEach((el) => el.classList.add('in'));
   };
 
+  /* Who answers the nav. Stacked, all three panels cover its line at once and
+     the last in the document would always win, so they stand down and the
+     stack answers for whichever is showing. Unstacked — a phone, less motion —
+     the panels are in the flow like any other section and answer for
+     themselves again. */
+  const voteAsStack = (yes: boolean) => {
+    for (const el of panels) {
+      if (yes) el.removeAttribute('data-theme');
+      else el.dataset.theme = el.dataset.panel ?? 'light';
+    }
+    syncNavTheme();
+  };
+
   const clear = () => {
     for (const el of panels) el.style.transform = '';
     root.removeAttribute('data-live');
-    root.removeAttribute('data-theme');
+    root.dataset.theme = 'light';
+    voteAsStack(false);
   };
 
   const update = () => {
@@ -70,20 +93,25 @@ export function createStudioStack(root: HTMLElement): StudioStack {
        the top of the screen, whole. The turns are laid end to end across the
        stack's travel, so the handovers are evenly spaced however many there
        are. The last panel never goes — the page scrolls on past it. */
+    const ph = r.height / n;
     let top = n - 1;
     for (let i = 0; i < n - 1; i++) {
       const local = clamp01(p * (n - 1) - i);
       const leave = clamp01((local - HOLD) / (1 - HOLD));
       panels[i].style.transform = leave <= 0 ? '' : `translateY(${(-leave * 100).toFixed(2)}%)`;
       if (leave > 0) unfold(panels[i + 1]);
-      if (leave < 1 && top === n - 1) top = i;
+      // it is the one under the nav while its foot is still below the nav's line
+      if (top === n - 1 && (1 - leave) * ph > navLine) top = i;
     }
     // whichever is showing tells the nav what it is standing on: all three
     // cover the nav's probe at once, so none of them can answer for itself
+    // …and says so the moment it changes: the nav only looks again on the next
+    // scroll, and its own look runs before this settle, so left to itself it
+    // would lag by one — or by all of it, if the scroll ended there
     if (top !== current) {
       current = top;
       const ground = panels[top].dataset.panel ?? 'light';
-      if (root.dataset.theme !== ground) root.dataset.theme = ground;
+      if (root.dataset.theme !== ground) { root.dataset.theme = ground; syncNavTheme(); }
     }
   };
 
@@ -92,7 +120,7 @@ export function createStudioStack(root: HTMLElement): StudioStack {
     if (want === on) return;
     on = want;
     last = -1; current = -1;
-    if (on) { root.dataset.live = ''; update(); } else clear();
+    if (on) { root.dataset.live = ''; voteAsStack(true); update(); } else clear();
   };
 
   /* One settle a frame. A hidden document is painted no frames, so a request
@@ -109,7 +137,7 @@ export function createStudioStack(root: HTMLElement): StudioStack {
   };
   const onHide = () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; update(); } };
   document.addEventListener('visibilitychange', onHide);
-  const onResize = () => { last = -1; sync(); update(); };
+  const onResize = () => { last = -1; measureNav(); sync(); update(); };
 
   /* Dev only, and stripped from a build: `?s=0.5` pins the panels to the
      screen and holds the stack at that point of its travel, so a still of any
@@ -132,7 +160,7 @@ export function createStudioStack(root: HTMLElement): StudioStack {
       const leave = clamp01((local - HOLD) / (1 - HOLD));
       panels[i].style.transform = leave <= 0 ? '' : `translateY(${(-leave * 100).toFixed(2)}%)`;
       if (leave > 0) unfold(panels[i + 1]);
-      if (leave < 1 && top === n - 1) top = i;
+      if (top === n - 1 && (1 - leave) * innerHeight > navLine) top = i;
     }
     unfold(panels[0]);
     root.dataset.theme = panels[top].dataset.panel ?? 'light';
@@ -140,6 +168,7 @@ export function createStudioStack(root: HTMLElement): StudioStack {
   if (import.meta.env.DEV) {
     const q = new URLSearchParams(location.search);
     if (q.has('s')) {
+      measureNav();
       const at = clamp01(Number(q.get('s')));
       setTimeout(() => pin(at), 400);
       setTimeout(() => pin(at), 1400);
@@ -151,6 +180,7 @@ export function createStudioStack(root: HTMLElement): StudioStack {
   addEventListener('resize', onResize);
   wide.addEventListener('change', onResize);
   still.addEventListener('change', onResize);
+  measureNav();
   sync();
 
   return {
