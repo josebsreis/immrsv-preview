@@ -221,14 +221,16 @@ export const HERO_CONFIG = {
     beat: { first: 1.0, shape: 4.5 },
   },
 
-  /** the Lusion-style lens: flow map + chromatic post pass on the mark */
+  /** the Lusion-style lens: a flow map that bends the mark under the cursor.
+   *  No colour split: the three channels used to be pulled apart along the
+   *  flow, which read as a glitch rather than as glass. */
   lens: {
     res: 256,
     decay: 0.955,
     radius: 0.11,
     gain: 5,
     strength: 0.045,
-    aberration: 0.18,
+    aberration: 0,
     maxVel: 0.035,
   },
 
