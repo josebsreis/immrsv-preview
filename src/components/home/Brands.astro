@@ -13,10 +13,10 @@ const { content } = Astro.props;
   <section class="brands" aria-label={content.tag}>
     <!-- the name of the section is a cell of the lattice itself: one column
          wide, standing on the first mark, sharing its line and its corners -->
-    <p class="lead" data-rise>{content.tag}</p>
+    <p class="lead">{content.tag}</p>
     <ul class="grid" data-dhover>
-      {content.items.map((b, i) => (
-        <li data-dhover-item data-rise style={`--i: ${i}`}>
+      {content.items.map((b) => (
+        <li data-dhover-item>
           <span class="clip" aria-hidden="true"><span class="tile" data-dhover-tile></span></span>
           <img src={b.logo.url} alt={b.logo.alt ?? b.name} loading="lazy" />
         </li>
@@ -32,26 +32,30 @@ const { content } = Astro.props;
   /* The name's cell: the top and both sides are its own, the line under it
      is the grid's top, so the two are one drawing. A column wide, like the
      cells below it, and shorter — it holds a line of small type, not a mark. */
-  /* exactly the first column: the grid's left line, then a quarter of what is
-     left — a plain quarter left its right line a hair short of the cell's */
-  .lead { width: calc(var(--hairline) + (100% - var(--hairline)) / 4); height: 3.25rem; padding: 0 var(--s-5); position: relative;
-          border-top: var(--hairline) solid var(--line);
-          border-left: var(--hairline) solid var(--line);
-          border-right: var(--hairline) solid var(--line);
+  /* exactly the first column, line to line: the grid's border on each side
+     and three gaps between four cells — a plain quarter left its right line
+     a hair off the cell's */
+  .lead { width: calc(var(--hairline) * 2 + (100% - var(--hairline) * 5) / 4); height: 3.25rem; padding: 0 var(--s-5); position: relative;
+          border: var(--hairline) solid var(--line); border-bottom: 0;
+          border-radius: var(--radius) var(--radius) 0 0;
           margin: 0; display: flex; align-items: center;
           font-size: var(--t-small); color: var(--ink-2); }
 
-  /* one lattice: the container draws the top and left, each cell the line to
-     its right and below, so every inner line is shared by two cells */
+  /* One lattice, on the site's corner. The lines between the cells are the
+     ground showing through a hairline gap over the line colour, so every
+     inner line is one line shared by two cells; the outline is the grid's
+     own border, and can take the radius — a lattice drawn cell by cell had
+     nothing to round. The top-left corner stays square: that is where the
+     name's cell stands on it. */
   /* four to a row at every size but a phone, where it halves: eight in one
      row made each mark a stamp, and two rows of four is a block with some
      weight to it */
   .grid { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr);
-          border-top: var(--hairline) solid var(--line); border-left: var(--hairline) solid var(--line); }
+          gap: var(--hairline); background: var(--line);
+          border: var(--hairline) solid var(--line);
+          border-radius: 0 var(--radius) var(--radius) var(--radius); overflow: hidden; }
   .grid li { position: relative; display: grid; place-items: center;
-             height: 8.5rem; padding: var(--s-5);
-             border-right: var(--hairline) solid var(--line);
-             border-bottom: var(--hairline) solid var(--line); }
+             height: 8.5rem; padding: var(--s-5); background: var(--ground); }
 
   /* the panel that arrives from the edge the cursor crossed, clipped to the cell */
   .clip { position: absolute; inset: 0; overflow: hidden; }
@@ -65,7 +69,7 @@ const { content } = Astro.props;
 
   @media (max-width: 719px) {
     .brands { padding: 0 0 10vh; }
-    .lead { width: calc(var(--hairline) + (100% - var(--hairline)) / 2); }
+    .lead { width: calc(var(--hairline) * 2 + (100% - var(--hairline) * 3) / 2); }
     .grid { grid-template-columns: repeat(2, 1fr); }
     .grid li { height: 6.5rem; }
     img { max-height: 2.5rem; }
