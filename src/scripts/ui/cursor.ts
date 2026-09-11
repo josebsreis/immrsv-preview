@@ -65,6 +65,29 @@ export function createCursor(): Cursor {
   const onScroll = () => { if (on) look(); };
   const onLeave = () => { over = null; el.dataset.cursor = ''; };
 
+  /* Pressing, over something that is dragged: the pill answers the hand.
+     It marks the press, and while the button is down it says which way the
+     pointer has gone since — the stylesheet leans the pill's discs apart
+     and favours the one on that side. Released, or the pointer let go of
+     off the page, it all comes back. */
+  let px = 0;
+  const onDown = (e: PointerEvent) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0 || !over || over.dataset.cursorKind !== 'drag') return;
+    px = e.clientX;
+    el.dataset.press = '';
+    el.dataset.dir = '';
+  };
+  const onDrag = (e: PointerEvent) => {
+    if (!('press' in el.dataset) || e.pointerType !== 'mouse') return;
+    const d = e.clientX - px;
+    if (Math.abs(d) > 6) el.dataset.dir = d < 0 ? 'l' : 'r';
+  };
+  const onUp = () => { delete el.dataset.press; delete el.dataset.dir; };
+
+  addEventListener('pointerdown', onDown);
+  addEventListener('pointermove', onDrag, { passive: true });
+  addEventListener('pointerup', onUp);
+  addEventListener('pointercancel', onUp);
   addEventListener('pointermove', onMove, { passive: true });
   addEventListener('scroll', onScroll, { passive: true });
   document.documentElement.addEventListener('mouseleave', onLeave);
@@ -73,6 +96,10 @@ export function createCursor(): Cursor {
     destroy() {
       cancelAnimationFrame(raf);
       removeEventListener('pointermove', onMove);
+      removeEventListener('pointerdown', onDown);
+      removeEventListener('pointermove', onDrag);
+      removeEventListener('pointerup', onUp);
+      removeEventListener('pointercancel', onUp);
       removeEventListener('scroll', onScroll);
       document.documentElement.removeEventListener('mouseleave', onLeave);
       el.dataset.cursor = '';
