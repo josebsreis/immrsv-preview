@@ -175,26 +175,33 @@ const SIZES = '4rem';
      past what the eye can carry back. */
   /* Every slide is as tall as the longest of them, and the marks hold the top
      and the foot of that space whichever quote is being read — so the frame
-     never moves and only what is inside it changes. The paragraph takes the
-     slack as equal margins above and below, which centres it between the two;
-     otherwise a short quote left all of its air under the closing mark and
-     the section looked as though it had been cut off. */
-  .words { margin: 0; max-width: 64ch; width: 100%;
-           display: flex; flex-direction: column; }
-  .words p { margin: auto 0; }
+     never moves and only what is inside it changes. The marks are out of the
+     flow: they sit on the corners of the frame and take no room from the
+     quote, so the name follows the last line at the same distance whether
+     the quote is long or short. A short one leaves its air under the name,
+     with the closing mark holding the corner. */
+  .words { position: relative; margin: 0; max-width: 64ch; width: 100%;
+           display: flex; flex-direction: column; --mark: 1.75rem; }
+  .words p { margin: 0; }
   /* the pair frames what was said: one opening above it on the left, one
-     closing under it on the right, at the end of the measure */
-  .quote { display: block; flex: none; width: 1.75rem; height: auto; color: var(--ink-dim); }
+     closing under it on the right, at the end of the measure. On a phone the
+     column is the whole page and there is no frame to hold, so they sit in
+     the flow, before and after the words. */
+  .quote { display: block; flex: none; width: var(--mark); height: auto; color: var(--ink-dim); }
   .open { margin-bottom: var(--s-5); }
   .close { margin: var(--s-5) 0 0 auto; }
+  @media (min-width: 860px) {
+    .words { padding-top: calc(var(--mark) * 0.8 + var(--s-5)); }
+    .quote { position: absolute; }
+    .open { top: 0; left: 0; margin: 0; }
+    .close { right: 0; bottom: 0; margin: 0; }
+  }
   .words p { font-size: var(--t-statement); font-weight: var(--w-title);
              line-height: 1.3; letter-spacing: var(--track-title); color: var(--ink); }
 
   /* The face belongs to the name, not to the quote: small, level with the two
      lines it labels, and starting on the quote's own left edge so the three
      read as one attribution rather than as a picture with text beside it. */
-  /* the attribution rides at the foot with the closing mark, so the face sits
-     on the same line from one testimonial to the next */
   .by { flex: none; display: flex; align-items: center; gap: var(--s-4); margin-top: var(--s-4); }
   .portrait { flex: none; display: block; width: 4rem; }
   /* `height: auto` is not optional: the tag carries width and height so the

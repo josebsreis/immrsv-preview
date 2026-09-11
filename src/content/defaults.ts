@@ -284,7 +284,7 @@ export const defaultHome: HomeContent = {
       {
         quote:
           'Oscar is our everything! For 15 years, he\u2019s been a dream to work with\u2014an incredibly talented, driven designer and a genuinely kind soul. His reliability, communication, and leadership have been vital to our success, and I\u2019m forever grateful to work with him. He has the unique ability to balance creativity with professionalism in every way.',
-        label: 'Fifteen years',
+        label: 'Reliability',
         name: 'Carlie Campesi',
         role: 'Partner | LePesi Architecture',
         portrait: { url: '/testimonials/carlie-campesi', alt: 'Carlie Campesi' },
