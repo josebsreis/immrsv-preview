@@ -11,7 +11,7 @@ const { project, class: cls } = Astro.props;
        the picture is left clear -->
   <div class="ttl">
     <span class="name">{project.title}</span>
-    <span class="label tag"><i class="sq" aria-hidden="true"></i>Featured</span>
+    <span class="label tag">Featured project</span>
   </div>
 </a>
 
@@ -38,9 +38,14 @@ const { project, class: cls } = Astro.props;
   .feat:hover img { opacity: 1; transform: scale(1.03); }
   /* the card's own padding gives it ten of the twelve it sits in */
   .ttl { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
-         padding: 0.75rem 0.125rem 0.125rem; font-size: var(--t-small); line-height: 1.3; }
+         padding: 0.75rem 0 0.125rem; font-size: var(--t-small); line-height: 1.3; }
   .name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  /* a note on the card, not its name: the site's marker and label, dimmed */
-  .tag { flex: none; display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink-3); }
-  .tag .sq { color: var(--ink-4); }
+  /* a note on the card, not its name: the site's label, dimmed */
+  /* The name starts on the picture's left edge and the label ends on its
+     right one. Tracked capitals carry their spacing after the last letter
+     too, which would stop the word short of the edge by that much, so the
+     label is let out by exactly its own tracking. */
+  .tag { flex: none; color: var(--ink-3);
+         margin-right: calc(var(--track-label) * -1); }
+
 </style>
