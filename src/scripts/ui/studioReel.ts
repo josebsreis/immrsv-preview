@@ -27,6 +27,7 @@ export function createStudioReel(el: HTMLElement): StudioReel {
   const band = frames[0].parentElement ?? el;
   const bar = el.querySelector<HTMLElement>('[data-reel-fill]');
   const readout = el.querySelector<HTMLElement>('[data-reel-now]');
+  const name = el.querySelector<HTMLElement>('[data-reel-name]');
   const prev = el.querySelector<HTMLButtonElement>('[data-reel-prev]');
   const next = el.querySelector<HTMLButtonElement>('[data-reel-next]');
   const n = frames.length;
@@ -75,6 +76,7 @@ export function createStudioReel(el: HTMLElement): StudioReel {
 
   function mark() {
     if (readout) readout.textContent = pad(at + 1);
+    if (name) name.textContent = frames[at].dataset.reelFrameName ?? '';
     frames.forEach((f, k) => {
       f.setAttribute('aria-hidden', String(k !== at));
       // only the frame on show can be reached by the keyboard: the others are
