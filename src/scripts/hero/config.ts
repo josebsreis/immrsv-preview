@@ -53,6 +53,11 @@ export const HERO_CONFIG = {
     spinWind: 1.4,                // per second — how quickly it winds up
     spinRelease: 2.6,             // …and how quickly it lets go
     wobble: 0.03,                 // slow tilt so the turn never feels like a loop
+    /* A turn at one speed is a turntable. The revolution breathes: its pace
+       swells and eases on two slow waves that never line up, so it is always
+       a little quicker or slower than a moment ago and never repeats. The
+       share of the cruise the waves may add or take. */
+    breathe: 0.35,
     tint: {                       // particle colours, dark→light along aTint
       base: [0.72, 0.74, 0.80],   // the low end runs cool: a cloud of pure
       mid: [0.92, 0.92, 0.95],    //   greys reads as paper, not as light.
@@ -146,8 +151,21 @@ export const HERO_CONFIG = {
     reach: 0.85,          // the closed cube's own half-extent across the screen,
                           //   in the mark's units, at the angle it is seen from —
                           //   measured off the projected points, not guessed
-    overshoot: 1.7,       // how much it springs past (easeOutBack's c1) — the
-                          //   same both ways: the way in is the way out, inverted
+    /* The cube's size and the form's collapse are not eased on a curve but
+       run on a spring: a weight on the end of it is pulled to where it
+       should be, overshoots, and settles. That is what an easing was
+       imitating, and the spring does what the imitation could not — it
+       anticipates. Going shut it is first flicked the other way, so it
+       opens a hair, gathers speed, shuts past its rest, and comes back up.
+       `freq` is how quickly it wants to get there (Hz), `damping` how much
+       of the bounce survives (1 = none), the kicks are the flick it is
+       given at each turn of the reel, as a speed in units a second. */
+    spring: {
+      freq: 1.05,
+      damping: 0.48,
+      openKick: 3.5,        // out, as the form blooms
+      shutKick: 1.6,        // the anticipation: out first, as the form is taken
+    },
     /* The open cube is meant to be barely there: the form in the middle is
        the thing, and three plates at full brightness around it were clutter.
        So as it grows it goes down as well as thin — the points dim per unit

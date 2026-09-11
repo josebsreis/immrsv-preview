@@ -147,6 +147,10 @@ export function createHero(opts: HeroOptions): Hero {
   let beat = 0, parked = false;
   let coreAt = 0;        // 0..1 — the cloud, from nothing to there
   let formAt = 0;        // 0..1 — the cloud, from a cloud to the form it is making
+  /* the springs (mark.spring): the cube's size, 0 shut to 1 open, and the
+     form's collapse, 1 standing to 0 gone — each a position and a speed,
+     pulled to a target every frame and flicked at each turn of the reel */
+  let cubeX = 0, cubeV = 0, fallX = 0, fallV = 0;
   let shape = 0;         // the form the cloud is bound to
   let cursor = -1;       // where the reel has got to
   let queued = -1;       // a form asked for out of turn — by a click
@@ -312,6 +316,7 @@ export function createHero(opts: HeroOptions): Hero {
           if (beat > F.settle && (ready(next) || beat > F.patience)) {
             cursor = next; shape = next; queued = -1;
             phase = 'bloom'; beat = 0;
+            cubeV += cfg.open.spring.openKick;         // the burst: flung open
           }
           break;
         }
@@ -320,7 +325,13 @@ export function createHero(opts: HeroOptions): Hero {
           if (formAt >= 1) { phase = 'hold'; beat = 0; }
           break;
         case 'hold':
-          if (beat > S.beat.shape) { phase = 'collapse'; beat = 0; }
+          if (beat > S.beat.shape) {
+            phase = 'collapse'; beat = 0;
+            // the anticipation: both are flicked outward first, and the
+            // spring takes them in from there, gathering speed
+            cubeV += cfg.open.spring.shutKick;
+            fallX = 1; fallV = cfg.open.spring.shutKick * 0.5;
+          }
           break;
         case 'collapse':
           formAt = clamp(formAt - dt / F.collapse, 0, 1);
@@ -341,20 +352,33 @@ export function createHero(opts: HeroOptions): Hero {
     // the ball in the last stretch. Creation, and the undoing of it, do not
     // look alike, and a single symmetric ease made them the same event.
     const rising = phase === 'bloom' || phase === 'hold';
-    const formE = rising ? 1 - Math.pow(1 - formAt, 3) : formAt * formAt * formAt;
-    // The cube follows. To `rest` as the cloud gathers; the last of the way as
-    // the form comes, springing a little past and settling (easeOutBack); and
-    // back in as the form is taken, on exactly that curve inverted — a little
-    // past its rest size, then up to it. One movement, forwards and backwards.
-    const back = (x: number) => { const u = x - 1, c1 = O.overshoot, c3 = c1 + 1; return 1 + c3 * u * u * u + c1 * u * u; };
-    const cubeE = rising ? back(formAt) : 1 - back(1 - formAt);
-    const openE = O.rest * coreE + (1 - O.rest) * cubeE;
+    /* The spring: a weight pulled to its target, damped short of dead. One
+       step of it a frame, speed first and then place (which is what keeps it
+       stable at any frame rate the page is drawn at). */
+    const SP = cfg.open.spring;
+    const w0 = 2 * Math.PI * SP.freq, kk = w0 * w0, cc = 2 * SP.damping * w0;
+    const spring = (x: number, v: number, to: number): [number, number] => {
+      v += (kk * (to - x) - cc * v) * dt;
+      return [x + v * dt, v];
+    };
+    // Blooming, the form is all at the start — fast out and slow to land, a
+    // burst. Collapsing, it is on the spring: flicked outward as it is let go,
+    // so it swells a hair, then taken in gathering speed, past the ball and
+    // back up into it. Creation and the undoing of it do not look alike.
+    let formE: number;
+    if (rising) { formE = 1 - Math.pow(1 - formAt, 3); fallX = formE; fallV = 0; }
+    else { [fallX, fallV] = spring(fallX, fallV, 0); formE = fallX; }
+    // The cube is on its own spring, both ways: to `rest` as the cloud
+    // gathers, then flung open with the form and pulled shut with it, past
+    // its mark each time and back. One weight, forwards and backwards.
+    [cubeX, cubeV] = spring(cubeX, cubeV, rising ? 1 : 0);
+    const openE = O.rest * coreE + (1 - O.rest) * cubeX;
     // The ball draws in through the settle and the burst opens from there:
     // while it waits it tightens (eased, so it is a gathering rather than a
     // shrink), and as the form comes the tightness is let go with the form's
     // own curve, so nothing steps.
     const sqT = phase === 'settle' ? clamp(beat / F.settle, 0, 1) : 0;
-    const squeeze = phase === 'settle' ? sqT * sqT * (3 - 2 * sqT) : rising ? 1 - formE : 0;
+    const squeeze = phase === 'settle' ? sqT * sqT * (3 - 2 * sqT) : rising ? clamp(1 - formE, 0, 1) : 0;
     const tight = 1 - F.squeeze * squeeze;
 
     // The throw: one curve from the first pixel of scroll to gone. It used to
@@ -407,7 +431,10 @@ export function createHero(opts: HeroOptions): Hero {
     const M = cfg.mark;
     const paceTo = rising ? M.spinOpen : M.spinShut;
     pace += (paceTo - pace) * (1 - Math.exp(-(rising ? M.spinRelease : M.spinWind) * dt));
-    spinAngle += (M.spin * pace + spinBoost) * spinFade * dt;
+    // …and the pace breathes: two slow waves that never line up, so the turn
+    // is always a little quicker or slower than it was and never a loop
+    const breath = 1 + M.breathe * (0.6 * Math.sin(t * 0.41) + 0.4 * Math.sin(t * 0.97 + 1.3));
+    spinAngle += (M.spin * pace * breath + spinBoost) * spinFade * dt;
     qSpin.setFromAxisAngle(SPIN_AXIS, spinAngle);
     qTilt.setFromAxisAngle(AX, Math.sin(t * 0.083) * cfg.mark.wobble);
     L0.quaternion.copy(qSpin).multiply(qTilt);
@@ -425,7 +452,8 @@ export function createHero(opts: HeroOptions): Hero {
     // ── the cloud: its turn, its churn ─────────────────────────────────
     // What the cube's turn cannot do for it, the cloud does for itself: one
     // slow turn on the spot, about the vertical, carrying whatever it is.
-    cloudPivot.rotation.y = t * S.turn;
+    // the cloud's turn breathes the same way, on its own waves
+    cloudPivot.rotation.y = t * S.turn + S.turn * (1.1 * Math.sin(t * 0.29) + 0.5 * Math.sin(t * 0.71 + 0.8));
     cloudPivot.updateMatrixWorld(true);
     material.uniforms.uTime.value = t;
     // the wander is the cloud's; a standing form keeps a quarter of it, which
