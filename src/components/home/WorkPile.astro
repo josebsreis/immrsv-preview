@@ -2,8 +2,8 @@
 /** The selected work, as a pile of cards fanned out on a dark table.
  *
  *  After Osmo's "Made with Osmo" (osmo.supply): the name of the section
- *  spread across the full width, and under it one project square in the
- *  middle with the others tipped away to either side. The card on show is
+ *  over the middle of the page, set as the studios' is, and under it one
+ *  project square in the middle with the others tipped away to either side. The card on show is
  *  set in a frame — a white plate a little larger than the picture, with the
  *  project's name on its foot and the studio it came out of on the right —
  *  and the whole card, picture and frame, is the link into it. Throwing the pile hands the
@@ -29,7 +29,6 @@ const cards = content.featured
   .filter((p): p is Project => Boolean(p?.cover));
 const n = cards.length;
 const studioName = (p: Project) => site.studios.find((s) => s.key === p.studios[0])?.label ?? '';
-const words = content.title.split(/\s+/);
 /** the card is about half the page wide, and the whole screen on a phone */
 const SIZES = '(max-width: 859px) 82vw, 52vw';
 
@@ -55,10 +54,8 @@ const dial = RINGS.map((r, k) => {
 ---
 {n > 0 && (
   <section class="pile" id="selected-work" data-pile data-theme="dark" aria-labelledby="pile-title">
-    <!-- the name spread edge to edge, a word to each end -->
-    <h2 class="title" id="pile-title" data-rise>
-      {words.map((w) => <span>{w}</span>)}
-    </h2>
+    <!-- the name over the middle of the page, as the studios' is -->
+    <h2 class="title" id="pile-title" data-rise>{content.title}</h2>
 
     <!-- the table: the dial underneath, and the pile on it -->
     <div class="table">
@@ -120,9 +117,10 @@ const dial = RINGS.map((r, k) => {
           /* the card, its frame and the foot of the frame */
           --card-w: min(52vw, 58rem); --frame: var(--s-2); --foot: 4rem; }
 
-  .title { display: flex; justify-content: space-between; gap: var(--s-5);
-           font-size: var(--t-h2); font-weight: var(--w-display);
-           letter-spacing: var(--track-display); line-height: 1; }
+  /* the studios' heading, to the letter: one name per section, one size */
+  .title { text-align: center; font-size: var(--t-h2); font-weight: var(--w-display);
+           line-height: var(--lh-display); letter-spacing: var(--track-display);
+           color: var(--ink); white-space: nowrap; }
 
   /* Every card in one cell of a grid, so they lie on top of one another and
      the list is as tall as one card. The room under it is the frame's foot
@@ -207,7 +205,7 @@ const dial = RINGS.map((r, k) => {
 
   @media (max-width: 859px) {
     .pile { padding: 14vh var(--page-x); --card-w: 82vw; --foot: 3.5rem; }
-    .title { font-size: var(--t-h3); }
+    .title { white-space: normal; font-size: var(--t-h3); }
     .table { margin-top: var(--s-7); }
     .name { font-size: var(--t-lead); }
   }
