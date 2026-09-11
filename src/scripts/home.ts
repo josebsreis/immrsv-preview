@@ -10,6 +10,7 @@ import { createDirectionalHover } from './ui/directionalHover';
 import { createMarquee } from './ui/marquee';
 import { createStudioReel } from './ui/studioReel';
 import { createStudioStack } from './ui/studioStack';
+import { createWorkPile } from './ui/workPile';
 import { createProcessRail } from './ui/processRail';
 import { createForming } from './ui/forming';
 import { createFaqs } from './ui/faqs';
@@ -63,6 +64,8 @@ onPage('home', () => {
   document.querySelectorAll<HTMLElement>('[data-studio-reel]').forEach((el) => add(createStudioReel(el)));
   const stack = document.querySelector<HTMLElement>('[data-studio-stack]');
   if (stack) add(createStudioStack(stack));
+  const pile = document.querySelector<HTMLElement>('[data-pile]');
+  if (pile) add(createWorkPile(pile));
   add(createVideoInView());
   add(createHoverAudio(site.audio.taps));
 

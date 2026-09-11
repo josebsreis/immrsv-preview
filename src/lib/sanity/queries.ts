@@ -144,6 +144,9 @@ export async function getHome(): Promise<HomeContent> {
       process: raw.process?.steps?.length
         ? { ...defaultHome.process, ...raw.process }
         : defaultHome.process,
+      work: raw.work?.featured?.length
+        ? { ...defaultHome.work, ...raw.work }
+        : defaultHome.work,
       faqs: raw.faqs?.items?.length
         ? { ...defaultHome.faqs, ...raw.faqs }
         : defaultHome.faqs,

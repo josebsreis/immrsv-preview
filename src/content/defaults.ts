@@ -312,6 +312,19 @@ export const defaultHome: HomeContent = {
       },
     ],
   },
+  work: {
+    title: 'Selected work',
+    /* None of the studio reels' projects: those already have a place on the
+       page, and the pile is for the work that has not been shown yet. Dealt
+       so the studios take turns. Stand-ins until the client picks his own —
+       and there is no Digital Products work to deal in until he sends it. */
+    featured: [
+      'racel-residence', 'spiderman', 'pacific-palisades-residence', 'rogers-cafe',
+      'grubhub', 'mishawaka', 'ruthchris-bar', 'swing-suite',
+    ],
+    see: 'See project',
+    cta: { label: 'Explore all projects', href: '/work' },
+  },
   faqs: {
     tag: 'FAQs',
     title: "What you'll want to know before working with us.",

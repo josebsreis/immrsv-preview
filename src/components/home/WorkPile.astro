@@ -1,0 +1,165 @@
+---
+/** The selected work, as a pile of cards fanned out on a dark table.
+ *
+ *  After Osmo's "Made with Osmo" (osmo.supply): the name of the section
+ *  spread across the full width, and under it one project square in the
+ *  middle with the others tipped away to either side. The card on show is
+ *  set in a frame — a white plate a little larger than the picture, with the
+ *  project's name on its foot and the way into it on the right — and the
+ *  studio it came out of on a chip underneath. Throwing the pile hands the
+ *  frame over: it draws back under the card that leaves and opens out from
+ *  under the one that arrives.
+ *
+ *  The ground is dark so the page alternates again — light stories, dark
+ *  work, light questions — and white renders on it read as lit.
+ *
+ *  The first pose is laid out here, from the same table the script uses, so
+ *  the fan is already there before any script runs and without one. */
+import type { HomeContent, Project } from '@lib/sanity/types';
+import Button from '@components/ui/Button.astro';
+import { site } from '@lib/site';
+import { offset, poseFor, statusFor, transformOf } from '../../scripts/ui/workPile';
+
+interface Props { content: HomeContent['work']; projects: Project[]; }
+const { content, projects } = Astro.props;
+
+const bySlug = new Map(projects.map((p) => [p.slug, p]));
+const cards = content.featured
+  .map((slug) => bySlug.get(slug))
+  .filter((p): p is Project => Boolean(p?.cover));
+const n = cards.length;
+const studioName = (p: Project) => site.studios.find((s) => s.key === p.studios[0])?.label ?? '';
+const words = content.title.split(/\s+/);
+/** the card is about half the page wide, and the whole screen on a phone */
+const SIZES = '(max-width: 859px) 82vw, 52vw';
+---
+{n > 0 && (
+  <section class="pile" id="selected-work" data-pile data-theme="dark" aria-labelledby="pile-title">
+    <!-- the name spread edge to edge, a word to each end -->
+    <h2 class="title" id="pile-title" data-rise>
+      {words.map((w) => <span>{w}</span>)}
+    </h2>
+
+    <ul class="list" data-pile-list aria-roledescription="carousel">
+      {cards.map((p, i) => {
+        const d = offset(i, 0, n);
+        const pose = poseFor(d);
+        return (
+          <li class="card" data-pile-card data-pile-status={statusFor(d)}
+              style={`transform: ${transformOf(pose)}; opacity: ${pose.o}; z-index: ${pose.z}`}
+              aria-hidden={d !== 0 ? 'true' : undefined}>
+            <!-- the frame: a white plate under the picture, clipped down to the
+                 picture's own edge until this card is the one on show. It
+                 carries the light ground's tokens without telling the nav. -->
+            <div class="plate" data-panel="light">
+              <div class="bar">
+                <h3 class="name">{p.title}</h3>
+                <!-- in a wrapper of this component's own: the rise below is scoped
+                     here, and would not reach the button's own root -->
+                <span class="go"><Button href={`/work/${p.slug}`} label={content.see} /></span>
+              </div>
+            </div>
+
+            <a class="media" href={`/work/${p.slug}`} draggable="false" data-tap
+               tabindex={d === 0 ? '0' : '-1'} aria-label={p.title}>
+              <picture>
+                {p.cover!.avifSrcset && <source srcset={p.cover!.avifSrcset} sizes={SIZES} type="image/avif" />}
+                <img src={p.cover!.url} srcset={p.cover!.webpSrcset} sizes={SIZES}
+                     alt={p.cover!.alt ?? p.title} width={p.cover!.width} height={p.cover!.height}
+                     loading="lazy" decoding="async" draggable="false" />
+              </picture>
+            </a>
+
+            <div class="studio"><span class="chip">{studioName(p)}</span></div>
+          </li>
+        );
+      })}
+    </ul>
+
+    <div class="more" data-rise>
+      <Button href={content.cta.href} label={content.cta.label} />
+    </div>
+  </section>
+)}
+
+<style>
+  /* The page's margins are the light section's; the ground has to reach the
+     edges, so the section steps out of them and puts them back inside. It
+     clips sideways only — the tipped cards reach past the screen's edges,
+     and a clip on both axes would cut their raised corners off at the top. */
+  .pile { position: relative; margin-inline: calc(var(--page-x) * -1);
+          padding: 14vh var(--page-x) 12vh; overflow-x: clip;
+          background: var(--ground); color: var(--ink);
+          /* the card, its frame and the foot of the frame */
+          --card-w: min(52vw, 58rem); --frame: var(--s-2); --foot: 4rem; }
+
+  .title { display: flex; justify-content: space-between; gap: var(--s-5);
+           font-size: var(--t-h2); font-weight: var(--w-display);
+           letter-spacing: var(--track-display); line-height: 1; }
+
+  /* Every card in one cell of a grid, so they lie on top of one another and
+     the list is as tall as one card. The room under it is the frame's foot
+     and the chip, which hang below the card rather than inside it. */
+  .list { list-style: none; display: grid; justify-items: center;
+          margin-top: var(--s-8);
+          padding-bottom: calc(var(--foot) + var(--s-7));
+          touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+  .pile[data-live] .list { cursor: grab; }
+  .pile[data-drag] .list { cursor: grabbing; }
+
+  .card { grid-area: 1 / 1; position: relative; width: var(--card-w);
+          isolation: isolate; will-change: transform, opacity; }
+  /* out past the second card on either side it has faded to nothing, and a
+     card you cannot see must not be the one a click lands on */
+  .card[data-pile-status="gone"] { pointer-events: none; }
+
+  .media { display: block; aspect-ratio: 16 / 10; overflow: hidden;
+           border-radius: var(--radius-media); background: var(--surface); }
+  .media img { width: 100%; height: 100%; object-fit: cover; pointer-events: none;
+               -webkit-user-drag: none; opacity: 0.5;
+               transition: opacity var(--dur-fast) ease; }
+  .card[data-pile-status="near"] .media img { opacity: 0.75; }
+  .card[data-pile-status="active"] .media img { opacity: 1; }
+
+  /* The frame. The plate is larger than the picture by the frame on three
+     sides and by the foot on the fourth, and sits under it; a clip holds it
+     to the picture's own edge, where it cannot be seen, until the card is
+     the one on show — and then it opens out from under it. The clip takes
+     the clicks with it, so a closed plate's button cannot be pressed. */
+  .plate { position: absolute; z-index: -1;
+           inset: calc(var(--frame) * -1) calc(var(--frame) * -1) calc(var(--foot) * -1);
+           background: var(--surface); border-radius: var(--radius-media);
+           clip-path: inset(var(--frame) var(--frame) var(--foot) var(--frame) round var(--radius-media));
+           transition: clip-path var(--dur-base) var(--ease-panel); }
+  .card[data-pile-status="active"] .plate { clip-path: inset(0 round var(--radius-media)); }
+
+  .bar { position: absolute; left: 0; right: 0; bottom: 0; height: var(--foot);
+         display: flex; align-items: center; justify-content: space-between;
+         gap: var(--s-4); padding: 0 var(--frame) 0 var(--s-4); }
+  .go { flex: none; display: flex; }
+  .name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+          font-size: var(--t-title); font-weight: var(--w-title);
+          letter-spacing: var(--track-title); color: var(--ink); }
+  /* the name and the button come up into the frame once it has opened —
+     Osmo's own move, the fade quick and the travel long */
+  .bar > *, .studio { opacity: 0; translate: 0 50%;
+                      transition: opacity 0.4s var(--ease-snap), translate var(--dur-slow) var(--ease-panel); }
+  .card[data-pile-status="active"] :is(.bar > *, .studio) { opacity: 1; translate: 0 0;
+                                                            transition-delay: 0.08s; }
+
+  /* the studio it came out of, on the table under the frame */
+  .studio { position: absolute; left: 0; right: 0; top: calc(100% + var(--foot) + var(--s-4));
+            display: flex; justify-content: center; }
+
+  .more { display: flex; justify-content: center; margin-top: var(--s-6); }
+
+  @media (max-width: 859px) {
+    .pile { padding: 10vh var(--page-x); --card-w: 82vw; --foot: 3.5rem; }
+    .title { font-size: var(--t-h3); }
+    .list { margin-top: var(--s-7); }
+    .name { font-size: var(--t-lead); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .plate, .bar > *, .studio { transition: none; }
+  }
+</style>

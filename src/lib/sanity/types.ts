@@ -137,5 +137,14 @@ export interface HomeContent {
     cta: Cta;
     items: { q: string; a: string }[];
   };
+  /** the selected work: a pile of cards fanned across the page, one project
+   *  on show at a time — named by slug, in the order they are dealt */
+  work: {
+    title: string;
+    featured: string[];
+    /** the button in the frame of the card on show */
+    see: string;
+    cta: Cta;
+  };
   featuredProject?: Project;
 }

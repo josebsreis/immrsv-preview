@@ -7,10 +7,12 @@ import Manifesto from '@components/home/Manifesto.astro';
 import Studios from '@components/home/Studios.astro';
 import Testimonials from '@components/home/Testimonials.astro';
 import Faqs from '@components/home/Faqs.astro';
+import WorkPile from '@components/home/WorkPile.astro';
 import Brands from '@components/home/Brands.astro';
-import { getHome } from '@lib/sanity/queries';
+import { getHome, getProjects } from '@lib/sanity/queries';
 
 const home = await getHome();
+const projects = await getProjects();
 ---
 <Base theme="dark">
   <main class="main" data-page="home">
@@ -34,9 +36,10 @@ const home = await getHome();
             read as filler. Component and content are both still here — put
             <Process content={home.process} /> back to restore it. */}
         <Testimonials content={home.testimonials} />
-        {/* No grid of selected work here: each studio panel already carries
-            its own projects and a way into the rest of them, so a second set
-            of the same pictures under the client stories only repeated them. */}
+        {/* the work the studio reels have not shown, on a dark ground between
+            the client stories and the questions, so the page's second half
+            is not two blocks of text in a row */}
+        <WorkPile content={home.work} projects={projects} />
         <Faqs content={home.faqs} person={home.about.founder} />
       </section>
     </div>
