@@ -259,7 +259,7 @@ export const defaultHome: HomeContent = {
     items: studios,
   },
   brands: {
-    tag: 'And the firms they are from',
+    tag: 'Clients we work with',
     items: [...clients, ...clients],
   },
   testimonials: {

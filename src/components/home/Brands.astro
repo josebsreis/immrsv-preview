@@ -10,8 +10,12 @@ const { content } = Astro.props;
 ---
 {content.items.length > 0 && (
   <section class="brands" aria-label={content.tag}>
-    <!-- no name on it: the stories above have just said who these are, and
-         eight marks in a row under them say the rest -->
+    <!-- the name of the section is a cell of the lattice itself: one column
+         wide, standing on the first mark, sharing its line and its corners -->
+    <p class="lead section-tag" data-rise>
+      <i class="c tl"></i><i class="c tr"></i>
+      <span class="sq" aria-hidden="true"></span>{content.tag}
+    </p>
     <ul class="grid" data-dhover>
       {content.items.map((b, i) => (
         <li data-dhover-item data-rise style={`--i: ${i}`}>
@@ -27,6 +31,18 @@ const { content } = Astro.props;
 <style>
   /* it sits inside the light section, which already holds the page margins */
   .brands { position: relative; padding: 0 0 11vh; }
+
+  /* The name's cell: the top and both sides are its own, the line under it
+     is the grid's top, so the two are one drawing. A column wide, like the
+     cells below it, and shorter — it holds a line of small type, not a mark. */
+  /* exactly the first column: the grid's left line, then a quarter of what is
+     left — a plain quarter left its right line a hair short of the cell's */
+  .lead { width: calc(var(--hairline) + (100% - var(--hairline)) / 4); height: 3.25rem; padding: 0 var(--s-5); position: relative;
+          border-top: var(--hairline) solid var(--line);
+          border-left: var(--hairline) solid var(--line);
+          border-right: var(--hairline) solid var(--line);
+          margin: 0; font-size: var(--t-small); color: var(--ink-2); }
+  /* only its head's corners are its own: its foot's are the grid's, already drawn */
 
   /* one lattice: the container draws the top and left, each cell the line to
      its right and below, so every inner line is shared by two cells */
@@ -63,6 +79,7 @@ const { content } = Astro.props;
 
   @media (max-width: 719px) {
     .brands { padding: 0 0 10vh; }
+    .lead { width: calc(var(--hairline) + (100% - var(--hairline)) / 2); }
     .grid { grid-template-columns: repeat(2, 1fr); }
     .grid li { height: 6.5rem; }
     img { max-height: 2.5rem; }
