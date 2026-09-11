@@ -20,7 +20,6 @@ const projects = await getProjects();
       <Hero content={home.hero} featured={home.featuredProject} />
       <Marquee items={home.studios.items.map((s) => s.name)} />
       <Manifesto content={home.about} />
-      <Brands content={home.brands} />
       <div class="scrim" data-scrim aria-hidden="true"></div>
     </div>
 
@@ -36,6 +35,9 @@ const projects = await getProjects();
             read as filler. Component and content are both still here — put
             <Process content={home.process} /> back to restore it. */}
         <Testimonials content={home.testimonials} />
+        {/* the firms the stories are from, right under them: the logos are
+            the receipt for the quotes, not decoration on the dark half */}
+        <Brands content={home.brands} />
         {/* the work the studio reels have not shown, on a dark ground between
             the client stories and the questions, so the page's second half
             is not two blocks of text in a row */}

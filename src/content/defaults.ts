@@ -33,9 +33,9 @@ const studios: Studio[] = [
   {
     key: 'products',
     name: 'Digital Products',
-    promise: 'The interface people actually move through.',
+    promise: 'The product people actually use.',
     description:
-      'Sites, configurators and internal tools, designed and built by the same team. Shipped and maintained rather than handed over as a mockup, and measured once real people are using them.',
+      'Apps, sites, configurators and internal tools, designed and built by the same team. Shipped and maintained rather than handed over as a mockup, and improved once real people are using them.',
     services: ['Product design', 'Web', 'Configurators', 'Design systems', 'Maintenance'],
     media: { kind: 'video', url: '/studios/products.mp4', poster: '/studios/products.jpg', alt: 'Digital products' },
   },
@@ -226,11 +226,17 @@ export const defaultProjects: Project[] = interleave([
 
 export const defaultHome: HomeContent = {
   hero: {
-    headline: 'Designing the future\nof',
-    words: ['experience.', 'space.', 'media.', 'products.'],
-    description: 'An independent practice working across architecture, creative media and digital products.',
-    primaryCta: { label: 'Discuss your project', href: '/#contact' },
-    secondaryCta: { label: 'See our portfolio', href: '/work' },
+    /* The page's one idea, planted here and paid off at the handover
+       ("Before it exists, we've already built it"): the thing is made for
+       the person who will move through it. The words map to the studios —
+       products first, so an app is the first thing the page says — and the
+       last one is the idea itself. Nothing here names a medium: the practice
+       is architecture and renders today, and may be apps next year. */
+    headline: 'Made for the people\nwho\u2019ll',
+    words: ['use it.', 'live in it.', 'watch it.', 'move through it.'],
+    description: 'Architecture, creative media and digital products, designed by one team, so whatever you\u2019re building arrives whole.',
+    primaryCta: { label: 'Start a project', href: '/#contact' },
+    secondaryCta: { label: 'See the work', href: '/work' },
   },
   about: {
     tag: 'What we do',
@@ -245,18 +251,18 @@ export const defaultHome: HomeContent = {
     stats: [
       { value: '30+', label: 'Projects delivered across the three studios' },
       { value: '2019', label: 'Founded in Lisbon, working across Europe' },
-      { value: '03', label: 'Studios under one roof, one team' },
-      { value: '1:1', label: 'Drawn at real scale before anything is built' },
+      { value: '03', label: 'Studios, one team between them' },
+      { value: '1:1', label: 'Built to be used before it is launched' },
     ],
   },
   studios: {
     tag: 'Studios',
     title: 'Three studios.',
-    intro: 'Under one roof. Work moves between them without a handover, which is the whole point.',
+    intro: 'Three doors into the same room. Whichever one you come in by, the same people design it, show it and build it.',
     items: studios,
   },
   brands: {
-    tag: "Brands we've helped",
+    tag: 'And the firms they are from',
     items: [...clients, ...clients],
   },
   testimonials: {
@@ -314,6 +320,7 @@ export const defaultHome: HomeContent = {
   },
   work: {
     title: 'Selected work.',
+    intro: 'Some of what they were talking about.',
     /* None of the studio reels' projects: those already have a place on the
        page, and the pile is for the work that has not been shown yet. Dealt
        so the studios take turns. Stand-ins until the client picks his own —
@@ -322,7 +329,7 @@ export const defaultHome: HomeContent = {
       'racel-residence', 'spiderman', 'pacific-palisades-residence', 'rogers-cafe',
       'grubhub', 'mishawaka', 'ruthchris-bar', 'swing-suite',
     ],
-    cta: { label: 'Explore all projects', href: '/work' },
+    cta: { label: 'See all the work', href: '/work' },
   },
   faqs: {
     tag: 'FAQs',

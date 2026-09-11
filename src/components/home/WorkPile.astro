@@ -56,6 +56,7 @@ const dial = RINGS.map((r, k) => {
   <section class="pile" id="selected-work" data-pile data-theme="dark" aria-labelledby="pile-title">
     <!-- the name over the middle of the page, as the studios' is -->
     <h2 class="title" id="pile-title" data-rise>{content.title}</h2>
+    <p class="intro" data-rise style="--i: 1">{content.intro}</p>
 
     <!-- the table: the dial underneath, and the pile on it -->
     <div class="table">
@@ -121,6 +122,10 @@ const dial = RINGS.map((r, k) => {
   .title { text-align: center; font-size: var(--t-h2); font-weight: var(--w-display);
            line-height: var(--lh-display); letter-spacing: var(--track-display);
            color: var(--ink); white-space: nowrap; }
+  /* the studios' line under their heading, to the letter */
+  .intro { max-width: 42ch; margin: var(--s-4) auto 0; text-align: center;
+           font-size: var(--t-lead); line-height: var(--lh-lead);
+           letter-spacing: var(--track-lead); color: var(--ink-3); }
 
   /* Every card in one cell of a grid, so they lie on top of one another and
      the list is as tall as one card. The room under it is the frame's foot

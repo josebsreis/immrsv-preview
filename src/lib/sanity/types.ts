@@ -141,6 +141,8 @@ export interface HomeContent {
    *  on show at a time — named by slug, in the order they are dealt */
   work: {
     title: string;
+    /** the line under the title — the hand-over from the stories above it */
+    intro: string;
     featured: string[];
     cta: Cta;
   };

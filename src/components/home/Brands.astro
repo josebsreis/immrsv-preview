@@ -25,7 +25,8 @@ const { content } = Astro.props;
 
 <style>
   /* above the hero's fixed layers, under the field */
-  .brands { position: relative; z-index: var(--z-ui); padding: 8vh var(--page-x) 12vh;
+  /* it sits inside the light section, which already holds the page margins */
+  .brands { position: relative; padding: 0 0 11vh;
             display: grid; grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
             column-gap: var(--col-gap); align-items: start;
             border-top: var(--hairline) solid var(--line); }
@@ -62,7 +63,7 @@ const { content } = Astro.props;
 
   @media (max-width: 1099px) { .brands { grid-template-columns: 1fr; row-gap: var(--s-7); } }
   @media (max-width: 719px) {
-    .brands { padding: 6vh var(--page-x) 10vh; }
+    .brands { padding: 0 0 10vh; }
     .grid { grid-template-columns: repeat(2, 1fr); }
     .grid li { height: 6.5rem; padding: var(--s-4); }
     img { max-height: 2.5rem; }
