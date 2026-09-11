@@ -313,7 +313,7 @@ export const defaultHome: HomeContent = {
     ],
   },
   work: {
-    title: 'Selected work',
+    title: 'Already built',
     /* None of the studio reels' projects: those already have a place on the
        page, and the pile is for the work that has not been shown yet. Dealt
        so the studios take turns. Stand-ins until the client picks his own —

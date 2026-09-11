@@ -88,7 +88,7 @@ const SIZES = '(max-width: 859px) 82vw, 52vw';
      clips sideways only — the tipped cards reach past the screen's edges,
      and a clip on both axes would cut their raised corners off at the top. */
   .pile { position: relative; margin-inline: calc(var(--page-x) * -1);
-          padding: 14vh var(--page-x) 12vh; overflow-x: clip;
+          padding: 22vh var(--page-x) 20vh; overflow-x: clip;
           background: var(--ground); color: var(--ink);
           /* the card, its frame and the foot of the frame */
           --card-w: min(52vw, 58rem); --frame: var(--s-2); --foot: 4rem; }
@@ -129,7 +129,10 @@ const SIZES = '(max-width: 859px) 82vw, 52vw';
   .plate { position: absolute; z-index: -1;
            inset: calc(var(--frame) * -1) calc(var(--frame) * -1) calc(var(--foot) * -1);
            background: var(--surface); border-radius: var(--radius-media);
-           clip-path: inset(var(--frame) var(--frame) var(--foot) var(--frame) round var(--radius-media));
+           /* closed a pixel inside the picture's edge, not on it: exactly on
+              it, the plate's white shows through the antialiasing at the
+              rounded corners as a hairline round every card at the side */
+           clip-path: inset(calc(var(--frame) + 1px) calc(var(--frame) + 1px) calc(var(--foot) + 1px) calc(var(--frame) + 1px) round var(--radius-media));
            transition: clip-path var(--dur-base) var(--ease-panel); }
   .card[data-pile-status="active"] .plate { clip-path: inset(0 round var(--radius-media)); }
 
@@ -151,10 +154,10 @@ const SIZES = '(max-width: 859px) 82vw, 52vw';
   .studio { position: absolute; left: 0; right: 0; top: calc(100% + var(--foot) + var(--s-4));
             display: flex; justify-content: center; }
 
-  .more { display: flex; justify-content: center; margin-top: var(--s-6); }
+  .more { display: flex; justify-content: center; margin-top: var(--s-8); }
 
   @media (max-width: 859px) {
-    .pile { padding: 10vh var(--page-x); --card-w: 82vw; --foot: 3.5rem; }
+    .pile { padding: 14vh var(--page-x); --card-w: 82vw; --foot: 3.5rem; }
     .title { font-size: var(--t-h3); }
     .list { margin-top: var(--s-7); }
     .name { font-size: var(--t-lead); }

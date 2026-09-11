@@ -9,8 +9,8 @@
    card thrown off the top goes round to the far side of the pile.
 
    The layout and the feel are Osmo's flick cards (osmo.supply), rebuilt
-   without GSAP: the table of poses is theirs, and so is the ease, written
-   out below. Nothing else on this site runs on a library, and one section
+   without GSAP: the table of poses starts from theirs (see poseFor), and
+   the ease is theirs, written out below. Nothing else on this site runs on a library, and one section
    is not worth one.
 
    Two things it must not do. It never takes the page's scroll: only a
@@ -37,17 +37,22 @@ export function offset(i: number, at: number, n: number): number {
   return d;
 }
 
-/** where a card lies for its distance from the middle — Osmo's table */
+/** Where a card lies for its distance from the middle. Osmo's table, with
+ *  the cards behind made smaller and set lower: at their size and tilt the
+ *  raised corner of each one stood above the top edge of the card in the
+ *  middle, a sliver of another picture over the one on show. Smaller, they
+ *  sit wholly behind it at the top, and they are spread further out so as
+ *  much of each still shows at the sides. */
 export function poseFor(d: number): Pose {
   switch (d) {
     case 0: return { x: 0, y: 0, rot: 0, s: 1, o: 1, z: 5 };
-    case 1: return { x: 25, y: 1, rot: 10, s: 0.9, o: 1, z: 4 };
-    case -1: return { x: -25, y: 1, rot: -10, s: 0.9, o: 1, z: 4 };
-    case 2: return { x: 45, y: 5, rot: 15, s: 0.8, o: 1, z: 3 };
-    case -2: return { x: -45, y: 5, rot: -15, s: 0.8, o: 1, z: 3 };
+    case 1: return { x: 32, y: 4, rot: 10, s: 0.78, o: 1, z: 4 };
+    case -1: return { x: -32, y: 4, rot: -10, s: 0.78, o: 1, z: 4 };
+    case 2: return { x: 58, y: 8, rot: 15, s: 0.64, o: 1, z: 3 };
+    case -2: return { x: -58, y: 8, rot: -15, s: 0.64, o: 1, z: 3 };
     default: {
       const dir = d > 0 ? 1 : -1;
-      return { x: 55 * dir, y: 5, rot: 20 * dir, s: 0.6, o: 0, z: 2 };
+      return { x: 70 * dir, y: 8, rot: 20 * dir, s: 0.5, o: 0, z: 2 };
     }
   }
 }
