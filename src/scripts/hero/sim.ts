@@ -61,6 +61,9 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
 
   const ex = ctx.exit;
   const { home, off, ain, sim, intro, over, seedv, iDelay, iDur, vel, stiff, damp, jit, gain, total, face } = S;
+  // the cursor is measured against where the particle was drawn — for the
+  // cloud that is its turned, posed place, not its seat in the raw cloud
+  const at = S.at ?? home;
   const stagger = ctx.reduced ? 0 : I.stagger, dur = ctx.reduced ? 0.01 : I.duration;
   const it = t - ctx.introT0, building = it < stagger + dur * 1.25 + 0.1;
   /* How hard the cursor is pressing. On the cube that follows how fast its
@@ -88,7 +91,7 @@ export function simulate(holder: THREE.Object3D, points: THREE.Points, S: PlateS
     let ox = sim[i3], oy = sim[i3 + 1], oz = sim[i3 + 2];
     let vx = vel[i3], vy = vel[i3 + 1], vz = vel[i3 + 2];
     if (hit) {
-      const px = home[i3] + ox, py = home[i3 + 1] + oy, pz = home[i3 + 2] + oz;
+      const px = at[i3] + ox, py = at[i3 + 1] + oy, pz = at[i3 + 2] + oz;
       /* Two ways of asking how near the cursor a particle is.
 
          On the cube: how far across its own plate, the depth through the plate

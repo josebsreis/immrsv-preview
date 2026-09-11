@@ -28,6 +28,10 @@ export interface PlateSim {
   n: Vec3;
   home: Float32Array;     // rest positions
   off: Float32Array;      // the attribute the shader reads (sim + intro + exit)
+  /** where each particle actually is this frame, when that is not home + sim:
+   *  the cloud is turned and posed into a form after its physics run, so the
+   *  cursor has to be measured against where it was drawn, not where it lives */
+  at?: Float32Array;
   ain: Float32Array;      // per-particle brightness (intro/exit fade)
   sim: Float32Array;      // spring offset
   vel: Float32Array;

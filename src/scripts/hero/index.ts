@@ -94,6 +94,9 @@ export function createHero(opts: HeroOptions): Hero {
   const F = cfg.core;
   const cloudN = mobile() ? F.countMobile : F.count;
   const cloud = buildCloud(cloudN, cfg, material, PIVOT);
+  // the cloud is turned and posed after its physics, so the sim is told
+  // where each particle was actually drawn (see PlateSim.at)
+  cloud.sim.at = Float32Array.from(cloud.sim.home);
   const cloudRoot = new THREE.Group(); cloudRoot.position.set(-vc, -vc, -vc); cloudRoot.add(cloud.points);
   const cloudPivot = new THREE.Group(); cloudPivot.add(cloudRoot);
   /** one array of targets per shape, in the cloud's frame, sampled once */
@@ -448,7 +451,7 @@ export function createHero(opts: HeroOptions): Hero {
     for (const p of plates) simulate(p.holder, p.points, p.sim, ctx);
     if (reel) {
       simulate(cloudRoot, cloud.points, cloud.sim, ctx);
-      const { off, home, ain } = cloud.sim, { wide, band } = cloud;
+      const { off, home, ain } = cloud.sim, at = cloud.sim.at!, { wide, band } = cloud;
       const tg = formE > 0.0005 ? targets[shape] : null;
       const rk = tg ? rank[shape] : null;
       const dim = 1 - out * cfg.exit.dim;
@@ -458,7 +461,7 @@ export function createHero(opts: HeroOptions): Hero {
         const g = clamp(coreE * (1 + F.spread) - F.spread * when[j], 0, 1);
         const w = g * g * (3 - 2 * g);
         ain[j] = w * dim;
-        if (w <= 0) { off[i3] = wide[i3]; off[i3 + 1] = wide[i3 + 1]; off[i3 + 2] = wide[i3 + 2]; continue; }
+        if (w <= 0) { off[i3] = wide[i3]; off[i3 + 1] = wide[i3 + 1]; off[i3 + 2] = wide[i3 + 2]; at[i3] = home[i3] + wide[i3]; at[i3 + 1] = home[i3 + 1] + wide[i3 + 1]; at[i3 + 2] = home[i3 + 2] + wide[i3 + 2]; continue; }
         // where the cloud holds it, turning
         const k = band[j], ca = bandC[k], sa = bandS[k];
         const ux = (home[i3] - PIVOT) * tight, uz = (home[i3 + 2] - PIVOT) * tight;
@@ -485,6 +488,8 @@ export function createHero(opts: HeroOptions): Hero {
             Ty += bobY * e;
           }
         }
+        // where it is drawn this frame, for the next frame's cursor
+        at[i3] = Tx; at[i3 + 1] = Ty; at[i3 + 2] = Tz;
         // still on its way in: the rest of the road from where it started
         const far = 1 - w;
         // some of the cursor's push survives, so the cloud is still
