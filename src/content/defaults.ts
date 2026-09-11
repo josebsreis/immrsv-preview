@@ -226,14 +226,11 @@ export const defaultProjects: Project[] = interleave([
 
 export const defaultHome: HomeContent = {
   hero: {
-    /* The page's one idea, planted here and paid off at the handover
-       ("Before it exists, we've already built it"): the thing is made for
-       the person who will move through it. The words map to the studios —
-       products first, so an app is the first thing the page says — and the
-       last one is the idea itself. Nothing here names a medium: the practice
-       is architecture and renders today, and may be apps next year. */
-    headline: 'Made for the people\nwho\u2019ll',
-    words: ['use it.', 'live in it.', 'watch it.', 'move through it.'],
+    /* The line under it carries the page's idea — one team, the work
+       arrives whole — and the handover pays it off; the headline itself
+       stays the practice's own. */
+    headline: 'Designing the future\nof',
+    words: ['experience.', 'space.', 'media.', 'products.'],
     description: 'Architecture, creative media and digital products, designed by one team, so whatever you\u2019re building arrives whole.',
     primaryCta: { label: 'Start a project', href: '/#contact' },
     secondaryCta: { label: 'See the work', href: '/work' },
