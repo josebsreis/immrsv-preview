@@ -32,14 +32,21 @@ const studioName = (p: Project) => site.studios.find((s) => s.key === p.studios[
 /** the card is about half the page wide, and the whole screen on a phone */
 const SIZES = '(max-width: 859px) 82vw, 52vw';
 
-/* The dial behind the pile, after Osmo's: rings of short ticks pointing at
-   the card in the middle, as one path. Each ring is ticked at about the same
-   spacing along its arc, so the outer rings carry more of them rather than
-   the same few spread thin, and every other ring is set half a step round
-   so the ticks do not line up into spokes. Units are the viewBox's; the
-   stroke is a hairline whatever the size it is drawn at. */
-const RINGS = [300, 390, 490, 600, 720, 850, 990];
-const SPACING = 56, TICK = 11;
+/* the small figure over the title: a sphere of particles, the hero's own
+   material, turning on the spot (scripts/ui/formingMarks.ts) */
+const sphere = Array.from({ length: 36 }, (_, i) => {
+  const y = 1 - (i / 35) * 2, r = Math.sqrt(1 - y * y), a = i * 2.39996;
+  return { x: Math.cos(a) * r * 18, y: y * 18, z: Math.sin(a) * r * 18 };
+});
+
+/* The dial behind the pile, after Osmo's: two rings of close-set ticks
+   pointing at the card in the middle, as one path — just outside the card,
+   dense enough to read as a scale rather than as a scatter of marks. Each
+   ring is ticked at the same spacing along its arc, and the outer one is
+   set half a step round so the ticks do not line up into spokes. Units are
+   the viewBox's; the stroke is a hairline whatever the size it is drawn at. */
+const RINGS = [330, 420];
+const SPACING = 13, TICK = 22;
 const dial = RINGS.map((r, k) => {
   const count = Math.round((2 * Math.PI * r) / SPACING);
   const phase = k % 2 ? Math.PI / count : 0;
@@ -54,9 +61,20 @@ const dial = RINGS.map((r, k) => {
 ---
 {n > 0 && (
   <section class="pile" id="selected-work" data-pile data-theme="dark" aria-labelledby="pile-title">
+    <!-- over the name: a small turning solid of particles, and the section's
+         tag — the furniture the studios' head has in its thread -->
+    <div class="over" data-rise>
+      <span class="figure" data-forming-mark aria-hidden="true">
+        {sphere.map((d) => (
+          <i data-p={`${d.x.toFixed(1)},${d.y.toFixed(1)},${d.z.toFixed(1)},0,0,0`}
+             style={`--x: ${d.x.toFixed(1)}px; --y: ${d.y.toFixed(1)}px`}></i>
+        ))}
+      </span>
+      <p class="tag label"><i class="sq" aria-hidden="true"></i>{content.tag}</p>
+    </div>
     <!-- the name over the middle of the page, as the studios' is -->
-    <h2 class="title" id="pile-title" data-rise>{content.title}</h2>
-    <p class="intro" data-rise style="--i: 1">{content.intro}</p>
+    <h2 class="title" id="pile-title" data-rise style="--i: 1">{content.title}</h2>
+    <p class="intro" data-rise style="--i: 2">{content.intro}</p>
 
     <!-- the table: the dial underneath, and the pile on it -->
     <div class="table">
@@ -117,6 +135,16 @@ const dial = RINGS.map((r, k) => {
           background: var(--ground); color: var(--ink);
           /* the card, its frame and the foot of the frame */
           --card-w: min(52vw, 58rem); --frame: var(--s-2); --foot: 4rem; }
+
+  /* the furniture over the name: the figure, then the tag under it */
+  .over { display: flex; flex-direction: column; align-items: center; gap: var(--s-4);
+          margin-bottom: var(--s-6); }
+  .figure { position: relative; width: 3rem; height: 3rem; --dot: 3px; }
+  .figure i { position: absolute; left: 50%; top: 50%; width: var(--dot); height: var(--dot);
+              margin: calc(var(--dot) / -2); border-radius: 50%; background: var(--ink-3);
+              translate: var(--x) var(--y); will-change: translate; }
+  .tag { display: flex; align-items: center; gap: var(--s-2); color: var(--ink-3); }
+  .tag .sq { color: var(--ink-4); }
 
   /* the studios' heading, to the letter: one name per section, one size */
   .title { text-align: center; font-size: var(--t-h2); font-weight: var(--w-display);

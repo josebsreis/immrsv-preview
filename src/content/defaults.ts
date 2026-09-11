@@ -316,6 +316,7 @@ export const defaultHome: HomeContent = {
     ],
   },
   work: {
+    tag: 'Portfolio',
     title: 'Selected work.',
     intro: 'Some of what they were talking about.',
     /* None of the studio reels' projects: those already have a place on the

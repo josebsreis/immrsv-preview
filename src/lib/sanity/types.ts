@@ -140,6 +140,8 @@ export interface HomeContent {
   /** the selected work: a pile of cards fanned across the page, one project
    *  on show at a time — named by slug, in the order they are dealt */
   work: {
+    /** the small word over the title */
+    tag: string;
     title: string;
     /** the line under the title — the hand-over from the stories above it */
     intro: string;
