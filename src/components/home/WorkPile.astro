@@ -43,7 +43,9 @@ const note = content.tag.split('\n');
    the viewBox's; the stroke is a hairline whatever the size it is drawn at. */
 const RINGS = [445, 540];
 const SPACING = 20, TICK = 12;
-const dial = RINGS.map((r, k) => {
+/* one path a ring: each turns on its own — slowly, the two against each
+   other, faster under the hand (scripts/ui/workPile.ts) */
+const rings = RINGS.map((r, k) => {
   const count = Math.round((2 * Math.PI * r) / SPACING);
   const phase = k % 2 ? Math.PI / count : 0;
   let d = '';
@@ -53,7 +55,7 @@ const dial = RINGS.map((r, k) => {
     d += `M${(c * r).toFixed(1)} ${(s * r).toFixed(1)}L${(c * (r + TICK)).toFixed(1)} ${(s * (r + TICK)).toFixed(1)}`;
   }
   return d;
-}).join('');
+});
 ---
 {n > 0 && (
   <section class="pile" id="selected-work" data-pile data-theme="dark" aria-labelledby="pile-title">
@@ -67,7 +69,7 @@ const dial = RINGS.map((r, k) => {
     <!-- the table: the dial underneath, and the pile on it -->
     <div class="table">
     <svg class="dial" viewBox="-1000 -1000 2000 2000" aria-hidden="true" focusable="false">
-      <path d={dial} />
+      {rings.map((d, k) => <path class="ring" data-pile-ring={k} d={d} />)}
     </svg>
     <ul class="list" data-pile-list aria-roledescription="carousel" data-cursor-hover data-cursor-text="Drag" data-cursor-kind="drag">
       {cards.map((p, i) => {
@@ -147,19 +149,21 @@ const dial = RINGS.map((r, k) => {
      the table, the cards being 16:10 — and larger than the screen either
      way, so its rings leave the section rather than end inside it. It fades
      out towards its edge, where it would otherwise stop on the section's
-     border as a hard line. It turns with the pile: a few degrees a card, and
-     with the hand while it is being dragged (--dial, from the script). */
+     border as a hard line. Each ring turns on its own, written by the
+     script every frame while the section is on screen: slowly at rest, the
+     two against each other; with the hand while the pile is dragged; and
+     with a kick when a card is thrown. */
   .dial { position: absolute; left: 50%; top: calc(var(--card-w) * 0.3125);
           /* the page caps pictures at their column; this one is meant to
              run off the screen, so it is let out of that */
           width: 200vmax; height: 200vmax; max-width: none; translate: -50% -50%;
-          rotate: var(--dial, 0deg); pointer-events: none;
+          pointer-events: none;
           fill: none; stroke: var(--ink-dim); stroke-width: 1;
           -webkit-mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
-          mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
-          transition: rotate var(--dur-slow) var(--ease-panel); }
-  .dial path { vector-effect: non-scaling-stroke; }
-  .pile[data-drag] .dial { transition: none; }
+          mask-image: radial-gradient(closest-side, #000 62%, transparent 100%); }
+  /* each ring turns about the middle of the drawing, which is its own centre */
+  .ring { vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center;
+          will-change: transform; }
 
   .list { position: relative; list-style: none; display: grid; justify-items: center;
           padding-bottom: calc(var(--foot) + var(--s-4));
@@ -227,6 +231,6 @@ const dial = RINGS.map((r, k) => {
     .name { font-size: var(--t-lead); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .plate, .bar > *, .dial, .media img { transition: none; }
+    .plate, .bar > *, .media img { transition: none; }
   }
 </style>
