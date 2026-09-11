@@ -183,6 +183,9 @@ const grounds = ['light', 'dark', 'light'] as const;
      different colour inside a gutter would be three stripes. */
   /* the thread from the head lands on a rule, not on an open panel */
   .stack .studio:first-child { border-top: var(--hairline) solid var(--line); }
+  /* …and the last one hands over to the client stories on one too: the two
+     share a ground, so without it the panel simply runs on into the quotes */
+  .stack .studio:last-child { border-bottom: var(--hairline) solid var(--line); }
   .studio { min-height: 100svh; display: flex; flex-direction: column;
             justify-content: space-between; gap: var(--s-8);
             margin-inline: calc(var(--page-x) * -1);
