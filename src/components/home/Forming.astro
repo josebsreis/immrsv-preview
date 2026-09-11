@@ -26,60 +26,39 @@ interface Props {
   steps?: { word: string; line: string }[];
 }
 
-/** One mark for each step, drawn in the page's own language: the site's
- *  dot, set on a seven-by-seven lattice — the same stuff the hero's mark is
- *  made of, at the scale of an icon. They are the only ornament on the site
- *  and they earn their place by saying what the step is before the word
- *  does. Each is a picture in seven rows: `o` is a dot. */
-const marks = [
-  /* a plan, with the dimension line above it */
-  ['ooooooo',
-   '.......',
-   '.ooooo.',
-   '.o...o.',
-   '.o...o.',
-   '.o...o.',
-   '.ooooo.'],
-  /* built: a wireframe solid — the hexagon and the Y inside it */
-  ['...o...',
-   '.o...o.',
-   'o.o.o.o',
-   'o..o..o',
-   'o..o..o',
-   '.o.o.o.',
-   '...o...'],
-  /* the sun, the thing it falls on, and the shadow that proves it */
-  ['.....o.',
-   '....ooo',
-   '.....o.',
-   'ooo....',
-   'o.o....',
-   'o.o....',
-   'ooo.ooo'],
-  /* delivered, and still running: a window, and a bar with its buttons */
-  ['ooooooo',
-   'o.o.o.o',
-   'ooooooo',
-   'o.....o',
-   'o.....o',
-   'o.....o',
-   'ooooooo'],
+/** One mark for each step: a small cluster of particles, the hero's own
+ *  material at the scale of an icon. Each is an abstract figure rather than
+ *  a picture — a focus, a lattice, a burst, a spiral — and the four are
+ *  different enough to tell apart at a glance. They are always faintly in
+ *  motion, like the mark in the hero, and they gather out of nothing as the
+ *  card arrives. Coordinates are px from the centre of a 48px box. */
+type Pt = { x: number; y: number };
+const ring = (r: number, n: number, off = 0): Pt[] =>
+  Array.from({ length: n }, (_, i) => { const a = off + (i / n) * Math.PI * 2; return { x: Math.cos(a) * r, y: Math.sin(a) * r }; });
+const marks: Pt[][] = [
+  /* understand: a focus — two rings round one point */
+  [{ x: 0, y: 0 }, ...ring(8.5, 8, Math.PI / 8), ...ring(19, 20)],
+  /* build: a lattice — a cube of three by three by three, seen from its corner */
+  (() => { const out: Pt[] = []; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) for (let k = 0; k < 3; k++)
+      out.push({ x: (i - k) * 8.2, y: (i + k) * 4.7 - (j - 1) * 9.4 - 9.4 }); return out; })(),
+  /* show: a burst — eight rays out from the middle */
+  [{ x: 0, y: 0 }, ...[6, 11, 16, 21].flatMap((r) => ring(r, 8, Math.PI / 8))],
+  /* refine: a spiral — the same turn, closer each time */
+  Array.from({ length: 30 }, (_, i) => { const a = i * 0.62, r = 3 + i * 0.62; return { x: Math.cos(a) * r, y: Math.sin(a) * r }; }),
 ];
-/** A mark as its dots: row, column, and for the assembly a place to arrive
- *  from and a turn to arrive in. Deterministic — the same numbers every
- *  build — from a small hash of the dot's seat, so nothing is random at
- *  runtime and the markup is stable. The order is shuffled by the same hash
- *  so the picture gathers rather than being drawn line by line. */
+/** A mark as its particles: where each sits, where it arrives from, its turn
+ *  to arrive, and the small path it wanders while it stands. Deterministic —
+ *  the same numbers every build — from a small hash of the seat, so nothing
+ *  is random at runtime and the markup is stable. The arrival order is
+ *  shuffled by the same hash, so the figure gathers rather than draws. */
 const hash = (n: number) => { let x = (n + 1) * 2654435761; x ^= x >>> 13; x *= 1274126177; x ^= x >>> 16; return (x >>> 0) / 4294967296; };
-const dots = (rows: string[], seed: number) => {
-  const out: { r: number; c: number; dx: number; dy: number; k: number }[] = [];
-  rows.forEach((row, r) => [...row].forEach((ch, c) => {
-    if (ch !== 'o') return;
-    const h = hash(seed * 101 + r * 7 + c);
-    const ang = h * Math.PI * 2, far = 10 + hash(seed * 307 + r * 7 + c) * 12;
-    out.push({ r: r + 1, c: c + 1, dx: Math.cos(ang) * far, dy: Math.sin(ang) * far, k: hash(seed * 503 + r * 7 + c) });
-  }));
-  // the arrival order is the third hash, so neighbours do not arrive together
+const dots = (pts: Pt[], seed: number) => {
+  const out = pts.map((pt, j) => {
+    const h = (k: number) => hash(seed * 997 + j * 13 + k);
+    const ang = h(1) * Math.PI * 2, far = 12 + h(2) * 14;
+    return { ...pt, dx: Math.cos(ang) * far, dy: Math.sin(ang) * far, k: h(3),
+             jx: (h(4) - 0.5) * 3, jy: (h(5) - 0.5) * 3, dur: 3 + h(6) * 3, delay: -h(7) * 6 };
+  });
   out.sort((a, b) => a.k - b.k);
   return out.map((d, i) => ({ ...d, i: i / Math.max(1, out.length - 1) }));
 };
@@ -119,7 +98,7 @@ const {
               <h3 class="word">{s.word}</h3>
               <span class="mark" aria-hidden="true">
                 {dots(marks[i % marks.length], i).map((d) => (
-                  <i style={`--r: ${d.r}; --c: ${d.c}; --dx: ${d.dx.toFixed(1)}px; --dy: ${d.dy.toFixed(1)}px; --d: ${d.i.toFixed(3)}`}></i>
+                  <i style={`--x: ${d.x.toFixed(1)}px; --y: ${d.y.toFixed(1)}px; --dx: ${d.dx.toFixed(1)}px; --dy: ${d.dy.toFixed(1)}px; --d: ${d.i.toFixed(3)}; --jx: ${d.jx.toFixed(2)}px; --jy: ${d.jy.toFixed(2)}px; --dur: ${d.dur.toFixed(2)}s; --delay: ${d.delay.toFixed(2)}s`}></i>
                 ))}
               </span>
             </div>
@@ -198,21 +177,30 @@ const {
           gap: var(--s-5); margin-bottom: 0.7rem; }
   .word { margin: 0; font-size: var(--t-title); font-weight: var(--w-title);
           letter-spacing: var(--track-title); line-height: var(--lh-title); }
-  /* The mark: dots on a lattice, and each dot arrives — from a little way
-     off, and small, and one after another — as the card comes in. The
+  /* The mark: a cluster of particles, and each one arrives — from a little
+     way off, and small, and one after another — as the card comes in. The
      script writes --a, 0 to 1, over the first part of the card's pass; each
-     dot takes its own slice of that, in the order it was dealt, so the
-     picture gathers out of nothing. Without script --a is unset and every
-     dot is simply home. */
-  .mark { flex: none; display: grid; gap: 2px;
-          grid-template-columns: repeat(7, var(--square)); grid-template-rows: repeat(7, var(--square)); }
-  .mark i { grid-row: var(--r); grid-column: var(--c);
-            width: var(--square); height: var(--square); border-radius: 50%; background: var(--ink);
-            /* this dot's own progress: its slice of the assembly begins at
-               --d (0..1 along the deal) and lasts half of it */
+     particle takes its own slice of that, in the order it was dealt, so the
+     figure gathers out of nothing. Without script --a is unset and every
+     particle is simply home. Standing, each wanders a little on its own
+     path (transform), under the arrival (translate/scale) — the two do not
+     touch each other. */
+  .mark { position: relative; flex: none; width: 3rem; height: 3rem; --dot: 3px; }
+  .mark i { position: absolute; left: 50%; top: 50%; width: var(--dot); height: var(--dot);
+            margin: calc(var(--dot) / -2); border-radius: 50%; background: var(--ink);
+            /* this particle's own progress: its slice of the assembly begins
+               at --d (0..1 along the deal) and lasts half of it */
             --k: clamp(0, calc((var(--a, 1) - var(--d) * 0.5) / 0.5), 1);
-            translate: calc(var(--dx) * (1 - var(--k))) calc(var(--dy) * (1 - var(--k)));
-            scale: var(--k); opacity: var(--k); }
+            translate: calc(var(--x) + var(--dx) * (1 - var(--k))) calc(var(--y) + var(--dy) * (1 - var(--k)));
+            scale: var(--k); opacity: var(--k);
+            animation: wander var(--dur) ease-in-out var(--delay) infinite; }
+  @keyframes wander {
+    0%, 100% { transform: translate(0, 0); }
+    33% { transform: translate(var(--jx), var(--jy)); }
+    66% { transform: translate(calc(var(--jy) * -1), var(--jx)); }
+  }
+  @media (prefers-reduced-motion: reduce) { .mark i { animation: none; } }
+
   .line { margin: 0; font-size: var(--t-small); color: var(--ink-2); line-height: var(--lh-body); }
 
   /* Narrow: she takes the width, the line reads as two stacked halves above
