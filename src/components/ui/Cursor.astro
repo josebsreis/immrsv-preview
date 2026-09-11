@@ -1,11 +1,12 @@
 ---
 /** The word beside the pointer (scripts/ui/cursor.ts): a pill that follows
  *  the mouse over anything marked `data-cursor-hover` and says what it does.
- *  Inverted — the ink as ground — so it reads over a photograph and over
- *  either page ground alike. The drag kind carries a dot either side: the
- *  two directions it can be pulled. */
+ *  White, and the same white everywhere — a plain object over a photograph
+ *  and over either page ground alike, with the light ground's ink on it.
+ *  The drag kind carries a dot either side: the two directions it can be
+ *  pulled. */
 ---
-<div class="cursor" data-cursor aria-hidden="true">
+<div class="cursor" data-cursor data-panel="light" aria-hidden="true">
   <span class="bubble">
     <i class="sq side l"></i>
     <span class="label" data-cursor-text-target></span>
@@ -21,13 +22,13 @@
               pointer-events: none; will-change: translate; }
     .bubble { display: inline-flex; align-items: center; gap: var(--s-2);
               height: var(--pill-h); padding: 0 var(--s-4);
-              background: var(--ink); color: var(--ground); border-radius: var(--radius);
+              background: var(--surface); color: var(--ink); border-radius: var(--radius);
               white-space: nowrap;
               opacity: 0; scale: 0.9; transform-origin: left top;
               transition: opacity var(--dur-fast) var(--ease-panel), scale var(--dur-fast) var(--ease-panel); }
     [data-cursor="on"] .bubble { opacity: 1; scale: 1; }
     /* the drag kind: a dot either side, for the two ways it goes */
-    .side { display: none; color: var(--ground); }
+    .side { display: none; color: var(--ink-4); }
     [data-cursor-kind="drag"] .side { display: inline-block; }
     [data-cursor-kind="drag"] .bubble { padding: 0 var(--s-3); }
   }

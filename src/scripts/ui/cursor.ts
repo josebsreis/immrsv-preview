@@ -38,11 +38,6 @@ export function createCursor(): Cursor {
     if (hit) {
       text.textContent = hit.dataset.cursorText ?? '';
       el.dataset.cursorKind = hit.dataset.cursorKind ?? '';
-      // the pill is inverted against whatever it is over: it takes the
-      // ground of the section under the pointer, and its stylesheet paints
-      // it in that ground's ink
-      const ground = hit.closest<HTMLElement>('[data-panel], [data-theme]');
-      el.dataset.theme = ground?.dataset.panel ?? ground?.dataset.theme ?? document.body.dataset.theme ?? 'dark';
       el.dataset.cursor = 'on';
     } else {
       el.dataset.cursor = '';
