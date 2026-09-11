@@ -17,7 +17,7 @@ const total = String(items.length).padStart(2, '0');
 /** the portraits are written by scripts/images.mjs conventions: an
  *  extension-less path with a width and a format hung off it */
 const shot = (url: string, w: number, ext: string) => `${url}-${w}.${ext}`;
-const SIZES = '4rem';
+const SIZES = '3rem';
 ---
 {items.length > 0 && (
   <section class="says" id="testimonials" data-stats data-stats-interval="9000">
@@ -206,7 +206,7 @@ const SIZES = '4rem';
      lines it labels, and starting on the quote's own left edge so the three
      read as one attribution rather than as a picture with text beside it. */
   .by { flex: none; display: flex; align-items: center; gap: var(--s-4); margin-top: var(--s-6); }
-  .portrait { flex: none; display: block; width: 4rem; }
+  .portrait { flex: none; display: block; width: 3rem; }
   /* `height: auto` is not optional: the tag carries width and height so the
      row holds its space before the face arrives, and without it that pixel
      height wins over the ratio and the portrait draws 64 by 420 */
