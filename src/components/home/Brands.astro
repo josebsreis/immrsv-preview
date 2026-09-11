@@ -10,7 +10,8 @@ const { content } = Astro.props;
 ---
 {content.items.length > 0 && (
   <section class="brands" aria-label={content.tag}>
-    <p class="section-tag"><span class="sq" aria-hidden="true"></span>{content.tag}</p>
+    <!-- no name on it: the stories above have just said who these are, and
+         eight marks in a row under them say the rest -->
     <ul class="grid" data-dhover>
       {content.items.map((b, i) => (
         <li data-dhover-item data-rise style={`--i: ${i}`}>
@@ -24,19 +25,17 @@ const { content } = Astro.props;
 )}
 
 <style>
-  /* above the hero's fixed layers, under the field */
   /* it sits inside the light section, which already holds the page margins */
-  .brands { position: relative; padding: 0 0 11vh;
-            display: grid; grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
-            column-gap: var(--col-gap); align-items: start;
-            border-top: var(--hairline) solid var(--line); }
+  .brands { position: relative; padding: 0 0 11vh; }
 
   /* one lattice: the container draws the top and left, each cell the line to
      its right and below, so every inner line is shared by two cells */
-  .grid { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr);
+  /* the eight in one row, the full width of the page; halved and halved
+     again as the page narrows, so the lattice stays a lattice at every size */
+  .grid { list-style: none; display: grid; grid-template-columns: repeat(8, 1fr);
           border-top: var(--hairline) solid var(--line); border-left: var(--hairline) solid var(--line); }
   .grid li { position: relative; display: grid; place-items: center;
-             height: 8.5rem; padding: var(--s-5);
+             height: 7.5rem; padding: var(--s-4);
              border-right: var(--hairline) solid var(--line);
              border-bottom: var(--hairline) solid var(--line); }
 
@@ -57,15 +56,18 @@ const { content } = Astro.props;
   .br { right: calc(var(--hairline) * -1); bottom: calc(var(--hairline) * -1); translate: 50% 50%; }
   .grid li:hover .c { background: var(--marker-hover); }
 
-  img { position: relative; max-height: 3.25rem; max-width: 100%; width: auto; object-fit: contain;
+  img { position: relative; max-height: 2.75rem; max-width: 100%; width: auto; object-fit: contain;
         filter: var(--logo-filter); opacity: 0.82; transition: opacity var(--dur-fast) ease; }
   .grid li:hover img { opacity: 1; }
 
-  @media (max-width: 1099px) { .brands { grid-template-columns: 1fr; row-gap: var(--s-7); } }
+  @media (max-width: 1099px) {
+    .grid { grid-template-columns: repeat(4, 1fr); }
+    .grid li { height: 8rem; }
+  }
   @media (max-width: 719px) {
     .brands { padding: 0 0 10vh; }
     .grid { grid-template-columns: repeat(2, 1fr); }
-    .grid li { height: 6.5rem; padding: var(--s-4); }
+    .grid li { height: 6.5rem; }
     img { max-height: 2.5rem; }
   }
   @media (prefers-reduced-motion: reduce) { .tile { transition: none; } }
