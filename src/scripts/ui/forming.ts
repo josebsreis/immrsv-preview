@@ -222,8 +222,10 @@ export function createForming(root: HTMLElement): Forming {
       b.style.setProperty('--v', v.toFixed(3));
       // the mark assembles over the first third of the pass — a beat longer
       // than the card takes to fade in, so the dots are still arriving as
-      // the card stands — and stays whole on the way out
-      b.style.setProperty('--a', ramp(p, at, at + span * 0.34).toFixed(3));
+      // the card stands — and comes apart again over the last third, the
+      // same move backwards, as the card goes
+      const a = Math.min(ramp(p, at, at + span * 0.34), 1 - ramp(p, at + span * 0.66, at + span));
+      b.style.setProperty('--a', a.toFixed(3));
       b.style.setProperty('--ay', `${((0.5 - t) * rise).toFixed(1)}px`);
       b.style.setProperty('--ax', `${(Math.sin(t * Math.PI) * lean * (i % 2 ? -1 : 1)).toFixed(1)}px`);
     });

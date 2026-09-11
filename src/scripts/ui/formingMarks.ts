@@ -4,13 +4,15 @@
    Each mark is a set of points in three dimensions, carried on the dots
    themselves. Every frame the solid is turned a little further about a
    tilted axis and projected flat, and each dot is put where its point
-   lands — nearer points a touch larger and brighter, so the turn reads as
-   depth and not as a flat pattern shuffling. The whole figure moves as one
-   thing, which is what keeps it a figure.
+   lands. Every dot the same size and the same ink: the turn is read from
+   the movement alone, and a figure whose dots differ in weight reads as
+   uneven when it happens to be still. The whole figure moves as one thing,
+   which is what keeps it a figure.
 
    The arrival rides on top: the card's script writes --a, 0 to 1, over the
-   first part of its pass, and each dot takes its own slice of that in the
-   order it was dealt — from a little way off, and small, to its seat.
+   first part of its pass and back to 0 over the last, and each dot takes
+   its own slice of that in the order it was dealt — from a little way off,
+   and small, to its seat, and back out the same way as the card goes.
 
    It runs only while the section is on screen, and not at all for a reader
    who asked for less motion: they get each solid seen straight on, still.
@@ -46,13 +48,11 @@ export function createFormingMarks(root: HTMLElement): FormingMarks {
         const [x, y, z, dx, dy, turn] = mk.p[i];
         // turn about the vertical, then lean the whole thing towards the reader
         const x1 = x * c + z * s, z1 = -x * s + z * c;
-        const y2 = y * ct - z1 * st, z2 = y * st + z1 * ct;
-        // nearer is larger and brighter: z2 runs about ±20
-        const near = clamp01(0.5 + z2 / 40);
+        const y2 = y * ct - z1 * st;
         const k = clamp01((a - turn * 0.5) / 0.5);
         d.style.translate = `${(x1 + dx * (1 - k)).toFixed(1)}px ${(y2 + dy * (1 - k)).toFixed(1)}px`;
-        d.style.scale = String((0.7 + near * 0.6) * k);
-        d.style.opacity = ((0.45 + near * 0.55) * k).toFixed(3);
+        d.style.scale = k.toFixed(3);
+        d.style.opacity = k.toFixed(3);
       });
     }
     if (visible) raf = requestAnimationFrame(frame);
