@@ -130,7 +130,9 @@ const lines = content.aside.split('\n');
 
   /* the answer opens on its own height, written from script */
   .a { overflow: hidden; height: 0; }
-  .inner { padding: var(--s-2) 0 var(--s-5); max-width: 52ch; }
+  /* the answer starts where the open question's text starts: the row steps
+     in by --s-4 when it opens, and the answer under it steps in the same */
+  .inner { padding: var(--s-2) var(--s-4) var(--s-5); max-width: calc(52ch + var(--s-4) * 2); }
   .a p { margin: 0 0 var(--s-4); font-size: var(--t-body); line-height: var(--lh-body);
          color: var(--ink-2); }
   .a p:last-child { margin-bottom: 0; }
