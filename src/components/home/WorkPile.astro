@@ -5,8 +5,8 @@
  *  spread across the full width, and under it one project square in the
  *  middle with the others tipped away to either side. The card on show is
  *  set in a frame — a white plate a little larger than the picture, with the
- *  project's name on its foot and the way into it on the right — and the
- *  studio it came out of on a chip underneath. Throwing the pile hands the
+ *  project's name on its foot and the studio it came out of on the right —
+ *  and the whole card, picture and frame, is the link into it. Throwing the pile hands the
  *  frame over: it draws back under the card that leaves and opens out from
  *  under the one that arrives.
  *
@@ -73,29 +73,29 @@ const dial = RINGS.map((r, k) => {
           <li class="card" data-pile-card data-pile-status={statusFor(d)}
               style={`transform: ${transformOf(pose)}; opacity: ${pose.o}; z-index: ${pose.z}`}
               aria-hidden={d !== 0 ? 'true' : undefined}>
-            <!-- the frame: a white plate under the picture, clipped down to the
-                 picture's own edge until this card is the one on show. It
-                 carries the light ground's tokens without telling the nav. -->
-            <div class="plate" data-panel="light">
-              <div class="bar">
-                <h3 class="name">{p.title}</h3>
-                <!-- in a wrapper of this component's own: the rise below is scoped
-                     here, and would not reach the button's own root -->
-                <span class="go"><Button href={`/work/${p.slug}`} label={content.see} /></span>
+            <!-- The card is the way in: the picture and its frame are one
+                 link, so there is nothing on it to aim for but the card. -->
+            <a class="link" href={`/work/${p.slug}`} draggable="false" data-tap
+               tabindex={d === 0 ? '0' : '-1'} aria-label={`${p.title}, ${studioName(p)}`}>
+              <!-- the frame: a white plate under the picture, clipped down to
+                   the picture's own edge until this card is the one on show. It
+                   carries the light ground's tokens without telling the nav. -->
+              <div class="plate" data-panel="light">
+                <div class="bar">
+                  <h3 class="name">{p.title}</h3>
+                  <span class="chip from">{studioName(p)}</span>
+                </div>
               </div>
-            </div>
 
-            <a class="media" href={`/work/${p.slug}`} draggable="false" data-tap
-               tabindex={d === 0 ? '0' : '-1'} aria-label={p.title}>
-              <picture>
-                {p.cover!.avifSrcset && <source srcset={p.cover!.avifSrcset} sizes={SIZES} type="image/avif" />}
-                <img src={p.cover!.url} srcset={p.cover!.webpSrcset} sizes={SIZES}
-                     alt={p.cover!.alt ?? p.title} width={p.cover!.width} height={p.cover!.height}
-                     loading="lazy" decoding="async" draggable="false" />
-              </picture>
+              <div class="media">
+                <picture>
+                  {p.cover!.avifSrcset && <source srcset={p.cover!.avifSrcset} sizes={SIZES} type="image/avif" />}
+                  <img src={p.cover!.url} srcset={p.cover!.webpSrcset} sizes={SIZES}
+                       alt={p.cover!.alt ?? p.title} width={p.cover!.width} height={p.cover!.height}
+                       loading="lazy" decoding="async" draggable="false" />
+                </picture>
+              </div>
             </a>
-
-            <div class="studio"><span class="chip">{studioName(p)}</span></div>
           </li>
         );
       })}
@@ -148,7 +148,7 @@ const dial = RINGS.map((r, k) => {
   .pile[data-drag] .dial { transition: none; }
 
   .list { position: relative; list-style: none; display: grid; justify-items: center;
-          padding-bottom: calc(var(--foot) + var(--s-7));
+          padding-bottom: calc(var(--foot) + var(--s-4));
           touch-action: pan-y; user-select: none; -webkit-user-select: none; }
   .pile[data-live] .list { cursor: grab; }
   .pile[data-drag] .list { cursor: grabbing; }
@@ -161,9 +161,10 @@ const dial = RINGS.map((r, k) => {
 
   .media { display: block; aspect-ratio: 16 / 10; overflow: hidden;
            border-radius: var(--radius-media); background: var(--surface); }
+  .link { display: block; color: inherit; }
   .media img { width: 100%; height: 100%; object-fit: cover; pointer-events: none;
                -webkit-user-drag: none; opacity: 0.5;
-               transition: opacity var(--dur-fast) ease; }
+               transition: opacity var(--dur-fast) ease, scale var(--dur-base) var(--ease-panel); }
   .card[data-pile-status="near"] .media img { opacity: 0.75; }
   .card[data-pile-status="active"] .media img { opacity: 1; }
 
@@ -184,21 +185,23 @@ const dial = RINGS.map((r, k) => {
 
   .bar { position: absolute; left: 0; right: 0; bottom: 0; height: var(--foot);
          display: flex; align-items: center; justify-content: space-between;
-         gap: var(--s-4); padding: 0 var(--frame) 0 var(--s-4); }
-  .go { flex: none; display: flex; }
+         gap: var(--s-4); padding: 0 var(--s-4); }
+  .from { flex: none; }
   .name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
           font-size: var(--t-title); font-weight: var(--w-title);
           letter-spacing: var(--track-title); color: var(--ink); }
   /* the name and the button come up into the frame once it has opened —
      Osmo's own move, the fade quick and the travel long */
-  .bar > *, .studio { opacity: 0; translate: 0 50%;
+  .bar > * { opacity: 0; translate: 0 50%;
                       transition: opacity 0.4s var(--ease-snap), translate var(--dur-slow) var(--ease-panel); }
-  .card[data-pile-status="active"] :is(.bar > *, .studio) { opacity: 1; translate: 0 0;
+  .card[data-pile-status="active"] .bar > * { opacity: 1; translate: 0 0;
                                                             transition-delay: 0.08s; }
 
-  /* the studio it came out of, on the table under the frame */
-  .studio { position: absolute; left: 0; right: 0; top: calc(100% + var(--foot) + var(--s-4));
-            display: flex; justify-content: center; }
+  /* With no button on it, the card has to say it can be pressed: the picture
+     eases in a touch under the pointer, inside a frame that holds still. */
+  @media (hover: hover) and (pointer: fine) {
+    .card[data-pile-status="active"] .link:hover .media img { scale: 1.03; }
+  }
 
   .more { display: flex; justify-content: center; margin-top: var(--s-8); }
 
@@ -209,6 +212,6 @@ const dial = RINGS.map((r, k) => {
     .name { font-size: var(--t-lead); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .plate, .bar > *, .studio, .dial { transition: none; }
+    .plate, .bar > *, .dial, .media img { transition: none; }
   }
 </style>

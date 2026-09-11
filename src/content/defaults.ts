@@ -322,7 +322,6 @@ export const defaultHome: HomeContent = {
       'racel-residence', 'spiderman', 'pacific-palisades-residence', 'rogers-cafe',
       'grubhub', 'mishawaka', 'ruthchris-bar', 'swing-suite',
     ],
-    see: 'See project',
     cta: { label: 'Explore all projects', href: '/work' },
   },
   faqs: {

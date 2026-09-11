@@ -142,8 +142,6 @@ export interface HomeContent {
   work: {
     title: string;
     featured: string[];
-    /** the button in the frame of the card on show */
-    see: string;
     cta: Cta;
   };
   featuredProject?: Project;
