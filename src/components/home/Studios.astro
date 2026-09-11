@@ -222,7 +222,7 @@ const grounds = ['light', 'dark', 'light'] as const;
   /* a step down from the bar: the bar measures the band, it does not sit on it */
   .band { position: relative; margin-top: var(--s-4); aspect-ratio: 3 / 2; overflow: hidden;
           background: var(--glass); border-radius: var(--radius-media); }
-  .frame { position: absolute; inset: 0; display: block; clip-path: inset(0 0 100% 0); }
+  .frame { position: absolute; inset: 0; display: block; clip-path: inset(0 0 0 100%); }
   .frame:first-of-type { clip-path: inset(0 0 0 0); }
   .frame picture, .frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
   /* the project's name, on the picture, so a click is never a guess: the

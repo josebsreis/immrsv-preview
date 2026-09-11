@@ -26,19 +26,63 @@ interface Props {
   steps?: { word: string; line: string }[];
 }
 
-/** One mark for each step, drawn in the page's own language: hairline,
- *  square-cornered, geometric. They are the only ornament on the site and
- *  they earn their place by saying what the step is before the word does. */
+/** One mark for each step, drawn in the page's own language: the site's
+ *  dot, set on a seven-by-seven lattice — the same stuff the hero's mark is
+ *  made of, at the scale of an icon. They are the only ornament on the site
+ *  and they earn their place by saying what the step is before the word
+ *  does. Each is a picture in seven rows: `o` is a dot. */
 const marks = [
   /* a plan, with the dimension line above it */
-  '<rect x="3.5" y="9.5" width="17" height="11"/><path d="M3.5 5.5h17M3.5 4v3M20.5 4v3"/>',
-  /* built: a wireframe solid */
-  '<path d="M12 2.5l8.5 4.75v9.5L12 21.5l-8.5-4.75v-9.5L12 2.5z"/><path d="M12 12l8.5-4.75M12 12L3.5 7.25M12 12v9.5"/>',
+  ['ooooooo',
+   '.......',
+   '.ooooo.',
+   '.o...o.',
+   '.o...o.',
+   '.o...o.',
+   '.ooooo.'],
+  /* built: a wireframe solid — the hexagon and the Y inside it */
+  ['...o...',
+   '.o...o.',
+   'o.o.o.o',
+   'o..o..o',
+   'o..o..o',
+   '.o.o.o.',
+   '...o...'],
   /* the sun, the thing it falls on, and the shadow that proves it */
-  '<circle cx="18" cy="6" r="2.6"/><path d="M15.6 8.4 12 12"/><rect x="4.5" y="11.5" width="7.5" height="9"/><path d="M12 20.5h7.5"/>',
-  /* delivered, and still running */
-  '<rect x="3.5" y="5" width="17" height="14"/><path d="M3.5 9.5h17M6.5 7.2h1.2M9.5 7.2h1.2"/>',
+  ['.....o.',
+   '....ooo',
+   '.....o.',
+   'ooo....',
+   'o.o....',
+   'o.o....',
+   'ooo.ooo'],
+  /* delivered, and still running: a window, and a bar with its buttons */
+  ['ooooooo',
+   'o.o.o.o',
+   'ooooooo',
+   'o.....o',
+   'o.....o',
+   'o.....o',
+   'ooooooo'],
 ];
+/** A mark as its dots: row, column, and for the assembly a place to arrive
+ *  from and a turn to arrive in. Deterministic — the same numbers every
+ *  build — from a small hash of the dot's seat, so nothing is random at
+ *  runtime and the markup is stable. The order is shuffled by the same hash
+ *  so the picture gathers rather than being drawn line by line. */
+const hash = (n: number) => { let x = (n + 1) * 2654435761; x ^= x >>> 13; x *= 1274126177; x ^= x >>> 16; return (x >>> 0) / 4294967296; };
+const dots = (rows: string[], seed: number) => {
+  const out: { r: number; c: number; dx: number; dy: number; k: number }[] = [];
+  rows.forEach((row, r) => [...row].forEach((ch, c) => {
+    if (ch !== 'o') return;
+    const h = hash(seed * 101 + r * 7 + c);
+    const ang = h * Math.PI * 2, far = 10 + hash(seed * 307 + r * 7 + c) * 12;
+    out.push({ r: r + 1, c: c + 1, dx: Math.cos(ang) * far, dy: Math.sin(ang) * far, k: hash(seed * 503 + r * 7 + c) });
+  }));
+  // the arrival order is the third hash, so neighbours do not arrive together
+  out.sort((a, b) => a.k - b.k);
+  return out.map((d, i) => ({ ...d, i: i / Math.max(1, out.length - 1) }));
+};
 const {
   lead = 'Before it exists,',
   tail = "we've already built it.",
@@ -73,7 +117,11 @@ const {
           <li class={`beat panel ${i % 2 ? 'right' : 'left'}`} data-forming-beat>
             <div class="head">
               <h3 class="word">{s.word}</h3>
-              <svg class="mark" viewBox="0 0 24 24" aria-hidden="true" set:html={marks[i % marks.length]} />
+              <span class="mark" aria-hidden="true">
+                {dots(marks[i % marks.length], i).map((d) => (
+                  <i style={`--r: ${d.r}; --c: ${d.c}; --dx: ${d.dx.toFixed(1)}px; --dy: ${d.dy.toFixed(1)}px; --d: ${d.i.toFixed(3)}`}></i>
+                ))}
+              </span>
             </div>
             <p class="line">{s.line}</p>
           </li>
@@ -150,8 +198,21 @@ const {
           gap: var(--s-5); margin-bottom: 0.7rem; }
   .word { margin: 0; font-size: var(--t-title); font-weight: var(--w-title);
           letter-spacing: var(--track-title); line-height: var(--lh-title); }
-  .mark { flex: none; width: 2.5rem; height: 2.5rem;
-          fill: none; stroke: var(--ink); stroke-width: 0.7; }
+  /* The mark: dots on a lattice, and each dot arrives — from a little way
+     off, and small, and one after another — as the card comes in. The
+     script writes --a, 0 to 1, over the first part of the card's pass; each
+     dot takes its own slice of that, in the order it was dealt, so the
+     picture gathers out of nothing. Without script --a is unset and every
+     dot is simply home. */
+  .mark { flex: none; display: grid; gap: 2px;
+          grid-template-columns: repeat(7, var(--square)); grid-template-rows: repeat(7, var(--square)); }
+  .mark i { grid-row: var(--r); grid-column: var(--c);
+            width: var(--square); height: var(--square); border-radius: 50%; background: var(--ink);
+            /* this dot's own progress: its slice of the assembly begins at
+               --d (0..1 along the deal) and lasts half of it */
+            --k: clamp(0, calc((var(--a, 1) - var(--d) * 0.5) / 0.5), 1);
+            translate: calc(var(--dx) * (1 - var(--k))) calc(var(--dy) * (1 - var(--k)));
+            scale: var(--k); opacity: var(--k); }
   .line { margin: 0; font-size: var(--t-small); color: var(--ink-2); line-height: var(--lh-body); }
 
   /* Narrow: she takes the width, the line reads as two stacked halves above

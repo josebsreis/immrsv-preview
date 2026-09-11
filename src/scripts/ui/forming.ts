@@ -220,6 +220,10 @@ export function createForming(root: HTMLElement): Forming {
       const t = ramp(p, at, at + span);
       const v = Math.min(1, ramp(p, at, at + span * 0.2), 1 - ramp(p, at + span * 0.78, at + span));
       b.style.setProperty('--v', v.toFixed(3));
+      // the mark assembles over the first third of the pass — a beat longer
+      // than the card takes to fade in, so the dots are still arriving as
+      // the card stands — and stays whole on the way out
+      b.style.setProperty('--a', ramp(p, at, at + span * 0.34).toFixed(3));
       b.style.setProperty('--ay', `${((0.5 - t) * rise).toFixed(1)}px`);
       b.style.setProperty('--ax', `${(Math.sin(t * Math.PI) * lean * (i % 2 ? -1 : 1)).toFixed(1)}px`);
     });

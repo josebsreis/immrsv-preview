@@ -11,8 +11,9 @@
    less motion — they get the first frame and the arrows.
 
    A change is a curtain, not a fade: the arriving frame is revealed by
-   opening a clip from the edge the reel is travelling from, over the
-   one before it, which is still sitting underneath.
+   opening a clip from the side the reel is travelling from — the next
+   one comes in from the right, the one before from the left, the way
+   the arrows point — over the one before it, still sitting underneath.
    ═══════════════════════════════════════════════════════════════════ */
 
 export interface StudioReel { destroy(): void }
@@ -66,7 +67,7 @@ export function createStudioReel(el: HTMLElement): StudioReel {
     frame.style.clipPath = 'inset(0 0 0 0)';
     if (!still) {
       frame.getAnimations().forEach((a) => a.cancel());
-      frame.animate([{ clipPath: down ? 'inset(0 0 100% 0)' : 'inset(100% 0 0 0)' },
+      frame.animate([{ clipPath: down ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)' },
                      { clipPath: 'inset(0 0 0 0)' }], { duration: MS, easing: EASE });
     }
     // the frame you were on keeps its place in the stack, directly beneath
@@ -113,7 +114,7 @@ export function createStudioReel(el: HTMLElement): StudioReel {
   io.observe(el);
 
   frames.forEach((f, i) => {
-    f.style.clipPath = i === 0 ? 'inset(0 0 0 0)' : 'inset(0 0 100% 0)';
+    f.style.clipPath = i === 0 ? 'inset(0 0 0 0)' : 'inset(0 0 0 100%)';
     f.style.zIndex = i === 0 ? '1' : '';
   });
   mark();
