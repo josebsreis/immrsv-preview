@@ -212,9 +212,13 @@ export const HERO_CONFIG = {
                           //   the spot inside the frame. The mark holds still;
                           //   this is the only thing in the hero still moving
                           //   of its own accord.
-    // seconds: the cube holds closed while the page settles, then each form
-    // stands for this long before it falls back to the cloud
-    beat: { first: 2.4, shape: 4.5 },
+    // seconds: how long after the intro is released the cloud starts to
+    // gather, then how long each form stands before it falls back to the
+    // cloud. The first is shorter than the cube's flight (intro.duration):
+    // the cloud is coming together in the void while the cube is still
+    // landing, a beat behind it rather than after a pause — the whole
+    // opening reads as one move instead of two
+    beat: { first: 1.0, shape: 4.5 },
   },
 
   /** the Lusion-style lens: flow map + chromatic post pass on the mark */
