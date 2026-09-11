@@ -44,6 +44,12 @@ const { items } = Astro.props;
           color: var(--ink); transition: color var(--dur-base) ease; }
   /* the tint only — the shorthand would take the veil under it with it */
   .item:hover { background-image: linear-gradient(var(--glass), var(--glass)); }
+  /* TRIAL: on a light ground the pills are plain white rather than glass —
+     the page's surface, no tint, no blur — to see whether they read better
+     as solid objects there. Drop this block to go back to glass. */
+  .nav[data-theme="light"] .item { background-color: var(--surface); background-image: none;
+                                   -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .nav[data-theme="light"] .item:hover { background-image: linear-gradient(var(--glass), var(--glass)); }
   .tile { position: absolute; inset: 0; background: var(--glass-hover);
           transform: translateX(-100%); will-change: transform;
           transition: transform var(--dur-base) var(--ease-panel); }
