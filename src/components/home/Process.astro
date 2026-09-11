@@ -118,7 +118,7 @@ const marks = steps.length + 1;
      number. Each arrives as the line reaches it. */
   .mark { position: absolute; top: 0; left: calc(var(--at) / var(--steps) * 100%);
           margin-left: calc(var(--square) / -2);
-          width: var(--square); height: var(--square);
+          width: var(--square); height: var(--square); border-radius: 50%;
           background: var(--ink);
           opacity: 0; scale: 0.3;
           transition: opacity var(--dur-fast) ease, scale var(--dur-fast) var(--ease-out); }

@@ -50,11 +50,14 @@ h1, h2, h3 { font-weight: var(--w-title); }
   text-transform: uppercase;
 }
 
-/* the 4px square — the site's marker */
+/* the site's marker: a dot. It was a square, and the class keeps the name —
+   the size, the colour and every place it sits are unchanged; only the
+   corner has gone. */
 .sq {
   display: inline-block;
   width: var(--square);
   height: var(--square);
+  border-radius: 50%;
   background: currentColor;
   flex: none;
 }

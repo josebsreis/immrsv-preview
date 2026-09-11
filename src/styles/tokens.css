@@ -122,8 +122,7 @@
      rounded — the site is still square — and enough that nothing has a hard
      corner against the grey ground. Fixed pixels, like --square: these are
      drawn details, not measures, and should not grow with the type.
-     The marker itself stays square. It is 5px across; a radius on it would
-     be a blur, not a corner. */
+     The marker is a dot, 5px across — see .sq. */
   --radius: 4px;                  /* the UI: buttons, pills, chips, glass */
   --radius-media: 6px;            /* pictures and clips */
   /* The marker. Fixed pixels, and an odd number of them, which is the whole
