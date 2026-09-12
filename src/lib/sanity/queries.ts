@@ -21,12 +21,14 @@ const projectFields = `{
 
 const homeQuery = `*[_type == "home"][0]{
   hero{ headline, words, description, primaryCta, secondaryCta },
-  about{ tag, statement, stats, founder{ name, role, "portrait": portrait ${imageFields} } },
-  studios{ tag, intro, "items": items[]{ key, name, promise, description, services,
+  about{ tag, statement, lead, stats, founder{ name, role, "portrait": portrait ${imageFields} } },
+  studios{ tag, title, intro, "items": items[]{ key, name, promise, description, services,
     "media": media{ kind, "url": coalesce(file.asset->url, url), "poster": poster ${imageFields}, alt } } },
   brands{ tag, "items": items[]{ name, "logo": logo ${imageFields} } },
   process{ tag, title, intro, "steps": coalesce(steps[]{ title, body }, []) },
   testimonials{ tag, "items": coalesce(items[]{ label, quote, name, role, "portrait": portrait ${imageFields} }, []) },
+  work{ tag, title, intro, "featured": coalesce(featured[]->slug.current, []), cta },
+  faqs{ tag, title, aside, cta, "items": coalesce(items[]{ q, a }, []) },
   "featuredProject": featuredProject-> ${projectFields}
 }`;
 

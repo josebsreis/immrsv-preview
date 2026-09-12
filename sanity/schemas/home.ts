@@ -31,6 +31,8 @@ export const home = defineType({
       fields: [
         defineField({ name: 'tag', type: 'string', initialValue: 'What we do' }),
         defineField({ name: 'statement', type: 'text', rows: 6, description: 'Leave a blank line between paragraphs.' }),
+        defineField({ name: 'lead', title: 'Hand-off line', type: 'string', initialValue: 'Here is how that happens.',
+          description: 'The one line under the statement that the video section answers.' }),
         defineField({
           name: 'founder',
           title: 'Signed by',
@@ -58,11 +60,37 @@ export const home = defineType({
       ],
     }),
     defineField({
-      name: 'brands',
-      title: 'Brands',
+      name: 'studios',
+      title: 'Three studios',
       type: 'object',
       fields: [
-        defineField({ name: 'tag', type: 'string', initialValue: "Brands we've helped" }),
+        defineField({ name: 'tag', type: 'string', initialValue: 'Studios' }),
+        defineField({ name: 'title', type: 'string', initialValue: 'Three studios.' }),
+        defineField({ name: 'intro', type: 'text', rows: 2 }),
+        defineField({
+          name: 'items',
+          type: 'array',
+          description: 'One panel each, in this order. The key ties it to the work filter and must be one of: architecture, media, products.',
+          of: [{
+            type: 'object',
+            fields: [
+              defineField({ name: 'key', type: 'string', options: { list: ['architecture', 'media', 'products'] }, validation: (r) => r.required() }),
+              defineField({ name: 'name', type: 'string', validation: (r) => r.required() }),
+              defineField({ name: 'promise', type: 'string', description: 'The one line at the top right of the panel.' }),
+              defineField({ name: 'description', type: 'text', rows: 4 }),
+              defineField({ name: 'services', title: 'What we do', type: 'array', of: [{ type: 'string' }] }),
+            ],
+            preview: { select: { title: 'name', subtitle: 'promise' } },
+          }],
+        }),
+      ],
+    }),
+    defineField({
+      name: 'brands',
+      title: 'Clients',
+      type: 'object',
+      fields: [
+        defineField({ name: 'tag', type: 'string', initialValue: 'Clients we work with' }),
         defineField({
           name: 'items',
           type: 'array',
@@ -127,7 +155,43 @@ export const home = defineType({
         }),
       ],
     }),
-    defineField({ name: 'featuredProject', type: 'reference', to: [{ type: 'project' }] }),
+    defineField({
+      name: 'work',
+      title: 'Selected work',
+      type: 'object',
+      description: 'The pile of cards under the client stories. At least seven projects, or the pile cannot be thrown.',
+      fields: [
+        defineField({ name: 'tag', title: 'Note at the top', type: 'text', rows: 2, description: 'Two short lines; a line break here is kept.' }),
+        defineField({ name: 'title', type: 'string', initialValue: 'Selected work.' }),
+        defineField({ name: 'intro', type: 'string', description: 'The line under the title.' }),
+        defineField({ name: 'featured', title: 'Projects, in order', type: 'array', of: [{ type: 'reference', to: [{ type: 'project' }] }] }),
+        defineField({ name: 'cta', title: 'Button', ...cta }),
+      ],
+    }),
+    defineField({
+      name: 'faqs',
+      title: 'FAQs',
+      type: 'object',
+      fields: [
+        defineField({ name: 'tag', type: 'string', initialValue: 'FAQs' }),
+        defineField({ name: 'title', type: 'string' }),
+        defineField({ name: 'aside', title: 'Line beside the founder', type: 'text', rows: 2, description: 'A line break here is kept.' }),
+        defineField({ name: 'cta', title: 'Button', ...cta }),
+        defineField({
+          name: 'items',
+          type: 'array',
+          of: [{
+            type: 'object',
+            fields: [
+              defineField({ name: 'q', title: 'Question', type: 'string' }),
+              defineField({ name: 'a', title: 'Answer', type: 'text', rows: 5, description: 'Leave a blank line between paragraphs.' }),
+            ],
+            preview: { select: { title: 'q' } },
+          }],
+        }),
+      ],
+    }),
+    defineField({ name: 'featuredProject', title: 'Featured project (hero)', type: 'reference', to: [{ type: 'project' }] }),
   ],
   preview: { prepare: () => ({ title: 'Homepage' }) },
 });
