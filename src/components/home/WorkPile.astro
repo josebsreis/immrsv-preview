@@ -208,11 +208,9 @@ const rings = RINGS.map((r, k) => {
   .name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
           font-size: var(--t-title); font-weight: var(--w-title);
           letter-spacing: var(--track-title); color: var(--ink); }
-  /* the name and the button come up into the frame once it has opened —
-     Osmo's own move, the fade quick and the travel long */
-  .bar > * { opacity: 0; translate: 0 50%;
-                      transition: opacity 0.4s var(--ease-snap), translate var(--dur-slow) var(--ease-panel); }
-  .card[data-pile-status="active"] .bar > * { opacity: 1; translate: 0 0;
+  /* the name and the studio fade in once the frame has opened, a beat behind it */
+  .bar > * { opacity: 0; transition: opacity 0.4s var(--ease-snap); }
+  .card[data-pile-status="active"] .bar > * { opacity: 1;
                                                             transition-delay: 0.08s; }
 
   /* With no button on it, the card has to say it can be pressed: the picture

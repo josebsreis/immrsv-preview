@@ -140,14 +140,16 @@ h1, h2, h3 { font-weight: var(--w-title); }
 /* elements that arrive together once the page is ready */
 .arrives { opacity: 0; }
 body.ready .arrives { animation: arrive var(--dur-slow) ease both; animation-delay: var(--arrive-delay, 0.6s); }
-@keyframes arrive { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
+@keyframes arrive { from { opacity: 0; } to { opacity: 1; } }
 
-/* anything that lifts into place as it is scrolled to; the choreography
-   adds .in. --i staggers a group without a rule per child. */
-[data-rise] { opacity: 0; transform: translateY(1.25rem);
-  transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+/* Anything that comes in as it is scrolled to; the choreography adds .in.
+   --i staggers a group without a rule per child. A fade and nothing else:
+   things used to lift into place as they faded, and a page where every
+   paragraph slides up on arrival reads as a template, not as a page. */
+[data-rise] { opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
   transition-delay: calc(var(--i, 0) * 0.08s); }
-[data-rise].in { opacity: 1; transform: none; }
+[data-rise].in { opacity: 1; }
 
 /* ── between pages ─────────────────────────────────────────────────────
    One page goes out, the next comes in over it — no slide, no wipe: the
@@ -157,13 +159,10 @@ body.ready .arrives { animation: arrive var(--dur-slow) ease both; animation-del
    and so takes no part in this. */
 ::view-transition-old(root) { animation: page-out 0.38s var(--ease-out) both; }
 ::view-transition-new(root) { animation: page-in 0.62s var(--ease-out) both; }
-/* The page that is leaving lifts a little as it goes and the one arriving
-   comes up from under it — the same move `[data-rise]` makes everywhere on
-   the site, so a whole page arrives the way a paragraph does. They travel
-   the same way rather than crossing, which reads as one thing replacing
-   another instead of two things swapping. */
-@keyframes page-out { to { opacity: 0; translate: 0 -0.75rem; } }
-@keyframes page-in { from { opacity: 0; translate: 0 1.25rem; } }
+/* the page that is leaving fades out and the one arriving fades in over
+   it — nothing travels, here or anywhere else something appears */
+@keyframes page-out { to { opacity: 0; } }
+@keyframes page-in { from { opacity: 0; } }
 
 
 @media (prefers-reduced-motion: reduce) {
@@ -179,7 +178,7 @@ body.ready .arrives { animation: arrive var(--dur-slow) ease both; animation-del
 
 @media (prefers-reduced-motion: reduce) {
   .arrives, body.ready .arrives { animation: none; opacity: 1; }
-  [data-rise] { opacity: 1; transform: none; }
+  [data-rise] { opacity: 1; }
   * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
 

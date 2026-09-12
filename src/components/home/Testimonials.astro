@@ -166,10 +166,10 @@ const SIZES = '3rem';
      whatever length a quote runs to */
   .slides { grid-column: 2; list-style: none; display: grid; }
   .slide { grid-area: 1 / 1; display: flex;
-           opacity: 0; visibility: hidden; translate: 0 0.75rem;
-           transition: opacity 0.6s var(--ease-out), translate 0.6s var(--ease-out),
+           opacity: 0; visibility: hidden;
+           transition: opacity 0.6s var(--ease-out),
                        visibility 0s linear 0.6s; }
-  .slide.on { opacity: 1; visibility: visible; translate: none;
+  .slide.on { opacity: 1; visibility: visible;
               transition-delay: 0s, 0s, 0s; }
 
   /* A long measure, because a quote is long-form and set large: at 40ch it
