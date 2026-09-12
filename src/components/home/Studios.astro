@@ -220,6 +220,13 @@ const grounds = ['light', 'dark', 'light'] as const;
           line-height: var(--lh-body); color: var(--ink-2); }
 
   /* ── the reel ──────────────────────────────────────────────────────── */
+  /* The panel is one screen tall and the picture is a share of the panel's
+     width, so on a wide, short screen the picture alone could be taller
+     than the room left under the head. The reel is capped by the screen's
+     height instead — the picture may take this much of it and no more —
+     and its width follows, so the bar over it stays exactly as wide as
+     the picture it measures. */
+  .reel { width: min(100%, calc(var(--reel-h) * 1.5)); --reel-h: 40svh; }
   /* a step down from the bar: the bar measures the band, it does not sit on it */
   .band { position: relative; margin-top: var(--s-4); aspect-ratio: 3 / 2; overflow: hidden;
           background: var(--glass); border-radius: var(--radius-media); }
@@ -266,6 +273,23 @@ const grounds = ['light', 'dark', 'light'] as const;
 
   @media (max-width: 1099px) {
     .top, .foot { column-gap: var(--s-7); }
+  }
+  /* A short screen — a laptop with the bar showing, or any window much
+     wider than it is tall, where the type has grown with the width and the
+     height has not — has less room under the nav than the panel was drawn
+     for. The heads come down a size, the air between head and foot closes
+     up, and the picture takes a smaller share of the height, so the panel
+     still holds its four corners without anything leaving the frame. */
+  @media (min-width: 860px) and ((max-height: 820px) or (min-aspect-ratio: 2 / 1)) {
+    .studio { gap: var(--s-6); padding-top: calc(var(--nav-y) * 2 + var(--pill-h) + 1vh); }
+    .n, .mark h3 { font-size: var(--t-h3); }
+    .promise { font-size: var(--t-title); margin-bottom: var(--s-3); }
+    .reel { --reel-h: 32svh; }
+    .services li { padding-block: var(--s-2); }
+  }
+  @media (min-width: 860px) and (max-height: 640px) {
+    .desc { display: none; }
+    .reel { --reel-h: 28svh; }
   }
 
   /* Stacked: the panel is no longer a screen with a void in it — on a phone
