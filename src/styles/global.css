@@ -129,7 +129,7 @@ h1, h2, h3 { font-weight: var(--w-title); }
                       background: none; border: 0; padding: 0; cursor: pointer;
                       transition: color var(--dur-fast) ease; }
 .reel-arrows button:hover { color: var(--ink); }
-.reel-count { color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.reel-count { color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .reel-track { margin-top: var(--s-4); height: var(--hairline); background: var(--line); overflow: hidden; }
 .reel-track i { display: block; height: 100%; background: var(--ink);
                 transform-origin: left center; transform: scaleX(0); }

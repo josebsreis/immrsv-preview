@@ -567,7 +567,12 @@ export function createHero(opts: HeroOptions): Hero {
     if (!running && !asleep) { running = true; raf = requestAnimationFrame(frame); }
   };
   document.addEventListener('visibilitychange', onVisibility);
-  raf = requestAnimationFrame(frame);
+  /* The shaders are compiled before the first frame is asked for, and where
+     the driver allows it, in parallel off the main thread: compiled on the
+     first draw instead, they were one long block in the middle of the page
+     settling. The intro is not released until the page is ready anyway, so
+     nothing is waiting on this. */
+  renderer.compileAsync(scene, camera).catch(() => {}).then(() => { if (!asleep) raf = requestAnimationFrame(frame); });
 
   return {
     setReady() { released = true; },

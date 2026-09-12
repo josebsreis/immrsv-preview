@@ -2,10 +2,19 @@
 import type { Project } from '@lib/sanity/types';
 interface Props { project: Project; class?: string; }
 const { project, class: cls } = Astro.props;
+/** the card is a fixed width: this is what the browser is told to fetch for */
+const SIZES = '(max-width: 719px) 100vw, min(23.75rem, 30vw)';
 ---
 <a class:list={['feat', 'arrives', cls]} href={`/work/${project.slug}`} data-tap style="--arrive-delay: .7s">
   <div class="media">
-    {project.cover && <img src={project.cover.url} alt={project.cover.alt ?? project.title} loading="eager" decoding="async" />}
+    {project.cover && (
+      <picture>
+        {project.cover.avifSrcset && <source srcset={project.cover.avifSrcset} sizes={SIZES} type="image/avif" />}
+        <img src={project.cover.url} srcset={project.cover.webpSrcset} sizes={SIZES}
+             alt={project.cover.alt ?? project.title} width={project.cover.width} height={project.cover.height}
+             loading="eager" decoding="async" fetchpriority="high" />
+      </picture>
+    )}
   </div>
   <!-- the name, and what it is doing here: one line under the picture, so
        the picture is left clear -->
@@ -34,6 +43,7 @@ const { project, class: cls } = Astro.props;
   .feat:hover { background: var(--glass-hover); }
   .media { position: relative; overflow: hidden;
            border-radius: var(--radius-media); }
+  picture { display: block; }
   img { width: 100%; aspect-ratio: 2 / 1; object-fit: cover; opacity: 0.9; transition: opacity var(--dur-fast) ease, transform var(--dur-slow) ease; }
   .feat:hover img { opacity: 1; transform: scale(1.03); }
   /* the card's own padding gives it ten of the twelve it sits in */

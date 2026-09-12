@@ -19,7 +19,7 @@ const SIZES = [
       ? <picture>
           {project.cover.avifSrcset && <source srcset={project.cover.avifSrcset} sizes={SIZES} type="image/avif" />}
           <img src={project.cover.url} srcset={project.cover.webpSrcset} sizes={SIZES}
-               alt={project.cover.alt ?? project.title}
+               alt=""
                width={project.cover.width} height={project.cover.height}
                loading={eager ? 'eager' : 'lazy'} decoding="async"
                style={project.cover.lqip ? `background:url(${project.cover.lqip}) center/cover` : undefined} />

@@ -188,7 +188,8 @@
   --ink: #f3f3f4;
   --ink-2: #b9b9bd;               /* secondary text */
   --ink-3: #9c9ca0;               /* muted text */
-  --ink-4: #727276;               /* dim: rule cross, meta */
+  --ink-4: #7d7d81;               /* dim: rule cross, meta — the darkest grey that
+                                     still clears 4.5:1 on this ground for small type */
   --ink-dim: #444447;             /* unlit words */
   --glass: rgb(255 255 255 / 0.05);
   --glass-hover: rgb(255 255 255 / 0.11);
@@ -224,8 +225,9 @@
      white, and the argument against is that these are the greys the eye is
      trained on. */
   --ink: #1d1d1f;                 /* the near-black everything is set in */
-  --ink-2: #6e6e73;               /* secondary text — anything with length */
-  --ink-3: #86868d;               /* muted text: meta, labels, the quiet line */
+  --ink-2: #626267;               /* secondary text — anything with length */
+  --ink-3: #707075;               /* muted text: meta, labels, the quiet line — the
+                                     lightest grey that clears 4.5:1 on this ground */
   --ink-4: #a1a1a6;               /* dim: rule cross, meta */
   --ink-dim: #d2d2d7;
   --glass: rgb(0 0 0 / 0.05);

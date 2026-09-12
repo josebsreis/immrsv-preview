@@ -136,8 +136,8 @@ const SIZES = '3rem';
            display: flex; flex-direction: column;
            align-items: flex-start; gap: var(--s-3); }
   .name { position: relative; display: block; text-align: left;
-          color: var(--ink-dim); transition: color var(--dur-fast) ease; }
-  .name:hover { color: var(--ink-3); }
+          color: var(--ink-3); transition: color var(--dur-fast) ease; }
+  .name:hover { color: var(--ink-2); }
   .name.on { color: var(--ink); }
 
   /* The marker takes no room in the row — it is out of the flow, so a name
@@ -216,7 +216,7 @@ const SIZES = '3rem';
   .who { display: flex; flex-direction: column; gap: 0.1rem;
          font-size: var(--t-small); line-height: var(--lh-lead); }
   .who b { font-weight: var(--w-body); color: var(--ink-2); }
-  .role { color: var(--ink-4); }
+  .role { color: var(--ink-3); }
 
   /* the split tightens to 14rem + 7rem, so the name comes down with it */
   @media (max-width: 1099px) {

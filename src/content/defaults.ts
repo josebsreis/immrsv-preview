@@ -200,10 +200,12 @@ const productPlaceholders: Project[] = [
     ...COPY.products,
     liveUrl: PLACEHOLDER_LIVE,
     services: servicesOf('products'),
-    cover: { url: '/studios/media.jpg', alt: 'Digital products' },
+    cover: { url: '/studios/media-900.webp', alt: 'Digital products', width: 1280, height: 720,
+             avifSrcset: '/studios/media-480.avif 480w, /studios/media-900.avif 900w, /studios/media-1400.avif 1400w',
+             webpSrcset: '/studios/media-480.webp 480w, /studios/media-900.webp 900w, /studios/media-1400.webp 1400w' },
     gallery: [],
     media: [
-      { kind: 'image', url: '/studios/media.jpg', alt: 'Digital products' },
+      { kind: 'image', url: '/studios/media-1400.webp', alt: 'Digital products', width: 1280, height: 720 },
       { kind: 'video', url: '/studios/media.mp4', poster: '/studios/media.jpg', alt: 'Digital products' },
     ],
     body: [],
@@ -247,7 +249,9 @@ export const defaultHome: HomeContent = {
     founder: {
       name: 'Oscar Nino',
       role: 'Founder, IMMRSV',
-      portrait: { url: '/team/oscar-nino.jpg', alt: 'Oscar Nino' },
+      portrait: { url: '/team/oscar-nino-360.webp', alt: 'Oscar Nino', width: 360, height: 360,
+                  avifSrcset: '/team/oscar-nino-360.avif 360w, /team/oscar-nino-720.avif 720w',
+                  webpSrcset: '/team/oscar-nino-360.webp 360w, /team/oscar-nino-720.webp 720w' },
     },
     stats: [
       { value: '30+', label: 'Projects delivered across the three studios' },

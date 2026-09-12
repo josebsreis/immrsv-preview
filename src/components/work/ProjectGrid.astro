@@ -5,7 +5,7 @@ interface Props { projects: Project[]; /** how many across on a full screen */ c
 const { projects, columns = 3 } = Astro.props;
 ---
 <div class="grid" data-filter-grid style={`--cols: ${columns}`}>
-  {projects.map((p, i) => <ProjectCard project={p} eager={i < columns} />)}
+  {projects.map((p, i) => <ProjectCard project={p} eager={i < columns * 2} />)}
 </div>
 
 <style>

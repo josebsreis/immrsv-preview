@@ -30,13 +30,17 @@ const FOLDER: Record<string, string> = { architecture: 'architecture-design', me
 /** every panel carries the same count, so the three reels read as three of
  *  one thing rather than as three different amounts of work */
 const PER_STUDIO = 3;
-type Shot = { src: string; name: string; slug: string };
+type Shot = { src: string; name: string; slug: string; widths: number[] };
 type Delivered = { studio: string; name: string; slug: string; images: { src: string; widths: number[] }[] };
 const projects = work as Delivered[];
-/** the reel is a band about a third of the page wide: the card width is plenty */
-const frame = (im: { src: string; widths: number[] }) => `${im.src}-${im.widths[0]}`;
+/** the still, extension-less; the ladder of widths that exists of it rides
+ *  alongside, so the browser picks the one its screen wants */
+const frame = (im: { src: string; widths: number[] }) => im.src;
+const ladder = (s: Shot, ext: string) => s.widths.map((w) => `${s.src}-${w}.${ext} ${w}w`).join(', ');
+/** the reel is a band under half the page wide, and the whole page on a phone */
+const REEL_SIZES = '(max-width: 859px) 100vw, 42vw';
 /** every render there is, in delivery order */
-const everything: Shot[] = projects.flatMap((p) => p.images.map((im) => ({ src: frame(im), name: p.name, slug: p.slug })));
+const everything: Shot[] = projects.flatMap((p) => p.images.map((im) => ({ src: frame(im), widths: im.widths, name: p.name, slug: p.slug })));
 
 /**
  * A studio's three frames: its own projects first, one frame each. A studio
@@ -47,10 +51,10 @@ const everything: Shot[] = projects.flatMap((p) => p.images.map((im) => ({ src: 
  */
 const reelFor = (key: string): Shot[] => {
   const mine = projects.filter((p) => p.studio === FOLDER[key]);
-  const own: Shot[] = mine.map((p) => ({ src: frame(p.images[0]), name: p.name, slug: p.slug })).slice(0, PER_STUDIO);
+  const own: Shot[] = mine.map((p) => ({ src: frame(p.images[0]), widths: p.images[0].widths, name: p.name, slug: p.slug })).slice(0, PER_STUDIO);
   if (own.length >= PER_STUDIO) return own;
 
-  const spare: Shot[] = mine.flatMap((p) => p.images.slice(1).map((im) => ({ src: frame(im), name: p.name, slug: p.slug })));
+  const spare: Shot[] = mine.flatMap((p) => p.images.slice(1).map((im) => ({ src: frame(im), widths: im.widths, name: p.name, slug: p.slug })));
   const taken = new Set(own.concat(spare).map((s) => s.src));
   const rest = everything.filter((s) => !taken.has(s.src));
   const want = PER_STUDIO - own.length - spare.length;
@@ -119,9 +123,9 @@ const grounds = ['light', 'dark', 'light'] as const;
                      data-cursor-hover data-cursor-text="Explore project"
                      aria-label={`${shot.name} — ${s.name}`}>
                     <picture>
-                      <source srcset={`${shot.src}.avif`} type="image/avif" />
-                      <img src={`${shot.src}.webp`} alt={shot.name}
-                           loading={k === 0 ? 'eager' : 'lazy'} decoding="async" />
+                      <source srcset={ladder(shot, 'avif')} sizes={REEL_SIZES} type="image/avif" />
+                      <img src={`${shot.src}-${shot.widths[1] ?? shot.widths[0]}.webp`} srcset={ladder(shot, 'webp')} sizes={REEL_SIZES}
+                           alt="" loading={k === 0 ? 'eager' : 'lazy'} decoding="async" />
                     </picture>
                   </a>
                 ))}
@@ -210,7 +214,7 @@ const grounds = ['light', 'dark', 'light'] as const;
   .mark { display: flex; flex-direction: column; }
   .n, .mark h3 { font-size: var(--t-h2); font-weight: var(--w-display);
                  line-height: var(--lh-display); letter-spacing: var(--track-display); }
-  .n { color: var(--ink-4); }
+  .n { color: var(--ink-3); }
   .mark h3 { margin: 0; color: var(--ink); }
 
   .promise { margin: 0 0 var(--s-5); max-width: 20ch; font-size: var(--t-h3);
