@@ -88,10 +88,15 @@ const PHASE = (PERIOD / (Math.PI * 2)) * Math.asin(1 / AMP);
 const elastic = (t: number) =>
   t >= 1 ? 1 : AMP * 2 ** (-10 * t) * Math.sin((t - PHASE) * ((Math.PI * 2) / PERIOD)) + 1;
 
+/* The stacking order travels with the move rather than being switched at
+   its end: the card coming forward passes the one going back half-way
+   through, where the two are the same size and their overlap is smallest.
+   Switched on release, the one still drawn large jumped behind the one
+   still drawn small — a flash where they overlapped. */
 const mix = (a: Pose, b: Pose, k: number): Pose => ({
   x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k,
   rot: a.rot + (b.rot - a.rot) * k, s: a.s + (b.s - a.s) * k,
-  o: a.o + (b.o - a.o) * k, z: a.z,
+  o: a.o + (b.o - a.o) * k, z: Math.round(a.z + (b.z - a.z) * k),
 });
 
 export function createWorkPile(root: HTMLElement): WorkPile {
@@ -135,6 +140,7 @@ export function createWorkPile(root: HTMLElement): WorkPile {
     const card = cards[i], p = now[i];
     card.style.transform = transformOf(p);
     card.style.opacity = p.o.toFixed(3);
+    card.style.zIndex = String(p.z);
   };
 
   function tick(t: number) {
@@ -158,7 +164,6 @@ export function createWorkPile(root: HTMLElement): WorkPile {
     cards.forEach((card, i) => {
       const d = offset(i, at, n);
       card.dataset.pileStatus = statusFor(d);
-      card.style.zIndex = String(poseFor(d).z);
       // only the card on show can be reached from the keyboard: the others
       // are brought to the middle first
       card.querySelectorAll<HTMLElement>('a').forEach((a) => a.setAttribute('tabindex', d === 0 ? '0' : '-1'));
