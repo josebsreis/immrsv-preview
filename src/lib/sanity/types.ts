@@ -102,6 +102,8 @@ export interface HomeContent {
   about: {
     tag: string;
     statement: string;      // a blank line starts a new paragraph
+    /** the hand-off: one line under the statement that the handover answers */
+    lead: string;
     founder: Person;
     stats?: Fact[];
   };

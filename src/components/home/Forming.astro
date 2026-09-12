@@ -91,6 +91,11 @@ const {
   <!-- as tall as the scroll it wants; the pane inside it holds still -->
   <div class="track" data-forming-track>
     <div class="pane" data-forming-pane>
+      <!-- the thread's second half: from the top of the pane — the seam, as
+           it climbs — down to the middle of the screen, where the ground
+           opens. Drawn by how far the pane has climbed (--over, from the
+           choreography); gone as the ground opens (--g, from the script). -->
+      <span class="lead-thread" aria-hidden="true"></span>
       <!-- the light ground: a rectangle that starts as the mark and grows -->
       <div class="ground" data-forming-ground aria-hidden="true"></div>
       <!-- the slot she is built in: a rectangle that opens between the halves -->
@@ -135,6 +140,15 @@ const {
      its own `data-theme` flips partway through, for the nav's sake, and the
      planes must not flip with it. */
   .pane { position: sticky; top: 0; height: 100vh; overflow: hidden; background: #f5f5f7; }
+  /* the dark half's line colour, whatever the section's theme has become:
+     it is drawn on the pane's own dark ground and is gone before that lightens */
+  .lead-thread { position: absolute; left: 50%; top: 0; width: var(--hairline); height: 50vh;
+                 margin-left: calc(var(--hairline) / -2); background: rgb(255 255 255 / 0.08);
+                 transform-origin: top; transform: scaleY(var(--over, 1));
+                 opacity: clamp(0, 1 - var(--g, 0) * 3, 1); pointer-events: none; }
+  /* only while the pane is the dark ground climbing up: without script it is
+     the light, and there is no seam to carry a line over */
+  .forming:not([data-live]) .lead-thread { display: none; }
   /* it starts on the dark half's ground, so the seam where the light half
      rides up over the dark one never shows */
   [data-live] .pane { background: #060606; }

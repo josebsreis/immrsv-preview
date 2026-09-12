@@ -181,6 +181,7 @@ export function createForming(root: HTMLElement): Forming {
     // until its four edges have left it
     const g = inOut(ramp(p, T.spread[0], T.spread[1]));
     const k = 1 - g;
+    root.style.setProperty('--g', g.toFixed(3));
     const gx = (w - 5) / 2, gy = (h - 5) / 2;
     win.style.clipPath = g >= 1 ? 'none'
       : `inset(${(gy * k).toFixed(1)}px ${(gx * k).toFixed(1)}px ${(gy * k).toFixed(1)}px ${(gx * k).toFixed(1)}px)`;

@@ -117,6 +117,8 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
     const over = light ? clamp01((vh - light.getBoundingClientRect().top) / vh) : 0;
     // the held half creeps up rather than standing still, and goes out
     if (hold) hold.style.top = (holdTop - over * vh * HOLD_DRIFT).toFixed(1) + 'px';
+    // …and the light half is told, for the thread it carries over the seam
+    if (light) light.style.setProperty('--over', over.toFixed(3));
     if (scrim) scrim.style.opacity = (over * HOLD_SHADE).toFixed(3);
 
     /* the nav's colour is not decided here: it reads the section under it,

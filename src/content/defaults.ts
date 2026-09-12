@@ -240,6 +240,10 @@ export const defaultHome: HomeContent = {
     statement:
       'A building, a film and a product are the same problem — someone has to move through it and understand it. Most studios solve one of the three and hand you the rest.\n\n' +
       'We keep all three under one roof, so the drawing, the image and the interface are made by the same people, and the work arrives whole.',
+    /* the question the handover answers ("Before it exists, we've already
+       built it"): a line, and a thread drawn down from it to where the
+       light opens */
+    lead: 'Here is how that happens.',
     founder: {
       name: 'Oscar Nino',
       role: 'Founder, IMMRSV',
