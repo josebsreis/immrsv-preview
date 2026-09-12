@@ -17,9 +17,7 @@ import { createFormingMarks } from './ui/formingMarks';
 import { createFaqs } from './ui/faqs';
 import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
-import { createHoverAudio } from './ui/hoverAudio';
 import { createCursor } from './ui/cursor';
-import { site } from '@lib/site';
 import { onPage } from './lifecycle';
 import type { Hero } from './hero';
 
@@ -69,7 +67,6 @@ onPage('home', () => {
   const pile = document.querySelector<HTMLElement>('[data-pile]');
   if (pile) add(createWorkPile(pile));
   add(createVideoInView());
-  add(createHoverAudio(site.audio.taps));
   add(createCursor());
 
   // no loading screen: the page arrives as soon as the fonts have settled

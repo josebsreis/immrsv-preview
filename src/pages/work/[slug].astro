@@ -144,12 +144,10 @@ const turns = [
   <script>
     import { onPage } from '../../scripts/lifecycle';
     import { createSmoothScroll } from '../../scripts/ui/smoothScroll';
-    import { createHoverAudio } from '../../scripts/ui/hoverAudio';
     import { createVideoInView } from '../../scripts/ui/videoInView';
     import { createTabs } from '../../scripts/ui/tabs';
     import { createDirectionalHover } from '../../scripts/ui/directionalHover';
     import { splitChars } from '../../scripts/ui/splitText';
-    import { site } from '../../lib/site';
     onPage('project', () => {
       document.body.classList.add('ready');
       /* the sources are held back until the clip is near, so a project with
@@ -172,7 +170,6 @@ const turns = [
       document.fonts.ready.then(() => splitChars());
       return [
         createSmoothScroll(),
-        createHoverAudio(site.audio.taps),
         createVideoInView(),
         createDirectionalHover(),
         turns && createTabs(turns),

@@ -12,9 +12,6 @@ export const site = {
     { key: 'media', label: 'Creative Media' },
     { key: 'products', label: 'Digital Products' },
   ],
-  audio: {
-    taps: ['/audio/tap_01.mp3', '/audio/tap_02.mp3', '/audio/tap_03.mp3', '/audio/tap_04.mp3'],
-  },
 } as const;
 
 export type StudioKey = (typeof site.studios)[number]['key'];

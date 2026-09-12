@@ -23,18 +23,15 @@ const projects = await getProjects();
   <script>
     import { onPage } from '../../scripts/lifecycle';
     import { createSmoothScroll } from '../../scripts/ui/smoothScroll';
-    import { createHoverAudio } from '../../scripts/ui/hoverAudio';
     import { createDirectionalHover } from '../../scripts/ui/directionalHover';
     import { createWorkFilter } from '../../scripts/ui/workFilter';
     import { splitChars } from '../../scripts/ui/splitText';
-    import { site } from '../../lib/site';
     onPage('work', () => {
       document.body.classList.add('ready');
       /* the footer's buttons are on this page too, and their letters slip */
       document.fonts.ready.then(() => splitChars());
       return [
         createSmoothScroll(),
-        createHoverAudio(site.audio.taps),
         createDirectionalHover(),
         createWorkFilter(),
       ];
