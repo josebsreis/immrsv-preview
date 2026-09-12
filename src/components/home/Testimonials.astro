@@ -95,7 +95,7 @@ const SIZES = '3rem';
 
 <style>
   /* it sits inside the light section, which already holds the page margins */
-  .says { position: relative; padding: 14vh 0; }
+  .says { position: relative; padding: var(--section-y) 0; }
 
   /* The head is cut on the same tracks as the body under it, so the line that
      says why the section is here starts exactly where the quotes start, and
@@ -114,8 +114,9 @@ const SIZES = '3rem';
      Rename the section and this wants checking; `nowrap` keeps it on one
      line, which means a longer name leans into the gutter rather than
      wrapping into the quotes. */
+  /* the size every section's name is set at */
   h2 { grid-column: 1; white-space: nowrap;
-       font-size: 3.6rem; font-weight: var(--w-display);
+       font-size: var(--t-h2); font-weight: var(--w-display);
        line-height: var(--lh-display); letter-spacing: var(--track-display);
        color: var(--ink); }
   .intro { grid-column: 2; }
@@ -219,7 +220,7 @@ const SIZES = '3rem';
 
   /* the split tightens to 14rem + 7rem, so the name comes down with it */
   @media (max-width: 1099px) {
-    h2 { font-size: 2rem; }
+    h2 { font-size: var(--t-h3); }
     .words { max-width: none; }
   }
 
@@ -227,7 +228,6 @@ const SIZES = '3rem';
      through under them — the list of names goes, since the row of arrows and
      the count already say where you are and there is no column to hold it */
   @media (max-width: 859px) {
-    .says { padding: 10vh 0; }
     .head, .body { grid-template-columns: 1fr; }
     .head { gap: var(--s-4); }
     /* stacked, it has the page: back to the size the other sections use */

@@ -65,7 +65,7 @@ const lines = content.aside.split('\n');
 
 <style>
   /* it sits inside the light section, which already holds the page margins */
-  .faqs { position: relative; padding: 11vh 0; }
+  .faqs { position: relative; padding: var(--section-y) 0; }
 
   /* the narrow column carries the name at its head and the founder at its
      foot, however tall the questions turn out to be */
@@ -149,7 +149,7 @@ const lines = content.aside.split('\n');
        belongs at the end. `display: contents` lets the two halves of the
        narrow column take their own places in that order without the markup
        having to be arranged for the phone. */
-    .faqs { padding: 10vh 0; display: flex; flex-direction: column; gap: var(--s-7); }
+    .faqs { display: flex; flex-direction: column; gap: var(--s-7); }
     .aside { display: contents; }
     .section-tag { order: 1; }
     .body { order: 2; }

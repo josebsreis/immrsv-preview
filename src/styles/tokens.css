@@ -22,6 +22,9 @@
      for its own smaller number — six of them used to. */
   --page-x: 2rem;
   --page-y: 2.125rem;             /* bottom margin for the hero's anchored row */
+  /* the air between one section and the next — one value, so the page has
+     one rhythm from the studios to the foot; it closes up on a phone */
+  --section-y: 12vh;
   --nav-y: 1.625rem;
   /* the height every pill in the site stands at — the nav's and the work
      filter's are the same object and were the same magic number twice */
@@ -237,6 +240,11 @@
 /* the split tightens before the panels stack */
 @media (max-width: 1099px) {
   :root { --col-side: 14rem; --col-gap: 7rem; }
+}
+
+/* the sections sit closer on a phone or a tablet */
+@media (max-width: 859px) {
+  :root { --section-y: 10vh; }
 }
 
 /* and the page's own edge comes in on a phone */

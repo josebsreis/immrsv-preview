@@ -27,7 +27,7 @@ const { content } = Astro.props;
 
 <style>
   /* it sits inside the light section, which already holds the page margins */
-  .brands { position: relative; padding: 0 0 11vh; }
+  .brands { position: relative; padding: 0 0 var(--section-y); }
 
   /* The name's cell: the top and both sides are its own, the line under it
      is the grid's top, so the two are one drawing. A column wide, like the
@@ -72,7 +72,6 @@ const { content } = Astro.props;
   .grid li:hover img { opacity: 1; }
 
   @media (max-width: 719px) {
-    .brands { padding: 0 0 10vh; }
     .lead { width: calc(var(--hairline) * 2 + (100% - var(--hairline) * 3) / 2); }
     .grid { grid-template-columns: repeat(2, 1fr); }
     .grid li { height: 6.5rem; }
