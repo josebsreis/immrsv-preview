@@ -226,7 +226,10 @@ const grounds = ['light', 'dark', 'light'] as const;
      height instead — the picture may take this much of it and no more —
      and its width follows, so the bar over it stays exactly as wide as
      the picture it measures. */
-  .reel { width: min(100%, calc(var(--reel-h) * 1.5)); --reel-h: 40svh; }
+  .reel { --reel-h: 40svh; }
+  /* only where the panel is a screen: stacked on a phone or a tablet it runs
+     at its own height and the picture simply takes the column */
+  @media (min-width: 860px) { .reel { width: min(100%, calc(var(--reel-h) * 1.5)); } }
   /* a step down from the bar: the bar measures the band, it does not sit on it */
   .band { position: relative; margin-top: var(--s-4); aspect-ratio: 3 / 2; overflow: hidden;
           background: var(--glass); border-radius: var(--radius-media); }
@@ -296,7 +299,7 @@ const grounds = ['light', 'dark', 'light'] as const;
      the void is just a blank screen — so it becomes a block that runs at its
      own height, in the same order. */
   @media (max-width: 859px) {
-    .studio { min-height: 0; gap: var(--s-7); padding: 12vh var(--page-x); }
+    .studio { min-height: 0; gap: var(--s-7); padding: 10vh var(--page-x); }
     .top, .foot { grid-template-columns: 1fr; row-gap: var(--s-6); }
     .n, .mark h3 { font-size: var(--t-h3); }
     .promise { font-size: var(--t-title); }
