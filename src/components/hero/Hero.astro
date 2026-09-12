@@ -15,9 +15,12 @@ const [line1, line2 = ''] = content.headline.split('\n');
 <div class="veil" data-veil aria-hidden="true"></div>
 
 <section class="hero" aria-label="Introduction">
-  <div class="lead arrives" style="--arrive-delay: .6s">
+  <!-- The headline is there from the first frame: it is the largest thing on
+       the screen, and a headline that fades in is one that a first-paint
+       measure never sees. The rest of the hero arrives after it. -->
+  <div class="lead">
     <h1>{line1}<br />{line2} <span class="rot" data-rotating-word data-words={JSON.stringify(content.words)}>{content.words[0]}</span></h1>
-    <div class="cta">
+    <div class="cta arrives" style="--arrive-delay: .6s">
       <Button href={content.primaryCta.href} label={content.primaryCta.label} />
       <Button href={content.secondaryCta.href} label={content.secondaryCta.label} />
     </div>

@@ -16,6 +16,19 @@
   font-display: swap;
   src: url('/fonts/InterVariable.woff2') format('woff2');
 }
+/* The fallback the page is set in until Inter arrives, sized to Inter's
+   metrics: the same text takes the same room in either, so the swap does
+   not re-flow the page or re-paint the headline larger — which is what a
+   first-paint measure was timing, on a slow connection, instead of the
+   first paint. Values are Inter's against Arial, from the font's tables. */
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('Helvetica');
+  size-adjust: 107.12%;
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+}
 
 /* ── reset / base ──────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

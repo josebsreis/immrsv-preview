@@ -69,8 +69,14 @@ onPage('home', () => {
   add(createVideoInView());
   add(createCursor());
 
-  // no loading screen: the page arrives as soon as the fonts have settled
-  document.fonts.ready.then(() => document.body.classList.add('ready'));
+  /* No loading screen: the page arrives as soon as the fonts have settled —
+     and no later than this, whatever the fonts are doing. The font is
+     preloaded and swaps in, so nothing is lost by going first; a page that
+     stood blank waiting on a slow connection was painting nothing that a
+     first-paint measure could see. */
+  const ready = () => document.body.classList.add('ready');
+  document.fonts.ready.then(ready);
+  setTimeout(ready, 600);
 
   /* The hero engine is by far the heaviest thing here, so it is not in this
      bundle: it is fetched once the page has painted and the browser is idle,

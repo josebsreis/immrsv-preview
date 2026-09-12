@@ -56,7 +56,7 @@
      fallback the page is drawn in while the file arrives — and on a Mac that
      fallback is real Helvetica Neue, which is close enough in width that the
      swap does not throw the layout about. */
-  --font-sans: InterVariable, "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --font-sans: InterVariable, "Inter Fallback", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
   /* The reading sizes run small and the display sizes stay large: the gap
      between them is the effect. Set at a comfortable 15px, body copy reads
      as a website; at 14 with the leading left open it reads as an interface,

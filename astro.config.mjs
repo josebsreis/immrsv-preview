@@ -11,6 +11,10 @@ const dataset = env.PUBLIC_SANITY_DATASET ?? 'production';
 export default defineConfig({
   site: env.PUBLIC_SITE_URL || 'https://immrsv.studio',
   output: 'static',
+  /* The stylesheets go into the page rather than beside it: three pages,
+     and each was waiting on two requests before it could paint a thing.
+     Inlined, the first paint has nothing to wait for. */
+  build: { inlineStylesheets: 'always' },
   integrations: [
     // Content + the embedded Studio at /admin. Without a project id the
     // integration is skipped entirely so the site still builds from defaults.
