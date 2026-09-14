@@ -18,8 +18,11 @@
 
 export interface StudioReel { destroy(): void }
 
-const MS = 620;
-const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
+/* The curtain: over a second, and eased at both ends — it gathers itself,
+   crosses, and settles — rather than snapping open and coasting. A change of
+   picture here is a thing to watch, not a thing to get out of the way. */
+const MS = 1100;
+const EASE = 'cubic-bezier(0.65, 0, 0.2, 1)';
 const pad = (n: number) => String(n).padStart(2, '0');
 
 export function createStudioReel(el: HTMLElement): StudioReel {
