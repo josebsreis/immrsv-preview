@@ -44,7 +44,10 @@ const SIZES = '(max-width: 719px) 100vw, min(23.75rem, 30vw)';
   .media { position: relative; overflow: hidden;
            border-radius: var(--radius-media); }
   picture { display: block; }
-  img { width: 100%; aspect-ratio: 2 / 1; object-fit: cover; opacity: 0.9; transition: opacity var(--dur-fast) ease, transform var(--dur-slow) ease; }
+  /* 16:9, and `height: auto` said outright: the tag carries the file's own
+     height so the browser can hold the room open, and that number was
+     winning over the ratio here — the card had grown to the picture's shape */
+  img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; opacity: 0.9; transition: opacity var(--dur-fast) ease, transform var(--dur-slow) ease; }
   .feat:hover img { opacity: 1; transform: scale(1.03); }
   /* the card's own padding gives it ten of the twelve it sits in */
   .ttl { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
