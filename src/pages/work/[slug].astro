@@ -85,7 +85,7 @@ const turns = [
             </div>
             <div class="panels" data-panels>
               {turns.map((t, i) => (
-                <div class="panel" role="tabpanel" data-panel={t.key}
+                <div class="turn" role="tabpanel" data-panel={t.key}
                      id={`panel-${t.key}`} aria-labelledby={`tab-${t.key}`} hidden={i !== 0}>
                   <p>{t.body}</p>
                 </div>
@@ -263,11 +263,13 @@ const turns = [
      and down the card as each turn is read — a turn one line longer than the
      last moves everything above it, which reads as the page flinching. */
   .panels { margin-top: var(--s-5); }
-  .panel { margin: 0; }
+  /* a turn, not a `.panel`: that name is the site's raised plate, and it was
+     putting each turn in a padded box a step in from the names over it */
+  .turn { margin: 0; }
   /* the same grey as the line under the title: in a column this short the two
      are read as one voice, and a step between them looked like a mistake
      rather than a hierarchy */
-  .panel p { font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-3); max-width: 40ch; }
+  .turn p { font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-3); max-width: 40ch; }
 
   .story { margin-top: var(--s-6); font-size: var(--t-small); color: var(--ink-2); }
 
