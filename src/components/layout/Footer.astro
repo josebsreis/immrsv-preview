@@ -52,7 +52,17 @@ const legal = [
        else — the page's own list was found not to be needed. -->
   <div class="cols">
     <div class="invite">
+      <div class="top">
       <h2 class="ask">Let’s create<br />something <span class="rot" data-footer-word data-words={JSON.stringify(words)}>{words[0]}</span></h2>
+      <!-- the studio's own time, level with the invitation and at the far
+           margin: where the reply would come from, what o'clock it is there
+           and what day, all set by the script from the studio's zone -->
+      <div class="when" data-clock>
+        <span class="city label">Los Angeles</span>
+        <span class="time" data-clock-time>--:--:-- --</span>
+        <span class="date label" data-clock-date>&nbsp;</span>
+      </div>
+      </div>
       <div class="acts">
         {acts.map((a) => <Button href={a.href} label={a.label} />)}
       </div>
@@ -62,7 +72,6 @@ const legal = [
       <div class="col">
         <span class="label head">Location</span>
         <p class="based">Working globally from Los Angeles, California.</p>
-        <span class="when" data-clock>--:--:--</span>
       </div>
       <div class="col">
         <span class="label head">Contact</span>
@@ -142,13 +151,27 @@ const legal = [
       seen.observe(rot);
     }
 
-    const face = document.querySelector<HTMLElement>('[data-clock]');
-    if (!face) return;
+    const time = document.querySelector<HTMLElement>('[data-clock-time]');
+    const date = document.querySelector<HTMLElement>('[data-clock-date]');
+    if (!time || !date) return;
+    const zone = 'America/Los_Angeles';
+    const fTime = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: zone });
+    const fDate = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric', timeZone: zone });
+    const fZone = new Intl.DateTimeFormat('en-US', { timeZoneName: 'shortOffset', timeZone: zone });
+    let day = '';
     const tick = () => {
-      const t = new Intl.DateTimeFormat('en-GB', {
-        hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'America/Los_Angeles',
-      }).format(new Date());
-      face.textContent = `${t} PT`;
+      const now = new Date();
+      time.textContent = fTime.format(now);
+      // the day and the offset only when they change — and the offset
+      // written as "GMT -07", the way a timetable prints it
+      const d = fDate.format(now);
+      if (d !== day) {
+        day = d;
+        const gmt = fZone.formatToParts(now).find((p) => p.type === 'timeZoneName')?.value ?? 'GMT';
+        const m = /GMT([+-])(\d+)(?::(\d+))?/.exec(gmt);
+        const off = m ? `GMT ${m[1]}${m[2].padStart(2, '0')}${m[3] ? ':' + m[3] : ''}` : gmt;
+        date.textContent = `${d} (${off})`;
+      }
     };
     tick();
     // on the second: the studio's own time, running
@@ -189,7 +212,7 @@ const legal = [
      words, never something they have to make room for: no box in the flow,
      no clicks, a hairline as the dial behind the work is. */
   .spin { position: absolute; z-index: 0; right: 0; top: 0;
-          height: min(56vw, 84vh); width: auto; max-width: none; overflow: visible;
+          height: min(92vw, 135vh); width: auto; max-width: none; overflow: visible;
           translate: 50% -50%;
           pointer-events: none;
           fill: none; stroke: var(--ink-dim); stroke-width: 1; }
@@ -204,10 +227,22 @@ const legal = [
 
   /* the time holds its width as the seconds turn */
   .when { font-variant-numeric: tabular-nums; }
+  @media (max-width: 719px) {
+    .top { flex-direction: column; gap: var(--s-5); }
+    .when { order: -1; padding-top: 0; justify-items: start; text-align: left; }
+  }
 
   /* the question, and the two ways in directly under it — they answer it, so
      they read better beneath it than sent to the far side of the page */
   .invite { margin: 0; }
+  /* the question at the left, the time at the right, level with its top */
+  .top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-6); }
+  /* the studio's clock: the city, the time, the day — set flush right,
+     the time in the page's ink and the rest in its second colour */
+  .when { flex: none; display: grid; gap: var(--s-2); justify-items: end; text-align: right;
+          color: var(--ink-3); padding-top: 0.3em; }
+  .when .time { font-size: var(--t-title); font-weight: var(--w-title); letter-spacing: var(--track-title);
+                line-height: var(--lh-title); color: var(--ink); }
   .ask { font-size: var(--t-h2); font-weight: var(--w-display);
          line-height: var(--lh-display); letter-spacing: var(--track-display); }
   /* the turning word, letter by letter, as the headline's */
@@ -236,7 +271,6 @@ const legal = [
   .col li { display: flex; gap: 0.5em; font-size: var(--t-body); color: var(--ink-2); }
   .k { color: var(--ink-3); }
   .based { font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-2); max-width: 22ch; }
-  .when { font-size: var(--t-body); color: var(--ink-2); }
   .col a { color: var(--ink-2); transition: color var(--dur-fast) ease; }
   .col a:hover { color: var(--ink); }
 
