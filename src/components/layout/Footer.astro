@@ -15,13 +15,6 @@ const enquiry = [
   { label: 'hello@immrsv.studio', href: 'mailto:hello@immrsv.studio' },
   { label: '747.302.6868', href: 'tel:+17473026868' },
 ];
-/** the page in four lines, for the reader who got to the foot of it */
-const explore = [
-  { label: 'Studios', href: '/#studios' },
-  { label: 'Process', href: '/#process' },
-  { label: 'Work', href: '/work' },
-  { label: 'FAQs', href: '/#faqs' },
-];
 /* the last word of the invitation turns, as the headline's does: the name
    first, then what the work is meant to be, and back to the name */
 const words = ['IMMRSV.', 'lasting.', 'real.', 'together.'];
@@ -54,8 +47,8 @@ const legal = [
     <g class="turn">{SYMBOL.paths.map((d) => <path d={d} />)}</g>
   </svg>
   <!-- The invitation across the top, and under it, left to right across
-       the page, the details in four short columns: where the studio is,
-       how to reach it, where the page's parts are, where to follow it. -->
+       the page, the details in three short columns: where the studio is,
+       how to reach it, where to follow it. -->
   <div class="cols">
     <div class="invite">
       <div class="top">
@@ -86,14 +79,6 @@ const legal = [
           ))}
         </ul>
       </div>
-      <nav class="col" aria-label="Footer">
-        <span class="label head">Explore</span>
-        <ul>
-          {explore.map((e) => (
-            <li><a href={e.href} data-tap>{e.label}</a></li>
-          ))}
-        </ul>
-      </nav>
       <div class="col">
         <span class="label head">Follow</span>
         <ul>
@@ -274,8 +259,8 @@ const legal = [
      as its caption, with the screen's spare height between the two */
   .cols { flex: 1; display: flex; flex-direction: column; justify-content: space-between;
           gap: var(--s-8); }
-  /* the four columns of details, quarters of the page from the left */
-  .details { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: var(--s-6); row-gap: var(--s-7);
+  /* the three columns of details, thirds of the page from the left */
+  .details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--s-6); row-gap: var(--s-7);
              align-content: start; }
   .col { display: grid; gap: var(--s-4); align-content: start; }
   .head { color: var(--ink-3); line-height: 1; }
@@ -325,9 +310,9 @@ const legal = [
     .mark { padding-top: var(--s-7); }
     .legal { flex-direction: column; align-items: flex-start; }
   }
-  /* two abreast where four would squeeze an address; one under the other
+  /* two abreast where three would squeeze an address; one under the other
      on a phone, which has no width for two */
-  @media (max-width: 859px) {
+  @media (max-width: 719px) {
     .details { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 479px) {
