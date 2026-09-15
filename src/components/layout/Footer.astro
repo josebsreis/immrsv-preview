@@ -25,6 +25,15 @@ const acts = [
   { label: 'Discuss your project', href: 'mailto:hello@immrsv.studio' },
 ];
 
+/** the page, as a list: where each part of it is */
+const menu = [
+  { label: 'Studios', href: '/#studios' },
+  { label: 'Process', href: '/#process' },
+  { label: 'Case studies', href: '/#selected-work' },
+  { label: 'All work', href: '/work' },
+  { label: 'FAQs', href: '/#faqs' },
+];
+
 /** what a site has to say about itself, at its foot */
 const legal = [
   { label: 'Privacy policy', href: '/privacy' },
@@ -43,8 +52,10 @@ const legal = [
     </div>
   </div>
 
+  <!-- Under the invitation: the ways to reach the studio on the left, where
+       the eye is after the button, and the page as a list on the right. -->
   <div class="cols">
-    <div class="col">
+    <div class="col reach">
       <span class="label head">Business enquiry</span>
       <ul>
         {enquiry.map((e) => (
@@ -52,6 +63,12 @@ const legal = [
         ))}
       </ul>
     </div>
+    <nav class="col" aria-label="Footer">
+      <span class="label head">Navigate</span>
+      <ul>
+        {menu.map((m) => <li><a href={m.href} data-tap>{m.label}</a></li>)}
+      </ul>
+    </nav>
     <div class="col">
       <span class="label head">Social</span>
       <ul class="pairs">
@@ -146,8 +163,9 @@ const legal = [
                         font-size: var(--t-small); }
 
   /* the two sets of details, kept to the right where they always sat */
-  .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 14rem)); justify-content: end;
-          gap: var(--s-6) var(--s-7); margin-top: auto; padding-top: var(--s-8);
+  /* the contacts take the left, the list and the socials keep to the right */
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, minmax(0, 14rem));
+          gap: var(--s-6) var(--s-7); margin-top: var(--s-8);
           align-items: start; }
   .col { display: grid; gap: var(--s-4); align-content: start; }
   .head { color: var(--ink-3); }
@@ -169,15 +187,16 @@ const legal = [
   /* ── the name ─────────────────────────────────────────────────────── */
   /* The last thing on the page and the largest: edge to edge between the
      page's margins, the ink sitting a margin's height off the foot. */
-  .mark { margin-top: var(--s-8); color: var(--ink); }
+  /* the name stands at the foot of the screen, whatever is above it */
+  .mark { margin-top: auto; padding-top: var(--s-8); color: var(--ink); }
   .mark svg { display: block; width: 100%; height: auto; }
 
   @media (max-width: 859px) {
     .footer { padding-top: var(--s-7); }
     .top { flex-direction: column; gap: var(--s-2); }
     .acts { flex-direction: column; align-items: flex-start; gap: var(--s-3); }
-    .cols { grid-template-columns: 1fr; justify-content: stretch; gap: var(--s-6); padding-top: 10vh; }
-    .mark { margin-top: 10vh; }
+    .cols { grid-template-columns: 1fr; gap: var(--s-6); margin-top: 8vh; }
+    .mark { padding-top: 10vh; }
     .legal { flex-direction: column; align-items: flex-start; }
   }
 </style>
