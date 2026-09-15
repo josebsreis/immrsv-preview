@@ -11,8 +11,6 @@ import { LETTERMARK } from '@lib/lettermark';
 
 const year = new Date().getFullYear();
 
-/* the practice's own accounts, when it has some to show: a second list
-   under the page's, in the same style, went here */
 const enquiry = [
   { k: 'E', label: 'hello@immrsv.studio', href: 'mailto:hello@immrsv.studio' },
   { k: 'P', label: '747.302.6868', href: 'tel:+17473026868' },
@@ -21,13 +19,11 @@ const acts = [
   { label: 'Discuss your project', href: 'mailto:hello@immrsv.studio' },
 ];
 
-/** the page, as a list: where each part of it is */
-const menu = [
-  { label: 'Studios', href: '/#studios' },
-  { label: 'Process', href: '/#process' },
-  { label: 'Case studies', href: '/#selected-work' },
-  { label: 'All work', href: '/work' },
-  { label: 'FAQs', href: '/#faqs' },
+/* PLACEHOLDER: the practice's accounts — the two it is likeliest to have,
+   pointing nowhere real until the client sends the handles */
+const social = [
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/' },
+  { label: 'Instagram', href: 'https://www.instagram.com/' },
 ];
 
 /** what a site has to say about itself, at its foot */
@@ -37,11 +33,11 @@ const legal = [
 ];
 ---
 <footer class="footer" id="contact" data-theme="dark">
-  <!-- Two halves side by side: the invitation with the ways to reach the
-       studio under it on the left, and the page as a list on the right,
-       starting level with the invitation. -->
+  <!-- Two halves side by side: the invitation on the left, and on the
+       right, level with it, the details in three short columns: where the
+       studio is and what time it is there, how to reach it, where to follow
+       it. Nothing else — the page's own list was found not to be needed. -->
   <div class="cols">
-    <div class="lead">
     <div class="invite">
       <h2 class="ask">Let’s create<br />something IMMRSV.</h2>
       <div class="acts">
@@ -49,42 +45,28 @@ const legal = [
       </div>
     </div>
 
-    <!-- the details, side by side: where they are on the left, the ways to
-         reach them on the right, so the half is used across -->
-    <div class="col reach">
-      <div>
-        <span class="label head">Business details</span>
+    <div class="details">
+      <div class="col">
+        <span class="label head">Location</span>
         <p class="based">Working globally from Los Angeles, California.</p>
+        <span class="when" data-clock>--:--:--</span>
       </div>
-      <ul>
-        {enquiry.map((e) => (
-          <li><span class="k">{e.k}.</span><a href={e.href} data-tap>{e.label}</a></li>
-        ))}
-        <li><span class="k">T.</span><span class="when" data-clock>--:--:--</span></li>
-      </ul>
-    </div>
-    </div>
-
-    <!-- The right half: the page as a list, set as the questions are — a row on a rule, a panel crossing it from
-         the edge the cursor came over, the name stepping in from the rule and
-         a dot arriving at the far edge. -->
-    <div class="lists">
-      <nav class="menu" aria-label="Footer">
-        <span class="label head">Navigate</span>
+      <div class="col">
+        <span class="label head">Contact</span>
         <ul>
-          {menu.map((m) => (
-            <li class="item">
-              <div class="row" data-dhover-item data-axis="y">
-                <span class="tile" data-dhover-tile aria-hidden="true"></span>
-                <a class="go" href={m.href} data-tap>
-                  <span class="txt">{m.label}</span>
-                  <i class="sq" aria-hidden="true"></i>
-                </a>
-              </div>
-            </li>
+          {enquiry.map((e) => (
+            <li><span class="k">{e.k}.</span><a href={e.href} data-tap>{e.label}</a></li>
           ))}
         </ul>
-      </nav>
+      </div>
+      <div class="col">
+        <span class="label head">Follow</span>
+        <ul>
+          {social.map((e) => (
+            <li><a href={e.href} rel="noopener" target="_blank" data-tap>{e.label}</a></li>
+          ))}
+        </ul>
+      </div>
     </div>
   </div>
 
@@ -185,50 +167,26 @@ const legal = [
   .acts :global(.btn) { height: 3.5rem; --pl: 2.75rem; --pr: 2.25rem; --gap: 1.375rem;
                         font-size: var(--t-small); }
 
-  /* the two sets of details, kept to the right where they always sat */
-  /* the contacts take the left, the list and the socials keep to the right */
   /* Two equal halves: the invitation needs the width its line is set at,
-     and the list sits beside it from its first row, level with the top of
-     the question. */
+     and the details sit beside it, their labels level with the top of the
+     question. */
   .cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
           column-gap: var(--s-8); row-gap: var(--s-7);
           align-items: start; }
-  .lead { display: grid; gap: var(--s-8); align-content: start; }
-  /* the list's label sits on the same line as the top of the question */
-  .lists > .menu:first-child > .head { line-height: 1; }
+  /* the three columns of details, even across the half; the where and
+     when gets the room a sentence needs */
+  .details { display: grid; grid-template-columns: 1.4fr 1fr 1fr; column-gap: var(--s-6); row-gap: var(--s-7);
+             align-content: start; }
   .col { display: grid; gap: var(--s-4); align-content: start; }
-  .head { color: var(--ink-3); }
+  /* the labels sit on the same line as the top of the question */
+  .head { color: var(--ink-3); line-height: 1; }
   .col ul { list-style: none; display: grid; gap: 0.55rem; }
   .col li { display: flex; gap: 0.5em; font-size: var(--t-body); color: var(--ink-2); }
   .k { color: var(--ink-3); }
-  .based { margin-top: var(--s-4); font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-2); max-width: 24ch; }
-  .reach { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: var(--s-7); }
+  .based { font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-2); max-width: 22ch; }
+  .when { font-size: var(--t-body); color: var(--ink-2); }
   .col a { color: var(--ink-2); transition: color var(--dur-fast) ease; }
   .col a:hover { color: var(--ink); }
-  /* ── the lists ────────────────────────────────────────────────────── */
-  .lists { display: grid; gap: var(--s-8); align-content: start; }
-  .menu { display: grid; gap: var(--s-4); }
-  .menu ul { list-style: none; }
-  .item { border-top: var(--hairline) solid var(--line); }
-  .item:last-child { border-bottom: var(--hairline) solid var(--line); }
-  .row { position: relative; overflow: hidden; }
-  .tile { position: absolute; inset: 0; background: var(--glass);
-          transform: translateY(-100%); will-change: transform;
-          transition: transform var(--dur-base) var(--ease-panel); }
-  .go { position: relative; display: flex; align-items: center; justify-content: space-between;
-        gap: var(--s-5); padding: var(--s-4) 0; color: var(--ink);
-        transition: padding var(--dur-base) var(--ease-panel); }
-  .txt { font-size: var(--t-title); font-weight: var(--w-title);
-         letter-spacing: var(--track-title); line-height: var(--lh-title); }
-  /* the dot is not there until the row is: it arrives with the panel */
-  .go .sq { flex: none; color: var(--ink); opacity: 0; transition: opacity var(--dur-fast) ease; }
-  @media (hover: hover) and (pointer: fine) {
-    .row:hover .go { padding-inline: var(--s-4); }
-    .row:hover .sq { opacity: 1; }
-  }
-  .go:focus-visible { padding-inline: var(--s-4); }
-  .go:focus-visible .sq { opacity: 1; }
-  @media (prefers-reduced-motion: reduce) { .tile, .go, .go .sq { transition: none; } }
 
   /* ── the small print ──────────────────────────────────────────────── */
   /* under the name, the policies on the left and the copyright on the right */
@@ -267,10 +225,14 @@ const legal = [
 
   @media (max-width: 859px) {
     .footer { padding-top: var(--s-7); }
-    .reach { grid-template-columns: 1fr; }
+    .details { grid-template-columns: 1fr 1fr; }
     .acts { flex-direction: column; align-items: flex-start; gap: var(--s-3); }
     .cols { grid-template-columns: 1fr; gap: var(--s-7); margin-top: 8vh; }
     .mark { padding-top: 10vh; }
     .legal { flex-direction: column; align-items: flex-start; }
+  }
+  /* one under the other on a phone, which has no width for two */
+  @media (max-width: 479px) {
+    .details { grid-template-columns: 1fr; }
   }
 </style>
