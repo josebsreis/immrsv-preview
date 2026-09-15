@@ -57,11 +57,29 @@ export function createDirectionalHover(root: ParentNode = document): Directional
       item.dataset.status = `leave-${edge}`;
     };
 
+    /* Start from the truth. The nav is carried from page to page, but its
+       hover is wired by each page and taken down again on the way out, so a
+       pointer that left a pill while the page was changing had its leave
+       heard by nobody, and the pill stayed lit on the next page. Whatever
+       state it arrives in, it is set to match what is under the pointer
+       now: lit if it is hovered, parked outside if not. */
+    const settle = () => {
+      tile.style.transition = 'none';
+      tile.style.transform = item.matches(':hover') ? 'translate(0, 0)' : '';
+      void tile.offsetHeight;
+      tile.style.transition = '';
+    };
+    settle();
+
     item.addEventListener('pointerenter', enter);
     item.addEventListener('pointerleave', leave);
     cleanup.push(() => {
       item.removeEventListener('pointerenter', enter);
       item.removeEventListener('pointerleave', leave);
+      // …and on the way out it is put back outside, so nothing carried to the
+      // next page is left lit by a leave this page will no longer hear
+      tile.style.transform = '';
+      delete item.dataset.status;
     });
   });
 
