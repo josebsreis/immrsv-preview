@@ -324,9 +324,9 @@ export const defaultHome: HomeContent = {
     ],
   },
   work: {
-    tag: 'Selected from across the three studios.\nEach one opens the full project.',
+    tag: 'Drag to move through the work.\nOpen any card for the full project.',
     title: 'Selected work.',
-    intro: 'Some of what they were talking about.',
+    intro: 'Recent projects from across the studios.',
     /* None of the studio reels' projects: those already have a place on the
        page, and the pile is for the work that has not been shown yet. Dealt
        so the studios take turns. Stand-ins until the client picks his own —
