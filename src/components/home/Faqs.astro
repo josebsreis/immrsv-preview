@@ -30,8 +30,8 @@ const lines = content.aside.split('\n');
     <div class="ask">
       {person.portrait && (
         <picture class="portrait">
-          {person.portrait.avifSrcset && <source srcset={person.portrait.avifSrcset} sizes="11rem" type="image/avif" />}
-          <img src={person.portrait.url} srcset={person.portrait.webpSrcset} sizes="11rem"
+          {person.portrait.avifSrcset && <source srcset={person.portrait.avifSrcset} sizes="7rem" type="image/avif" />}
+          <img src={person.portrait.url} srcset={person.portrait.webpSrcset} sizes="7rem"
                alt={person.portrait.alt ?? person.name} width="360" height="360" loading="lazy" decoding="async" />
         </picture>
       )}
@@ -75,7 +75,7 @@ const lines = content.aside.split('\n');
   .aside { display: flex; flex-direction: column; justify-content: space-between;
            gap: var(--s-8); }
   .ask { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-4); }
-  .portrait { display: block; width: 11rem; height: 11rem; }
+  .portrait { display: block; width: 7rem; height: 7rem; }
   .portrait img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1);
                   border-radius: var(--radius-media); }
   .line { margin: 0; font-size: var(--t-lead); line-height: var(--lh-lead);
@@ -158,7 +158,7 @@ const lines = content.aside.split('\n');
     .section-tag { order: 1; }
     .body { order: 2; }
     .ask { order: 3; }
-    .portrait { width: 8rem; height: 8rem; }
+    .portrait { width: 6rem; height: 6rem; }
     .txt { font-size: var(--t-lead); }
   }
 </style>
