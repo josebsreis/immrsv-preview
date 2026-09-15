@@ -91,12 +91,10 @@ const legal = [
   <!-- The name, the last thing on the page and as wide as the page's margins
        allow — drawn rather than set: a hairline outline whose letters are
        separate objects. Touching one shoves it along the pointer's travel,
-       spins it about its centre and lights it white at once, and the three
-       faces of the symbol burst out of it and fall away; a spring returns the
-       letter and the light fades back off (scripts/ui/wordmarkLetters.ts). -->
+       spins it about its centre and lights it white at once; a spring returns
+       it and the light fades back off (scripts/ui/wordmarkLetters.ts). -->
   <div class="mark" data-wordmark>
-    <!-- each letter is a group the cursor moves; the pieces of the symbol
-         that burst out of a touched letter are added after them, on top -->
+    <!-- each letter is a group the cursor moves -->
     <svg viewBox={LETTERMARK.viewBox} role="img" aria-label={site.name}>
       {LETTERMARK.paths.map((d) => (
         <g data-letter>
@@ -256,9 +254,6 @@ const legal = [
   /* contact is instant — no ramp, the letter is simply white; letting go
      fades it back to the page's ink and then to an outline */
   .lit .ltr { fill: #fff; stroke: #fff; fill-opacity: 1; stroke-opacity: 1; transition: none; }
-  /* the pieces of the symbol that fly out of a touched letter: the script
-     moves them, this only paints them, white and untouchable */
-  .mark :global(.shard) { fill: #fff; pointer-events: none; will-change: transform, opacity; }
   /* nothing to shove without a pointer, so the name simply stands solid */
   @media (hover: none), (prefers-reduced-motion: reduce) {
     .ltr { fill-opacity: 1; stroke-opacity: 1; transition: none; }
