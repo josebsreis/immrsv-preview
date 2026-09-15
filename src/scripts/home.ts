@@ -5,7 +5,6 @@ import { createSmoothScroll } from './ui/smoothScroll';
 import { createScrollChoreography } from './ui/scrollChoreography';
 import { createRotatingWord } from './ui/rotatingWord';
 import { createStatsReel } from './ui/statsReel';
-import { createWordmarkLetters } from './ui/wordmarkLetters';
 import { createDirectionalHover } from './ui/directionalHover';
 import { createMarquee } from './ui/marquee';
 import { createStudioReel } from './ui/studioReel';
@@ -46,13 +45,6 @@ onPage('home', () => {
      same driver turns both */
   document.querySelectorAll<HTMLElement>('[data-stats]').forEach((el) => add(createStatsReel(el)));
 
-  // the letters of the name are shoved about by the cursor
-  const markHost = document.querySelector<HTMLElement>('[data-wordmark]');
-  if (markHost && markHost.dataset.outline !== 'off'
-      && matchMedia('(hover: hover) and (pointer: fine)').matches
-      && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    add(createWordmarkLetters(markHost));
-  }
   const forming = document.querySelector<HTMLElement>('[data-forming]');
   if (forming) { add(createForming(forming)); add(createFormingMarks(forming)); }
   const faqs = document.querySelector<HTMLElement>('[data-faqs]');

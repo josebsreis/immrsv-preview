@@ -7,6 +7,7 @@
  *  marked below is meant to be replaced, not kept. */
 import Button from '@components/ui/Button.astro';
 import { site } from '@lib/site';
+import { LETTERMARK } from '@lib/lettermark';
 
 const year = new Date().getFullYear();
 
@@ -87,17 +88,14 @@ const legal = [
     </div>
   </div>
 
-  <!-- the name, the last thing on the page and as wide as the page's margins
-       allow. A plain drawing — the letters of the wordmark, without the mark
-       — to be replaced by the final artwork. -->
-  <div class="mark">
-    <svg viewBox="275 78.35 695.44 85.45" fill="currentColor" role="img" aria-label={site.name}>
-      <path d="M296.23 78.36H275V163.8H296.23V78.36Z"/>
-      <path d="M373.91 139.3L327.02 78.36H307.11V163.8H328.34V116.65L364.61 163.8H383.21L419.47 116.65V163.8H440.71V78.36H420.79L373.91 139.3Z"/>
-      <path d="M518.38 139.3L471.5 78.36H451.58V163.8H472.81V116.65L509.08 163.8H527.68L563.95 116.65V163.8H585.18V78.36H565.26L518.38 139.3Z"/>
-      <path d="M713.6 131.69V78.35H596.05V163.79H617.28V131.69H675.37L691.42 163.79H715.19L699.14 131.69H713.6ZM692.37 99.59V110.46H617.29V99.59H692.37Z"/>
-      <path d="M724.47 131.69H820.79V142.57H724.47V163.8H842.02V110.46H745.7V99.59H842.02V78.36H724.47V131.69Z"/>
-      <path d="M950.41 78.36L911.67 136.47L872.92 78.36H852.89V89.76L902.25 163.8H921.08L970.44 89.76V78.36H950.41Z"/>
+  <!-- The name, the last thing on the page and as wide as the page's margins
+       allow — drawn rather than set: a hairline outline whose letters are
+       separate objects. Touching one shoves it along the pointer's travel,
+       spins it about its centre and lights it at once; a spring returns it
+       and the light fades back off (scripts/ui/wordmarkLetters.ts). -->
+  <div class="mark" data-wordmark>
+    <svg viewBox={LETTERMARK.viewBox} role="img" aria-label={site.name}>
+      {LETTERMARK.paths.map((d) => <path class="ltr" data-letter d={d} />)}
     </svg>
   </div>
   <!-- the small print, under the name: what the site owes its readers on
@@ -112,13 +110,23 @@ const legal = [
 </footer>
 
 <script>
+  import { createWordmarkLetters } from '../../scripts/ui/wordmarkLetters';
+
   /* The footer is on every page, so it wires itself rather than waiting for a
      page's own entry — and it has to unwire itself too: the footer is not
      persisted across a navigation, and a clock left running would tick on a
      discarded element beside a second one on the next page. */
   let clock: ReturnType<typeof setInterval> | undefined;
+  let letters: { destroy(): void } | null = null;
 
   const start = () => {
+    // the letters answer the cursor: nothing to shove without one
+    const mark = document.querySelector<HTMLElement>('[data-wordmark]');
+    if (mark && matchMedia('(hover: hover) and (pointer: fine)').matches
+        && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      letters = createWordmarkLetters(mark);
+    }
+
     const face = document.querySelector<HTMLElement>('[data-clock]');
     if (!face) return;
     const tick = () => {
@@ -134,6 +142,8 @@ const legal = [
 
   const stop = () => {
     if (clock) clearInterval(clock);
+    letters?.destroy();
+    letters = null;
   };
 
   document.addEventListener('astro:page-load', start);
@@ -225,10 +235,21 @@ const legal = [
 
   /* ── the name ─────────────────────────────────────────────────────── */
   /* The last thing on the page and the largest: edge to edge between the
-     page's margins, the ink sitting a margin's height off the foot. */
-  /* the name stands at the foot of the screen, whatever is above it */
+     page's margins, standing at the foot of the screen whatever is above it.
+     The letters may be shoved past the mark's box, so it is not clipped. */
   .mark { margin-top: auto; padding-top: var(--s-8); color: var(--ink); }
-  .mark svg { display: block; width: 100%; height: auto; }
+  .mark svg { display: block; width: 100%; height: auto; overflow: visible; }
+  /* outline at rest, a true hairline at any scale; the interior is the target */
+  .ltr { fill: currentColor; fill-opacity: 0;
+         stroke: currentColor; stroke-width: 1px; vector-effect: non-scaling-stroke; stroke-opacity: 0.55;
+         pointer-events: fill; transform-box: fill-box; transform-origin: 50% 50%;
+         transition: fill-opacity 0.95s ease, stroke-opacity 0.95s ease; }
+  /* contact is instant — no ramp, the light is simply on; letting go fades it */
+  .ltr.lit { fill-opacity: 1; stroke-opacity: 1; transition: none; }
+  /* nothing to shove without a pointer, so the name simply stands solid */
+  @media (hover: none), (prefers-reduced-motion: reduce) {
+    .ltr { fill-opacity: 1; stroke-opacity: 1; transition: none; }
+  }
 
   /* side by side only where the question keeps to its two lines: narrower,
      the list goes under the details instead of breaking the line in three */
