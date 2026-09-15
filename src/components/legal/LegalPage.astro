@@ -1,0 +1,34 @@
+---
+/** A page of small print: the name, the date it was last changed, and the
+ *  text in a single readable column. The words are plain and describe what
+ *  this site actually does; they are a starting point to be read and
+ *  approved by the practice (and its lawyer), not legal advice. */
+import Base from '@layouts/Base.astro';
+interface Props { title: string; updated: string; description: string; }
+const { title, updated, description } = Astro.props;
+---
+<Base theme="light" title={title} description={description}>
+  <main class="legal" data-page="legal">
+    <header>
+      <h1>{title}</h1>
+      <p class="label updated">Last updated {updated}</p>
+    </header>
+    <div class="body"><slot /></div>
+  </main>
+</Base>
+
+<style>
+  .legal { padding: calc(var(--nav-y) * 2 + var(--pill-h) + var(--section-y)) var(--page-x) var(--section-y);
+           background: var(--ground); color: var(--ink); }
+  header { max-width: 64ch; margin: 0 auto var(--s-8); }
+  h1 { font-size: var(--t-h2); font-weight: var(--w-display); line-height: var(--lh-display);
+       letter-spacing: var(--track-display); }
+  .updated { margin-top: var(--s-4); color: var(--ink-3); }
+  .body { max-width: 64ch; margin: 0 auto; }
+  .body :global(h2) { margin: var(--s-7) 0 var(--s-3); font-size: var(--t-title);
+                      font-weight: var(--w-title); letter-spacing: var(--track-title); }
+  .body :global(p), .body :global(li) { font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-2); }
+  .body :global(p + p) { margin-top: var(--s-3); }
+  .body :global(ul) { margin: var(--s-3) 0 0 1.1em; display: grid; gap: var(--s-2); }
+  .body :global(a) { color: var(--ink); text-decoration: underline; text-underline-offset: 0.2em; }
+</style>

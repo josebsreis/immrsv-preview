@@ -7,7 +7,6 @@
  *  marked below is meant to be replaced, not kept. */
 import Button from '@components/ui/Button.astro';
 import { site } from '@lib/site';
-import mark from '../../content/wordmark.generated.json';
 
 const year = new Date().getFullYear();
 
@@ -27,16 +26,11 @@ const acts = [
   { label: 'Book a 30-minute call', href: 'mailto:hello@immrsv.studio' },
 ];
 
-/** the name, worked out from the artwork by scripts/wordmark.mjs */
-const { cols, lines } = mark as { cols: number; rows: number; lines: { y: number; runs: [number, number][] }[] };
-/* The raster is the artwork's own box, which has air above and below the
-   letters; the box drawn here is the ink only, so the name can sit on the
-   foot of the page with nothing under it. */
-const top = lines[0].y;
-const bottom = lines[lines.length - 1].y + 1;
-const tall = bottom - top;
-/** a line is thinner than its row, which is what leaves the gaps between them */
-const WEIGHT = 0.52;
+/** what a site has to say about itself, at its foot */
+const legal = [
+  { label: 'Privacy policy', href: '/privacy' },
+  { label: 'Terms of use', href: '/terms' },
+];
 ---
 <footer class="footer" id="contact" data-theme="dark">
   <div class="top">
@@ -53,7 +47,6 @@ const WEIGHT = 0.52;
 
   <div class="cols">
     <div class="col say">
-      <span class="label muted">© {site.name} {year}</span>
       <span class="label muted">Architecture · Creative media · Digital products</span>
     </div>
     <div class="col">
@@ -72,35 +65,38 @@ const WEIGHT = 0.52;
     </div>
   </div>
 
-  <!-- the name, one row of lines at a time; the cursor combs it -->
-  <div class="mark" data-wordmark-lines data-rows={tall} data-top={top}>
-    <svg viewBox={`0 ${top} ${cols} ${tall}`} role="img" aria-label={site.name} preserveAspectRatio="xMidYMid meet">
-      {lines.map((row) => (
-        <g data-line={row.y} style={`--i: ${row.y}`}>
-          {row.runs.map(([x, w]) => (
-            <rect x={x} y={row.y + (1 - WEIGHT) / 2} width={w} height={WEIGHT} />
-          ))}
-        </g>
-      ))}
+  <!-- the small print, over the name: what the site owes its readers on the
+       left, whose it is on the right -->
+  <div class="legal">
+    <ul>
+      {legal.map((l) => <li><a class="label" href={l.href} data-tap>{l.label}</a></li>)}
+    </ul>
+    <span class="label">© {year} {site.name}. All rights reserved.</span>
+  </div>
+
+  <!-- the name, the last thing on the page and as wide as the page's margins
+       allow. A plain drawing — the letters of the wordmark, without the mark
+       — to be replaced by the final artwork. -->
+  <div class="mark">
+    <svg viewBox="275 78.35 695.44 85.45" fill="currentColor" role="img" aria-label={site.name}>
+      <path d="M296.23 78.36H275V163.8H296.23V78.36Z"/>
+      <path d="M373.91 139.3L327.02 78.36H307.11V163.8H328.34V116.65L364.61 163.8H383.21L419.47 116.65V163.8H440.71V78.36H420.79L373.91 139.3Z"/>
+      <path d="M518.38 139.3L471.5 78.36H451.58V163.8H472.81V116.65L509.08 163.8H527.68L563.95 116.65V163.8H585.18V78.36H565.26L518.38 139.3Z"/>
+      <path d="M713.6 131.69V78.35H596.05V163.79H617.28V131.69H675.37L691.42 163.79H715.19L699.14 131.69H713.6ZM692.37 99.59V110.46H617.29V99.59H692.37Z"/>
+      <path d="M724.47 131.69H820.79V142.57H724.47V163.8H842.02V110.46H745.7V99.59H842.02V78.36H724.47V131.69Z"/>
+      <path d="M950.41 78.36L911.67 136.47L872.92 78.36H852.89V89.76L902.25 163.8H921.08L970.44 89.76V78.36H950.41Z"/>
     </svg>
   </div>
 </footer>
 
 <script>
-  import { createWordmarkLines } from '../../scripts/ui/wordmarkLines';
-
   /* The footer is on every page, so it wires itself rather than waiting for a
-     page's own entry — and it has to unwire itself too. The footer is not
-     persisted across a navigation, so without this the mark's loop would go
-     on writing to a discarded element and a second loop would start beside
-     it on the next page. */
-  let mark: { destroy(): void } | null = null;
+     page's own entry — and it has to unwire itself too: the footer is not
+     persisted across a navigation, and a clock left running would tick on a
+     discarded element beside a second one on the next page. */
   let clock: ReturnType<typeof setInterval> | undefined;
 
   const start = () => {
-    const el = document.querySelector<HTMLElement>('[data-wordmark-lines]');
-    mark = el ? createWordmarkLines(el) : null;
-
     const face = document.querySelector<HTMLElement>('[data-clock]');
     if (!face) return;
     const tick = () => {
@@ -114,8 +110,6 @@ const WEIGHT = 0.52;
   };
 
   const stop = () => {
-    mark?.destroy();
-    mark = null;
     if (clock) clearInterval(clock);
   };
 
@@ -162,29 +156,26 @@ const WEIGHT = 0.52;
   .col a { color: var(--ink-2); transition: color var(--dur-fast) ease; }
   .col a:hover { color: var(--ink); }
 
+  /* ── the small print ──────────────────────────────────────────────── */
+  /* on a rule, the policies on the left and the copyright on the right */
+  .legal { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4);
+           margin-top: var(--s-8); padding-top: var(--s-4);
+           border-top: var(--hairline) solid var(--line); color: var(--ink-3); }
+  .legal ul { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); }
+  .legal a { color: var(--ink-3); transition: color var(--dur-fast) ease; }
+  .legal a:hover { color: var(--ink); }
+
   /* ── the name ─────────────────────────────────────────────────────── */
-  /* It is the last thing on the page and the largest, so it is given the
-     page's full width and nothing else. Each row is its own group, moved by
-     a single custom property the loop writes — no element is rebuilt and no
-     layout is read while it runs. */
-  .mark { margin-top: var(--s-8); }
-  .mark svg { display: block; width: 100%; height: auto; fill: var(--ink); }
-  .mark g { transform: translateX(calc(var(--dx, 0) * 1px)); }
-
-  /* on a screen that cannot hover the rows arrive instead, one after another */
-  .mark g { opacity: 0; transition: opacity var(--dur-slow) var(--ease-out); }
-  .mark[data-in] g { opacity: 1; }
-
-  @media (prefers-reduced-motion: reduce) {
-    .mark g { transition: none; }
-    .act::after { transition: none; }
-  }
+  /* The last thing on the page and the largest: edge to edge between the
+     page's margins, the ink sitting a margin's height off the foot. */
+  .mark { margin-top: var(--s-5); padding-bottom: var(--page-x); color: var(--ink); }
+  .mark svg { display: block; width: 100%; height: auto; }
 
   @media (max-width: 859px) {
     .footer { padding-top: var(--s-7); }
     .top { flex-direction: column; gap: var(--s-2); }
     .acts { flex-direction: column; align-items: flex-start; gap: var(--s-3); }
     .cols { grid-template-columns: 1fr; gap: var(--s-6); padding-top: 10vh; }
-    .mark { margin-top: 10vh; }
+    .legal { flex-direction: column; align-items: flex-start; margin-top: 10vh; }
   }
 </style>
