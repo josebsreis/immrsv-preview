@@ -69,7 +69,7 @@ const reelFor = (key: string): Shot[] => {
 const grounds = ['light', 'dark', 'light'] as const;
 ---
 {content.items.length > 0 && (
-  <div class="studios" id="studios">
+  <div class="studios">
     <header class="head" data-theme="light">
       <!-- the thread the handover above leaves off with, carried down through
            the title to the first studio -->
@@ -82,7 +82,9 @@ const grounds = ['light', 'dark', 'light'] as const;
     <!-- the stack carries a ground from the start: the nav reads the page's
          themed sections once, before any script has run, so a ground the
          stack only gave itself later was never read at all -->
-    <div class="stack" data-studio-stack data-theme="light" style={`--n: ${content.items.length}`}>
+    <!-- `#studios` lands here, on the first panel filling the screen, not on
+         the heading above it: the nav's link is to the studios themselves -->
+    <div class="stack" id="studios" data-studio-stack data-theme="light" style={`--n: ${content.items.length}`}>
     {content.items.map((s, i) => {
       const shots = reelFor(s.key);
       return (
