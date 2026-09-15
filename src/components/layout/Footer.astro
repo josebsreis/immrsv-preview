@@ -23,7 +23,6 @@ const enquiry = [
 ];
 const acts = [
   { label: 'Discuss your project', href: 'mailto:hello@immrsv.studio' },
-  { label: 'Book a 30-minute call', href: 'mailto:hello@immrsv.studio' },
 ];
 
 /** what a site has to say about itself, at its foot */
@@ -34,8 +33,6 @@ const legal = [
 ---
 <footer class="footer" id="contact" data-theme="dark">
   <div class="top">
-    <!-- the name of the part of the page the nav's Contact lands on -->
-    <span class="label">Contact</span>
     <span class="label when" data-clock aria-hidden="true"></span>
   </div>
 
@@ -127,7 +124,8 @@ const legal = [
             display: flex; flex-direction: column; }
   @media (min-width: 860px) { .footer { min-height: 100vh; } }
 
-  .top { display: flex; justify-content: space-between; gap: var(--s-4);
+  /* the studio's own time, alone on the right; the invitation below leads */
+  .top { display: flex; justify-content: flex-end; gap: var(--s-4);
          color: var(--ink-3); }
   .when { font-variant-numeric: tabular-nums; color: var(--ink-3); }
 
@@ -140,6 +138,12 @@ const legal = [
   /* the site's own button — the same slab the hero offers, with the square
      that walks to the far end of it */
   .acts { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-top: var(--s-6); }
+  /* The one way in, and the page's last word, so it is the site's button a
+     size up: taller, the label a step larger, the dot further in. The same
+     object — the panel, the dot's walk, the letters — at the scale of the
+     line it answers. */
+  .acts :global(.btn) { height: 3.5rem; --pl: 2.75rem; --pr: 2.25rem; --gap: 1.375rem;
+                        font-size: var(--t-small); }
 
   /* the two sets of details, kept to the right where they always sat */
   .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 14rem)); justify-content: end;
