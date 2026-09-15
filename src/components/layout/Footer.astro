@@ -63,31 +63,47 @@ const legal = [
         <li><span class="k">L.</span>Los Angeles, California</li>
         <li><span class="k">T.</span><span class="when" data-clock>--:--:--</span></li>
       </ul>
-      <span class="label head social-head">Social</span>
-      <ul class="pairs">
-        {social.map((sx) => <li><a href={sx.href} data-tap>{sx.label}</a></li>)}
-      </ul>
     </div>
     </div>
 
-    <!-- The page as a list, set as the questions are: a row on a rule, a
-         panel crossing it from the edge the cursor came over, the name
-         stepping in from the rule and its dot from the far edge. -->
-    <nav class="menu" aria-label="Footer">
-      <ul>
-        {menu.map((m) => (
-          <li class="item">
-            <div class="row" data-dhover-item data-axis="y">
-              <span class="tile" data-dhover-tile aria-hidden="true"></span>
-              <a class="go" href={m.href} data-tap>
-                <span class="txt">{m.label}</span>
-                <i class="sq" aria-hidden="true"></i>
-              </a>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <!-- The right half: the page as a list, and under it the accounts, both
+         set as the questions are — a row on a rule, a panel crossing it from
+         the edge the cursor came over, the name stepping in from the rule and
+         a dot arriving at the far edge. -->
+    <div class="lists">
+      <nav class="menu" aria-label="Footer">
+        <span class="label head">Navigate</span>
+        <ul>
+          {menu.map((m) => (
+            <li class="item">
+              <div class="row" data-dhover-item data-axis="y">
+                <span class="tile" data-dhover-tile aria-hidden="true"></span>
+                <a class="go" href={m.href} data-tap>
+                  <span class="txt">{m.label}</span>
+                  <i class="sq" aria-hidden="true"></i>
+                </a>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <nav class="menu" aria-label="Social">
+        <span class="label head">Social</span>
+        <ul>
+          {social.map((sx) => (
+            <li class="item">
+              <div class="row" data-dhover-item data-axis="y">
+                <span class="tile" data-dhover-tile aria-hidden="true"></span>
+                <a class="go" href={sx.href} data-tap>
+                  <span class="txt">{sx.label}</span>
+                  <i class="sq" aria-hidden="true"></i>
+                </a>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
   </div>
 
   <!-- the name, the last thing on the page and as wide as the page's margins
@@ -182,17 +198,18 @@ const legal = [
           column-gap: var(--s-8); row-gap: var(--s-7);
           align-items: start; }
   .lead { display: grid; gap: var(--s-8); align-content: start; }
+  /* the list's label sits on the same line as the top of the question */
+  .lists > .menu:first-child > .head { line-height: 1; }
   .col { display: grid; gap: var(--s-4); align-content: start; }
   .head { color: var(--ink-3); }
   .col ul { list-style: none; display: grid; gap: 0.55rem; }
-  .pairs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem var(--s-4); }
   .col li { display: flex; gap: 0.5em; font-size: var(--t-body); color: var(--ink-2); }
   .k { color: var(--ink-3); }
   .col a { color: var(--ink-2); transition: color var(--dur-fast) ease; }
   .col a:hover { color: var(--ink); }
-  .social-head { margin-top: var(--s-4); }
-
-  /* ── the list ─────────────────────────────────────────────────────── */
+  /* ── the lists ────────────────────────────────────────────────────── */
+  .lists { display: grid; gap: var(--s-8); align-content: start; }
+  .menu { display: grid; gap: var(--s-4); }
   .menu ul { list-style: none; }
   .item { border-top: var(--hairline) solid var(--line); }
   .item:last-child { border-bottom: var(--hairline) solid var(--line); }
@@ -205,13 +222,15 @@ const legal = [
         transition: padding var(--dur-base) var(--ease-panel); }
   .txt { font-size: var(--t-title); font-weight: var(--w-title);
          letter-spacing: var(--track-title); line-height: var(--lh-title); }
-  .go .sq { flex: none; color: var(--ink-4); transition: color var(--dur-fast) ease; }
+  /* the dot is not there until the row is: it arrives with the panel */
+  .go .sq { flex: none; color: var(--ink); opacity: 0; transition: opacity var(--dur-fast) ease; }
   @media (hover: hover) and (pointer: fine) {
     .row:hover .go { padding-inline: var(--s-4); }
-    .row:hover .sq { color: var(--ink); }
+    .row:hover .sq { opacity: 1; }
   }
   .go:focus-visible { padding-inline: var(--s-4); }
-  @media (prefers-reduced-motion: reduce) { .tile, .go { transition: none; } }
+  .go:focus-visible .sq { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .tile, .go, .go .sq { transition: none; } }
 
   /* ── the small print ──────────────────────────────────────────────── */
   /* under the name, the policies on the left and the copyright on the right */
