@@ -225,11 +225,16 @@ const rings = RINGS.map((r, k) => {
 
   @media (max-width: 859px) {
     .pile { padding: calc(var(--section-y) + 2vh) var(--page-x) calc(var(--page-y) + 3rem + 10vh); --card-w: 82vw; --foot: 3.5rem; }
-    .title { white-space: normal; font-size: var(--t-h3); }
+    .title { white-space: normal; }
     .table { margin-top: var(--s-7); }
     .name { font-size: var(--t-lead); }
   }
   @media (prefers-reduced-motion: reduce) {
     .plate, .bar > *, .media img { transition: none; }
+  }
+  /* the section's name steps down a size only on a phone: a tablet has the
+     width for it at full size, stacked */
+  @media (max-width: 719px) {
+    .title { font-size: var(--t-h3); }
   }
 </style>

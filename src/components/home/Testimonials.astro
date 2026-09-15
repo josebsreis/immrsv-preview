@@ -232,7 +232,8 @@ const SIZES = '3rem';
     .head { gap: var(--s-4); }
     /* stacked, it has the page: back to the size the other sections use */
     /* the size every section's name takes on a small screen */
-    h2 { grid-column: 1; font-size: var(--t-h3); white-space: normal; }
+    /* stacked, the name has the page's width again */
+    h2 { grid-column: 1; font-size: var(--t-h2); white-space: normal; }
     .intro { grid-column: 1; }
     .names { display: none; }
     .slides { grid-column: 1; grid-row: 1; }
@@ -242,5 +243,10 @@ const SIZES = '3rem';
   /* asked for less motion: no fade between slides, just the change */
   @media (prefers-reduced-motion: reduce) {
     .slide, .name .sq, .name span { transition: none; }
+  }
+  /* the section's name steps down a size only on a phone: a tablet has the
+     width for it at full size, stacked */
+  @media (max-width: 719px) {
+    h2 { font-size: var(--t-h3); }
   }
 </style>

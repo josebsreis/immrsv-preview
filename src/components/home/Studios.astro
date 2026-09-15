@@ -310,7 +310,12 @@ const grounds = ['light', 'dark', 'light'] as const;
     .n, .mark h3 { font-size: var(--t-h3); }
     .promise { font-size: var(--t-title); }
     .desc, .promise { max-width: none; }
-    h2 { white-space: normal; font-size: var(--t-h3); }
+    h2 { white-space: normal; }
     .thread { height: 8vh; }
+  }
+  /* the section's name steps down a size only on a phone: a tablet has the
+     width for it at full size, stacked */
+  @media (max-width: 719px) {
+    h2 { font-size: var(--t-h3); }
   }
 </style>

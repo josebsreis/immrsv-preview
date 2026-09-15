@@ -60,15 +60,6 @@ const legal = [
     </div>
   </div>
 
-  <!-- the small print, over the name: what the site owes its readers on the
-       left, whose it is on the right -->
-  <div class="legal">
-    <ul>
-      {legal.map((l) => <li><a class="label" href={l.href} data-tap>{l.label}</a></li>)}
-    </ul>
-    <span class="label">© {year} {site.name}. All rights reserved.</span>
-  </div>
-
   <!-- the name, the last thing on the page and as wide as the page's margins
        allow. A plain drawing — the letters of the wordmark, without the mark
        — to be replaced by the final artwork. -->
@@ -82,6 +73,15 @@ const legal = [
       <path d="M950.41 78.36L911.67 136.47L872.92 78.36H852.89V89.76L902.25 163.8H921.08L970.44 89.76V78.36H950.41Z"/>
     </svg>
   </div>
+  <!-- the small print, under the name: what the site owes its readers on
+       the left, whose it is on the right -->
+  <div class="legal">
+    <ul>
+      {legal.map((l) => <li><a class="label" href={l.href} data-tap>{l.label}</a></li>)}
+    </ul>
+    <span class="label">© {year} {site.name}. All rights reserved.</span>
+  </div>
+
 </footer>
 
 <script>
@@ -159,10 +159,9 @@ const legal = [
   .col a:hover { color: var(--ink); }
 
   /* ── the small print ──────────────────────────────────────────────── */
-  /* on a rule, the policies on the left and the copyright on the right */
+  /* under the name, the policies on the left and the copyright on the right */
   .legal { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4);
-           margin-top: var(--s-8); padding-top: var(--s-4);
-           border-top: var(--hairline) solid var(--line); color: var(--ink-3); }
+           margin-top: var(--s-4); padding-bottom: var(--page-y); color: var(--ink-3); }
   .legal ul { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); }
   .legal a { color: var(--ink-3); transition: color var(--dur-fast) ease; }
   .legal a:hover { color: var(--ink); }
@@ -170,7 +169,7 @@ const legal = [
   /* ── the name ─────────────────────────────────────────────────────── */
   /* The last thing on the page and the largest: edge to edge between the
      page's margins, the ink sitting a margin's height off the foot. */
-  .mark { margin-top: var(--s-5); padding-bottom: var(--page-x); color: var(--ink); }
+  .mark { margin-top: var(--s-8); color: var(--ink); }
   .mark svg { display: block; width: 100%; height: auto; }
 
   @media (max-width: 859px) {
@@ -178,6 +177,7 @@ const legal = [
     .top { flex-direction: column; gap: var(--s-2); }
     .acts { flex-direction: column; align-items: flex-start; gap: var(--s-3); }
     .cols { grid-template-columns: 1fr; justify-content: stretch; gap: var(--s-6); padding-top: 10vh; }
-    .legal { flex-direction: column; align-items: flex-start; margin-top: 10vh; }
+    .mark { margin-top: 10vh; }
+    .legal { flex-direction: column; align-items: flex-start; }
   }
 </style>
