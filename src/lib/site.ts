@@ -3,10 +3,11 @@ export const site = {
   name: 'IMMRSV',
   /* No Home: the logo is the way home, as everywhere. No About: there is no
      about page, and the statement it pointed at sits right under the hero,
-     one scroll down. Work first — it is what most people came for. */
+     one scroll down. In the order the page tells it: the studios, then the
+     work, then the way to get in touch. */
   nav: [
-    { label: 'Work', href: '/work' },
     { label: 'Studios', href: '/#studios' },
+    { label: 'Work', href: '/work' },
     { label: 'Contact', href: '/#contact' },
   ],
   studios: [
