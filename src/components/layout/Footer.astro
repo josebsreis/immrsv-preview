@@ -257,17 +257,18 @@ const legal = [
   .mark svg { display: block; width: 100%; height: auto; overflow: visible; }
   /* the letter is the group: it is what the cursor moves, about its middle */
   [data-letter] { transform-box: fill-box; transform-origin: 50% 50%; }
-  /* outline at rest, a true hairline at any scale; the interior is the target */
+  /* outline at rest, a true hairline at any scale, in the same dim line as
+     the symbol turning at the corner; the interior is the target */
   .ltr { fill: currentColor; fill-opacity: 0;
-         stroke: currentColor; stroke-width: 1px; vector-effect: non-scaling-stroke; stroke-opacity: 0.55;
+         stroke: var(--ink-dim); stroke-width: 1px; vector-effect: non-scaling-stroke;
          pointer-events: fill;
-         transition: fill-opacity 0.95s ease, stroke-opacity 0.95s ease, fill 0.95s ease, stroke 0.95s ease; }
+         transition: fill-opacity 0.95s ease, fill 0.95s ease, stroke 0.95s ease; }
   /* contact is instant — no ramp, the letter is simply white; letting go
      fades it back to the page's ink and then to an outline */
-  .lit .ltr { fill: #fff; stroke: #fff; fill-opacity: 1; stroke-opacity: 1; transition: none; }
+  .lit .ltr { fill: #fff; stroke: #fff; fill-opacity: 1; transition: none; }
   /* nothing to shove without a pointer, so the name simply stands solid */
   @media (hover: none), (prefers-reduced-motion: reduce) {
-    .ltr { fill-opacity: 1; stroke-opacity: 1; transition: none; }
+    .ltr { fill-opacity: 1; stroke: currentColor; transition: none; }
   }
 
   /* side by side only where the question keeps to its two lines: narrower,
