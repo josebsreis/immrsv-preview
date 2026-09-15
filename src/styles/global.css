@@ -170,6 +170,15 @@ body.ready .arrives { animation: arrive var(--dur-slow) ease both; animation-del
   transition-delay: calc(var(--i, 0) * 0.08s); }
 [data-rise].in { opacity: 1; }
 
+/* A heading that comes in letter by letter, as the headline's last word
+   does (scripts/ui/blurIn.ts): each letter out of focus and gone until the
+   heading is scrolled to, then sharp, on its own moment. Words are kept
+   whole so the split never moves a line break. */
+[data-blur-in] .w { display: inline-block; white-space: nowrap; }
+[data-blur-in] .ch { display: inline-block; font-style: normal;
+  transition: opacity 0.55s ease-in-out, filter 0.55s ease-in-out; }
+[data-blur-in] .ch.out { opacity: 0; filter: blur(9px); }
+
 /* ── between pages ─────────────────────────────────────────────────────
    One page goes out, the next comes in over it — no slide, no wipe: the
    site's own transitions are all in the scroll, and a page that travels

@@ -17,6 +17,7 @@ import { createFaqs } from './ui/faqs';
 import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
 import { createCursor } from './ui/cursor';
+import { createBlurIn } from './ui/blurIn';
 import { onPage } from './lifecycle';
 import type { Hero } from './hero';
 
@@ -38,6 +39,8 @@ onPage('home', () => {
 
   add(createSmoothScroll());
   const choreography = add(createScrollChoreography(() => hero))!;
+  // the section names come in letter by letter, before anything can be seen split
+  add(createBlurIn());
   document.fonts.ready.then(() => splitChars());
   const rot = document.querySelector<HTMLElement>('[data-rotating-word]');
   if (rot) add(createRotatingWord(rot));

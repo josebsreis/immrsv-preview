@@ -74,7 +74,7 @@ const grounds = ['light', 'dark', 'light'] as const;
       <!-- the thread the handover above leaves off with, carried down through
            the title to the first studio -->
       <span class="thread" data-thread aria-hidden="true"></span>
-      <h2 data-rise>{content.title}</h2>
+      <h2 data-blur-in>{content.title}</h2>
       <p class="intro" data-rise style="--i: 1">{content.intro}</p>
       <span class="thread" data-thread aria-hidden="true"></span>
     </header>
@@ -94,7 +94,7 @@ const grounds = ['light', 'dark', 'light'] as const;
           <div class="top">
             <div class="mark">
               <span class="n" data-rise>{String(i + 1).padStart(2, '0')}</span>
-              <h3 id={`studio-${s.key}`} data-rise style="--i: 1">{s.name}</h3>
+              <h3 id={`studio-${s.key}`} data-blur-in>{s.name}</h3>
             </div>
             <div class="say">
               <p class="promise" data-rise style="--i: 2">{s.promise}</p>
