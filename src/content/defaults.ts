@@ -325,7 +325,7 @@ export const defaultHome: HomeContent = {
   },
   work: {
     tag: 'Spaces, films and products.\nEach one designed, built and seen through.',
-    title: 'Selected work.',
+    title: 'Case studies.',
     intro: 'Recent projects from across the studios.',
     /* None of the studio reels' projects: those already have a place on the
        page, and the pile is for the work that has not been shown yet. Dealt

@@ -162,7 +162,7 @@ export const home = defineType({
       description: 'The pile of cards under the client stories. At least seven projects, or the pile cannot be thrown.',
       fields: [
         defineField({ name: 'tag', title: 'Note at the top', type: 'text', rows: 2, description: 'Two short lines; a line break here is kept.' }),
-        defineField({ name: 'title', type: 'string', initialValue: 'Selected work.' }),
+        defineField({ name: 'title', type: 'string', initialValue: 'Case studies.' }),
         defineField({ name: 'intro', type: 'string', description: 'The line under the title.' }),
         defineField({ name: 'featured', title: 'Projects, in order', type: 'array', of: [{ type: 'reference', to: [{ type: 'project' }] }] }),
         defineField({ name: 'cta', title: 'Button', ...cta }),
