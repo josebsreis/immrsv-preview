@@ -164,7 +164,9 @@ const legal = [
      `height` so a long address list grows it instead of overflowing. */
   .footer { position: relative; z-index: var(--z-ui);
             background: var(--ground); color: var(--ink);
-            padding: var(--s-8) var(--page-x) 0;
+            /* well down from the section above: the invitation is a line
+               to arrive at, not a caption to what came before */
+            padding: max(var(--s-8), 14vh) var(--page-x) 0;
             display: flex; flex-direction: column; }
   @media (min-width: 860px) { .footer { min-height: 100vh; } }
 
@@ -193,7 +195,10 @@ const legal = [
                         font-size: var(--t-small); }
 
   /* the invitation, and the details a step under it */
-  .cols { display: grid; row-gap: var(--s-8); align-items: start; }
+  /* the invitation stands at the top; the details go down to the name,
+     as its caption, with the screen's spare height between the two */
+  .cols { flex: 1; display: flex; flex-direction: column; justify-content: space-between;
+          gap: var(--s-8); }
   /* the three columns of details, thirds of the page from the left */
   .details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--s-6); row-gap: var(--s-7);
              align-content: start; }
@@ -219,7 +224,7 @@ const legal = [
   /* The last thing on the page and the largest: edge to edge between the
      page's margins, standing at the foot of the screen whatever is above it.
      The letters may be shoved past the mark's box, so it is not clipped. */
-  .mark { margin-top: auto; padding-top: var(--s-8); color: var(--ink); }
+  .mark { padding-top: var(--s-7); color: var(--ink); }
   .mark svg { display: block; width: 100%; height: auto; overflow: visible; }
   /* the letter is the group: it is what the cursor moves, about its middle */
   [data-letter] { transform-box: fill-box; transform-origin: 50% 50%; }
@@ -240,10 +245,10 @@ const legal = [
      the list goes under the details instead of breaking the line in three */
 
   @media (max-width: 859px) {
-    .footer { padding-top: var(--s-7); }
+    .footer { padding-top: max(var(--s-8), 10vh); }
     .acts { flex-direction: column; align-items: flex-start; gap: var(--s-3); }
-    .cols { row-gap: var(--s-7); margin-top: 8vh; }
-    .mark { padding-top: 10vh; }
+    .cols { gap: 10vh; }
+    .mark { padding-top: var(--s-7); }
     .legal { flex-direction: column; align-items: flex-start; }
   }
   /* two abreast where three would squeeze an address; one under the other
