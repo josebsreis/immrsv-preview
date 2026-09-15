@@ -7,7 +7,7 @@
  *  marked below is meant to be replaced, not kept. */
 import Button from '@components/ui/Button.astro';
 import { site } from '@lib/site';
-import { LETTERMARK } from '@lib/lettermark';
+import { LETTERMARK, SYMBOL } from '@lib/lettermark';
 
 const year = new Date().getFullYear();
 
@@ -36,6 +36,13 @@ const legal = [
 ];
 ---
 <footer class="footer" id="contact" data-theme="dark">
+  <!-- The symbol, large, turning on the spot at the footer's right edge —
+       its centre on the edge, so only its inner half is in the page and the
+       rest is cut off by it. A hairline drawing behind everything, going
+       round slowly enough to be noticed rather than watched. -->
+  <svg class="spin" viewBox={SYMBOL.viewBox} aria-hidden="true" focusable="false">
+    <g class="turn">{SYMBOL.paths.map((d) => <path d={d} />)}</g>
+  </svg>
   <!-- The invitation across the top, and under it, left to right across
        the page, the details in three short columns: where the studio is and
        what time it is there, how to reach it, where to follow it. Nothing
@@ -167,8 +174,29 @@ const legal = [
             /* well down from the section above: the invitation is a line
                to arrive at, not a caption to what came before */
             padding: max(var(--s-8), 14vh) var(--page-x) 0;
-            display: flex; flex-direction: column; }
+            display: flex; flex-direction: column;
+            /* the turning symbol runs off the edge: the footer cuts it there */
+            overflow: clip; }
   @media (min-width: 860px) { .footer { min-height: 100vh; } }
+
+  /* ── the turning symbol ───────────────────────────────────────────── */
+  /* Sized to the screen and centred on the right edge, level with the
+     invitation, so half of it is off the page. It is a drawing behind the
+     words, never something they have to make room for: no box in the flow,
+     no clicks, a hairline as the dial behind the work is. */
+  .spin { position: absolute; z-index: 0; right: 0; top: max(var(--s-8), 14vh);
+          height: min(46vw, 72vh); width: auto; max-width: none;
+          translate: 50% -18%;
+          pointer-events: none;
+          fill: none; stroke: var(--ink-dim); stroke-width: 1; }
+  .spin path { vector-effect: non-scaling-stroke; }
+  /* one turn a minute, about its own middle */
+  .turn { transform-box: fill-box; transform-origin: center;
+          animation: turn 60s linear infinite; }
+  @keyframes turn { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .turn { animation: none; } }
+  /* everything else is in front of it */
+  .footer > :not(.spin) { position: relative; z-index: 1; }
 
   /* the time holds its width as the seconds turn */
   .when { font-variant-numeric: tabular-nums; }
