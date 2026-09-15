@@ -18,8 +18,11 @@ const enquiry = [
 /* the last word of the invitation turns, as the headline's does: the name
    first, then what the work is meant to be, and back to the name */
 const words = ['IMMRSV.', 'lasting.', 'real.', 'together.'];
+/* PLACEHOLDER: the call goes to the number until the client says where a
+   booking should go — a calendar link, most likely */
 const acts = [
   { label: 'Discuss your project', href: 'mailto:hello@immrsv.studio' },
+  { label: 'Book a call', href: 'tel:+17473026868' },
 ];
 
 /* PLACEHOLDER: the practice's accounts — the two it is likeliest to have,
@@ -215,13 +218,9 @@ const legal = [
 
   /* the site's own button — the same slab the hero offers, with the square
      that walks to the far end of it */
-  .acts { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-top: var(--s-6); }
-  /* The one way in, and the page's last word, so it is the site's button a
-     size up: taller, the label a step larger, the dot further in. The same
-     object — the panel, the dot's walk, the letters — at the scale of the
-     line it answers. */
-  .acts :global(.btn) { height: 3.5rem; --pl: 2.75rem; --pr: 2.25rem; --gap: 1.375rem;
-                        font-size: var(--t-small); }
+  /* the two ways in, the site's buttons at their own size, as the hero
+     sets its pair */
+  .acts { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-6); }
 
   /* the invitation, and the details a step under it */
   /* the invitation stands at the top; the details go down to the name,
