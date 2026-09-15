@@ -53,6 +53,12 @@ a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 /* the title tier's weight; a display-sized heading asks for --w-display */
 h1, h2, h3 { font-weight: var(--w-title); }
+/* No word left alone on a line. Headings are balanced — their lines are
+   evened out — and running text is set `pretty`, which only reworks the
+   last few lines of a paragraph so it never ends on a single word. Both
+   are a hint the browser drops where it cannot afford it; nothing breaks. */
+h1, h2, h3, h4 { text-wrap: balance; }
+p, li, dd, blockquote { text-wrap: pretty; }
 
 :focus-visible { outline: var(--hairline) solid var(--ink); outline-offset: 3px; }
 
