@@ -46,9 +46,6 @@ const legal = [
   </div>
 
   <div class="cols">
-    <div class="col say">
-      <span class="label muted">Architecture · Creative media · Digital products</span>
-    </div>
     <div class="col">
       <span class="label head">Business enquiry</span>
       <ul>
@@ -142,13 +139,12 @@ const legal = [
      that walks to the far end of it */
   .acts { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-top: var(--s-6); }
 
-  .cols { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, minmax(0, 14rem));
+  /* the two sets of details, kept to the right where they always sat */
+  .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 14rem)); justify-content: end;
           gap: var(--s-6) var(--s-7); margin-top: auto; padding-top: var(--s-8);
           align-items: start; }
   .col { display: grid; gap: var(--s-4); align-content: start; }
-  .say { gap: var(--s-3); }
   .head { color: var(--ink-3); }
-  .muted { color: var(--ink-3); }
   .col ul { list-style: none; display: grid; gap: 0.55rem; }
   .pairs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem var(--s-4); }
   .col li { display: flex; gap: 0.5em; font-size: var(--t-body); color: var(--ink-2); }
@@ -175,7 +171,7 @@ const legal = [
     .footer { padding-top: var(--s-7); }
     .top { flex-direction: column; gap: var(--s-2); }
     .acts { flex-direction: column; align-items: flex-start; gap: var(--s-3); }
-    .cols { grid-template-columns: 1fr; gap: var(--s-6); padding-top: 10vh; }
+    .cols { grid-template-columns: 1fr; justify-content: stretch; gap: var(--s-6); padding-top: 10vh; }
     .legal { flex-direction: column; align-items: flex-start; margin-top: 10vh; }
   }
 </style>
