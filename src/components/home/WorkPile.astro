@@ -122,7 +122,7 @@ const rings = RINGS.map((r, k) => {
      tipped cards are well inside its padding. */
   .pile { position: relative; margin-inline: calc(var(--page-x) * -1);
           /* the page's rhythm, plus the room the note at the head takes */
-          padding: calc(var(--section-y) + 6vh) var(--page-x) calc(var(--page-y) + 3rem + 8vh); overflow: clip;
+          padding: calc(var(--section-y) + 6vh) var(--page-x) calc(var(--page-y) + 3rem + 14vh); overflow: clip;
           background: var(--ground); color: var(--ink);
           /* the card, its frame and the foot of the frame */
           --card-w: min(42vw, 48rem); --frame: var(--s-2); --foot: 4rem; }
@@ -224,7 +224,7 @@ const rings = RINGS.map((r, k) => {
           display: flex; justify-content: center; }
 
   @media (max-width: 859px) {
-    .pile { padding: calc(var(--section-y) + 2vh) var(--page-x) calc(var(--page-y) + 3rem + 6vh); --card-w: 82vw; --foot: 3.5rem; }
+    .pile { padding: calc(var(--section-y) + 2vh) var(--page-x) calc(var(--page-y) + 3rem + 10vh); --card-w: 82vw; --foot: 3.5rem; }
     .title { white-space: normal; font-size: var(--t-h3); }
     .table { margin-top: var(--s-7); }
     .name { font-size: var(--t-lead); }
