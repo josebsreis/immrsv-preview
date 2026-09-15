@@ -255,7 +255,7 @@ export const defaultHome: HomeContent = {
     },
     stats: [
       { value: '30+', label: 'Projects delivered across the three studios' },
-      { value: '2019', label: 'Founded in Lisbon, working across Europe' },
+      { value: 'LA', label: 'Based in Los Angeles, working worldwide' },
       { value: '03', label: 'Studios, one team between them' },
       { value: '1:1', label: 'Built to be used before it is launched' },
     ],
