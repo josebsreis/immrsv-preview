@@ -41,16 +41,18 @@ const legal = [
 ];
 ---
 <footer class="footer" id="contact" data-theme="dark">
-  <div class="invite">
-    <h2 class="ask">Let’s create<br />something IMMRSV.</h2>
-    <div class="acts">
-      {acts.map((a) => <Button href={a.href} label={a.label} />)}
-    </div>
-  </div>
-
-  <!-- Under the invitation: the ways to reach the studio on the left, where
-       the eye is after the button, and the page as a list on the right. -->
+  <!-- Two halves side by side: the invitation with the ways to reach the
+       studio under it on the left, and the page as a list on the right,
+       starting level with the invitation. -->
   <div class="cols">
+    <div class="lead">
+    <div class="invite">
+      <h2 class="ask">Let’s create<br />something IMMRSV.</h2>
+      <div class="acts">
+        {acts.map((a) => <Button href={a.href} label={a.label} />)}
+      </div>
+    </div>
+
     <div class="col reach">
       <span class="label head">Business details</span>
       <ul>
@@ -65,6 +67,7 @@ const legal = [
       <ul class="pairs">
         {social.map((sx) => <li><a href={sx.href} data-tap>{sx.label}</a></li>)}
       </ul>
+    </div>
     </div>
 
     <!-- The page as a list, set as the questions are: a row on a rule, a
@@ -156,7 +159,7 @@ const legal = [
 
   /* the question, and the two ways in directly under it — they answer it, so
      they read better beneath it than sent to the far side of the page */
-  .invite { margin-top: 0; }
+  .invite { margin: 0; }
   .ask { font-size: var(--t-h2); font-weight: var(--w-display);
          line-height: var(--lh-display); letter-spacing: var(--track-display); }
 
@@ -172,11 +175,13 @@ const legal = [
 
   /* the two sets of details, kept to the right where they always sat */
   /* the contacts take the left, the list and the socials keep to the right */
-  /* the page's two columns, as the questions use them: the details in the
-     narrow one, the list across the wide one */
-  .cols { display: grid; grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
-          column-gap: var(--col-gap); row-gap: var(--s-7); margin-top: var(--s-8);
+  /* Two equal halves: the invitation needs the width its line is set at,
+     and the list sits beside it from its first row, level with the top of
+     the question. */
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          column-gap: var(--s-8); row-gap: var(--s-7);
           align-items: start; }
+  .lead { display: grid; gap: var(--s-8); align-content: start; }
   .col { display: grid; gap: var(--s-4); align-content: start; }
   .head { color: var(--ink-3); }
   .col ul { list-style: none; display: grid; gap: 0.55rem; }
@@ -222,6 +227,12 @@ const legal = [
   /* the name stands at the foot of the screen, whatever is above it */
   .mark { margin-top: auto; padding-top: var(--s-8); color: var(--ink); }
   .mark svg { display: block; width: 100%; height: auto; }
+
+  /* side by side only where the question keeps to its two lines: narrower,
+     the list goes under the details instead of breaking the line in three */
+  @media (max-width: 1099px) {
+    .cols { grid-template-columns: 1fr; }
+  }
 
   @media (max-width: 859px) {
     .footer { padding-top: var(--s-7); }
