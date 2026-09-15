@@ -324,7 +324,7 @@ export const defaultHome: HomeContent = {
     ],
   },
   work: {
-    tag: 'Drag to move through the work.\nOpen any card for the full project.',
+    tag: 'Spaces, films and products.\nEach one designed, built and seen through.',
     title: 'Selected work.',
     intro: 'Recent projects from across the studios.',
     /* None of the studio reels' projects: those already have a place on the
