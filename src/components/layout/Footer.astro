@@ -47,6 +47,12 @@ const legal = [
 
   <div class="cols">
     <div class="col">
+      <span class="label head">Studio</span>
+      <ul>
+        <li>Los Angeles, California</li>
+      </ul>
+    </div>
+    <div class="col">
       <span class="label head">Business enquiry</span>
       <ul>
         {enquiry.map((e) => (
@@ -140,7 +146,7 @@ const legal = [
   .acts { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-top: var(--s-6); }
 
   /* the two sets of details, kept to the right where they always sat */
-  .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 14rem)); justify-content: end;
+  .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 14rem)); justify-content: end;
           gap: var(--s-6) var(--s-7); margin-top: auto; padding-top: var(--s-8);
           align-items: start; }
   .col { display: grid; gap: var(--s-4); align-content: start; }
