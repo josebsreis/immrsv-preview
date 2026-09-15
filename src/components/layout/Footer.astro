@@ -36,9 +36,9 @@ const legal = [
 ];
 ---
 <footer class="footer" id="contact" data-theme="dark">
-  <!-- The symbol, large, turning on the spot at the footer's right edge —
-       its centre on the edge, so only its inner half is in the page and the
-       rest is cut off by it. A hairline drawing behind everything, going
+  <!-- The symbol, large, turning on the spot at the footer's top right
+       corner — its centre on the corner, so only the quarter of it that is
+       in the page shows and the footer cuts off the rest. A hairline drawing behind everything, going
        round slowly enough to be noticed rather than watched. -->
   <svg class="spin" viewBox={SYMBOL.viewBox} aria-hidden="true" focusable="false">
     <g class="turn">{SYMBOL.paths.map((d) => <path d={d} />)}</g>
@@ -180,13 +180,14 @@ const legal = [
   @media (min-width: 860px) { .footer { min-height: 100vh; } }
 
   /* ── the turning symbol ───────────────────────────────────────────── */
-  /* Sized to the screen and centred on the right edge, level with the
-     invitation, so half of it is off the page. It is a drawing behind the
+  /* Sized to the screen and centred on the top right corner, so most of it
+     is off the page. Its own box is let go of, or the corners of the cube
+     would be cut off by it as it turns. It is a drawing behind the
      words, never something they have to make room for: no box in the flow,
      no clicks, a hairline as the dial behind the work is. */
-  .spin { position: absolute; z-index: 0; right: 0; top: max(var(--s-8), 14vh);
-          height: min(46vw, 72vh); width: auto; max-width: none;
-          translate: 50% -18%;
+  .spin { position: absolute; z-index: 0; right: 0; top: 0;
+          height: min(56vw, 84vh); width: auto; max-width: none; overflow: visible;
+          translate: 50% -50%;
           pointer-events: none;
           fill: none; stroke: var(--ink-dim); stroke-width: 1; }
   .spin path { vector-effect: non-scaling-stroke; }
