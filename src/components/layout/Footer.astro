@@ -10,13 +10,8 @@ import { site } from '@lib/site';
 
 const year = new Date().getFullYear();
 
-/* placeholder — the practice's own accounts and details */
-const social = [
-  { label: 'LinkedIn', href: '#' },
-  { label: 'Instagram', href: '#' },
-  { label: 'Behance', href: '#' },
-  { label: 'Dribbble', href: '#' },
-];
+/* the practice's own accounts, when it has some to show: a second list
+   under the page's, in the same style, went here */
 const enquiry = [
   { k: 'E', label: 'hello@immrsv.studio', href: 'mailto:hello@immrsv.studio' },
   { k: 'P', label: '747.302.6868', href: 'tel:+17473026868' },
@@ -55,19 +50,18 @@ const legal = [
 
     <div class="col reach">
       <span class="label head">Business details</span>
+      <!-- based in one place, at work anywhere; and what time it is there -->
+      <p class="based">Working globally from Los Angeles, California.</p>
       <ul>
         {enquiry.map((e) => (
           <li><span class="k">{e.k}.</span><a href={e.href} data-tap>{e.label}</a></li>
         ))}
-        <!-- where the studio is, and what time it is there now -->
-        <li><span class="k">L.</span>Los Angeles, California</li>
         <li><span class="k">T.</span><span class="when" data-clock>--:--:--</span></li>
       </ul>
     </div>
     </div>
 
-    <!-- The right half: the page as a list, and under it the accounts, both
-         set as the questions are — a row on a rule, a panel crossing it from
+    <!-- The right half: the page as a list, set as the questions are — a row on a rule, a panel crossing it from
          the edge the cursor came over, the name stepping in from the rule and
          a dot arriving at the far edge. -->
     <div class="lists">
@@ -80,22 +74,6 @@ const legal = [
                 <span class="tile" data-dhover-tile aria-hidden="true"></span>
                 <a class="go" href={m.href} data-tap>
                   <span class="txt">{m.label}</span>
-                  <i class="sq" aria-hidden="true"></i>
-                </a>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <nav class="menu" aria-label="Social">
-        <span class="label head">Social</span>
-        <ul>
-          {social.map((sx) => (
-            <li class="item">
-              <div class="row" data-dhover-item data-axis="y">
-                <span class="tile" data-dhover-tile aria-hidden="true"></span>
-                <a class="go" href={sx.href} data-tap>
-                  <span class="txt">{sx.label}</span>
                   <i class="sq" aria-hidden="true"></i>
                 </a>
               </div>
@@ -205,6 +183,7 @@ const legal = [
   .col ul { list-style: none; display: grid; gap: 0.55rem; }
   .col li { display: flex; gap: 0.5em; font-size: var(--t-body); color: var(--ink-2); }
   .k { color: var(--ink-3); }
+  .based { font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-2); max-width: 30ch; }
   .col a { color: var(--ink-2); transition: color var(--dur-fast) ease; }
   .col a:hover { color: var(--ink); }
   /* ── the lists ────────────────────────────────────────────────────── */
