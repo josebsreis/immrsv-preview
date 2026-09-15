@@ -48,10 +48,13 @@ const legal = [
       </div>
     </div>
 
+    <!-- the details, side by side: where they are on the left, the ways to
+         reach them on the right, so the half is used across -->
     <div class="col reach">
-      <span class="label head">Business details</span>
-      <!-- based in one place, at work anywhere; and what time it is there -->
-      <p class="based">Working globally from Los Angeles, California.</p>
+      <div>
+        <span class="label head">Business details</span>
+        <p class="based">Working globally from Los Angeles, California.</p>
+      </div>
       <ul>
         {enquiry.map((e) => (
           <li><span class="k">{e.k}.</span><a href={e.href} data-tap>{e.label}</a></li>
@@ -183,7 +186,8 @@ const legal = [
   .col ul { list-style: none; display: grid; gap: 0.55rem; }
   .col li { display: flex; gap: 0.5em; font-size: var(--t-body); color: var(--ink-2); }
   .k { color: var(--ink-3); }
-  .based { font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-2); max-width: 30ch; }
+  .based { margin-top: var(--s-4); font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-2); max-width: 24ch; }
+  .reach { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: var(--s-7); }
   .col a { color: var(--ink-2); transition: color var(--dur-fast) ease; }
   .col a:hover { color: var(--ink); }
   /* ── the lists ────────────────────────────────────────────────────── */
@@ -234,6 +238,7 @@ const legal = [
 
   @media (max-width: 859px) {
     .footer { padding-top: var(--s-7); }
+    .reach { grid-template-columns: 1fr; }
     .acts { flex-direction: column; align-items: flex-start; gap: var(--s-3); }
     .cols { grid-template-columns: 1fr; gap: var(--s-7); margin-top: 8vh; }
     .mark { padding-top: 10vh; }
