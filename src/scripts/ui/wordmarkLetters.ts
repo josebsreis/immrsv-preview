@@ -5,10 +5,17 @@
    back to its place. Contact also fills it at once, and the fill fades away a
    moment later, so the mark is an outline again by the time you look away.
 
+   Contact also breaks the symbol out of the letter: a handful of the cube's
+   three faces, small, burst from where the pointer went in, tumble outward
+   along its travel and fall away — each one a short animation of its own,
+   gone from the drawing when it ends.
+
    The physics is the same shape as GSAP's inertia (velocity in, resistance,
    settle at the origin) written as a spring so the page keeps its own
    integrator and no library.
    ═══════════════════════════════════════════════════════════════════ */
+
+import { SYMBOL } from '@lib/lettermark';
 
 export interface WordmarkLettersConfig {
   shove: number;        // pointer velocity → letter velocity
@@ -20,6 +27,15 @@ export interface WordmarkLettersConfig {
   spinStiffness: number;
   spinDamping: number;
   hold: number;         // ms a touched letter stays filled
+  burst: {
+    count: [number, number]; // pieces a touch throws, min and max
+    size: [number, number];  // each piece's scale of the symbol, min and max
+    throw: [number, number]; // how far a piece flies, in the drawing's units
+    carry: number;           // how much of the pointer's travel a piece takes with it
+    fall: number;            // how far a piece drops as it fades, in the drawing's units
+    life: [number, number];  // ms a piece lasts, min and max
+    cap: number;             // pieces in flight at once, at most
+  };
 }
 
 export const WORDMARK_LETTERS: WordmarkLettersConfig = {
@@ -32,6 +48,15 @@ export const WORDMARK_LETTERS: WordmarkLettersConfig = {
   spinStiffness: 58,
   spinDamping: 6.6,
   hold: 620,
+  burst: {
+    count: [7, 11],
+    size: [0.05, 0.11],
+    throw: [22, 70],
+    carry: 0.05,
+    fall: 14,
+    life: [650, 1100],
+    cap: 90,
+  },
 };
 
 interface Letter {
@@ -53,7 +78,12 @@ export function createWordmarkLetters(
   const nodes = Array.from(host.querySelectorAll<SVGGraphicsElement>('[data-letter]'));
   if (!svg || nodes.length === 0) return null;
 
-  const C = { ...WORDMARK_LETTERS, ...config };
+  const C = { ...WORDMARK_LETTERS, ...config, burst: { ...WORDMARK_LETTERS.burst, ...config.burst } };
+  // the pieces are drawn after the letters, so over them
+  const shards = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  shards.setAttribute('aria-hidden', 'true');
+  svg.append(shards);
+  let flying = 0;
   const letters: Letter[] = nodes.map((el) => ({ el, x: 0, y: 0, r: 0, vx: 0, vy: 0, vr: 0, timer: 0 }));
 
   // the SVG is drawn in user units, the pointer moves in CSS pixels
@@ -74,7 +104,46 @@ export function createWordmarkLetters(
   };
   addEventListener('pointermove', onMove, { passive: true });
 
+  const between = ([a, b]: readonly [number, number]) => a + Math.random() * (b - a);
+
+  /** the symbol's faces burst out of the point the pointer touched */
+  function burst(e: PointerEvent) {
+    const B = C.burst;
+    if (flying >= B.cap) return;
+    // where the pointer is, in the drawing's own units
+    const r = svg.getBoundingClientRect();
+    const box = svg.viewBox.baseVal;
+    const x0 = box.x + (e.clientX - r.left) / scale;
+    const y0 = box.y + (e.clientY - r.top) / scale;
+    // the faces are drawn about the symbol's middle
+    const cx = SYMBOL.box.x + SYMBOL.box.w / 2, cy = SYMBOL.box.y + SYMBOL.box.h / 2;
+    const n = Math.round(between(B.count));
+    for (let i = 0; i < n && flying < B.cap; i++) {
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('shard');
+      const face = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      face.setAttribute('d', SYMBOL.paths[i % SYMBOL.paths.length]);
+      face.setAttribute('transform', `scale(${between(B.size).toFixed(3)}) translate(${-cx} ${-cy})`);
+      g.append(face);
+      shards.append(g);
+      flying++;
+
+      // out in every direction, all of them leaning the way the pointer went
+      const a = Math.random() * Math.PI * 2, d = between(B.throw);
+      const dx = Math.cos(a) * d + vx * B.carry / scale * 0.1;
+      const dy = Math.sin(a) * d + vy * B.carry / scale * 0.1;
+      const spin = (Math.random() - 0.5) * 540;
+      const anim = g.animate([
+        { transform: `translate(${x0}px, ${y0}px) rotate(0deg) scale(0.2)`, opacity: 1 },
+        { transform: `translate(${x0 + dx * 0.75}px, ${y0 + dy * 0.75}px) rotate(${spin * 0.7}deg) scale(1)`, opacity: 1, offset: 0.45 },
+        { transform: `translate(${x0 + dx}px, ${y0 + dy + B.fall}px) rotate(${spin}deg) scale(0.85)`, opacity: 0 },
+      ], { duration: between(B.life), easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'forwards' });
+      anim.onfinish = anim.oncancel = () => { g.remove(); flying--; };
+    }
+  }
+
   function touch(L: Letter, e: PointerEvent) {
+    burst(e);
     const b = L.el.getBoundingClientRect();
     const ox = e.clientX - (b.left + b.width / 2);
     const oy = e.clientY - (b.top + b.height / 2);
@@ -131,6 +200,7 @@ export function createWordmarkLetters(
   return {
     destroy() {
       cancelAnimationFrame(raf); io.disconnect(); ro.disconnect();
+      shards.getAnimations({ subtree: true }).forEach((a) => a.cancel()); shards.remove();
       removeEventListener('pointermove', onMove);
       letters.forEach((L, i) => { clearTimeout(L.timer); L.el.removeEventListener('pointerenter', enters[i]); });
     },
