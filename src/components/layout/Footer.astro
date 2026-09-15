@@ -57,10 +57,9 @@ const legal = [
       <!-- the studio's own time, level with the invitation and at the far
            margin: where the reply would come from, what o'clock it is there
            and what day, all set by the script from the studio's zone -->
-      <div class="when" data-clock>
-        <span class="city label">Los Angeles</span>
-        <span class="time" data-clock-time>--:--:-- --</span>
-        <span class="date label" data-clock-date>&nbsp;</span>
+      <div class="when label" data-clock>
+        <span>Los Angeles <span class="time" data-clock-time>--:--:-- --</span></span>
+        <span data-clock-date>&nbsp;</span>
       </div>
       </div>
       <div class="acts">
@@ -237,12 +236,11 @@ const legal = [
   .invite { margin: 0; }
   /* the question at the left, the time at the right, level with its top */
   .top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-6); }
-  /* the studio's clock: the city, the time, the day — set flush right,
-     the time in the page's ink and the rest in its second colour */
+  /* the studio's clock: two lines of the page's small capitals, flush
+     right — the city and the time, and the day under them */
   .when { flex: none; display: grid; gap: var(--s-2); justify-items: end; text-align: right;
           color: var(--ink-3); padding-top: 0.3em; }
-  .when .time { font-size: var(--t-title); font-weight: var(--w-title); letter-spacing: var(--track-title);
-                line-height: var(--lh-title); color: var(--ink); }
+  .when .time { margin-left: 0.5em; }
   .ask { font-size: var(--t-h2); font-weight: var(--w-display);
          line-height: var(--lh-display); letter-spacing: var(--track-display); }
   /* the turning word, letter by letter, as the headline's */
