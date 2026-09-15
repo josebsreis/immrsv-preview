@@ -41,10 +41,6 @@ const legal = [
 ];
 ---
 <footer class="footer" id="contact" data-theme="dark">
-  <div class="top">
-    <span class="label when" data-clock aria-hidden="true"></span>
-  </div>
-
   <div class="invite">
     <h2 class="ask">Let’s create<br />something IMMRSV.</h2>
     <div class="acts">
@@ -56,11 +52,14 @@ const legal = [
        the eye is after the button, and the page as a list on the right. -->
   <div class="cols">
     <div class="col reach">
-      <span class="label head">Business enquiry</span>
+      <span class="label head">Business details</span>
       <ul>
         {enquiry.map((e) => (
           <li><span class="k">{e.k}.</span><a href={e.href} data-tap>{e.label}</a></li>
         ))}
+        <!-- where the studio is, and what time it is there now -->
+        <li><span class="k">L.</span>Los Angeles, California</li>
+        <li><span class="k">T.</span><span class="when" data-clock>--:--:--</span></li>
       </ul>
     </div>
     <nav class="col" aria-label="Footer">
@@ -115,7 +114,7 @@ const legal = [
       const t = new Intl.DateTimeFormat('en-GB', {
         hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'America/Los_Angeles',
       }).format(new Date());
-      face.textContent = `Los Angeles, California → ${t}`;
+      face.textContent = `${t} PT`;
     };
     tick();
     // on the second: the studio's own time, running
@@ -141,14 +140,12 @@ const legal = [
             display: flex; flex-direction: column; }
   @media (min-width: 860px) { .footer { min-height: 100vh; } }
 
-  /* the studio's own time, alone on the right; the invitation below leads */
-  .top { display: flex; justify-content: flex-end; gap: var(--s-4);
-         color: var(--ink-3); }
-  .when { font-variant-numeric: tabular-nums; color: var(--ink-3); }
+  /* the time holds its width as the seconds turn */
+  .when { font-variant-numeric: tabular-nums; }
 
   /* the question, and the two ways in directly under it — they answer it, so
      they read better beneath it than sent to the far side of the page */
-  .invite { margin-top: var(--s-8); }
+  .invite { margin-top: 0; }
   .ask { font-size: var(--t-h2); font-weight: var(--w-display);
          line-height: var(--lh-display); letter-spacing: var(--track-display); }
 
@@ -193,7 +190,6 @@ const legal = [
 
   @media (max-width: 859px) {
     .footer { padding-top: var(--s-7); }
-    .top { flex-direction: column; gap: var(--s-2); }
     .acts { flex-direction: column; align-items: flex-start; gap: var(--s-3); }
     .cols { grid-template-columns: 1fr; gap: var(--s-6); margin-top: 8vh; }
     .mark { padding-top: 10vh; }
