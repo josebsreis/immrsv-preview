@@ -50,7 +50,9 @@ export function createHero(opts: HeroOptions): Hero {
 
   // ── renderer / camera / scene ──────────────────────────────────────
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, premultipliedAlpha: true });
-  const dpr = () => Math.min(devicePixelRatio, mobile() ? cfg.renderer.dprMobile : cfg.renderer.dpr);
+  /** a phone's ceiling: it starts at the config's and only ever comes down */
+  let mobileDpr = cfg.renderer.dprMobile;
+  const dpr = () => Math.min(devicePixelRatio, mobile() ? mobileDpr : cfg.renderer.dpr);
   renderer.setPixelRatio(dpr());
   renderer.setSize(innerWidth, innerHeight);
   renderer.setClearColor(cfg.renderer.ground, 0);
@@ -258,9 +260,32 @@ export function createHero(opts: HeroOptions): Hero {
     if (innerWidth === vw && Math.abs(innerHeight - vhSeen) < vhSeen * 0.2) return;
     vw = innerWidth; vhSeen = innerHeight;
     camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+    applyDpr();
+  };
+  /** the drawing buffer, the lens's and the points' size, at the ratio in force */
+  function applyDpr() {
     renderer.setPixelRatio(dpr()); renderer.setSize(innerWidth, innerHeight);
     lens.resize();
     material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
+  }
+  /* A phone is drawn as sharp as its display, and watched: over each run of
+     frames, once the intro's first hitches are past, the average frame is
+     taken, and one slower than the config allows steps the resolution down —
+     three, then two, then the floor — and never back up, so it cannot hunt.
+     The motion is the thing; the sharpness is what is left over for it. */
+  let watchT = 0, watchN = 0, watchFrom = 0;
+  const watchFrames = (t: number, dt: number) => {
+    if (!mobile() || mobileDpr <= cfg.renderer.dprMobileFloor) return;
+    if (!watchFrom) watchFrom = t + 2;
+    if (t < watchFrom) return;
+    watchT += dt; watchN++;
+    if (watchN < 90) return;
+    const slow = watchT / watchN > cfg.renderer.slowFrame;
+    watchT = 0; watchN = 0;
+    if (!slow) return;
+    mobileDpr = mobileDpr > 2 ? 2 : cfg.renderer.dprMobileFloor;
+    applyDpr();
+    watchFrom = t + 1;           // the resize is a hitch of its own: let it pass
   };
   addEventListener('resize', onResize);
 
@@ -290,6 +315,7 @@ export function createHero(opts: HeroOptions): Hero {
     // return, and in a browser that hides the page between every tool call
     // it never got past that frame at all.
     if (!released || !begun) { introT0 = t; begun = released; }
+    watchFrames(t, dt);
     last = now;
 
     // The reel turns on its own. Scrolling takes precedence — nothing changes

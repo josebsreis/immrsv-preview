@@ -24,11 +24,20 @@ export const HERO_CONFIG = {
        quality setting so much as a match: a 2× display drawn at 1.5× is
        stretched by a third and every point goes soft, which on a tablet
        read as the whole hero being blurred the moment it loaded. Two is the
-       common Retina ratio, so nothing on a desktop or a tablet is scaled;
-       phones — three-times displays with small batteries — take a little
-       less, which at their size is not visible. */
+       common Retina ratio, so nothing on a desktop or a tablet is scaled.
+       Phones were held to one and a half on the reasoning that it would not
+       be seen at their size — and it was: on a three-times display that is
+       every point drawn at half size and stretched, and the cloud read as
+       out of focus. They are now drawn at the display's own ratio, up to
+       three, and the engine watches its own frame rate: a phone that cannot
+       keep up is stepped down to `dprMobileFloor` by way of two (index.ts),
+       so the sharpness is spent only where there is the speed to pay for it. */
     dpr: 2,
-    dprMobile: 1.5,
+    dprMobile: 3,
+    dprMobileFloor: 1.5,
+    /** the slowest average frame, in seconds, a phone may run at before its
+     *  resolution is stepped down — about fifty a second */
+    slowFrame: 1 / 50,
     ground: 0x060606,             // must match --ground in tokens.css (dark)
     exposure: 1.1,
   },
