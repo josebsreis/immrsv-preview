@@ -94,7 +94,7 @@ const grounds = ['light', 'dark', 'light'] as const;
           <div class="top">
             <div class="mark">
               <span class="n" data-rise>{String(i + 1).padStart(2, '0')}</span>
-              <h3 id={`studio-${s.key}`} data-blur-in>{s.name}</h3>
+              <h3 id={`studio-${s.key}`} data-blur-in><span>{s.name.split(' ')[0]}</span> {s.name.split(' ').slice(1).join(' ')}</h3>
             </div>
             <div class="say">
               <p class="promise" data-rise style="--i: 2">{s.promise}</p>
@@ -225,6 +225,16 @@ const grounds = ['light', 'dark', 'light'] as const;
      the name's way. */
   .mark .n { font-family: var(--font-display); font-stretch: var(--display-stretch);
              color: var(--ink-4); }
+  /* On a desktop every name sets in two lines, the first word on its own, so
+     the three panels open alike — one name broke by itself and two did not.
+     The first child is the word's own span, or the first word the letter
+     animation makes of it; either way it is the first word. */
+  /* `:global`, because the animation's words are made in script and carry
+     no scope of this component's; and not on a short or very wide screen,
+     whose tighter panel counts on the name keeping to one line. */
+  @media (min-width: 860px) and (min-height: 821px) and (max-aspect-ratio: 2/1) {
+    .mark h3 > :global(:first-child) { display: block; }
+  }
 
   /* The studio's line is a sentence, so it takes the statement's voice — the
      one the manifesto speaks in: normal case, regular, at the statement's
