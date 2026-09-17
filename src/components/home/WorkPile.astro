@@ -207,8 +207,8 @@ const rings = RINGS.map((r, k) => {
          gap: var(--s-4); padding: 0 var(--s-4); }
   .from { flex: none; }
   .name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-          font-size: var(--t-lead); /* TRIAL: was --t-title; the wide capitals need the room */ font-weight: var(--w-title);
-          letter-spacing: var(--track-title); color: var(--ink); }
+          font-size: var(--t-lead); font-weight: var(--w-display);
+          letter-spacing: var(--track-display); color: var(--ink); }
   /* the name and the studio fade in once the frame has opened, a beat behind it */
   .bar > * { opacity: 0; transition: opacity 0.4s var(--ease-snap); }
   .card[data-pile-status="active"] .bar > * { opacity: 1;
@@ -227,7 +227,7 @@ const rings = RINGS.map((r, k) => {
     .pile { padding: calc(var(--section-y) + 2vh) var(--page-x) calc(var(--page-y) + 3rem + 10vh); --card-w: 82vw; --foot: 3.5rem; }
     .title { white-space: normal; }
     .table { margin-top: var(--s-7); }
-    .name { font-size: var(--t-body); /* TRIAL: was --t-lead */ }
+    .name { font-size: var(--t-body); }
   }
   @media (prefers-reduced-motion: reduce) {
     .plate, .bar > *, .media img { transition: none; }

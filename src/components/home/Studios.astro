@@ -94,7 +94,7 @@ const grounds = ['light', 'dark', 'light'] as const;
           <div class="top">
             <div class="mark">
               <h3 id={`studio-${s.key}`} data-blur-in>{s.name}</h3>
-              <!-- TRIAL: the number follows the name, raised at its last word -->
+              <!-- the number follows the name, raised at its last word -->
               <span class="n" data-rise>{String(i + 1).padStart(2, '0')}</span>
             </div>
             <div class="say">
@@ -219,21 +219,21 @@ const grounds = ['light', 'dark', 'light'] as const;
                  line-height: var(--lh-display); letter-spacing: var(--track-display); }
   .n { color: var(--ink-3); }
   .mark h3 { margin: 0; color: var(--ink); }
-  /* TRIAL: the name runs as a line of text and the number follows its last
+  /* The name runs as a line of text and the number follows its last
      word, small and raised like a footnote — wherever that line ends. The
      sizes are forced so the rules for smaller screens below do not undo it. */
   .mark { display: block; text-wrap: balance; }
   .mark h3 { display: inline; }
   .mark .n { display: inline-block; vertical-align: top; margin-left: 0.45em;
              font-size: var(--t-lead) !important; line-height: 1;
-             font-weight: 500; letter-spacing: var(--track-label);
-             padding-top: 0.25em; }
+             font-stretch: var(--label-stretch); font-weight: var(--w-label);
+             letter-spacing: var(--track-label); padding-top: 0.25em; }
 
-  /* TRIAL: set as the headings are — wide capitals — so it sits with the
-     studio's name beside it rather than against it */
-  .promise { font-family: var(--font-display); font-stretch: var(--display-stretch); text-transform: uppercase; }
-  .promise { margin: 0 0 var(--s-5); max-width: 24ch; font-size: var(--t-h3);
-             font-weight: var(--w-display); line-height: var(--lh-title);
+  /* The studio's line is a sentence, so it takes the statement's voice — the
+     one the manifesto speaks in: normal case, regular, at the statement's
+     size — and leaves the capitals to the name beside it. */
+  .promise { margin: 0 0 var(--s-5); max-width: 22ch; font-size: var(--t-statement);
+             font-weight: var(--w-title); line-height: 1.2;
              letter-spacing: var(--track-title); color: var(--ink); }
   .desc { margin: 0; max-width: 46ch; font-size: var(--t-body);
           line-height: var(--lh-body); color: var(--ink-2); }

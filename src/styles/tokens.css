@@ -56,14 +56,25 @@
      fallback the page is drawn in while the file arrives — and on a Mac that
      fallback is real Helvetica Neue, which is close enough in width that the
      swap does not throw the layout about. */
-  /* TRIAL: the whole site in Archivo; Inter stays behind it as the fallback */
+  /* One family, Archivo, in three voices — it is variable in width as well
+     as weight, and the width is what tells the voices apart:
+
+       display   a little wide, semibold, capitals   headings, the marquee,
+                                                     each studio's line
+       label     a little wide, medium, capitals     nav, buttons, tags, chips,
+                                                     counts, contact lines
+       text      normal width, regular, normal case  anything with length
+
+     Capitals are for what is read at a glance; anything read at length stays
+     in normal case at normal width, where it reads as quickly as it should.
+     Inter stays behind it as the fallback while the file arrives. */
   --font-sans: "Archivo", InterVariable, "Inter Fallback", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
-  /* TRIAL: the headings in the same face, in capitals and bold */
-  /* TRIAL: Archivo for the headings, set a little wide */
-  --font-display: "Archivo", var(--font-sans);
+  --font-display: var(--font-sans);
+  --font-label: var(--font-sans);
   --display-stretch: 112%;
-  /* TRIAL: the short text in capitals is Archivo too, a little wide */
-  --font-mono: var(--font-sans);
+  --display-case: uppercase;
+  --label-stretch: 112%;
+  --text-stretch: 100%;
   /* The reading sizes run small and the display sizes stay large: the gap
      between them is the effect. Set at a comfortable 15px, body copy reads
      as a website; at 14 with the leading left open it reads as an interface,
@@ -79,16 +90,18 @@
      tablet, where 4.6vw was 35px and 2.8vw was 21. Each is a fixed part plus
      a smaller slope, set so 1440 is unchanged and a tablet keeps most of
      the size — the headings step down with the screen instead of falling. */
-  --t-h2: clamp(1.56rem, 1.13rem + 2.32vw, 3.61rem);  /* TRIAL: ×0.78 for bold capitals */
+  /* set for wide semibold capitals, which carry at a smaller size than the
+     light lower case these were first drawn for */
+  --t-h2: clamp(1.56rem, 1.13rem + 2.32vw, 3.61rem);
   /* a card's or a step's own title: the rung between the lead and the
      statement, which the scale did not have and two components wanted */
   --t-title: clamp(1.125rem, 1.5vw, 1.375rem);
   /* a section heading that is not the page's largest — the questions, and
      anything else that wants to be clearly a heading without taking a screen */
-  --t-h3: clamp(1.38rem, 1.22rem + 1.01vw, 2.12rem);  /* TRIAL: ×0.85 for bold capitals */
+  --t-h3: clamp(1.38rem, 1.22rem + 1.01vw, 2.12rem);
   --t-statement: clamp(1.25rem, 0.93rem + 0.89vw, 1.875rem);   /* the spoken statement */
   --t-figure: clamp(2.5rem, 1.55rem + 1.98vw, 3.75rem);        /* a stat's number */
-  --t-display: clamp(1.85rem, 1.15rem + 2.1vw, 3.12rem);  /* TRIAL: ×0.78 for bold capitals */
+  --t-display: clamp(1.85rem, 1.15rem + 2.1vw, 3.12rem);
   /* ── the type system ─────────────────────────────────────────────
      Four tiers, and every piece of text on the site belongs to one of them.
      A tier owns its weight, its tracking and its leading together, because
@@ -108,25 +121,26 @@
      title tier so it can part from it again; today they are the same
      weight on purpose, not by drift. Only small controls go heavier, where
      the size cannot carry the emphasis itself. */
-  --w-display: 600;  /* TRIAL: was 400 */
+  --w-display: 600;               /* the display voice: semibold capitals */
   --w-title: 400;
   --w-body: 400;
   --w-ui: 500;                    /* buttons and the like, at caption size */
+  --w-label: 500;                 /* the label voice */
 
   /* Tracking is negative above body size and positive below it: large type
      sets too loose at its natural spacing and small capitals too tight.
      Inter is drawn for UI, so body itself wants none. */
-  --track-display: -0.03em;  /* TRIAL: tight, for the wide capitals */
+  --track-display: -0.03em;       /* wide capitals set loose on their own: pulled in, they read as words */
   --track-title: -0.025em;
   --track-lead: -0.01em;
-  --track-caps: 0.07em;  /* TRIAL: was 0.12em */           /* 11px uppercase: chips, tabs, buttons */
-  --track-label: 0.09em;  /* TRIAL: was 0.16em */          /* 10px uppercase: nav, tags, meta */
+  --track-caps: 0.07em;           /* 11px uppercase: chips, tabs, buttons */
+  --track-label: 0.09em;          /* 10px uppercase: nav, tags, meta */
   --track-wide: 0.26em;
 
   /* Leading closes as the type grows: a display line is nearly solid, body
      copy is open. 1.7 rather than 1.5 on body is most of the air on a page
      that has few other things in it. */
-  --lh-display: 0.98;
+  --lh-display: 1;                /* capitals have no descenders to clear, but two lines of them want a hair of air */
   --lh-title: 1.05;
   --lh-lead: 1.45;
   --lh-body: 1.7;

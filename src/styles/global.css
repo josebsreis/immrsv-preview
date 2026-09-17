@@ -58,14 +58,19 @@ h1, h2, h3 { font-weight: var(--w-title); }
    last few lines of a paragraph so it never ends on a single word. Both
    are a hint the browser drops where it cannot afford it; nothing breaks. */
 h1, h2, h3, h4 { text-wrap: balance; }
-/* TRIAL: every heading in Archivo, a little wide, bold capitals. The weight is forced
-   because several headings set the lighter title weight in their own rules. */
-h1, h2, h3 { font-family: var(--font-display); font-stretch: var(--display-stretch); text-transform: uppercase;
-             font-weight: 600 !important; letter-spacing: -0.03em !important; }
+/* The display voice: every heading, whatever its size. A component sets
+   the size; the voice — face, width, case, weight, tracking — is set here,
+   once, so no heading can drift from the others. */
+h1, h2, h3, .voice-display {
+  font-family: var(--font-display); font-stretch: var(--display-stretch);
+  text-transform: var(--display-case);
+  font-weight: var(--w-display); letter-spacing: var(--track-display); }
 p, li, dd, blockquote { text-wrap: pretty; }
-/* TRIAL: the short text — labels, nav, section tags, chips, counts and the
-   buttons — in capitals, a little wide, at medium weight */
-.label, .chip, .btn, .section-tag { font-family: var(--font-mono); font-stretch: var(--display-stretch); font-weight: 500; text-transform: uppercase; }
+/* The label voice: the short text — nav, section tags, chips, counts and
+   the buttons. Size and tracking stay with each; the voice is set here. */
+.label, .chip, .btn, .section-tag, .voice-label {
+  font-family: var(--font-label); font-stretch: var(--label-stretch);
+  font-weight: var(--w-label); text-transform: uppercase; }
 
 :focus-visible { outline: var(--hairline) solid var(--ink); outline-offset: 3px; }
 

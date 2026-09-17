@@ -48,7 +48,7 @@ const [line1, line2 = ''] = content.headline.split('\n');
 
   .lead { position: absolute; left: var(--page-x); top: clamp(7.375rem, 16vh, 10.625rem); z-index: var(--z-ui); }
   h1 { font-size: var(--t-display); font-weight: var(--w-display);
-       line-height: var(--lh-display); letter-spacing: var(--track-display); max-width: 15em; /* TRIAL: was 11em; capitals are wider */ }
+       line-height: var(--lh-display); letter-spacing: var(--track-display); max-width: 15em; }
   .rot { display: inline-block; white-space: nowrap; }
   .rot :global(i) { display: inline-block; font-style: normal; transition: opacity 0.75s ease-in-out, filter 0.75s ease-in-out; }
   .rot :global(i.out) { opacity: 0; filter: blur(9px); }
