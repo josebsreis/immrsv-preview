@@ -297,8 +297,10 @@ const grounds = ['light', 'dark', 'light'] as const;
                  line-height: var(--lh-title); color: var(--ink);
                  border-bottom: var(--hairline) solid var(--line); }
 
-  /* the way into the rest of it */
-  .all { margin-top: var(--s-5); }
+  /* the way into the rest of it. `:global`, because the button is another
+     component's element and carries none of this one's scope — without it
+     this rule matched nothing and the button sat hard under the list */
+  .does :global(.all) { margin-top: var(--s-5); }
 
   @media (max-width: 1099px) {
     .top, .foot { column-gap: var(--s-7); }
@@ -334,6 +336,10 @@ const grounds = ['light', 'dark', 'light'] as const;
     .desc, .promise { max-width: none; }
     h2 { white-space: normal; }
     .thread { height: 8vh; }
+    /* side by side, the button sat at the foot of a tall column with the
+       column's spare height over it; stacked, that height is gone and the
+       button was hard under the list's last rule */
+    .does :global(.all) { margin-top: var(--s-7); }
   }
   /* the section's name steps down a size only on a phone: a tablet has the
      width for it at full size, stacked */
