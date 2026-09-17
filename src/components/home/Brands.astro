@@ -13,7 +13,7 @@ const { content } = Astro.props;
   <section class="brands" aria-label={content.tag}>
     <!-- the name of the section is a cell of the lattice itself: one column
          wide, standing on the first mark, sharing its line and its corners -->
-    <p class="lead">{content.tag}</p>
+    <p class="lead label">{content.tag}</p>
     <ul class="grid" data-dhover>
       {content.items.map((b) => (
         <li data-dhover-item>
@@ -39,7 +39,9 @@ const { content } = Astro.props;
           border: var(--hairline) solid var(--line); border-bottom: 0;
           border-radius: var(--radius) var(--radius) 0 0;
           margin: 0; display: flex; align-items: center;
-          font-size: var(--t-small); color: var(--ink-2); }
+          /* the label voice, at the caption size: it names the grid under it */
+          font-size: var(--t-caption); letter-spacing: var(--track-caps); line-height: 1.3;
+          color: var(--ink-2); }
 
   /* One lattice, on the site's corner. The lines between the cells are the
      ground showing through a hairline gap over the line colour, so every
