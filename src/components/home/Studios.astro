@@ -166,7 +166,9 @@ const grounds = ['light', 'dark', 'light'] as const;
   h2 { margin: var(--s-6) 0 var(--s-4); font-size: var(--t-h2);
        font-weight: var(--w-display); line-height: var(--lh-display);
        letter-spacing: var(--track-display); color: var(--ink); white-space: nowrap; }
-  .intro { max-width: 42ch; margin: 0 0 var(--s-6); text-wrap: balance; font-size: var(--t-lead);
+  /* wide enough for the line to set in two on a desktop; it narrows again
+     with the screen and takes the lines it needs there */
+  .intro { max-width: 64ch; margin: 0 0 var(--s-6); text-wrap: balance; font-size: var(--t-lead);
            line-height: var(--lh-lead); letter-spacing: var(--track-lead);
            color: var(--ink-3); }
 
