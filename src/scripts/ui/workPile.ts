@@ -138,12 +138,15 @@ export function createWorkPile(root: HTMLElement): WorkPile {
      the card sits nearer the section's foot than its head, so both rings
      showed above the card and one below. Here the foot is let out until the
      card's middle is the section's middle, and the dial is drawn so its
-     outer ring stands just inside that distance — both rings, whole, above
-     and below alike. A desktop keeps the large dial that runs off the sides. */
+     outer ring runs just off the section's head and foot — cut by the edge
+     at the middle and curving back into view towards the sides — with the
+     inner ring whole inside it, above and below alike. A desktop keeps the
+     large dial that runs off the sides. */
   const dial = root.querySelector<SVGElement>('.dial');
   const stacked = matchMedia('(max-width: 859px)');
-  /** the outer ring's far edge, in the drawing's units (its box is 2000) */
-  const OUTER = 552, FIT = 0.9;
+  /** the middle of the outer ring's ticks, in the drawing's units (its box
+   *  is 2000), and how far past the section's edge that lands */
+  const OUTER = 546, FIT = 1.04;
   const fitDial = () => {
     if (!dial) return;
     root.style.paddingBottom = '';
