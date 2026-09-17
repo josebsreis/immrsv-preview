@@ -218,6 +218,13 @@ const grounds = ['light', 'dark', 'light'] as const;
                  line-height: var(--lh-display); letter-spacing: var(--track-display); }
   .n { color: var(--ink-3); }
   .mark h3 { margin: 0; color: var(--ink); }
+  /* TRIAL: the number beside the name as a small index at its top, so the
+     name starts on the first line rather than under the number. It is set
+     after the size rules below, so it wins at every width. */
+  .mark { flex-direction: row; align-items: flex-start; gap: var(--s-4); }
+  .mark .n { flex: none; font-size: var(--t-lead) !important; line-height: 1;
+             font-weight: 500; letter-spacing: var(--track-label);
+             padding-top: 0.2em; }
 
   /* TRIAL: set as the headings are — wide capitals — so it sits with the
      studio's name beside it rather than against it */
