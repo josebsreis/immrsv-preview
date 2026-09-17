@@ -132,6 +132,38 @@ export function createWorkPile(root: HTMLElement): WorkPile {
     if (seen && !dialRaf && !still) { dialLast = 0; dialRaf = requestAnimationFrame(dialFrame); }
   });
   if (rings.length) dialIo.observe(root);
+
+  /* Stacked, the dial is fitted to the section rather than to the screen.
+     Sized by the screen it bore no relation to the room it had: on a phone
+     the card sits nearer the section's foot than its head, so both rings
+     showed above the card and one below. Here the foot is let out until the
+     card's middle is the section's middle, and the dial is drawn so its
+     outer ring stands just inside that distance — both rings, whole, above
+     and below alike. A desktop keeps the large dial that runs off the sides. */
+  const dial = root.querySelector<SVGElement>('.dial');
+  const stacked = matchMedia('(max-width: 859px)');
+  /** the outer ring's far edge, in the drawing's units (its box is 2000) */
+  const OUTER = 552, FIT = 0.9;
+  const fitDial = () => {
+    if (!dial) return;
+    root.style.paddingBottom = '';
+    dial.style.width = dial.style.height = '';
+    if (!stacked.matches) return;
+    const box = root.getBoundingClientRect();
+    const d = dial.getBoundingClientRect();
+    const cy = d.top + d.height / 2;
+    const above = cy - box.top, below = box.bottom - cy;
+    if (below < above) {
+      const pad = parseFloat(getComputedStyle(root).paddingBottom) || 0;
+      root.style.paddingBottom = `${Math.round(pad + above - below)}px`;
+    }
+    const half = Math.max(above, below);
+    const size = Math.round(((half * FIT) / OUTER) * 2000);
+    dial.style.width = dial.style.height = `${size}px`;
+  };
+  fitDial();
+  document.fonts?.ready.then(fitDial);
+  addEventListener('resize', fitDial);
   let now: Pose[] = cards.map((_, i) => poseFor(offset(i, 0, n)));
   let from: Pose[] = now, to: Pose[] = now;
   let start = 0, raf = 0;
@@ -312,6 +344,7 @@ export function createWorkPile(root: HTMLElement): WorkPile {
     destroy() {
       cancelAnimationFrame(raf); cancelAnimationFrame(followRaf);
       cancelAnimationFrame(dialRaf); dialIo.disconnect();
+      removeEventListener('resize', fitDial);
       list.removeEventListener('pointerdown', onDown);
       removeEventListener('pointermove', onMove);
       removeEventListener('pointerup', onUp);
