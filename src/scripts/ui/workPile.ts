@@ -187,9 +187,43 @@ export function createWorkPile(root: HTMLElement): WorkPile {
   let down = false, axis: 'x' | 'y' | null = null;
   let x0 = 0, y0 = 0, dx = 0, width = 1, dragged = false;
 
+  /* Under the hand the cards are not put where the pointer says: they are
+     given somewhere to be and close on it a share of the way each frame.
+     Two flickers came from setting them outright. A pile grabbed again while
+     it was still landing from the last throw jumped from mid-flight to its
+     rest poses in one frame; followed, it is simply caught where it is. And
+     a pointer never holds still, so every tremor of the hand was a tremor of
+     the pile; followed, it is smoothed out. */
+  const FOLLOW = still ? 1 : 0.3;
+  let aim: Pose[] | null = null, followRaf = 0;
+  const follow = () => {
+    followRaf = 0;
+    if (!aim) return;
+    const a = aim;
+    now = now.map((p, i) => ({
+      x: p.x + (a[i].x - p.x) * FOLLOW, y: p.y + (a[i].y - p.y) * FOLLOW,
+      rot: p.rot + (a[i].rot - p.rot) * FOLLOW, s: p.s + (a[i].s - p.s) * FOLLOW,
+      o: p.o + (a[i].o - p.o) * FOLLOW,
+      // the order is not eased: a stacking order is whole numbers, and one
+      // half-way between two of them is just noise
+      z: a[i].z,
+    }));
+    cards.forEach((_, i) => paint(i));
+    followRaf = requestAnimationFrame(follow);
+  };
+  /* Which card is in front swaps in the middle of a drag, where the two
+     overlap most — so a hand resting near the middle flipped it back and
+     forth with every tremor. It swaps at the middle and swaps back only
+     well before it; between the two it stays as it was. (The drag goes
+     heavy past half the width, so a hand seldom gets much beyond 0.55 —
+     the swap cannot wait for more than the middle.) */
+  const SWAP_ON = 0.5, SWAP_OFF = 0.38;
+  let front = false, way = 0;
+
   const onDown = (e: PointerEvent) => {
     if (n < MIN || e.button !== 0) return;
     down = true; axis = null; dragged = false;
+    front = false; way = 0;
     x0 = e.clientX; y0 = e.clientY; dx = 0;
     width = root.clientWidth || 1;
   };
@@ -216,9 +250,16 @@ export function createWorkPile(root: HTMLElement): WorkPile {
     dx = over <= 0 ? mx : Math.sign(mx) * (half + over * 0.2);
     const raw = dx / width;
     const k = Math.min(1, Math.abs(raw));
-    const next = at + (raw > 0 ? -1 : 1);
-    now = cards.map((_, i) => mix(poseFor(offset(i, at, n)), poseFor(offset(i, next, n)), k));
-    cards.forEach((_, i) => paint(i));
+    const step = raw > 0 ? -1 : 1;
+    const next = at + step;
+    // dragged back through the start and out the other side: a new pass
+    if (step !== way) { way = step; front = false; }
+    if (k > SWAP_ON) front = true; else if (k < SWAP_OFF) front = false;
+    aim = cards.map((_, i) => {
+      const a = poseFor(offset(i, at, n)), b = poseFor(offset(i, next, n));
+      return { ...mix(a, b, k), z: front ? b.z : a.z };
+    });
+    if (!followRaf) followRaf = requestAnimationFrame(follow);
     turnDial(turns + (next - at) * k);
   };
 
@@ -226,6 +267,9 @@ export function createWorkPile(root: HTMLElement): WorkPile {
     if (!down) return;
     down = false;
     delete root.dataset.drag;
+    // the hand has let go: nothing to follow, and the throw takes over from
+    // wherever the cards have got to
+    aim = null; cancelAnimationFrame(followRaf); followRaf = 0;
     if (axis !== 'x') return;
     const raw = dx / width;
     settle(at + (raw > THRESHOLD ? -1 : raw < -THRESHOLD ? 1 : 0));
@@ -266,7 +310,7 @@ export function createWorkPile(root: HTMLElement): WorkPile {
 
   return {
     destroy() {
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(raf); cancelAnimationFrame(followRaf);
       cancelAnimationFrame(dialRaf); dialIo.disconnect();
       list.removeEventListener('pointerdown', onDown);
       removeEventListener('pointermove', onMove);
