@@ -59,7 +59,9 @@
   /* TRIAL: the whole site in Be Vietnam Pro; Inter stays behind it as the fallback */
   --font-sans: "Be Vietnam Pro", InterVariable, "Inter Fallback", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
   /* TRIAL: the headings in the same face, in capitals and bold */
-  --font-display: "Be Vietnam Pro", var(--font-sans);
+  /* TRIAL: Archivo for the headings, set a little wide */
+  --font-display: "Archivo", var(--font-sans);
+  --display-stretch: 112%;
   /* TRIAL: a squared mono for the short text in capitals — labels, nav,
      buttons, chips, counts */
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;

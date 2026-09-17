@@ -58,9 +58,9 @@ h1, h2, h3 { font-weight: var(--w-title); }
    last few lines of a paragraph so it never ends on a single word. Both
    are a hint the browser drops where it cannot afford it; nothing breaks. */
 h1, h2, h3, h4 { text-wrap: balance; }
-/* TRIAL: every heading in Be Vietnam Pro, bold capitals. The weight is forced
+/* TRIAL: every heading in Archivo, a little wide, bold capitals. The weight is forced
    because several headings set the lighter title weight in their own rules. */
-h1, h2, h3 { font-family: var(--font-display); text-transform: uppercase;
+h1, h2, h3 { font-family: var(--font-display); font-stretch: var(--display-stretch); text-transform: uppercase;
              font-weight: 600 !important; letter-spacing: -0.005em !important; }
 p, li, dd, blockquote { text-wrap: pretty; }
 /* TRIAL: the short text — labels, nav, section tags, chips, counts and the
