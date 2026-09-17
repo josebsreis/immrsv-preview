@@ -57,9 +57,6 @@ h1, h2, h3 { font-weight: var(--w-title); }
    evened out — and running text is set `pretty`, which only reworks the
    last few lines of a paragraph so it never ends on a single word. Both
    are a hint the browser drops where it cannot afford it; nothing breaks. */
-/* TRIAL: everything in capitals */
-body { text-transform: uppercase; }
-button, input, textarea, select { text-transform: inherit; }
 h1, h2, h3, h4 { text-wrap: balance; }
 /* TRIAL: every heading in General Sans, bold capitals. The weight is forced
    because several headings set the lighter title weight in their own rules. */
