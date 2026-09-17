@@ -239,7 +239,9 @@ const SIZES = '3rem';
     /* stacked, it has the page: back to the size the other sections use */
     /* the size every section's name takes on a small screen */
     /* stacked, the name has the page's width again */
-    h2 { grid-column: 1; font-size: var(--t-h2); white-space: normal; }
+    /* and it has the page's width, so it is one line again: the word-a-line
+       break was for the narrow column beside the quotes */
+    h2 { grid-column: 1; font-size: var(--t-h2); white-space: normal; width: auto; }
     .intro { grid-column: 1; }
     .names { display: none; }
     .slides { grid-column: 1; grid-row: 1; }
