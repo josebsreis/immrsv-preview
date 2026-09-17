@@ -64,8 +64,8 @@ h1, h2, h3 { font-family: var(--font-display); font-stretch: var(--display-stret
              font-weight: 600 !important; letter-spacing: -0.005em !important; }
 p, li, dd, blockquote { text-wrap: pretty; }
 /* TRIAL: the short text — labels, nav, section tags, chips, counts and the
-   buttons — in the mono, in capitals, at medium weight */
-.label, .chip, .btn, .section-tag { font-family: var(--font-mono); font-weight: 500; text-transform: uppercase; }
+   buttons — in capitals, a little wide, at medium weight */
+.label, .chip, .btn, .section-tag { font-family: var(--font-mono); font-stretch: var(--display-stretch); font-weight: 500; text-transform: uppercase; }
 
 :focus-visible { outline: var(--hairline) solid var(--ink); outline-offset: 3px; }
 

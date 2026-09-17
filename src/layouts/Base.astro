@@ -32,12 +32,10 @@ const fullTitle = title ? `${title} — ${site.name}` : `${site.name} — Design
     <!-- the one file the page is set in: fetched alongside the CSS rather
          than after it, so the swap happens before the first paint is read -->
     <link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
-    <!-- TRIAL: Be Vietnam Pro for the whole site, from Google Fonts;
-         self-host the files if it is kept -->
-    <!-- TRIAL: JetBrains Mono for the short text in capitals -->
+    <!-- TRIAL: Archivo for the whole site -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" />
     <!-- pages swap in place: the nav stays put and the rest cross-fades -->
     <ClientRouter />
     <slot name="head" />

@@ -56,15 +56,14 @@
      fallback the page is drawn in while the file arrives — and on a Mac that
      fallback is real Helvetica Neue, which is close enough in width that the
      swap does not throw the layout about. */
-  /* TRIAL: the whole site in Be Vietnam Pro; Inter stays behind it as the fallback */
-  --font-sans: "Be Vietnam Pro", InterVariable, "Inter Fallback", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  /* TRIAL: the whole site in Archivo; Inter stays behind it as the fallback */
+  --font-sans: "Archivo", InterVariable, "Inter Fallback", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
   /* TRIAL: the headings in the same face, in capitals and bold */
   /* TRIAL: Archivo for the headings, set a little wide */
   --font-display: "Archivo", var(--font-sans);
   --display-stretch: 112%;
-  /* TRIAL: a squared mono for the short text in capitals — labels, nav,
-     buttons, chips, counts */
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  /* TRIAL: the short text in capitals is Archivo too, a little wide */
+  --font-mono: var(--font-sans);
   /* The reading sizes run small and the display sizes stay large: the gap
      between them is the effect. Set at a comfortable 15px, body copy reads
      as a website; at 14 with the leading left open it reads as an interface,
@@ -111,7 +110,7 @@
      the size cannot carry the emphasis itself. */
   --w-display: 600;  /* TRIAL: was 400 */
   --w-title: 400;
-  --w-body: 400;  /* TRIAL: Be Vietnam Pro is sturdy enough at regular */
+  --w-body: 400;
   --w-ui: 500;                    /* buttons and the like, at caption size */
 
   /* Tracking is negative above body size and positive below it: large type
@@ -120,8 +119,8 @@
   --track-display: -0.005em;  /* TRIAL: was -0.03em; capitals want more room */
   --track-title: -0.025em;
   --track-lead: -0.01em;
-  --track-caps: 0.04em;  /* TRIAL: was 0.12em; a mono is spaced already */           /* 11px uppercase: chips, tabs, buttons */
-  --track-label: 0.06em;  /* TRIAL: was 0.16em; a mono is spaced already */          /* 10px uppercase: nav, tags, meta */
+  --track-caps: 0.07em;  /* TRIAL: was 0.12em */           /* 11px uppercase: chips, tabs, buttons */
+  --track-label: 0.09em;  /* TRIAL: was 0.16em */          /* 10px uppercase: nav, tags, meta */
   --track-wide: 0.26em;
 
   /* Leading closes as the type grows: a display line is nearly solid, body
