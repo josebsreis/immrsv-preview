@@ -61,7 +61,7 @@ h1, h2, h3, h4 { text-wrap: balance; }
 /* TRIAL: every heading in Archivo, a little wide, bold capitals. The weight is forced
    because several headings set the lighter title weight in their own rules. */
 h1, h2, h3 { font-family: var(--font-display); font-stretch: var(--display-stretch); text-transform: uppercase;
-             font-weight: 600 !important; letter-spacing: -0.005em !important; }
+             font-weight: 600 !important; letter-spacing: -0.03em !important; }
 p, li, dd, blockquote { text-wrap: pretty; }
 /* TRIAL: the short text — labels, nav, section tags, chips, counts and the
    buttons — in capitals, a little wide, at medium weight */

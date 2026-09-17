@@ -116,7 +116,7 @@
   /* Tracking is negative above body size and positive below it: large type
      sets too loose at its natural spacing and small capitals too tight.
      Inter is drawn for UI, so body itself wants none. */
-  --track-display: -0.005em;  /* TRIAL: was -0.03em; capitals want more room */
+  --track-display: -0.03em;  /* TRIAL: tight, for the wide capitals */
   --track-title: -0.025em;
   --track-lead: -0.01em;
   --track-caps: 0.07em;  /* TRIAL: was 0.12em */           /* 11px uppercase: chips, tabs, buttons */
