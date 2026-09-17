@@ -227,18 +227,19 @@ const {
 
   .line { margin: 0; font-size: var(--t-small); color: var(--ink-2); line-height: var(--lh-body); }
 
-  /* Narrow: she takes the width, the line reads as two stacked halves above
-     her, and her steps sit at the foot rather than beside her — there is no
-     beside on a phone. */
+  /* Narrow: she takes the width and stands in the middle of the screen, the
+     line reads as two halves above and below her, and her steps do not pass
+     beside her — there is no beside on a phone — but over her: each comes
+     up from the foot of the screen, crosses her and leaves at the head, the
+     way a list scrolls over a picture that holds still. */
   @media (max-width: 719px) {
     [data-live] .track { height: 380vh; }
-    /* she sits a little above centre, to leave the foot of the screen to the
-       card that is passing */
-    .slot { height: min(56vh, 128vw); top: 42%; }
+    .slot { height: min(56vh, 128vw); }
     .title { font-size: var(--t-small); }
-    .beat { top: auto; bottom: var(--page-y); width: calc(100% - var(--page-x) * 2);
+    /* from the middle, and the script carries it the height of the screen */
+    .beat { top: 50%; width: calc(100% - var(--page-x) * 2);
             left: var(--page-x); right: auto;
-            transform: translateY(var(--ay)); }
+            transform: translateY(calc(-50% + var(--ay))); }
 
   }
 </style>

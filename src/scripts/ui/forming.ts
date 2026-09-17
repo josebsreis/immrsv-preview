@@ -210,11 +210,14 @@ export function createForming(root: HTMLElement): Forming {
        through its own half circle — in towards her at the middle of the pass,
        out again as it goes — and they overlap, so one is always arriving
        while another leaves. */
-    /* Narrow, they come one at a time and barely move: there is only one place
-       for a card to be, and two of them in it is a pile. */
+    /* Narrow, there is no beside her for a card to pass through, so it
+       passes over her: from under the foot of the screen to over its head,
+       nearly the whole height, at the same overlap as on a desktop — which
+       at that travel keeps two cards most of half a screen apart, never a
+       pile. */
     const narrow = w <= 719;
-    const span = narrow ? T.step * 0.95 : T.life;
-    const rise = h * (narrow ? 0.06 : TRAVEL);
+    const span = T.life;
+    const rise = h * (narrow ? 0.92 : TRAVEL);
     const lean = narrow ? 0 : Math.min(w * LEAN, 96, leanMax);
     beats.forEach((b, i) => {
       const at = T.beat + i * T.step;
