@@ -331,7 +331,9 @@ const grounds = ['light', 'dark', 'light'] as const;
     /* one column, and never wider than the screen: a `1fr` track is as wide
        as its widest word, and a long button label made it wider */
     .top, .foot { grid-template-columns: minmax(0, 1fr); row-gap: var(--s-6); }
-    .n, .mark h3 { font-size: var(--t-h3); }
+    /* the studio's name keeps the section-heading size when stacked: it is
+       what each panel opens on, and at the smaller size it did not lead */
+    .n, .mark h3 { font-size: var(--t-h2); }
     .promise { font-size: var(--t-title); }
     .desc, .promise { max-width: none; }
     h2 { white-space: normal; }
@@ -344,6 +346,6 @@ const grounds = ['light', 'dark', 'light'] as const;
   /* the section's name steps down a size only on a phone: a tablet has the
      width for it at full size, stacked */
   @media (max-width: 719px) {
-    h2 { font-size: var(--t-h3); }
+    h2 { font-size: var(--t-h2); }
   }
 </style>
