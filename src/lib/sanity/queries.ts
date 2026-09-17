@@ -7,7 +7,7 @@ const imageFields = `{ asset, alt, "lqip": asset->metadata.lqip, "width": asset-
 
 const projectFields = `{
   _id, title, "slug": slug.current, year, location, studios, summary, featured,
-  challenge, approach, outcome, whatWeDid, liveUrl,
+  brief, whatWeDid, liveUrl,
   "services": coalesce(services, []),
   "cover": cover ${imageFields},
   "gallery": coalesce(gallery[] ${imageFields}, []),
@@ -83,9 +83,7 @@ function mapProject(raw: any): Project {
     location: raw.location,
     studios: raw.studios ?? [],
     summary: raw.summary,
-    challenge: raw.challenge,
-    approach: raw.approach,
-    outcome: raw.outcome,
+    brief: raw.brief,
     whatWeDid: raw.whatWeDid,
     liveUrl: raw.liveUrl,
     services: raw.services ?? [],

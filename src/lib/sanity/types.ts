@@ -71,9 +71,9 @@ export interface Project {
   services: string[];
   /** the project read in four turns, one at a time: the first three are
    *  written, the fourth is the services above */
-  challenge?: string;
-  approach?: string;
-  outcome?: string;
+  /** what was asked, and what made it hard */
+  brief?: string;
+  /** how it was tackled and what was delivered */
   whatWeDid?: string;
   /** where the finished thing lives, if it lives anywhere public */
   liveUrl?: string;

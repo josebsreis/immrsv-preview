@@ -63,41 +63,29 @@ const studios: Studio[] = [
    It reads as finished, which is the point and also the risk: nothing on the
    page announces itself as a placeholder any more, so this wants a read
    through before the site goes live. */
-type Copy = { summary: string; challenge: string; approach: string; outcome: string; whatWeDid: string };
+type Copy = { summary: string; brief: string; whatWeDid: string };
 
 const COPY: Record<StudioKey, Copy> = {
   architecture: {
     summary: 'Architecture and interiors, drawn from the first sketch through to construction.',
-    challenge:
+    brief:
       'A plan that had to hold at every scale — how the rooms are entered, where the light lands through the day, and what the structure would allow — settled while the drawings were still soft enough to change.',
-    approach:
-      'We modelled the whole building at real scale and made the decisions inside it, so what was approved on screen is what the contractor was handed. Nothing was resolved twice.',
-    outcome:
-      'A set that survived the site. The details were argued out where changes are cheap, and the rooms as built hold the proportions the model promised.',
     whatWeDid:
-      'Concept design, the permit set, construction drawings and the interior packages — with the visualisation cut from the same model rather than rebuilt for the picture.',
+      'We modelled the whole building at real scale and made the decisions inside it, so what was approved on screen is what the contractor was handed. The rooms as built hold the proportions the model promised.',
   },
   media: {
     summary: 'Visualisation and film, made from the drawings rather than around them.',
-    challenge:
+    brief:
       'The work had to be seen before it existed, and had to read as the thing itself rather than as a render — accurate to the design, and still worth looking at.',
-    approach:
-      "We built each shot from the project's own model and lit it like a photograph: real optics, real materials, and no flattery the building could not deliver.",
-    outcome:
-      'Images that carried the idea to the people who had to approve it, and that still describe the project honestly once it was standing.',
     whatWeDid:
-      'Art direction, modelling and lookdev, stills and animation, and the final grade.',
+      "We built each shot from the project's own model and lit it like a photograph: real optics, real materials, no flattery the building could not deliver. The images carried the idea to the people who had to approve it.",
   },
   products: {
     summary: 'Digital products, designed and built by the same team that draws.',
-    challenge:
+    brief:
       'A great deal of information and very little patience for it: the interface had to make a wide range feel obvious, on a phone as much as on a desk.',
-    approach:
-      'We designed in the browser against real content, so the layout was proven at the sizes people actually use before anything was called finished.',
-    outcome:
-      'Something that shipped and kept working — quick on a phone, easy to keep up to date, and measured against how it is used rather than how it demoed.',
     whatWeDid:
-      'Product design, the front-end build, the design system underneath it, and the maintenance after launch.',
+      'We designed in the browser against real content, so the layout was proven at the sizes people actually use. It shipped and kept working — quick on a phone, easy to keep up to date.',
   },
 };
 
