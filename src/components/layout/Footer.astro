@@ -225,10 +225,6 @@ const legal = [
 
   /* the time holds its width as the seconds turn */
   .when { font-variant-numeric: tabular-nums; }
-  @media (max-width: 719px) {
-    .top { flex-direction: column; gap: var(--s-5); }
-    .when { order: -1; padding-top: 0; justify-items: start; text-align: left; }
-  }
 
   /* the question, and the two ways in directly under it — they answer it, so
      they read better beneath it than sent to the far side of the page */
@@ -240,6 +236,11 @@ const legal = [
   .when { flex: none; display: grid; gap: var(--s-2); justify-items: end; text-align: right;
           color: var(--ink-3); padding-top: 0.3em; }
   .when .time { margin-left: 0.5em; }
+  /* stacked, the clock is dropped: over the question it pushed the ask down
+     the screen, and the city is already in the details underneath */
+  @media (max-width: 719px) {
+    .when { display: none; }
+  }
   .ask { font-size: var(--t-h2); font-weight: var(--w-display);
          line-height: var(--lh-display); letter-spacing: var(--track-display); }
   /* the turning word, letter by letter, as the headline's */
