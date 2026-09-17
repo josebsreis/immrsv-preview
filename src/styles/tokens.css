@@ -275,9 +275,23 @@
   :root { --section-y: 10vh; }
 }
 
-/* and the page's own edge comes in on a phone */
+/* and the page's own edge comes in on a phone — and the type comes up a
+   step: held at arm's length, the sizes set for a desk read small, and the
+   floors of the fluid sizes are what a phone always gets */
 @media (max-width: 719px) {
-  :root { --page-x: 1.25rem; }
+  :root {
+    --page-x: 1.25rem;
+    --t-label: 0.6875rem;         /* 11px */
+    --t-caption: 0.75rem;         /* 12px */
+    --t-small: 0.875rem;          /* 14px */
+    --t-body: 0.9375rem;          /* 15px */
+    --t-lead: 1.0625rem;          /* 17px */
+    --t-title: 1.25rem;           /* 20px */
+    --t-statement: 1.375rem;      /* 22px */
+    --t-h3: 1.5rem;               /* 24px */
+    --t-h2: 1.75rem;              /* 28px */
+    --t-display: 2.125rem;        /* 34px */
+  }
 }
 
 /* ── breakpoints (documented; CSS can't read custom props in @media) ──

@@ -309,6 +309,13 @@ const turns = [
     .dock :global(.btn) { --pl: 1.25rem; --pr: 1.25rem; flex: 1 1 0; justify-content: center; }
     .dock :global(.sq) { display: none; }
     .dock :global(.btn:first-child), .dock :global(.btn:last-child) { flex: 0 1 auto; }
+  }
+  /* the smallest phones: three labels across want every pixel */
+  @media (max-width: 400px) {
+    .dock { gap: var(--s-2); }
+    .dock :global(.btn) { --pl: 0.875rem; --pr: 0.875rem; font-stretch: 100%; min-width: 0; }
+  }
+  @media (max-width: 1099px) {
     /* the column's own links are gone: the dock is them */
     .back, .ends { display: none; }
   }

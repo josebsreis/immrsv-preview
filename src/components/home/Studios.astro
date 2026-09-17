@@ -326,7 +326,9 @@ const grounds = ['light', 'dark', 'light'] as const;
      own height, in the same order. */
   @media (max-width: 859px) {
     .studio { min-height: 0; gap: var(--s-7); padding: var(--section-y) var(--page-x); }
-    .top, .foot { grid-template-columns: 1fr; row-gap: var(--s-6); }
+    /* one column, and never wider than the screen: a `1fr` track is as wide
+       as its widest word, and a long button label made it wider */
+    .top, .foot { grid-template-columns: minmax(0, 1fr); row-gap: var(--s-6); }
     .n, .mark h3 { font-size: var(--t-h3); }
     .promise { font-size: var(--t-title); }
     .desc, .promise { max-width: none; }
