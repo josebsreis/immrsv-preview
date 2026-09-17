@@ -71,7 +71,7 @@ const { content } = Astro.props;
 
   img { position: relative; max-height: 3.25rem; max-width: 100%; width: auto; object-fit: contain;
         filter: var(--logo-filter); opacity: 0.82; transition: opacity var(--dur-fast) ease; }
-  .grid li:hover img { opacity: 1; }
+  @media (hover: hover) and (pointer: fine) { .grid li:hover img { opacity: 1; } }
 
   @media (max-width: 719px) {
     .lead { width: calc(var(--hairline) * 2 + (100% - var(--hairline) * 3) / 2); }

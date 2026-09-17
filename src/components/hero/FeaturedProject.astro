@@ -40,7 +40,7 @@ const SIZES = '(max-width: 719px) 100vw, min(23.75rem, 30vw)';
           color: var(--ink); background: var(--glass);
           border-radius: var(--radius-media); padding: 0.625rem;
           transition: background var(--dur-fast) ease; }
-  .feat:hover { background: var(--glass-hover); }
+  @media (hover: hover) and (pointer: fine) { .feat:hover { background: var(--glass-hover); } }
   .media { position: relative; overflow: hidden;
            border-radius: var(--radius-media); }
   picture { display: block; }
@@ -48,7 +48,7 @@ const SIZES = '(max-width: 719px) 100vw, min(23.75rem, 30vw)';
      height so the browser can hold the room open, and that number was
      winning over the ratio here — the card had grown to the picture's shape */
   img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; opacity: 0.9; transition: opacity var(--dur-fast) ease, transform var(--dur-slow) ease; }
-  .feat:hover img { opacity: 1; transform: scale(1.03); }
+  @media (hover: hover) and (pointer: fine) { .feat:hover img { opacity: 1; transform: scale(1.03); } }
   /* the card's own padding gives it ten of the twelve it sits in */
   .ttl { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
          padding: 0.75rem 0 0.125rem; font-size: var(--t-small); line-height: 1.3; }

@@ -213,7 +213,7 @@ const turns = [
   .back { color: var(--ink-3); padding-bottom: var(--s-4);
           border-bottom: var(--hairline) solid var(--line);
           transition: color var(--dur-fast) ease; }
-  .back:hover { color: var(--ink); }
+  @media (hover: hover) and (pointer: fine) { .back:hover { color: var(--ink); } }
 
   /* the name at the top, what is said about it in the middle of what is left,
      and at the foot what was ours and the way out. `safe` is what keeps a
@@ -257,7 +257,7 @@ const turns = [
           font-family: var(--font-label); font-stretch: var(--label-stretch); font-weight: var(--w-label);
           white-space: nowrap;
           color: var(--ink-3); transition: color var(--dur-fast) ease; }
-  .name:hover { color: var(--ink-2); }
+  @media (hover: hover) and (pointer: fine) { .name:hover { color: var(--ink-2); } }
   .name[aria-selected="true"] { color: var(--ink); }
   /* the rule is the width of the name it belongs to, and arrives with it */
   .name::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0;
@@ -289,7 +289,7 @@ const turns = [
   .ends { display: flex; justify-content: space-between; gap: var(--s-4);
           padding-top: var(--s-4); border-top: var(--hairline) solid var(--line); }
   .ends a { color: var(--ink-3); transition: color var(--dur-fast) ease; }
-  .ends a:hover { color: var(--ink); }
+  @media (hover: hover) and (pointer: fine) { .ends a:hover { color: var(--ink); } }
 
   /* The dock: hidden while the column is fixed beside the media and carries
      the same links itself. Below that it is a row pinned to the foot of the

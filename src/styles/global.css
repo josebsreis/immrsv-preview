@@ -146,7 +146,7 @@ p, li, dd, blockquote { text-wrap: pretty; }
   border-radius: var(--radius);
   transition: background var(--dur-fast) ease;
 }
-.glass:hover { background-image: linear-gradient(var(--glass-hover), var(--glass-hover)); }
+@media (hover: hover) and (pointer: fine) { .glass:hover { background-image: linear-gradient(var(--glass-hover), var(--glass-hover)); } }
 
 /* The reel's instrument: two arrows and a count, then a hairline that fills
    for the life of a slide, sitting over the thing it measures. The statement,
@@ -159,7 +159,7 @@ p, li, dd, blockquote { text-wrap: pretty; }
 .reel-arrows button { font-size: var(--t-body); line-height: 1; color: var(--ink-3);
                       background: none; border: 0; padding: 0; cursor: pointer;
                       transition: color var(--dur-fast) ease; }
-.reel-arrows button:hover { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .reel-arrows button:hover { color: var(--ink); } }
 .reel-count { color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .reel-track { margin-top: var(--s-4); height: var(--hairline); background: var(--line); overflow: hidden; }
 .reel-track i { display: block; height: 100%; background: var(--ink);

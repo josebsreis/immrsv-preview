@@ -48,7 +48,7 @@ const { items } = Astro.props;
           background-color: var(--surface); border-radius: var(--radius);
           color: var(--ink); transition: color var(--dur-base) ease, background-color var(--dur-base) ease; }
   /* the tint only — the shorthand would take the surface under it with it */
-  .item:hover { background-image: linear-gradient(var(--glass), var(--glass)); }
+  @media (hover: hover) and (pointer: fine) { .item:hover { background-image: linear-gradient(var(--glass), var(--glass)); } }
   .tile { position: absolute; inset: 0; background: var(--glass-hover);
           transform: translateX(-100%); will-change: transform;
           transition: transform var(--dur-base) var(--ease-panel); }

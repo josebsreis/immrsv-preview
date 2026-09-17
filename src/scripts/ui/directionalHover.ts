@@ -36,6 +36,11 @@ function edgeFrom(e: PointerEvent, el: HTMLElement, axis: Axis): Edge {
 
 export function createDirectionalHover(root: ParentNode = document): DirectionalHover {
   const cleanup: Array<() => void> = [];
+  /* A pointer that hovers, or nothing. It is asked of the device, not of the
+     screen's width: a small window still has a mouse and a large tablet does
+     not. On a touch screen a tap is an enter with no leave to follow it, so
+     the panel slid in and stayed until something else was tapped. */
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return { destroy() {} };
 
   root.querySelectorAll<HTMLElement>('[data-dhover-item]').forEach((item) => {
     const tile = item.querySelector<HTMLElement>('[data-dhover-tile]');
