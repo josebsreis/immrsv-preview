@@ -241,11 +241,12 @@ const rings = RINGS.map((r, k) => {
     .title { font-size: var(--t-h3); }
   }
   /* A phone's card is too narrow for the name and the studio side by side:
-     the studio took most of the foot and the name was cut. The name goes on
-     top with the whole width, the studio under it. */
-  @media (max-width: 519px) {
-    .pile { --foot: 4.75rem; }
-    .bar { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0.3rem; }
-    .name { max-width: 100%; }
+     the studio took most of the foot and the name was cut. The studio is
+     dropped there — the project's own page says whose it is — and the name
+     has the foot to itself, in the middle of it. */
+  @media (max-width: 719px) {
+    .from { display: none; }
+    .bar { justify-content: center; }
+    .name { max-width: 100%; text-align: center; }
   }
 </style>
