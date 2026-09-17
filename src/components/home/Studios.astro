@@ -219,7 +219,10 @@ const grounds = ['light', 'dark', 'light'] as const;
   .n { color: var(--ink-3); }
   .mark h3 { margin: 0; color: var(--ink); }
 
-  .promise { margin: 0 0 var(--s-5); max-width: 20ch; font-size: var(--t-h3);
+  /* TRIAL: set as the headings are — wide capitals — so it sits with the
+     studio's name beside it rather than against it */
+  .promise { font-family: var(--font-display); font-stretch: var(--display-stretch); text-transform: uppercase; }
+  .promise { margin: 0 0 var(--s-5); max-width: 24ch; font-size: var(--t-h3);
              font-weight: var(--w-display); line-height: var(--lh-title);
              letter-spacing: var(--track-title); color: var(--ink); }
   .desc { margin: 0; max-width: 46ch; font-size: var(--t-body);
