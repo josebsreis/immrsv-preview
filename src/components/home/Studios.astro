@@ -93,9 +93,8 @@ const grounds = ['light', 'dark', 'light'] as const;
                  style={`--z: ${content.items.length - i}`} aria-labelledby={`studio-${s.key}`}>
           <div class="top">
             <div class="mark">
-              <h3 id={`studio-${s.key}`} data-blur-in>{s.name}</h3>
-              <!-- the number follows the name, raised at its last word -->
               <span class="n" data-rise>{String(i + 1).padStart(2, '0')}</span>
+              <h3 id={`studio-${s.key}`} data-blur-in>{s.name}</h3>
             </div>
             <div class="say">
               <p class="promise" data-rise style="--i: 2">{s.promise}</p>
@@ -221,15 +220,11 @@ const grounds = ['light', 'dark', 'light'] as const;
                  line-height: var(--lh-display); letter-spacing: var(--track-display); }
   .n { color: var(--ink-3); }
   .mark h3 { margin: 0; color: var(--ink); }
-  /* The name runs as a line of text and the number follows its last
-     word, small and raised like a footnote — wherever that line ends. The
-     sizes are forced so the rules for smaller screens below do not undo it. */
-  .mark { display: block; text-wrap: balance; }
-  .mark h3 { display: inline; }
-  .mark .n { display: inline-block; vertical-align: top; margin-left: 0.45em;
-             font-size: var(--t-lead) !important; line-height: 1;
-             font-stretch: var(--label-stretch); font-weight: var(--w-label);
-             letter-spacing: var(--track-label); padding-top: 0.25em; }
+  /* The number over the name, at the name's size and in its voice, but in
+     the light grey: it says which of three this is, and then gets out of
+     the name's way. */
+  .mark .n { font-family: var(--font-display); font-stretch: var(--display-stretch);
+             color: var(--ink-4); }
 
   /* The studio's line is a sentence, so it takes the statement's voice — the
      one the manifesto speaks in: normal case, regular, at the statement's

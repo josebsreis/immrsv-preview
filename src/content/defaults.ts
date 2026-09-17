@@ -250,7 +250,7 @@ export const defaultHome: HomeContent = {
   },
   studios: {
     tag: 'Studios',
-    title: 'Three studios.',
+    title: 'Three studios',
     intro: 'Three doors into the same room. Whichever one you come in by, the same people design it, show it and build it.',
     items: studios,
   },
@@ -313,7 +313,7 @@ export const defaultHome: HomeContent = {
   },
   work: {
     tag: 'Spaces, films and products.\nEach one designed, built and seen through.',
-    title: 'Case studies.',
+    title: 'Case studies',
     intro: 'Recent projects from across the studios.',
     /* None of the studio reels' projects: those already have a place on the
        page, and the pile is for the work that has not been shown yet. Dealt
@@ -327,7 +327,7 @@ export const defaultHome: HomeContent = {
   },
   faqs: {
     tag: 'FAQs',
-    title: "What you'll want to know before working with us.",
+    title: "What you'll want to know before working with us",
     aside: 'Something not answered here?\nAsk Oscar directly.',
     cta: { label: 'Book a call', href: '#contact' },
     items: [
