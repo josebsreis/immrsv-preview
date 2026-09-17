@@ -44,6 +44,20 @@ export function createMarquee(el: HTMLElement): Marquee {
   document.fonts?.ready.then(() => { x = 0; fill(); });
 
   let x = 0, dir = -1, pending = 0, lastY = scrollY, raf = 0, last = 0, live = false;
+  /* The band moves by speeds, not by distances. What the page scrolled is
+     turned into a speed and smoothed before the band borrows it, and the
+     drift eases to its new heading rather than being set to it. Adding each
+     scroll event's pixels straight on was fine under a mouse wheel and a
+     stutter on a phone: a touch screen sends its scroll events out of step
+     with the frames — none, then two at once — and every lump was a lurch;
+     and a turn-round was the drift snapping from full speed one way to full
+     speed the other. */
+  let drift = base * dir, scrollVel = 0, against = 0;
+  /** seconds for the borrowed speed, and for the turn, to mostly settle */
+  const SMOOTH = 0.14, TURN = 0.45;
+  /** px of scroll the other way before it counts as turning round: a thumb
+   *  wobbles, and a wobble is not a change of mind */
+  const WOBBLE = 18;
 
   const onScroll = () => {
     const dy = scrollY - lastY;
@@ -54,12 +68,15 @@ export function createMarquee(el: HTMLElement): Marquee {
     // came back into view.
     if (!live || Math.abs(dy) < 0.4) return;
     pending += dy;
-    // reading down runs it one way, reading back up turns it round
+    // reading down runs it one way, reading back up turns it round — once
+    // the scroll has really gone the other way, not at its first tremor
     const next = dy > 0 ? -1 : 1;
-    if (next !== dir) {
-      dir = next;
-      el.dataset.marqueeStatus = dir === -1 ? 'normal' : 'inverted';
-    }
+    if (next === dir) { against = 0; return; }
+    against += Math.abs(dy);
+    if (against < WOBBLE) return;
+    against = 0;
+    dir = next;
+    el.dataset.marqueeStatus = dir === -1 ? 'normal' : 'inverted';
   };
   el.dataset.marqueeStatus = 'normal';
 
@@ -70,9 +87,16 @@ export function createMarquee(el: HTMLElement): Marquee {
     // the band left, up pushes it right, so it always runs with you. The
     // borrowed motion is capped per frame — a flick of a trackpad, or a smooth
     // scroller catching up after a jump, is not a licence to teleport.
-    const push = Math.max(-70, Math.min(70, pending)) * drag;
+    // The scroll since the last frame, as a speed. It is capped — a flick,
+    // or a scroller catching up after a jump, is not a licence to teleport —
+    // and then eased into, so uneven events even out over a few frames.
+    const sv = dt > 0 ? Math.max(-4200, Math.min(4200, pending / dt)) : 0;
     pending = 0;
-    x += base * dir * dt - push;
+    scrollVel += (sv - scrollVel) * (1 - Math.exp(-dt / SMOOTH));
+    if (Math.abs(scrollVel) < 0.5) scrollVel = 0;
+    // and the drift comes round to its heading through a stop
+    drift += (base * dir - drift) * (1 - Math.exp(-dt / TURN));
+    x += (drift - scrollVel * drag) * dt;
     if (runW > 0) { x %= runW; if (x > 0) x -= runW; }
     track.style.transform = `translate3d(${x.toFixed(2)}px,0,0)`;
     if (live) raf = requestAnimationFrame(frame);
@@ -80,7 +104,7 @@ export function createMarquee(el: HTMLElement): Marquee {
 
   const start = () => {
     if (live || reduced) return;
-    live = true; last = 0; pending = 0; lastY = scrollY;
+    live = true; last = 0; pending = 0; lastY = scrollY; scrollVel = 0; against = 0;
     raf = requestAnimationFrame(frame);
   };
   const stop = () => { live = false; cancelAnimationFrame(raf); };
