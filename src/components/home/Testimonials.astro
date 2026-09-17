@@ -106,7 +106,11 @@ const SIZES = '3rem';
      `nowrap` keeps it on one line at the widths where the column tightens —
      it has the gutter to lean into and nothing is in there. */
   .head { display: grid; grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
-          column-gap: var(--col-gap); align-items: baseline; }
+          /* centred on each other rather than on the name's first baseline:
+             the name can take two lines and the line beside it three, and
+             pinned to the first baseline the line hangs part-way down the
+             name instead of standing beside it */
+          column-gap: var(--col-gap); align-items: center; }
   /* Display scale, sized by the room it has rather than by the viewport: the
      name has the narrow column and the gutter beside it to fill — 38rem up
      here, 21rem once the split tightens — and "Client stories" sets 9.9em
