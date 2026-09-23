@@ -1,33 +1,67 @@
 ---
-/** The last screen of the dark half: the studios named before they are shown.
+/** The last screen of the dark half: the studios' opening.
  *
- *  The statement has made its claim and asked its question; this answers it
- *  with the index of what follows — the section's name, its one line, and
- *  the three studios listed by number — on the dark ground, filling the
- *  screen. Then the first studio, on the light, rides up over it: the page
- *  turns from dark to light by the first panel arriving, not by a section
- *  changing colour under you.
+ *  The statement has said what the practice is and the clients have vouched
+ *  for it; this is the claim the three studios make together, read a word
+ *  at a time as it is scrolled — the manifesto's own sweep, used once more
+ *  at the middle of the page — with the three studios pictured under it,
+ *  numbered, in the order they are about to come. Then the first of them,
+ *  on the light, rides up over this screen: the page turns from dark to
+ *  light by the first panel arriving, not by a section changing colour
+ *  under you.
  *
- *  The thread from the statement's hand-off runs down through the name to
- *  the foot of the screen, where the seam is, so the dark half is one line
- *  from the question to the answer. */
+ *  A thread runs from the pictures to the foot of the screen, where the
+ *  seam is, so the screen ends on the line the studios' panels take up. */
 import type { HomeContent } from '@lib/sanity/types';
+import work from '../../content/work.generated.json';
+
 interface Props { content: HomeContent['studios']; }
 const { content } = Astro.props;
+
+/* One picture a studio: its own first project, or — for a studio with no
+   work delivered yet — a frame borrowed from across the practice, spread
+   through the pool so two studios never show the same building. Stand-ins
+   until the client sends the rest; nothing here is invented. */
+const FOLDER: Record<string, string> = { architecture: 'architecture-design', media: 'creative-media', products: 'digital-products' };
+type Delivered = { studio: string; name: string; slug: string; images: { src: string; widths: number[] }[] };
+const projects = work as Delivered[];
+type Shot = { src: string; widths: number[]; name: string };
+const shotOf = (p: Delivered): Shot => ({ src: p.images[0].src, widths: p.images[0].widths, name: p.name });
+const taken = new Set<string>();
+const pictures: Shot[] = content.items.map((s, i) => {
+  const own = projects.find((p) => p.studio === FOLDER[s.key]);
+  if (own) { taken.add(own.slug); return shotOf(own); }
+  const rest = projects.filter((p) => !taken.has(p.slug));
+  const pick = rest[Math.floor(((i + 1) * rest.length) / (content.items.length + 1)) % rest.length];
+  taken.add(pick.slug);
+  return shotOf(pick);
+});
+const ladder = (s: Shot, ext: string) => s.widths.map((w) => `${s.src}-${w}.${ext} ${w}w`).join(', ');
+const SIZES = '(max-width: 719px) 30vw, 20rem';
+const statement = content.statement ?? content.intro;
 ---
 {content.items.length > 0 && (
-  <section class="index" data-theme="dark" aria-labelledby="studios-title">
-    <span class="thread" data-thread aria-hidden="true"></span>
+  <section class="opening" data-theme="dark" aria-labelledby="studios-title">
     <div class="body">
-      <h2 id="studios-title" data-blur-in>{content.title}</h2>
-      <p class="intro" data-rise style="--i: 1">{content.intro}</p>
-      <!-- the three, by number: what the next three screens are, in the
-           order they come, in the display voice at a size under the name -->
-      <ol class="names">
+      <h2 id="studios-title" class="label" data-rise>{content.title}</h2>
+      <!-- the claim, lit through a character at a time by the scroll -->
+      <div class="claim" data-reveal-group>
+        <p data-reveal-words>{statement}</p>
+      </div>
+
+      <!-- the three, pictured and numbered, in the order they come -->
+      <ol class="three">
         {content.items.map((s, i) => (
-          <li data-rise style={`--i: ${i + 2}`}>
-            <span class="n">{String(i + 1).padStart(2, '0')}</span>
-            <span class="name">{s.name}</span>
+          <li data-rise style={`--i: ${i + 1}`}>
+            <a class="pic" href={`/work?studio=${s.key}`} data-tap data-cursor-hover data-cursor-text="See the work"
+               aria-label={`${s.name} work`}>
+              <picture>
+                <source srcset={ladder(pictures[i], 'avif')} sizes={SIZES} type="image/avif" />
+                <img src={`${pictures[i].src}-${pictures[i].widths[1] ?? pictures[i].widths[0]}.webp`}
+                     srcset={ladder(pictures[i], 'webp')} sizes={SIZES} alt="" loading="lazy" decoding="async" />
+              </picture>
+            </a>
+            <span class="cap"><span class="n">{String(i + 1).padStart(2, '0')}</span><span class="name">{s.name}</span></span>
           </li>
         ))}
       </ol>
@@ -37,39 +71,55 @@ const { content } = Astro.props;
 )}
 
 <style>
-  /* a screen: the thread above and below take whatever height the body
-     leaves, so the name sits at the middle and the line reaches the foot */
-  .index { position: relative; z-index: var(--z-ui); min-height: 100svh;
-           display: flex; flex-direction: column; align-items: center;
-           padding: 0 var(--page-x); text-align: center; }
-  .thread { flex: 1 1 0; min-height: 8vh; width: var(--hairline); background: var(--line);
+  /* a screen: the body at its middle, the thread taking whatever height is
+     left under it, down to the seam */
+  .opening { position: relative; z-index: var(--z-ui); min-height: 100svh;
+             display: flex; flex-direction: column; align-items: center;
+             padding: var(--section-y) var(--page-x) 0; text-align: center; }
+  .body { flex: 1 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .thread { flex: 0 0 auto; height: 12vh; width: var(--hairline); background: var(--line);
             transform-origin: top; transform: scaleY(var(--draw, 1)); }
-  .body { display: flex; flex-direction: column; align-items: center; padding: var(--s-6) 0; }
-  h2 { margin: 0 0 var(--s-4); font-size: var(--t-h2); font-weight: var(--w-display);
-       line-height: var(--lh-display); letter-spacing: var(--track-display);
-       color: var(--ink); white-space: nowrap; }
-  .intro { max-width: 64ch; margin: 0 0 var(--s-8); text-wrap: balance; font-size: var(--t-lead);
-           line-height: var(--lh-lead); letter-spacing: var(--track-lead); color: var(--ink-3); }
 
-  /* the index: three rows, ruled like the questions and the services, the
-     number in the light grey and the name in the display voice */
-  .names { list-style: none; margin: 0; padding: 0; width: min(100%, 44rem); }
-  .names li { display: flex; align-items: baseline; justify-content: center; gap: var(--s-5);
-              padding: var(--s-4) 0; border-top: var(--hairline) solid var(--line);
-              font-family: var(--font-display); font-stretch: var(--display-stretch);
-              text-transform: var(--display-case); font-weight: var(--w-display);
-              letter-spacing: var(--track-display); font-size: var(--t-h3); line-height: var(--lh-display); }
-  .names li:last-child { border-bottom: var(--hairline) solid var(--line); }
+  /* the section's name is the eyebrow here; the claim is the heading */
+  h2 { margin: 0 0 var(--s-6); font-size: var(--t-label); color: var(--ink-3); }
+
+  /* the claim: the statement's voice, a size up and centred, in the same
+     sweep the manifesto is read by */
+  .claim p { margin: 0; max-width: 30ch; font-size: var(--t-h3); font-weight: var(--w-title);
+             line-height: 1.15; letter-spacing: var(--track-title); text-wrap: balance; color: var(--ink); }
+  .claim :global(.rv) { color: var(--ink-dim); transition: color 0.18s linear; }
+  .claim :global(.rv.on) { color: var(--ink); }
+  @supports (color: color-mix(in oklab, #000, #fff 50%)) {
+    .claim :global(.rv), .claim :global(.rv.on) {
+      color: color-mix(in oklab, var(--ink-dim), var(--ink) calc(var(--l, 0) * 100%));
+    }
+  }
+
+  /* the three pictures in a row under the claim, each with its number and
+     name; the row is narrower than the claim so the claim stays the thing */
+  .three { list-style: none; margin: var(--s-8) 0 0; padding: 0; width: min(100%, 60rem);
+           display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); }
+  .three li { display: flex; flex-direction: column; gap: var(--s-4); }
+  .pic { display: block; aspect-ratio: 3 / 2; overflow: hidden; border-radius: var(--radius-media);
+         background: var(--glass); }
+  .pic picture, .pic img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .pic img { transition: transform 1.4s var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) { .pic:hover img { transform: scale(1.06); } }
+  @media (prefers-reduced-motion: reduce) { .pic img { transition: none; } .pic:hover img { transform: none; } }
+  .cap { display: flex; justify-content: center; align-items: baseline; gap: var(--s-3);
+         font-family: var(--font-label); font-stretch: var(--label-stretch); font-weight: var(--w-label);
+         text-transform: uppercase; letter-spacing: var(--track-caps); font-size: var(--t-caption); }
   .n { color: var(--ink-4); }
   .name { color: var(--ink-2); }
 
   @media (max-width: 859px) {
-    h2 { white-space: normal; }
-    .names li { font-size: var(--t-title); }
+    .claim p { font-size: var(--t-statement); }
   }
   @media (max-width: 719px) {
-    .index { min-height: 0; padding-block: 0; }
-    .thread { flex: 0 0 auto; height: 10vh; }
-    .intro { margin-bottom: var(--s-7); }
+    .opening { min-height: 0; }
+    .thread { height: 10vh; }
+    .three { gap: var(--s-3); margin-top: var(--s-7); }
+    .three li { gap: var(--s-3); }
+    .cap { flex-direction: column; gap: 0.15rem; font-size: var(--t-label); }
   }
 </style>

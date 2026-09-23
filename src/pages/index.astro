@@ -20,9 +20,13 @@ const projects = await getProjects();
       <Hero content={home.hero} featured={home.featuredProject} />
       <Marquee items={home.studios.items.map((s) => s.name)} />
       <Manifesto content={home.about} />
-      {/* the dark half ends on the studios' name and their index, a screen
-          on the dark ground; the first studio, on the light, rides up over
-          it, so the page turns light by the first panel arriving */}
+      {/* the firms the practice has worked for, right after it has said what
+          it is: the marks are the receipt for the statement */}
+      <div class="clients"><Brands content={home.brands} /></div>
+      {/* the dark half ends on the studios' opening — the claim, and the
+          three of them pictured — a screen on the dark ground; the first
+          studio, on the light, rides up over it, so the page turns light by
+          the first panel arriving */}
       <StudiosIndex content={home.studios} />
       <div class="scrim" data-scrim aria-hidden="true"></div>
     </div>
@@ -40,9 +44,6 @@ const projects = await getProjects();
             read as filler. Component and content are both still here — put
             <Process content={home.process} /> back to restore it. */}
         <Testimonials content={home.testimonials} />
-        {/* the firms the stories are from, right under them: the logos are
-            the receipt for the quotes, not decoration on the dark half */}
-        <Brands content={home.brands} />
         {/* the work the studio reels have not shown, on a dark ground between
             the client stories and the questions, so the page's second half
             is not two blocks of text in a row */}
@@ -67,6 +68,9 @@ const projects = await getProjects();
   .scrim { position: fixed; inset: 0; z-index: calc(var(--z-ui) + 1);
            background: var(--ground); opacity: 0; pointer-events: none; }
   .light { position: relative; z-index: var(--z-ui); }
+  /* the clients' lattice holds the page margins itself here, on the dark
+     ground, a section's air above it */
+  .clients { position: relative; z-index: var(--z-ui); padding: var(--section-y) var(--page-x) 0; }
   /* no air at its head: the first studio's panel is the head of the light
      half, and it is the whole of the seam */
   .next { background: var(--ground); color: var(--ink); padding: 0 var(--page-x); }

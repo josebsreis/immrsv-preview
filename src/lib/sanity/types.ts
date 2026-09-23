@@ -112,6 +112,9 @@ export interface HomeContent {
     /** the section's own heading, at display scale */
     title: string;
     intro: string;
+    /** the claim the three studios open on, read a word at a time as it is
+     *  scrolled — the argument for the practice in one breath */
+    statement?: string;
     items: Studio[];
   };
   brands: {

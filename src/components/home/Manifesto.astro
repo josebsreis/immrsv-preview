@@ -45,15 +45,6 @@ const total = String(stats.length).padStart(2, '0');
     </div>
   </div>
 
-  <!-- The hand-off. The statement has made its claim; this asks the question
-       the handover answers, and a thread is drawn down from it to the foot of
-       the dark half — where the light climbs over, its own thread carries on
-       from the seam to the point the ground opens. One line, from here to
-       there. -->
-  <div class="lead">
-    <p class="lead-line" data-rise>{content.lead}</p>
-    <span class="thread" data-thread aria-hidden="true"></span>
-  </div>
 </section>
 
 <style>
@@ -105,21 +96,9 @@ const total = String(stats.length).padStart(2, '0');
               border-radius: var(--radius-media); }
   .by :global(.sq) { color: var(--ink-4); }
 
-  /* the hand-off: across both columns, on the middle of the page, and the
-     thread runs to the very foot of the section so the seam meets it */
-  .lead { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center;
-          margin-top: 14vh; text-align: center; }
-  .lead-line { margin: 0 0 var(--s-6); max-width: 34ch;
-               font-size: var(--t-lead); line-height: var(--lh-lead);
-               letter-spacing: var(--track-lead); color: var(--ink-2); }
-  /* the studios' thread, to the letter, on the dark ground */
-  .thread { width: var(--hairline); height: 22vh; background: var(--line);
-            transform-origin: top; transform: scaleY(var(--draw, 1)); }
 
   @media (max-width: 859px) {
     .manifesto { grid-template-columns: 1fr; row-gap: var(--s-7); padding: 0 var(--page-x) 0; }
-    .lead { margin-top: 10vh; }
-    .thread { height: 16vh; }
     .cap, .say p { max-width: none; }
   }
 </style>
