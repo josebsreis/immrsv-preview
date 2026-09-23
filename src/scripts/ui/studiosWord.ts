@@ -32,7 +32,7 @@ const LAYERS = 8;
 const STEP = 0.04;
 /** how far each copy drops below the one behind it, as a share of the
  *  word's height, when the fan is complete */
-const DROP = 0.07;
+const DROP = 0.13;
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
