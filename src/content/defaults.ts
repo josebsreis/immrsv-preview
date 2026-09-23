@@ -256,7 +256,7 @@ export const defaultHome: HomeContent = {
     items: studios,
   },
   brands: {
-    tag: 'Clients we work with',
+    tag: 'Trusted by',
     items: [...clients, ...clients],
   },
   testimonials: {
