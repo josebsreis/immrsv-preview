@@ -70,15 +70,9 @@ const grounds = ['light', 'dark', 'light'] as const;
 ---
 {content.items.length > 0 && (
   <div class="studios">
-    <header class="head" data-theme="light">
-      <!-- the thread the handover above leaves off with, carried down through
-           the title to the first studio -->
-      <span class="thread" data-thread aria-hidden="true"></span>
-      <h2 data-blur-in>{content.title}</h2>
-      <p class="intro" data-rise style="--i: 1">{content.intro}</p>
-      <span class="thread" data-thread aria-hidden="true"></span>
-    </header>
-
+    <!-- the section's name and its index stand on the dark half, the screen
+         before this (components/home/StudiosIndex.astro); the panels are
+         what that screen promised -->
     <!-- the stack carries a ground from the start: the nav reads the page's
          themed sections once, before any script has run, so a ground the
          stack only gave itself later was never read at all -->
@@ -152,25 +146,6 @@ const grounds = ['light', 'dark', 'light'] as const;
 )}
 
 <style>
-  /* the head sits inside the light section, which holds the page margins; the
-     panels below break out of them and hold their own */
-  .head { display: flex; flex-direction: column; align-items: center;
-          text-align: center; padding-bottom: 2vh; }
-  /* The same weight as every other rule on the site, and the same length
-     above the name as below it. It is drawn downward from the scroll — the
-     choreography writes --draw — so it reads as the line above carrying on
-     rather than as a divider arriving. Without script it is simply there. */
-  .thread { width: var(--hairline); height: 11vh; background: var(--line);
-            transform-origin: top; transform: scaleY(var(--draw, 1)); }
-  h2 { margin: var(--s-6) 0 var(--s-4); font-size: var(--t-h2);
-       font-weight: var(--w-display); line-height: var(--lh-display);
-       letter-spacing: var(--track-display); color: var(--ink); white-space: nowrap; }
-  /* wide enough for the line to set in two on a desktop; it narrows again
-     with the screen and takes the lines it needs there */
-  .intro { max-width: 64ch; margin: 0 0 var(--s-6); text-wrap: balance; font-size: var(--t-lead);
-           line-height: var(--lh-lead); letter-spacing: var(--track-lead);
-           color: var(--ink-3); }
-
   /* ── the stack ───────────────────────────────────────────────────────
      As tall as the panels it holds, so there is a screen of scroll for each
      handover. Without script — or on a phone, or for a reader who asked for
@@ -192,7 +167,7 @@ const grounds = ['light', 'dark', 'light'] as const;
      middle left empty, and its own ground under it. It breaks the page's
      margins because the ground has to reach the edges — three panels of
      different colour inside a gutter would be three stripes. */
-  /* the thread from the head lands on a rule, not on an open panel */
+  /* the seam the panel climbs over the dark half on is a rule, not an open edge */
   .stack .studio:first-child { border-top: var(--hairline) solid var(--line); }
   /* …and the last one hands over to the client stories on one too: the two
      share a ground, so without it the panel simply runs on into the quotes */
@@ -336,16 +311,9 @@ const grounds = ['light', 'dark', 'light'] as const;
     .n, .mark h3 { font-size: var(--t-h2); }
     .promise { font-size: var(--t-title); }
     .desc, .promise { max-width: none; }
-    h2 { white-space: normal; }
-    .thread { height: 8vh; }
     /* side by side, the button sat at the foot of a tall column with the
        column's spare height over it; stacked, that height is gone and the
        button was hard under the list's last rule */
     .does :global(.all) { margin-top: var(--s-7); }
-  }
-  /* the section's name steps down a size only on a phone: a tablet has the
-     width for it at full size, stacked */
-  @media (max-width: 719px) {
-    h2 { font-size: var(--t-h2); }
   }
 </style>

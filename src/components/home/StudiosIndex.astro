@@ -1,0 +1,75 @@
+---
+/** The last screen of the dark half: the studios named before they are shown.
+ *
+ *  The statement has made its claim and asked its question; this answers it
+ *  with the index of what follows — the section's name, its one line, and
+ *  the three studios listed by number — on the dark ground, filling the
+ *  screen. Then the first studio, on the light, rides up over it: the page
+ *  turns from dark to light by the first panel arriving, not by a section
+ *  changing colour under you.
+ *
+ *  The thread from the statement's hand-off runs down through the name to
+ *  the foot of the screen, where the seam is, so the dark half is one line
+ *  from the question to the answer. */
+import type { HomeContent } from '@lib/sanity/types';
+interface Props { content: HomeContent['studios']; }
+const { content } = Astro.props;
+---
+{content.items.length > 0 && (
+  <section class="index" data-theme="dark" aria-labelledby="studios-title">
+    <span class="thread" data-thread aria-hidden="true"></span>
+    <div class="body">
+      <h2 id="studios-title" data-blur-in>{content.title}</h2>
+      <p class="intro" data-rise style="--i: 1">{content.intro}</p>
+      <!-- the three, by number: what the next three screens are, in the
+           order they come, in the display voice at a size under the name -->
+      <ol class="names">
+        {content.items.map((s, i) => (
+          <li data-rise style={`--i: ${i + 2}`}>
+            <span class="n">{String(i + 1).padStart(2, '0')}</span>
+            <span class="name">{s.name}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+    <span class="thread" data-thread aria-hidden="true"></span>
+  </section>
+)}
+
+<style>
+  /* a screen: the thread above and below take whatever height the body
+     leaves, so the name sits at the middle and the line reaches the foot */
+  .index { position: relative; z-index: var(--z-ui); min-height: 100svh;
+           display: flex; flex-direction: column; align-items: center;
+           padding: 0 var(--page-x); text-align: center; }
+  .thread { flex: 1 1 0; min-height: 8vh; width: var(--hairline); background: var(--line);
+            transform-origin: top; transform: scaleY(var(--draw, 1)); }
+  .body { display: flex; flex-direction: column; align-items: center; padding: var(--s-6) 0; }
+  h2 { margin: 0 0 var(--s-4); font-size: var(--t-h2); font-weight: var(--w-display);
+       line-height: var(--lh-display); letter-spacing: var(--track-display);
+       color: var(--ink); white-space: nowrap; }
+  .intro { max-width: 64ch; margin: 0 0 var(--s-8); text-wrap: balance; font-size: var(--t-lead);
+           line-height: var(--lh-lead); letter-spacing: var(--track-lead); color: var(--ink-3); }
+
+  /* the index: three rows, ruled like the questions and the services, the
+     number in the light grey and the name in the display voice */
+  .names { list-style: none; margin: 0; padding: 0; width: min(100%, 44rem); }
+  .names li { display: flex; align-items: baseline; justify-content: center; gap: var(--s-5);
+              padding: var(--s-4) 0; border-top: var(--hairline) solid var(--line);
+              font-family: var(--font-display); font-stretch: var(--display-stretch);
+              text-transform: var(--display-case); font-weight: var(--w-display);
+              letter-spacing: var(--track-display); font-size: var(--t-h3); line-height: var(--lh-display); }
+  .names li:last-child { border-bottom: var(--hairline) solid var(--line); }
+  .n { color: var(--ink-4); }
+  .name { color: var(--ink-2); }
+
+  @media (max-width: 859px) {
+    h2 { white-space: normal; }
+    .names li { font-size: var(--t-title); }
+  }
+  @media (max-width: 719px) {
+    .index { min-height: 0; padding-block: 0; }
+    .thread { flex: 0 0 auto; height: 10vh; }
+    .intro { margin-bottom: var(--s-7); }
+  }
+</style>

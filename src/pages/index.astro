@@ -1,10 +1,10 @@
 ---
 import Base from '@layouts/Base.astro';
-import Forming from '@components/home/Forming.astro';
 import Hero from '@components/hero/Hero.astro';
 import Marquee from '@components/home/Marquee.astro';
 import Manifesto from '@components/home/Manifesto.astro';
 import Studios from '@components/home/Studios.astro';
+import StudiosIndex from '@components/home/StudiosIndex.astro';
 import Testimonials from '@components/home/Testimonials.astro';
 import Faqs from '@components/home/Faqs.astro';
 import WorkPile from '@components/home/WorkPile.astro';
@@ -20,14 +20,19 @@ const projects = await getProjects();
       <Hero content={home.hero} featured={home.featuredProject} />
       <Marquee items={home.studios.items.map((s) => s.name)} />
       <Manifesto content={home.about} />
+      {/* the dark half ends on the studios' name and their index, a screen
+          on the dark ground; the first studio, on the light, rides up over
+          it, so the page turns light by the first panel arriving */}
+      <StudiosIndex content={home.studios} />
       <div class="scrim" data-scrim aria-hidden="true"></div>
     </div>
 
-    <!-- the light half travels over the dark one, the figure being built at
-         its head: the ground opens from the mark, and the section arrives
-         inside that opening -->
+    <!-- the light half travels over the dark one, the first studio at its
+         head. The handover that was here — the figure built between the
+         halves of a line (components/home/Forming.astro) — is off the page:
+         there is no film for it yet, and the studios' index above says
+         where the page is going. Put <Forming /> back here to restore it. -->
     <div class="light" data-light>
-      <Forming />
       <section class="next" id="work" data-next data-theme="light">
         <Studios content={home.studios} />
         {/* The process section is off the page: the handover above says the
@@ -53,7 +58,7 @@ const projects = await getProjects();
   .main { position: relative; z-index: var(--z-main); }
   /* the dark half holds once its end meets the bottom of the screen (the top
      offset is set in JS: viewport − height), and the light half rides up over
-     it — the figure being built at its head */
+     it — the first studio at its head */
   .dark { position: sticky; top: 0; z-index: 1; }
   /* the dark half is put out as the light one climbs over it */
   /* inside the held half's own stacking context, so it is a local number and
@@ -62,8 +67,7 @@ const projects = await getProjects();
   .scrim { position: fixed; inset: 0; z-index: calc(var(--z-ui) + 1);
            background: var(--ground); opacity: 0; pointer-events: none; }
   .light { position: relative; z-index: var(--z-ui); }
-  /* no air at its head: the section above ends on a thread down the middle of
-     the page and the studios pick it up at their first pixel — two vh here is
-     a visible break in a line that is meant to be one */
+  /* no air at its head: the first studio's panel is the head of the light
+     half, and it is the whole of the seam */
   .next { background: var(--ground); color: var(--ink); padding: 0 var(--page-x); }
 </style>
