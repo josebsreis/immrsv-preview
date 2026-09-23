@@ -9,8 +9,16 @@ import type { Hero } from '../hero';
 export interface ScrollChoreography { update(): void; destroy(): void; }
 
 const REVEAL_BAND = 0.2;      // how much of a passage is mid-transition at once
-const HOLD_DRIFT = 0.22;      // how far the held half creeps up as the next one climbs, in screens
-const HOLD_SHADE = 0.62;      // how far it is put out by the time it is covered
+const HOLD_DRIFT = 0;         // how far the held half creeps up as the next one arrives, in screens
+const HOLD_SHADE = 0.72;      // how far it is put out by the time it is covered
+/* The light half does not climb up over the dark one: it arrives as the
+   first studio, small, in the middle of the screen — over the word that
+   has just come apart — and grows until it is the screen. These are how
+   small it starts, how far its corners are rounded while it is a card,
+   and how much of the arrival it spends coming into view. */
+const GROW_FROM = 0.42;
+const GROW_RADIUS = 28;
+const GROW_FADE = 0.12;
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
@@ -39,6 +47,7 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
   /* the light half of the page: its head is where the handover begins, and
      how far it has climbed is what puts the dark half out */
   const light = document.querySelector<HTMLElement>('[data-light]');
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // sticky with a negative top: the block scrolls normally until its end meets
   // the bottom of the screen, then holds there while the next half rides over
@@ -112,14 +121,38 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
       if (q !== drawn[i]) { drawn[i] = q; el.style.setProperty('--draw', q); }
     }
 
-    // how far the light half has climbed over the held one: 0 as its head
-    // reaches the bottom of the screen, 1 once it owns the whole of it
-    const over = light ? clamp01((vh - light.getBoundingClientRect().top) / vh) : 0;
+    // how far the light half has arrived over the held one: 0 as its head
+    // would reach the bottom of the screen, 1 once it owns the whole of it.
+    // Measured from the layout, not the drawn box — the drawn box is moved
+    // by the very transform this number drives.
+    const over = light ? clamp01((vh - (light.offsetTop - y)) / vh) : 0;
     // the held half creeps up rather than standing still, and goes out
     if (hold) hold.style.top = (holdTop - over * vh * HOLD_DRIFT).toFixed(1) + 'px';
     // …and the light half is told, for the thread it carries over the seam
     if (light) light.style.setProperty('--over', over.toFixed(3));
     if (scrim) scrim.style.opacity = (over * HOLD_SHADE).toFixed(3);
+
+    /* The arrival. While it is arriving the light half is lifted so that
+       its head sits at the top of the screen from the first moment, and
+       then scaled about the middle of the screen — which is the middle of
+       the first studio — from a card to the full screen, clipped to that
+       first screen so nothing under the panel shows beneath the card. The
+       moment it owns the screen every one of these is taken off, and the
+       page is in plain flow again. A reader who asked for less motion has
+       the half simply ride up, as it did. */
+    if (light && !still) {
+      if (over < 1) {
+        const e = over * over * (3 - 2 * over);
+        const s = GROW_FROM + (1 - GROW_FROM) * e;
+        light.style.transformOrigin = `50% ${vh / 2}px`;
+        light.style.transform = `translateY(${(-(1 - over) * vh).toFixed(1)}px) scale(${s.toFixed(4)})`;
+        light.style.clipPath = `inset(0 0 calc(100% - ${vh}px) 0 round ${((1 - e) * GROW_RADIUS).toFixed(1)}px)`;
+        light.style.opacity = clamp01(over / GROW_FADE).toFixed(3);
+      } else if (light.style.transform) {
+        light.style.transform = ''; light.style.transformOrigin = '';
+        light.style.clipPath = ''; light.style.opacity = '';
+      }
+    }
 
     /* the nav's colour is not decided here: it reads the section under it,
        wherever it is, which is the only way it can also answer to the black
