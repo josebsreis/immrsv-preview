@@ -1,19 +1,22 @@
 /* ═══════════════════════════════════════════════════════════════════
-   The word STUDIOS, the width of the page, cut into bands as it is
-   scrolled.
+   The word STUDIOS, the width of the page, coming apart in layers as it
+   is scrolled.
 
    The word is one SVG text, sized once so that it spans exactly the
-   page's width. Over it stand K copies, each clipped to one horizontal
-   band of the word's box, and as the section is scrolled each band's
-   letters slide sideways — the bands nearest the middle barely, the top
-   and foot ones furthest, and neighbouring letters in opposite
-   directions — so the word shears apart into slices, the way a thing
-   cut and pushed does, rather than fading or moving as one.
+   page's width between the margins. It is drawn N times, one copy over
+   another, each on an opaque rectangle of the ground the size of the
+   word — so at rest the N are one word. As the section is scrolled the
+   copy at the back stays where it is and every copy in front of it
+   shrinks and drops, the front one most: each copy's ground hides all
+   of the copies behind it except what stands proud of it — the tops of
+   the letters above, the first letter's left edge, the last letter's
+   right — so the word reads as a stack of slices fanning up and out
+   from the front, the way a deck pushed with a thumb does.
 
    Scroll drives it, not time: the section is taller than the screen and
-   the word holds still while it goes by, so the slicing runs with the
+   the word holds still while it goes by, so the fan runs with the
    reader's own hand and reverses when they scroll back. When the section
-   has been scrolled through, the word is fully cut, and the first studio
+   has been scrolled through, the fan is complete, and the first studio
    rides up over it.
 
    Without script, or for a reader who asked for less motion, it is the
@@ -22,11 +25,14 @@
 
 export interface StudiosWord { destroy(): void }
 
-/** how many bands the word is cut into */
-const BANDS = 9;
-/** how far a letter in the outermost band travels, as a share of the
- *  word's height, when the cut is complete */
-const THROW = 0.55;
+/** how many copies the word is drawn in */
+const LAYERS = 8;
+/** how much smaller each copy is than the one behind it, when the fan
+ *  is complete */
+const STEP = 0.04;
+/** how far each copy drops below the one behind it, as a share of the
+ *  word's height, when the fan is complete */
+const DROP = 0.07;
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
@@ -38,80 +44,79 @@ export function createStudiosWord(root: HTMLElement): StudiosWord {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return { destroy() {} };
   root.dataset.live = '';
 
-  const word = base.textContent ?? '';
-  const n = word.length;
   const ns = 'http://www.w3.org/2000/svg';
-  let copies: SVGTextElement[] = [];
-  let boxH = 1;
+  /** the copies, front first */
+  let layers: SVGGElement[] = [];
+  let box = { x: 0, y: 0, width: 1, height: 1 };
   let built = false;
   let frame = 0;
   let last = -1;
 
-  /* lay the word out to the page's width, then cut it: one clipped copy a
-     band, the original kept only as the measure */
+  /* lay the word out to the page's width, then draw it N times over its
+     own ground; the original is kept only as the measure */
   const build = () => {
-    for (const c of copies) c.remove();
-    svg.querySelectorAll('clipPath').forEach((c) => c.remove());
-    copies = [];
+    for (const g of layers) g.remove();
+    layers = [];
 
     const width = svg.clientWidth || 1;
     base.setAttribute('font-size', '100');
-    base.removeAttribute('dx');
     const len = base.getComputedTextLength() || 1;
     const size = (100 * width) / len;
     base.setAttribute('font-size', size.toFixed(2));
-    const box = base.getBBox();
-    boxH = box.height;
-    /* the box is the word, and the drawing is the box plus room at either
-       side for the slices to travel into */
-    const pad = box.height * THROW;
-    svg.setAttribute('viewBox', `${(box.x - pad).toFixed(1)} ${box.y.toFixed(1)} ${(box.width + pad * 2).toFixed(1)} ${box.height.toFixed(1)}`);
-    svg.style.height = `${(box.height / (box.width + pad * 2)) * svg.clientWidth}px`;
+    /* The ground under each copy has to be the letters' own box, not the
+       font's: the em box carries empty room above the capitals, and a
+       ground that tall on the copy in front covered the tops of the copy
+       behind — which are the very slices this is for. The letters are
+       measured on a canvas, which reports the ink's own ascent and
+       descent, and the text is set on its baseline that far down. */
+    const cs = getComputedStyle(base);
+    const ctx = document.createElement('canvas').getContext('2d');
+    let asc = size * 0.72, desc = 0;
+    if (ctx) {
+      ctx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
+      try { (ctx as CanvasRenderingContext2D & { fontStretch: string }).fontStretch = cs.fontStretch; } catch { /* older browsers */ }
+      const m = ctx.measureText(base.textContent ?? '');
+      if (m.actualBoundingBoxAscent) { asc = m.actualBoundingBoxAscent; desc = m.actualBoundingBoxDescent; }
+    }
+    base.setAttribute('dominant-baseline', 'alphabetic');
+    base.setAttribute('y', asc.toFixed(2));
+    const b = base.getBBox();
+    box = { x: b.x, y: 0, width: b.width, height: asc + desc };
+    /* the drawing is the word's own box, edge to edge: the copies that
+       stand proud of it are allowed to overflow into the page's margins */
+    svg.setAttribute('viewBox', `${box.x.toFixed(1)} 0 ${box.width.toFixed(1)} ${box.height.toFixed(1)}`);
+    svg.style.height = `${(box.height / box.width) * width}px`;
 
-    const defs = document.createElementNS(ns, 'defs');
-    for (let k = 0; k < BANDS; k++) {
-      const clip = document.createElementNS(ns, 'clipPath');
-      const id = `sw-${k}`;
-      clip.setAttribute('id', id);
+    /* back to front in the document, so the front is drawn last */
+    for (let k = LAYERS - 1; k >= 0; k--) {
+      const g = document.createElementNS(ns, 'g');
       const r = document.createElementNS(ns, 'rect');
-      /* each band overlaps the next by a hair, so no seam shows while
-         two bands stand together */
-      r.setAttribute('x', (box.x - pad * 2).toFixed(1));
-      r.setAttribute('y', (box.y + (box.height * k) / BANDS - 0.3).toFixed(2));
-      r.setAttribute('width', (box.width + pad * 4).toFixed(1));
-      r.setAttribute('height', (box.height / BANDS + 0.6).toFixed(2));
-      clip.append(r);
-      defs.append(clip);
-
+      r.setAttribute('x', box.x.toFixed(1));
+      r.setAttribute('y', '0');
+      r.setAttribute('width', box.width.toFixed(1));
+      r.setAttribute('height', box.height.toFixed(1));
+      r.setAttribute('class', 'ground');
       const t = base.cloneNode(true) as SVGTextElement;
       t.removeAttribute('data-measure');
-      t.setAttribute('clip-path', `url(#${id})`);
-      svg.append(t);
-      copies.push(t);
+      g.append(r, t);
+      svg.append(g);
+      layers[k] = g;
     }
-    svg.prepend(defs);
     base.setAttribute('opacity', '0');
     built = true;
     last = -1;
   };
 
-  /* the offset of each letter in each band, written as per-glyph dx —
-     which SVG reads as a step from the previous glyph, so each is the
-     difference from the one before */
+  /* each copy shrinks about the word's centre and drops, by how far in
+     front of the back copy it stands */
   const paint = (p: number) => {
-    const mid = (BANDS - 1) / 2;
-    for (let k = 0; k < BANDS; k++) {
-      const reach = ((k - mid) / mid) * THROW * boxH * p;
-      const dx: string[] = [];
-      let prev = 0;
-      for (let i = 0; i < n; i++) {
-        /* neighbours go opposite ways; the middle letters a little less */
-        const dir = i % 2 ? -1 : 1;
-        const off = reach * dir;
-        dx.push((off - prev).toFixed(2));
-        prev = off;
-      }
-      copies[k].setAttribute('dx', dx.join(' '));
+    const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
+    for (let k = 0; k < LAYERS; k++) {
+      const depth = LAYERS - 1 - k;                         // 0 at the back
+      const s = 1 - depth * STEP * p;
+      const ty = depth * DROP * box.height * p;
+      layers[k].setAttribute('transform',
+        `translate(${cx.toFixed(1)} ${(cy + ty).toFixed(2)}) scale(${s.toFixed(4)}) translate(${(-cx).toFixed(1)} ${(-cy).toFixed(1)})`);
     }
   };
 
@@ -124,7 +129,7 @@ export function createStudiosWord(root: HTMLElement): StudiosWord {
     const q = Math.round(p * 200) / 200;
     if (q === last) return;
     last = q;
-    /* the cut eases in: little at first, then all of it */
+    /* the fan eases in: little at first, then all of it */
     paint(q * q * (3 - 2 * q));
   };
   const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };

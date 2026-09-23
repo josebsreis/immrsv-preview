@@ -3,13 +3,13 @@
  *  page, cut apart as it is scrolled.
  *
  *  A rule with a small line at its left — "Get to know our" — and the
- *  count at its right, and under it the one word, STUDIOS, as wide as the
- *  page. The section is taller than the screen and the word holds still
- *  while it goes by: as it is scrolled the word is cut into horizontal
- *  bands that slide apart, letter by letter (scripts/ui/studiosWord.ts),
- *  so that by the foot of the section the word is in slices — and then the
- *  first studio, on the light, rides up over it. The page turns from dark
- *  to light by the first panel arriving.
+ *  count at its right, and under it the one word, STUDIOS, margin to
+ *  margin. The section is taller than the screen and the word holds still
+ *  while it goes by: as it is scrolled it comes apart into a stack of
+ *  copies, the back one still and the ones in front shrinking and dropping
+ *  (scripts/ui/studiosWord.ts), so that by the foot of the section it is
+ *  a fan of slices — and then the first studio, on the light, rides up
+ *  over it. The page turns from dark to light by the first panel arriving.
  *
  *  Without script, or for a reader who asked for less motion, it is the
  *  word, whole, on one screen. */
@@ -25,7 +25,7 @@ const count = String(content.items.length).padStart(2, '0');
         <p class="rule label"><span>Get to know our</span><span>{count}</span></p>
         <h2 id="studios-title" class="visually-hidden">{content.title}</h2>
         <!-- the word, as one SVG text so it can be measured to the page's
-             width and cut into bands; the script sizes it and does the cutting -->
+             width and drawn in layers; the script sizes it and does the rest -->
         <svg class="word" data-word aria-hidden="true" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
           <text x="0" y="0" font-size="100" dominant-baseline="hanging" data-measure>STUDIOS</text>
         </svg>
@@ -52,6 +52,9 @@ const count = String(content.items.length).padStart(2, '0');
   .word text { font-family: var(--font-display); font-stretch: var(--display-stretch);
                font-weight: var(--w-display); letter-spacing: var(--track-display);
                text-transform: uppercase; fill: var(--ink); }
+  /* each copy stands on its own ground, which is what hides the copies
+     behind it: `:global`, because the script makes them */
+  .word :global(.ground) { fill: var(--ground); }
 
   @media (max-width: 719px) {
     [data-live] .track { height: 180svh; }
