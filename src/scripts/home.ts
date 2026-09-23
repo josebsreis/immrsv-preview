@@ -18,6 +18,7 @@ import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
 import { createCursor } from './ui/cursor';
 import { createBlurIn } from './ui/blurIn';
+import { createStudiosWord } from './ui/studiosWord';
 import { onPage } from './lifecycle';
 import type { Hero } from './hero';
 
@@ -50,6 +51,8 @@ onPage('home', () => {
 
   const forming = document.querySelector<HTMLElement>('[data-forming]');
   if (forming) { add(createForming(forming)); add(createFormingMarks(forming)); }
+  const word = document.querySelector<HTMLElement>('[data-studios-word]');
+  if (word) add(createStudiosWord(word));
   const faqs = document.querySelector<HTMLElement>('[data-faqs]');
   if (faqs) add(createFaqs(faqs));
   const process = document.querySelector<HTMLElement>('[data-process]');

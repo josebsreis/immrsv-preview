@@ -1,125 +1,60 @@
 ---
-/** The last screen of the dark half: the studios' opening.
+/** The last screen of the dark half: the studios' name, the width of the
+ *  page, cut apart as it is scrolled.
  *
- *  The statement has said what the practice is and the clients have vouched
- *  for it; this is the claim the three studios make together, read a word
- *  at a time as it is scrolled — the manifesto's own sweep, used once more
- *  at the middle of the page — with the three studios pictured under it,
- *  numbered, in the order they are about to come. Then the first of them,
- *  on the light, rides up over this screen: the page turns from dark to
- *  light by the first panel arriving, not by a section changing colour
- *  under you.
+ *  A rule with a small line at its left — "Get to know our" — and the
+ *  count at its right, and under it the one word, STUDIOS, as wide as the
+ *  page. The section is taller than the screen and the word holds still
+ *  while it goes by: as it is scrolled the word is cut into horizontal
+ *  bands that slide apart, letter by letter (scripts/ui/studiosWord.ts),
+ *  so that by the foot of the section the word is in slices — and then the
+ *  first studio, on the light, rides up over it. The page turns from dark
+ *  to light by the first panel arriving.
  *
- *  A thread runs from the pictures to the foot of the screen, where the
- *  seam is, so the screen ends on the line the studios' panels take up. */
+ *  Without script, or for a reader who asked for less motion, it is the
+ *  word, whole, on one screen. */
 import type { HomeContent } from '@lib/sanity/types';
-import work from '../../content/work.generated.json';
-
 interface Props { content: HomeContent['studios']; }
 const { content } = Astro.props;
-
-/* One picture a studio: its own first project, or — for a studio with no
-   work delivered yet — a frame borrowed from across the practice, spread
-   through the pool so two studios never show the same building. Stand-ins
-   until the client sends the rest; nothing here is invented. */
-const FOLDER: Record<string, string> = { architecture: 'architecture-design', media: 'creative-media', products: 'digital-products' };
-type Delivered = { studio: string; name: string; slug: string; images: { src: string; widths: number[] }[] };
-const projects = work as Delivered[];
-type Shot = { src: string; widths: number[]; name: string };
-const shotOf = (p: Delivered): Shot => ({ src: p.images[0].src, widths: p.images[0].widths, name: p.name });
-const taken = new Set<string>();
-const pictures: Shot[] = content.items.map((s, i) => {
-  const own = projects.find((p) => p.studio === FOLDER[s.key]);
-  if (own) { taken.add(own.slug); return shotOf(own); }
-  const rest = projects.filter((p) => !taken.has(p.slug));
-  const pick = rest[Math.floor(((i + 1) * rest.length) / (content.items.length + 1)) % rest.length];
-  taken.add(pick.slug);
-  return shotOf(pick);
-});
-const ladder = (s: Shot, ext: string) => s.widths.map((w) => `${s.src}-${w}.${ext} ${w}w`).join(', ');
-const SIZES = '(max-width: 719px) 30vw, 20rem';
-const statement = content.statement ?? content.intro;
+const count = String(content.items.length).padStart(2, '0');
 ---
 {content.items.length > 0 && (
-  <section class="opening" data-theme="dark" aria-labelledby="studios-title">
-    <div class="body">
-      <h2 id="studios-title" class="label" data-rise>{content.title}</h2>
-      <!-- the claim, lit through a character at a time by the scroll -->
-      <div class="claim" data-reveal-group>
-        <p data-reveal-words>{statement}</p>
+  <section class="opening" data-theme="dark" data-studios-word aria-labelledby="studios-title">
+    <div class="track" data-word-track>
+      <div class="pane">
+        <p class="rule label"><span>Get to know our</span><span>{count}</span></p>
+        <h2 id="studios-title" class="visually-hidden">{content.title}</h2>
+        <!-- the word, as one SVG text so it can be measured to the page's
+             width and cut into bands; the script sizes it and does the cutting -->
+        <svg class="word" data-word aria-hidden="true" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+          <text x="0" y="0" font-size="100" dominant-baseline="hanging" data-measure>STUDIOS</text>
+        </svg>
       </div>
-
-      <!-- the three, pictured and numbered, in the order they come -->
-      <ol class="three">
-        {content.items.map((s, i) => (
-          <li data-rise style={`--i: ${i + 1}`}>
-            <a class="pic" href={`/work?studio=${s.key}`} data-tap data-cursor-hover data-cursor-text="See the work"
-               aria-label={`${s.name} work`}>
-              <picture>
-                <source srcset={ladder(pictures[i], 'avif')} sizes={SIZES} type="image/avif" />
-                <img src={`${pictures[i].src}-${pictures[i].widths[1] ?? pictures[i].widths[0]}.webp`}
-                     srcset={ladder(pictures[i], 'webp')} sizes={SIZES} alt="" loading="lazy" decoding="async" />
-              </picture>
-            </a>
-            <span class="cap"><span class="n">{String(i + 1).padStart(2, '0')}</span><span class="name">{s.name}</span></span>
-          </li>
-        ))}
-      </ol>
     </div>
-    <span class="thread" data-thread aria-hidden="true"></span>
   </section>
 )}
 
 <style>
-  /* a screen: the body at its middle, the thread taking whatever height is
-     left under it, down to the seam */
-  .opening { position: relative; z-index: var(--z-ui); min-height: 100svh;
-             display: flex; flex-direction: column; align-items: center;
-             padding: var(--section-y) var(--page-x) 0; text-align: center; }
-  .body { flex: 1 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .thread { flex: 0 0 auto; height: 12vh; width: var(--hairline); background: var(--line);
-            transform-origin: top; transform: scaleY(var(--draw, 1)); }
+  .opening { position: relative; z-index: var(--z-ui); }
+  /* one screen without script; with it, the screen of scroll the cut runs over */
+  .track { position: relative; min-height: 100svh; }
+  [data-live] .track { height: 220svh; }
+  .pane { position: sticky; top: 0; min-height: 100svh; display: flex; flex-direction: column;
+          justify-content: center; padding: calc(var(--nav-y) * 2 + var(--pill-h)) var(--page-x) var(--page-y);
+          gap: var(--s-7); }
 
-  /* the section's name is the eyebrow here; the claim is the heading */
-  h2 { margin: 0 0 var(--s-6); font-size: var(--t-label); color: var(--ink-3); }
+  /* the rule: the line at its left, the count at its right, a hairline under */
+  .rule { display: flex; justify-content: space-between; margin: 0; padding-bottom: var(--s-4);
+          border-bottom: var(--hairline) solid var(--line); color: var(--ink-3); }
 
-  /* the claim: the statement's voice, a size up and centred, in the same
-     sweep the manifesto is read by */
-  .claim p { margin: 0; max-width: 30ch; font-size: var(--t-h3); font-weight: var(--w-title);
-             line-height: 1.15; letter-spacing: var(--track-title); text-wrap: balance; color: var(--ink); }
-  .claim :global(.rv) { color: var(--ink-dim); transition: color 0.18s linear; }
-  .claim :global(.rv.on) { color: var(--ink); }
-  @supports (color: color-mix(in oklab, #000, #fff 50%)) {
-    .claim :global(.rv), .claim :global(.rv.on) {
-      color: color-mix(in oklab, var(--ink-dim), var(--ink) calc(var(--l, 0) * 100%));
-    }
-  }
+  /* the word: the display voice, at whatever size spans the page */
+  .word { display: block; width: 100%; height: auto; overflow: visible; }
+  .word text { font-family: var(--font-display); font-stretch: var(--display-stretch);
+               font-weight: var(--w-display); letter-spacing: var(--track-display);
+               text-transform: uppercase; fill: var(--ink); }
 
-  /* the three pictures in a row under the claim, each with its number and
-     name; the row is narrower than the claim so the claim stays the thing */
-  .three { list-style: none; margin: var(--s-8) 0 0; padding: 0; width: min(100%, 60rem);
-           display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); }
-  .three li { display: flex; flex-direction: column; gap: var(--s-4); }
-  .pic { display: block; aspect-ratio: 3 / 2; overflow: hidden; border-radius: var(--radius-media);
-         background: var(--glass); }
-  .pic picture, .pic img { display: block; width: 100%; height: 100%; object-fit: cover; }
-  .pic img { transition: transform 1.4s var(--ease-out); }
-  @media (hover: hover) and (pointer: fine) { .pic:hover img { transform: scale(1.06); } }
-  @media (prefers-reduced-motion: reduce) { .pic img { transition: none; } .pic:hover img { transform: none; } }
-  .cap { display: flex; justify-content: center; align-items: baseline; gap: var(--s-3);
-         font-family: var(--font-label); font-stretch: var(--label-stretch); font-weight: var(--w-label);
-         text-transform: uppercase; letter-spacing: var(--track-caps); font-size: var(--t-caption); }
-  .n { color: var(--ink-4); }
-  .name { color: var(--ink-2); }
-
-  @media (max-width: 859px) {
-    .claim p { font-size: var(--t-statement); }
-  }
   @media (max-width: 719px) {
-    .opening { min-height: 0; }
-    .thread { height: 10vh; }
-    .three { gap: var(--s-3); margin-top: var(--s-7); }
-    .three li { gap: var(--s-3); }
-    .cap { flex-direction: column; gap: 0.15rem; font-size: var(--t-label); }
+    [data-live] .track { height: 180svh; }
+    .pane { gap: var(--s-6); }
   }
 </style>
