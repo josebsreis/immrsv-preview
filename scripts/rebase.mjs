@@ -22,7 +22,7 @@ if (!prefix) { console.error('usage: rebase.mjs /prefix'); process.exit(1); }
 
 /** everything the site serves from its own root */
 const OWNED = ['work', 'studios', 'brands', 'team', 'audio', 'shapes',
-               'forming', 'fonts', 'testimonials', 'favicon.svg', '_astro'];
+               'fonts', 'testimonials', 'favicon.svg', '_astro'];
 /** the files a path can be written in */
 const TEXT = new Set(['.html', '.css', '.js', '.json', '.xml', '.txt', '.webmanifest']);
 

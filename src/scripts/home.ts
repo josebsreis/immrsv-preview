@@ -11,8 +11,6 @@ import { createStudioReel } from './ui/studioReel';
 import { createStudioStack } from './ui/studioStack';
 import { createWorkPile } from './ui/workPile';
 import { createProcessRail } from './ui/processRail';
-import { createForming } from './ui/forming';
-import { createFormingMarks } from './ui/formingMarks';
 import { createFaqs } from './ui/faqs';
 import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
@@ -49,8 +47,6 @@ onPage('home', () => {
      same driver turns both */
   document.querySelectorAll<HTMLElement>('[data-stats]').forEach((el) => add(createStatsReel(el)));
 
-  const forming = document.querySelector<HTMLElement>('[data-forming]');
-  if (forming) { add(createForming(forming)); add(createFormingMarks(forming)); }
   const brands = document.querySelector<HTMLElement>('[data-brands]');
   if (brands) add(createBrandSwap(brands));
   const faqs = document.querySelector<HTMLElement>('[data-faqs]');
