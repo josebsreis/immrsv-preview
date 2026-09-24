@@ -61,6 +61,8 @@ const total = String(stats.length).padStart(2, '0');
   /* the same order the testimonials use: the controls, then the bar over
      what it measures */
 
+  /* the instrument keeps its own width, not the column's */
+  .reel-controls, .reel-track { max-width: var(--reel-w); }
   /* every slide in the same cell, so the block is as tall as the longest */
   .slides { list-style: none; display: grid; margin-top: var(--s-7); }
   .slide { grid-area: 1 / 1; display: flex; flex-direction: column; gap: var(--s-4);

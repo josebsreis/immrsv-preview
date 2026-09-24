@@ -126,6 +126,8 @@ const SIZES = '3rem';
        line-height: var(--lh-display); letter-spacing: var(--track-display);
        color: var(--ink); }
   .intro { grid-column: 2; }
+  /* the instrument keeps its own width, not the column's */
+  .step { max-width: var(--reel-w); }
   .intro { max-width: 34ch; font-size: var(--t-body); line-height: var(--lh-body);
            color: var(--ink-3); }
 

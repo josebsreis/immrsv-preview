@@ -35,6 +35,10 @@
      split, so every right-hand column on the page starts on one line. */
   --col-side: 42%;
   --col-gap: var(--s-8);
+  /* the width of a reel's instrument — the arrows, the count and the bar —
+     where it is not measuring a picture: the narrow column it used to
+     stand in, kept now that the column is wider */
+  --reel-w: 20rem;
 
   /* ── spacing scale (rem) ───────────────────────────────────────── */
   --s-1: 0.25rem;
@@ -269,7 +273,7 @@
 
 /* the gap tightens before the panels stack */
 @media (max-width: 1099px) {
-  :root { --col-gap: var(--s-7); }
+  :root { --col-gap: var(--s-7); --reel-w: 14rem; }
 }
 
 /* the sections sit closer on a phone or a tablet */
