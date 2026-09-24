@@ -1,14 +1,13 @@
 /** Structural site config — things that are code, not content. Content lives in Sanity (with defaults in src/content/defaults.ts). */
 export const site = {
   name: 'IMMRSV',
-  /* No Home: the logo is the way home, as everywhere. No About: there is no
-     about page, and the statement it pointed at sits right under the hero,
-     one scroll down. In the order the page tells it: the studios, then the
-     work, then the way to get in touch. */
+  /* Home, the work, and the way to get in touch. Contact is a link to this
+     same page's own foot: every page ends on the footer, so it never has to
+     leave for the homepage to find it (scripts/ui/smoothScroll glides there). */
   nav: [
-    { label: 'Studios', href: '/#studios' },
+    { label: 'Home', href: '/' },
     { label: 'Work', href: '/work' },
-    { label: 'Contact', href: '/#contact' },
+    { label: 'Contact', href: '#contact' },
   ],
   studios: [
     { key: 'architecture', label: 'Architecture + Design' },

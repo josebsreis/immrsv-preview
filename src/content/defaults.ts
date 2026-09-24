@@ -222,7 +222,7 @@ export const defaultHome: HomeContent = {
     headline: 'Designing the future\nof',
     words: ['experience.', 'space.', 'media.', 'products.'],
     description: 'Architecture, creative media and digital products, designed by one team, so whatever you\u2019re building arrives whole.',
-    primaryCta: { label: 'Start a project', href: '/#contact' },
+    primaryCta: { label: 'Start a project', href: '#contact' },
     secondaryCta: { label: 'Book a call', href: 'tel:+17473026868' },
   },
   about: {
