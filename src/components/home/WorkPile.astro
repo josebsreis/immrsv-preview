@@ -131,7 +131,8 @@ const rings = RINGS.map((r, k) => {
 
   /* the note at the head and the button at the foot sit on the section's
      edges — the page margin in from each — with the pile between them */
-  .note { position: absolute; left: 0; right: 0; top: var(--page-y); margin: 0;
+  /* a breath in from the section's edges, not the page margin alone */
+  .note { position: absolute; left: 0; right: 0; top: calc(var(--page-y) + var(--s-6)); margin: 0;
           text-align: center; line-height: 1.7; color: var(--ink-3); }
 
   /* the studios' heading, to the letter: one name per section, one size */
@@ -222,7 +223,7 @@ const rings = RINGS.map((r, k) => {
     .card[data-pile-status="active"] .link:hover .media img { scale: 1.03; }
   }
 
-  .more { position: absolute; left: 0; right: 0; bottom: var(--page-y);
+  .more { position: absolute; left: 0; right: 0; bottom: calc(var(--page-y) + var(--s-6));
           display: flex; justify-content: center; }
 
   @media (max-width: 859px) {
