@@ -7,7 +7,8 @@
  *  stopping on its own letter once it is here (scripts/ui/studiosRoll.ts)
  *  — held at the top of the screen while the rest goes by. Down the middle,
  *  a run of the studios' own work, a handful of frames from across the
- *  projects, one under another, scrolling as the page does. At the right,
+ *  projects, one under another, scrolling as the page does — pictures
+ *  only, nothing to press. At the right,
  *  held to the foot of the screen, the line about what the three are
  *  together. Then the first studio rides up over it all, as every section
  *  does.
@@ -35,7 +36,7 @@ const SHOWN = 5;
 const picked = Array.from({ length: Math.min(SHOWN, projects.length) }, (_, k) => {
   const p = projects[Math.floor((k * projects.length) / Math.min(SHOWN, projects.length))];
   const im = p.images[k % p.images.length] ?? p.images[0];
-  return { name: p.name, slug: p.slug, src: im.src, widths: im.widths };
+  return { src: im.src, widths: im.widths };
 });
 const ladder = (s: { src: string; widths: number[] }, ext: string) => s.widths.map((w) => `${s.src}-${w}.${ext} ${w}w`).join(', ');
 const SIZES = '(max-width: 859px) 100vw, 48vw';
@@ -58,13 +59,12 @@ const line = content.statement ?? content.intro;
     <ul class="run">
       {picked.map((s, k) => (
         <li data-rise style={`--i: ${k % 2}`}>
-          <a class="frame" href={`/work/${s.slug}`} data-tap data-cursor-hover data-cursor-text="Explore project" aria-label={s.name}>
-            <picture>
-              <source srcset={ladder(s, 'avif')} sizes={SIZES} type="image/avif" />
-              <img src={`${s.src}-${s.widths[1] ?? s.widths[0]}.webp`} srcset={ladder(s, 'webp')} sizes={SIZES}
-                   alt="" loading="lazy" decoding="async" />
-            </picture>
-          </a>
+          <!-- pictures, only: nothing to press, nothing under the pointer -->
+          <picture class="frame">
+            <source srcset={ladder(s, 'avif')} sizes={SIZES} type="image/avif" />
+            <img src={`${s.src}-${s.widths[1] ?? s.widths[0]}.webp`} srcset={ladder(s, 'webp')} sizes={SIZES}
+                 alt="" loading="lazy" decoding="async" />
+          </picture>
         </li>
       ))}
     </ul>
@@ -114,9 +114,7 @@ const line = content.statement ?? content.intro;
   .run { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
   .frame { display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--radius-media);
            background: var(--glass); }
-  .frame picture, .frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
-  .frame img { transition: transform 1.4s var(--ease-out); }
-  @media (hover: hover) and (pointer: fine) { .frame:hover img { transform: scale(1.04); } }
+  .frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
   /* the line holds the foot of the screen while the work goes by beside it */
   .say { align-self: end; position: sticky; bottom: var(--page-y); margin: 0;
@@ -127,5 +125,4 @@ const line = content.statement ?? content.intro;
     .head, .say { position: static; }
     .say { max-width: 44ch; }
   }
-  @media (prefers-reduced-motion: reduce) { .frame img { transition: none; } .frame:hover img { transform: none; } }
 </style>
