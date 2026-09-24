@@ -39,9 +39,6 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
   /* the light half of the page: its head is where the handover begins, and
      how far it has climbed is what puts the dark half out */
   const light = document.querySelector<HTMLElement>('[data-light]');
-  /* the studios' opening carries the light half in itself while it is
-     live (ui/studiosOpening): the held half neither creeps nor dims then */
-  const opening = document.querySelector<HTMLElement>('[data-studios-opening]');
 
   // sticky with a negative top: the block scrolls normally until its end meets
   // the bottom of the screen, then holds there while the next half rides over
@@ -118,12 +115,11 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
     // how far the light half has climbed over the held one: 0 as its head
     // reaches the bottom of the screen, 1 once it owns the whole of it
     const over = light ? clamp01((vh - light.getBoundingClientRect().top) / vh) : 0;
-    const carried = opening?.hasAttribute('data-live') ?? false;
     // the held half creeps up rather than standing still, and goes out
-    if (hold) hold.style.top = (holdTop - (carried ? 0 : over * vh * HOLD_DRIFT)).toFixed(1) + 'px';
+    if (hold) hold.style.top = (holdTop - over * vh * HOLD_DRIFT).toFixed(1) + 'px';
     // …and the light half is told, for the thread it carries over the seam
     if (light) light.style.setProperty('--over', over.toFixed(3));
-    if (scrim) scrim.style.opacity = (carried ? 0 : over * HOLD_SHADE).toFixed(3);
+    if (scrim) scrim.style.opacity = (over * HOLD_SHADE).toFixed(3);
 
     /* the nav's colour is not decided here: it reads the section under it,
        wherever it is, which is the only way it can also answer to the black

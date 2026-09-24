@@ -1,105 +1,77 @@
 ---
-/** The last screen of the dark half: the studios announced, and the mark
- *  gone into.
+/** The last screen of the dark half: the studios announced.
  *
- *  One sentence, centred, with the mark sitting in it where a word would
- *  go: "Three studios, one mark. Every face of ◆ is a way in." It assembles
- *  as the screen arrives — the first line's halves from either side, the
- *  mark landing between them, the second line from below — and then the
- *  scroll takes over: the words fall back, the mark lifts out of the line
- *  and grows, turning a little, until one of its faces is the whole screen.
- *  The first studio is what is on that face (scripts/ui/studiosOpening.ts).
+ *  "THREE STUDIOS", in the hero's voice, with the word THREE rolled into
+ *  place letter by letter — each letter a strip of the alphabet that turns,
+ *  like the drum of a counter, and stops on its own letter, the last one
+ *  first — and the section's line under it. It plays once, as the screen
+ *  arrives. Then the first studio rides up over it, as every section does.
  *
- *  The face's fill is the light half's own ground, so the moment the face
- *  fills the screen is already the studio's ground, with no step in colour.
- *
- *  Without script, or for a reader who asked for less motion, it is the
- *  sentence on one screen, and the first studio rides up over it as every
- *  section did. */
+ *  The roll is the styles' own: the script only says when
+ *  (scripts/ui/studiosRoll.ts). Without script, or for a reader who asked
+ *  for less motion, the word simply stands. */
 import type { HomeContent } from '@lib/sanity/types';
-import { SYMBOL } from '@lib/lettermark';
 interface Props { content: HomeContent['studios']; }
 const { content } = Astro.props;
+
+const WORD = 'THREE';
+/* the drum: the alphabet twice, so every letter turns at least a full round
+   before it lands — a T two letters in would barely have moved */
+const ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const drum = (ABC + ABC).split('');
+const letters = WORD.split('').map((ch) => ({ ch, at: 26 + ABC.indexOf(ch) }));
 ---
 {content.items.length > 0 && (
-  <section class="opening" data-theme="dark" data-studios-opening aria-labelledby="studios-title">
-    <div class="track" data-opening-track>
-      <div class="pane" data-opening-pane>
-        <h2 id="studios-title" class="visually-hidden">{content.title}</h2>
-        <p class="line" data-opening-line aria-label="Three studios, one mark. Every face of IMMRSV is a way in.">
-          <!-- four lines, one under the other, each arriving on its own:
-               the first two from either side, the last two from below -->
-          <span class="row" data-in="left" aria-hidden="true">Three studios,</span>
-          <span class="row" data-in="right" aria-hidden="true">one mark.</span>
-          <span class="row" data-in="up" aria-hidden="true">
-            Every face of
-            <!-- the slot holds the mark's room in the line whatever the mark
-                 itself is doing, so the large mark can be placed over it -->
-            <span class="slot" data-opening-slot><svg class="mark" data-opening-inline viewBox={SYMBOL.viewBox} focusable="false">
-              {SYMBOL.paths.map((d) => <path d={d} />)}
-            </svg></span>
-          </span>
-          <span class="row" data-in="up-late" aria-hidden="true">is a way in.</span>
-        </p>
-        <!-- the same mark, drawn large: it stands exactly over the small one
-             when the scroll begins and is carried from there into its face -->
-        <svg class="big" data-opening-mark viewBox={SYMBOL.viewBox} width={SYMBOL.box.w} height={SYMBOL.box.h}
-             aria-hidden="true" focusable="false">
-          {SYMBOL.paths.map((d, i) => <path d={d} data-face={i} />)}
-        </svg>
-      </div>
+  <section class="opening" data-theme="dark" data-studios-roll aria-labelledby="studios-title">
+    <div class="pane">
+      <h2 id="studios-title" class="head">
+        <span class="roll" role="text" aria-label={WORD}>
+          {letters.map((l, i) => (
+            <span class="slot" style={`--at: ${l.at}; --i: ${letters.length - 1 - i}`} aria-hidden="true">
+              <span class="w">{l.ch}</span>
+              <span class="drum">{drum.map((d) => <span class="d">{d}</span>)}</span>
+            </span>
+          ))}
+        </span>
+        {' '}<span class="rest" data-blur-in>Studios</span>
+      </h2>
+      <p class="intro" data-rise style="--i: 1">{content.intro}</p>
     </div>
   </section>
 )}
 
 <style>
   .opening { position: relative; z-index: var(--z-ui); }
-  /* one screen without script; with it, a screen of scroll for the zoom */
-  .track { min-height: 100svh; position: relative; }
-  [data-live] .track { height: 200svh; }
-  /* the pane is the screen and clips to it: the mark grows far past it */
-  .pane { position: sticky; top: 0; height: 100svh; display: grid; place-items: center;
-          padding: 0 var(--page-x); overflow: clip; }
+  /* a screen, the words at its middle */
+  .pane { min-height: 100svh; display: flex; flex-direction: column; align-items: center;
+          justify-content: center; text-align: center; padding: 0 var(--page-x); }
 
-  /* the sentence: the hero's own voice — the display face, wide, in
-     capitals, at the headline's size — centred */
-  .line { position: relative; z-index: 1; margin: 0; text-align: center;
-          font-family: var(--font-display); font-stretch: var(--display-stretch);
-          text-transform: var(--display-case); font-size: var(--t-display);
-          font-weight: var(--w-display); line-height: var(--lh-display);
-          letter-spacing: var(--track-display); color: var(--ink); text-wrap: balance;
-          transform-origin: 50% 50%; }
-  /* a line each, stacked; on a phone a long one may take two */
-  .row { display: block; }
-  @media (min-width: 720px) { .row { white-space: nowrap; } }
-  /* the mark in the line, the height of a capital, on the baseline of the words */
-  .slot { display: inline-block; height: 0.8em; aspect-ratio: 184 / 210; vertical-align: -0.06em; }
-  .mark { display: block; width: 100%; height: 100%; fill: currentColor; transform-origin: 50% 50%; }
+  .head { margin: 0; font-size: var(--t-display); white-space: nowrap; }
+  .roll { display: inline-block; }
 
-  /* The assembly. Every piece starts out of focus, a short way off its
-     place, and comes in when the screen does: the halves of the first line
-     from either side, the second line from below, the mark scaling into the
-     gap in it with a little overshoot. A short travel — a slide across the
-     screen would be a transition, not an arrival. */
-  [data-live] [data-in] { opacity: 0; filter: blur(8px);
-                          transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out), filter 0.6s var(--ease-out); }
-  [data-live] [data-in="left"] { transform: translateX(-1.5rem); }
-  [data-live] [data-in="right"] { transform: translateX(1.5rem); transition-delay: 0.12s; }
-  [data-live] [data-in="up"] { transform: translateY(1.25rem); transition-delay: 0.4s; }
-  [data-live] [data-in="up-late"] { transform: translateY(1.25rem); transition-delay: 0.55s; }
-  [data-live] .mark { transform: scale(0); transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.65s; }
-  .in [data-in] { opacity: 1; transform: none; filter: none; }
-  .in .mark { transform: scale(1); }
+  /* a slot is one letter wide — the letter itself holds the width, unseen —
+     and one line tall, and shows one letter of the drum at a time */
+  .slot { position: relative; display: inline-block; overflow: hidden;
+          line-height: var(--lh-display); vertical-align: top; }
+  .w { visibility: hidden; }
+  .drum { position: absolute; left: 0; top: 0; width: 100%; display: flex; flex-direction: column;
+          align-items: center; transform: translateY(calc(var(--at) * -1em * var(--lh-display, 1))); }
+  .d { display: block; height: calc(1em * var(--lh-display, 1)); }
 
-  /* the large mark: placed by the script, in px from the pane's corner */
-  .big { position: absolute; left: 0; top: 0; transform-origin: 0 0;
-         fill: var(--ink); visibility: hidden; pointer-events: none; will-change: transform; }
-  .opening:not([data-live]) .big { display: none; }
-  /* the face that is gone into carries the light half's ground, so the
-     screen it fills is already the studio's */
-  .big [data-face="2"] { fill: #f5f5f7; }
+  /* The turn: from the top of the drum to the letter, once the screen has
+     arrived, each slot a beat after the one to its right — so the word
+     lands right to left, the way a counter settles. Long and eased hard at
+     the end, so the last letters slow into place. */
+  [data-live] .drum { transform: translateY(0); }
+  [data-live].in .drum {
+    transform: translateY(calc(var(--at) * -1em * var(--lh-display, 1)));
+    transition: transform 1.6s cubic-bezier(0.16, 1, 0.3, 1) calc(0.12s + var(--i) * 0.08s); }
+
+  .intro { max-width: 40ch; margin: var(--s-6) 0 0; text-wrap: balance; font-size: var(--t-lead);
+           line-height: var(--lh-lead); letter-spacing: var(--track-lead); color: var(--ink-3); }
 
   @media (max-width: 719px) {
-    [data-live] .track { height: 180svh; }
+    .head { white-space: normal; }
+    .intro { margin-top: var(--s-5); }
   }
 </style>
