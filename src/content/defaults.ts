@@ -223,7 +223,7 @@ export const defaultHome: HomeContent = {
     words: ['experience.', 'space.', 'media.', 'products.'],
     description: 'Architecture, creative media and digital products, designed by one team, so whatever you\u2019re building arrives whole.',
     primaryCta: { label: 'Start a project', href: '/#contact' },
-    secondaryCta: { label: 'See the work', href: '/work' },
+    secondaryCta: { label: 'Book a call', href: 'tel:+17473026868' },
   },
   about: {
     tag: 'What we do',
