@@ -36,6 +36,10 @@ export function createFaqs(root: HTMLElement): Faqs {
   for (const { a } of rows) a.style.height = '0px';
 
   let open: Row | null = null;
+  /* a row the markup marks `open` starts that way — standing, not animated
+     into place: the project page opens on the brief */
+  const first = rows.find((r) => r.item.classList.contains('open'));
+  if (first) { open = first; first.q.setAttribute('aria-expanded', 'true'); first.a.style.height = 'auto'; }
 
   /** from wherever it is now to wherever it should be, and then let go of the
    *  height so the answer can reflow with the page */

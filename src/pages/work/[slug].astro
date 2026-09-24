@@ -73,24 +73,24 @@ const turns = [
 
       <!-- and what is said about it sits in the middle of what is left -->
       <div class="words">
+        <!-- the two turns, one under the other, opened one at a time the way
+             the questions are (scripts/ui/faqs.ts): the brief stands open on
+             arrival, and each row carries the site's dot at its end — inked
+             while the row is open, dim while it is closed -->
         {turns.length > 0 && (
-          <div class="turns" data-tabs>
-            <div class="names" role="tablist" aria-label="About this project">
-              {turns.map((t, i) => (
-                <button type="button" class="name" role="tab" data-tab={t.key}
-                        id={`tab-${t.key}`} aria-controls={`panel-${t.key}`}
-                        aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}
-                        data-tap>{t.label}</button>
-              ))}
-            </div>
-            <div class="panels" data-panels>
-              {turns.map((t, i) => (
-                <div class="turn" role="tabpanel" data-panel={t.key}
-                     id={`panel-${t.key}`} aria-labelledby={`tab-${t.key}`} hidden={i !== 0}>
+          <div class="turns" data-turns>
+            {turns.map((t, i) => (
+              <div class={`item${i === 0 ? ' open' : ''}`}>
+                <button class="q" type="button" aria-expanded={i === 0 ? 'true' : 'false'}
+                        aria-controls={`turn-${t.key}`} data-faq-q data-tap>
+                  <span class="txt">{t.label}</span>
+                  <i class="sq" aria-hidden="true"></i>
+                </button>
+                <div class="a" id={`turn-${t.key}`} data-faq-a>
                   <p>{t.body}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
 
@@ -145,7 +145,7 @@ const turns = [
     import { onPage } from '../../scripts/lifecycle';
     import { createSmoothScroll } from '../../scripts/ui/smoothScroll';
     import { createVideoInView } from '../../scripts/ui/videoInView';
-    import { createTabs } from '../../scripts/ui/tabs';
+    import { createFaqs } from '../../scripts/ui/faqs';
     import { createDirectionalHover } from '../../scripts/ui/directionalHover';
     import { splitChars } from '../../scripts/ui/splitText';
     onPage('project', () => {
@@ -155,7 +155,7 @@ const turns = [
       document.querySelectorAll<HTMLVideoElement>('video[data-src]').forEach((v) => {
         v.src = v.dataset.src!;
       });
-      const turns = document.querySelector<HTMLElement>('[data-tabs]');
+      const turns = document.querySelector<HTMLElement>('[data-turns]');
       /* the dock steps out as soon as any of the footer is on screen, and
          back when it has gone */
       const dock = document.querySelector<HTMLElement>('[data-dock]');
@@ -172,7 +172,7 @@ const turns = [
         createSmoothScroll(),
         createVideoInView(),
         createDirectionalHover(),
-        turns && createTabs(turns),
+        turns && createFaqs(turns),
         { destroy() { watch?.disconnect(); } },
       ];
     });
@@ -245,39 +245,34 @@ const turns = [
   .facts dt { color: var(--ink-4); margin-bottom: 0.25em; }
   .facts dd { font-size: var(--t-body); color: var(--ink); }
 
-  /* The two turns. The names are a row the width of the column, so they
-     wrap rather than scroll; the chosen one is inked and underlined and the
-     rest sit back. Uppercase but only lightly tracked — the site's --label is
-     10px and heavily spaced, which is right for a tag and too quiet for a
-     control you are meant to press. */
+  /* The two turns, stacked and ruled like the questions: a row is the name
+     of the turn at the left and the site's dot at the right, on a hairline;
+     the open row's text stands under it. The name is set in the label voice
+     at the caption size — a control you are meant to press, not a tag. */
   .turns { width: 100%; }
-  .names { display: flex; flex-wrap: wrap; gap: var(--s-4); }
-  .name { position: relative; padding: 0 0 0.45em; font-size: var(--t-caption);
-          letter-spacing: var(--track-caps); text-transform: uppercase; line-height: 1;
-          font-family: var(--font-label); font-stretch: var(--label-stretch); font-weight: var(--w-label);
-          white-space: nowrap;
-          color: var(--ink-3); transition: color var(--dur-fast) ease; }
-  @media (hover: hover) and (pointer: fine) { .name:hover { color: var(--ink-2); } }
-  .name[aria-selected="true"] { color: var(--ink); }
-  /* the rule is the width of the name it belongs to, and arrives with it */
-  .name::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0;
-                 height: var(--hairline); background: var(--ink);
-                 transform: scaleX(0); transform-origin: left center;
-                 transition: transform var(--dur-fast) var(--ease-out); }
-  .name[aria-selected="true"]::after { transform: scaleX(1); }
-
-  /* The panels are held at the height of the longest of them, measured once
-     the face has settled (scripts/ui/tabs.ts). Without it the names walk up
-     and down the card as each turn is read — a turn one line longer than the
-     last moves everything above it, which reads as the page flinching. */
-  .panels { margin-top: var(--s-5); }
-  /* a turn, not a `.panel`: that name is the site's raised plate, and it was
-     putting each turn in a padded box a step in from the names over it */
-  .turn { margin: 0; }
+  .item { border-top: var(--hairline) solid var(--line); }
+  .item:last-child { border-bottom: var(--hairline) solid var(--line); }
+  .q { display: flex; width: 100%; align-items: center; justify-content: space-between;
+       gap: var(--s-5); padding: var(--s-4) 0; background: none; border: 0;
+       text-align: left; cursor: pointer; font: inherit; color: var(--ink-3);
+       transition: color var(--dur-fast) ease; }
+  .txt { font-size: var(--t-caption); letter-spacing: var(--track-caps); text-transform: uppercase;
+         line-height: 1; font-family: var(--font-label); font-stretch: var(--label-stretch);
+         font-weight: var(--w-label); white-space: nowrap; }
+  @media (hover: hover) and (pointer: fine) { .q:hover { color: var(--ink-2); } }
+  .item.open .q { color: var(--ink); }
+  /* the dot: dim while the row is closed, the ink while it is open */
+  .q .sq { color: var(--ink-4); opacity: 0.5; transition: color var(--dur-fast) ease, opacity var(--dur-fast) ease; }
+  .item.open .q .sq { color: var(--ink); opacity: 1; }
+  /* the text opens on its own height (scripts/ui/faqs.ts); without script
+     it is simply there */
+  .a { overflow: hidden; height: 0; }
+  .turns:not([data-live]) .a { height: auto; }
   /* the same grey as the line under the title: in a column this short the two
      are read as one voice, and a step between them looked like a mistake
      rather than a hierarchy */
-  .turn p { font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-3); max-width: 40ch; }
+  .a p { margin: 0; padding: 0 0 var(--s-5); font-size: var(--t-body); line-height: var(--lh-body);
+         color: var(--ink-3); max-width: 40ch; }
 
   .story { margin-top: var(--s-6); font-size: var(--t-small); color: var(--ink-2); }
 
