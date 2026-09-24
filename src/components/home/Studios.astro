@@ -181,8 +181,9 @@ const grounds = ['light', 'dark', 'light'] as const;
             padding: calc(var(--nav-y) * 2 + var(--pill-h) + 2vh) var(--page-x) var(--page-y);
             background: var(--ground); color: var(--ink); }
 
-  .top, .foot { display: grid; grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
-                column-gap: var(--s-8); }
+  /* the page's split, which this panel is the measure of */
+  .top, .foot { display: grid; grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
+                column-gap: var(--col-gap); }
   /* the two columns are one height — the reel's — so the label at the head
      of the list sits level with the reel's controls and the slab at its foot
      sits level with the picture's bottom edge */
@@ -277,9 +278,6 @@ const grounds = ['light', 'dark', 'light'] as const;
      this rule matched nothing and the button sat hard under the list */
   .does :global(.all) { margin-top: var(--s-5); }
 
-  @media (max-width: 1099px) {
-    .top, .foot { column-gap: var(--s-7); }
-  }
   /* A short screen — a laptop with the bar showing, or any window much
      wider than it is tall, where the type has grown with the width and the
      height has not — has less room under the nav than the panel was drawn

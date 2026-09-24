@@ -29,10 +29,12 @@
   /* the height every pill in the site stands at — the nav's and the work
      filter's are the same object and were the same magic number twice */
   --pill-h: 2.125rem;
-  /* the page's two-column split: a narrow left column and the gap after it.
-     Every panel that uses it starts its right column on the same line. */
-  --col-side: 20rem;
-  --col-gap: 18rem;
+  /* the page's two-column split: the left column and the gap after it.
+     The studios' panels set it — the reel wants that much of the width —
+     and the statement, the client stories and the questions take the same
+     split, so every right-hand column on the page starts on one line. */
+  --col-side: 42%;
+  --col-gap: var(--s-8);
 
   /* ── spacing scale (rem) ───────────────────────────────────────── */
   --s-1: 0.25rem;
@@ -265,9 +267,9 @@
   --logo-filter: none;
 }
 
-/* the split tightens before the panels stack */
+/* the gap tightens before the panels stack */
 @media (max-width: 1099px) {
-  :root { --col-side: 14rem; --col-gap: 7rem; }
+  :root { --col-gap: var(--s-7); }
 }
 
 /* the sections sit closer on a phone or a tablet */
