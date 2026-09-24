@@ -27,19 +27,19 @@ const { content } = Astro.props;
       <div class="pane" data-opening-pane>
         <h2 id="studios-title" class="visually-hidden">{content.title}</h2>
         <p class="line" data-opening-line aria-label="Three studios, one mark. Every face of IMMRSV is a way in.">
-          <span class="l1" aria-hidden="true">
-            <span class="part" data-in="left">Three studios,</span>
-            <span class="part" data-in="right">one mark.</span>
-          </span>
-          <span class="l2" data-in="up" aria-hidden="true">
+          <!-- four lines, one under the other, each arriving on its own:
+               the first two from either side, the last two from below -->
+          <span class="row" data-in="left" aria-hidden="true">Three studios,</span>
+          <span class="row" data-in="right" aria-hidden="true">one mark.</span>
+          <span class="row" data-in="up" aria-hidden="true">
             Every face of
             <!-- the slot holds the mark's room in the line whatever the mark
                  itself is doing, so the large mark can be placed over it -->
             <span class="slot" data-opening-slot><svg class="mark" data-opening-inline viewBox={SYMBOL.viewBox} focusable="false">
               {SYMBOL.paths.map((d) => <path d={d} />)}
             </svg></span>
-            is a way in.
           </span>
+          <span class="row" data-in="up-late" aria-hidden="true">is a way in.</span>
         </p>
         <!-- the same mark, drawn large: it stands exactly over the small one
              when the scroll begins and is carried from there into its face -->
@@ -63,14 +63,15 @@ const { content } = Astro.props;
 
   /* the sentence: the hero's own voice — the display face, wide, in
      capitals, at the headline's size — centred */
-  .line { position: relative; z-index: 1; margin: 0; max-width: 24ch; text-align: center;
+  .line { position: relative; z-index: 1; margin: 0; text-align: center;
           font-family: var(--font-display); font-stretch: var(--display-stretch);
           text-transform: var(--display-case); font-size: var(--t-display);
           font-weight: var(--w-display); line-height: var(--lh-display);
           letter-spacing: var(--track-display); color: var(--ink); text-wrap: balance;
           transform-origin: 50% 50%; }
-  .l1, .l2 { display: block; }
-  .part { display: inline-block; }
+  /* a line each, stacked; on a phone a long one may take two */
+  .row { display: block; }
+  @media (min-width: 720px) { .row { white-space: nowrap; } }
   /* the mark in the line, the height of a capital, on the baseline of the words */
   .slot { display: inline-block; height: 0.8em; aspect-ratio: 184 / 210; vertical-align: -0.06em; }
   .mark { display: block; width: 100%; height: 100%; fill: currentColor; transform-origin: 50% 50%; }
@@ -84,8 +85,9 @@ const { content } = Astro.props;
                           transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out), filter 0.6s var(--ease-out); }
   [data-live] [data-in="left"] { transform: translateX(-1.5rem); }
   [data-live] [data-in="right"] { transform: translateX(1.5rem); transition-delay: 0.12s; }
-  [data-live] [data-in="up"] { transform: translateY(1.25rem); transition-delay: 0.45s; }
-  [data-live] .mark { transform: scale(0); transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s; }
+  [data-live] [data-in="up"] { transform: translateY(1.25rem); transition-delay: 0.4s; }
+  [data-live] [data-in="up-late"] { transform: translateY(1.25rem); transition-delay: 0.55s; }
+  [data-live] .mark { transform: scale(0); transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.65s; }
   .in [data-in] { opacity: 1; transform: none; filter: none; }
   .in .mark { transform: scale(1); }
 
