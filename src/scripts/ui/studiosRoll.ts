@@ -17,12 +17,14 @@ export function createStudiosRoll(root: HTMLElement): StudiosRoll {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return { destroy() {} };
   root.dataset.live = '';
   const drums = [...root.querySelectorAll<HTMLElement>('.drum')];
+  /* the name is what is watched: the section is taller than a screen */
+  const head = root.querySelector<HTMLElement>('[data-roll-head]') ?? root;
 
   /* turning: from a screen below */
   const near = new IntersectionObserver((entries) => {
     if (entries.some((e) => e.isIntersecting)) { root.classList.add('spin'); near.disconnect(); }
   }, { rootMargin: '0px 0px 100% 0px' });
-  near.observe(root);
+  near.observe(head);
 
   /* landing: once here */
   const here = new IntersectionObserver((entries) => {
@@ -38,7 +40,7 @@ export function createStudiosRoll(root: HTMLElement): StudiosRoll {
     root.classList.add('in');
     for (const d of drums) { d.style.animation = ''; d.style.transform = ''; }
   }, { threshold: 0.5 });
-  here.observe(root);
+  here.observe(head);
 
   return { destroy() { near.disconnect(); here.disconnect(); delete root.dataset.live; } };
 }

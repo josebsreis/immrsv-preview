@@ -1,17 +1,21 @@
 ---
-/** The last screen of the dark half: the studios announced.
+/** The last stretch of the dark half: the studios announced.
  *
- *  "THREE STUDIOS", in the hero's voice and larger, with the word THREE
- *  rolled into place letter by letter — each letter a drum of the alphabet
- *  that is already turning as the screen comes up, and stops on its own
- *  letter once the screen is here, the last one first — and the section's
- *  line under it. Then the first studio rides up over it, as every section
+ *  Three columns on the dark ground. At the left, "THREE STUDIOS", in the
+ *  hero's voice, the word THREE rolled into place letter by letter — each
+ *  letter a drum of the alphabet, already turning as the screen comes up,
+ *  stopping on its own letter once it is here (scripts/ui/studiosRoll.ts)
+ *  — held at the top of the screen while the rest goes by. Down the middle,
+ *  a run of the studios' own work, a handful of frames from across the
+ *  projects, one under another, scrolling as the page does. At the right,
+ *  held to the foot of the screen, the line about what the three are
+ *  together. Then the first studio rides up over it all, as every section
  *  does.
  *
- *  The turning and the landing are the styles' own: the script only says
- *  when (scripts/ui/studiosRoll.ts). Without script, or for a reader who
- *  asked for less motion, the word simply stands. */
+ *  Without script, or for a reader who asked for less motion, the word
+ *  simply stands. */
 import type { HomeContent } from '@lib/sanity/types';
+import work from '../../content/work.generated.json';
 interface Props { content: HomeContent['studios']; }
 const { content } = Astro.props;
 
@@ -21,38 +25,67 @@ const WORD = 'THREE';
 const ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const drum = (ABC + ABC).split('');
 const letters = WORD.split('').map((ch) => ({ ch, at: 26 + ABC.indexOf(ch) }));
+
+/* A handful of frames from across the work: one from each of five projects,
+   spread through the delivered list rather than taken off its top, so the
+   run is not five views of one building. The same five every build. */
+type Delivered = { studio: string; name: string; slug: string; images: { src: string; widths: number[] }[] };
+const projects = work as Delivered[];
+const SHOWN = 5;
+const picked = Array.from({ length: Math.min(SHOWN, projects.length) }, (_, k) => {
+  const p = projects[Math.floor((k * projects.length) / Math.min(SHOWN, projects.length))];
+  const im = p.images[k % p.images.length] ?? p.images[0];
+  return { name: p.name, slug: p.slug, src: im.src, widths: im.widths };
+});
+const ladder = (s: { src: string; widths: number[] }, ext: string) => s.widths.map((w) => `${s.src}-${w}.${ext} ${w}w`).join(', ');
+const SIZES = '(max-width: 859px) 100vw, 48vw';
+const line = content.statement ?? content.intro;
 ---
 {content.items.length > 0 && (
   <section class="opening" data-theme="dark" data-studios-roll aria-labelledby="studios-title">
-    <div class="pane">
-      <h2 id="studios-title" class="head">
-        <span class="roll" role="text" aria-label={WORD}>
-          {letters.map((l, i) => (
-            <span class="slot" style={`--at: ${l.at}; --i: ${letters.length - 1 - i}`} aria-hidden="true">
-              <span class="w">{l.ch}</span>
-              <span class="drum">{drum.map((d) => <span class="d">{d}</span>)}</span>
-            </span>
-          ))}
-        </span>
-        {' '}<span class="rest" data-blur-in>Studios</span>
-      </h2>
-      <p class="intro" data-rise style="--i: 1">{content.intro}</p>
-    </div>
+    <h2 id="studios-title" class="head" data-roll-head>
+      <span class="roll" role="text" aria-label={WORD}>
+        {letters.map((l, i) => (
+          <span class="slot" style={`--at: ${l.at}; --i: ${letters.length - 1 - i}`} aria-hidden="true">
+            <span class="w">{l.ch}</span>
+            <span class="drum">{drum.map((d) => <span class="d">{d}</span>)}</span>
+          </span>
+        ))}
+      </span>
+      <span class="rest" data-blur-in>Studios</span>
+    </h2>
+
+    <ul class="run">
+      {picked.map((s, k) => (
+        <li data-rise style={`--i: ${k % 2}`}>
+          <a class="frame" href={`/work/${s.slug}`} data-tap data-cursor-hover data-cursor-text="Explore project" aria-label={s.name}>
+            <picture>
+              <source srcset={ladder(s, 'avif')} sizes={SIZES} type="image/avif" />
+              <img src={`${s.src}-${s.widths[1] ?? s.widths[0]}.webp`} srcset={ladder(s, 'webp')} sizes={SIZES}
+                   alt="" loading="lazy" decoding="async" />
+            </picture>
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <p class="say" data-rise>{line}</p>
   </section>
 )}
 
 <style>
-  .opening { position: relative; z-index: var(--z-ui); }
-  /* a screen, the words at its middle */
-  .pane { min-height: 100svh; display: flex; flex-direction: column; align-items: center;
-          justify-content: center; text-align: center; padding: 0 var(--page-x); }
+  /* three columns: the name, the run of work twice as wide, the line */
+  .opening { position: relative; z-index: var(--z-ui); display: grid;
+             grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
+             column-gap: var(--s-7); align-items: start;
+             padding: var(--section-y) var(--page-x); }
 
-  /* a size up from the hero's headline: this is the one word on the screen */
-  .head { margin: 0; font-size: clamp(2.75rem, 7.2vw, 6.5rem); white-space: nowrap; line-height: var(--lh-display); }
-  /* both words are boxes of the same line, set on the same top edge, so
-     their letters sit on one baseline — a clipped box has no baseline of
-     its own to align by */
-  .roll, .rest { display: inline-block; vertical-align: top; line-height: var(--lh-display); }
+  /* the name holds the head of the screen while the work goes by under it */
+  .head { position: sticky; top: calc(var(--nav-y) * 2 + var(--pill-h) + 2vh); margin: 0;
+          font-size: var(--t-display); line-height: var(--lh-display); }
+  /* one word a line: the roll and the rest are boxes of one line each, set
+     on their own top edges — a clipped box has no baseline to align by */
+  .roll, .rest { display: block; line-height: var(--lh-display); }
 
   /* a slot is one letter wide — the letter itself holds the width, unseen —
      and one line tall, and shows one letter of the drum at a time */
@@ -66,11 +99,10 @@ const letters = WORD.split('').map((ch) => ({ ch, at: 26 + ABC.indexOf(ch) }));
   /* The turn. With script the drums start at the top and, once the screen
      is on its way up, turn round and round — the first alphabet, over and
      over — so the word is already scrambling as it comes into view. Once
-     the screen is here the script stops each drum where it is and it rolls
+     the name is here the script stops each drum where it is and it rolls
      on, forward, to its letter in the second alphabet, each slot a beat
      after the one to its right — so the word lands right to left, the way
-     a counter settles. Long and eased hard at the end, so the last letters
-     slow into place. */
+     a counter settles. Long and eased hard at the end. */
   [data-live] .drum { transform: translateY(0); }
   [data-live].spin .drum { animation: drum 1.1s linear infinite; }
   @keyframes drum { to { transform: translateY(calc(-26em * var(--lh-display, 1))); } }
@@ -78,11 +110,22 @@ const letters = WORD.split('').map((ch) => ({ ch, at: 26 + ABC.indexOf(ch) }));
     transform: translateY(calc(var(--at) * -1em * var(--lh-display, 1)));
     transition: transform 1.8s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i) * 0.09s); }
 
-  .intro { max-width: 40ch; margin: var(--s-6) 0 0; text-wrap: balance; font-size: var(--t-lead);
-           line-height: var(--lh-lead); letter-spacing: var(--track-lead); color: var(--ink-3); }
+  /* the run: frames one under another, a hair apart, each the column's width */
+  .run { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
+  .frame { display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--radius-media);
+           background: var(--glass); }
+  .frame picture, .frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .frame img { transition: transform 1.4s var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) { .frame:hover img { transform: scale(1.04); } }
 
-  @media (max-width: 719px) {
-    .head { white-space: normal; }
-    .intro { margin-top: var(--s-5); }
+  /* the line holds the foot of the screen while the work goes by beside it */
+  .say { align-self: end; position: sticky; bottom: var(--page-y); margin: 0;
+         font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-2); }
+
+  @media (max-width: 859px) {
+    .opening { grid-template-columns: minmax(0, 1fr); row-gap: var(--s-7); }
+    .head, .say { position: static; }
+    .say { max-width: 44ch; }
   }
+  @media (prefers-reduced-motion: reduce) { .frame img { transition: none; } .frame:hover img { transform: none; } }
 </style>

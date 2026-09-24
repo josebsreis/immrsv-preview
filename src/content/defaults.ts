@@ -252,7 +252,7 @@ export const defaultHome: HomeContent = {
     tag: 'Studios',
     title: 'Three studios',
     intro: 'Three doors into the same room. Whichever one you come in by, the same people design it, show it and build it.',
-    statement: 'People decide in seconds whether something is worth their attention. We take what makes you irreplaceable and build the whole experience around it — the space, the film, the product — so they feel it before they read a word.',
+    statement: 'Architecture, creative media and digital products, one team. We draw the building, render the film and build the product ourselves, so nothing is lost in a handover: what you approve is what gets built. Whichever studio you come in by, you get all three.',
     items: studios,
   },
   brands: {
