@@ -62,6 +62,15 @@ const SIZES = '3rem';
                 <polygon points="41.9 78.36 41.9 36.38 22.14 36.38 41.9 1.64 21.41 1.64 1.67 36.38 1.67 78.36 41.9 78.36"/>
               </svg>
               <p>{t.quote}</p>
+              <!-- the client's own closing pair, not the opening one turned
+                   round: the two are drawn as a set, each with its tails
+                   running the way that mark's tails run. It closes the quote
+                   on a row of its own, at the end of the measure, before the
+                   name. -->
+              <svg class="quote close" viewBox="0 0 100 80" aria-hidden="true" fill="currentColor">
+                <polygon points="1.67 1.64 1.67 43.62 21.43 43.62 1.67 78.36 22.16 78.36 41.9 43.62 41.9 1.64 1.67 1.64"/>
+                <polygon points="58.1 1.64 58.1 43.62 77.86 43.62 58.1 78.36 78.59 78.36 98.33 43.62 98.33 1.64 58.1 1.64"/>
+              </svg>
               <footer class="by">
                 {t.portrait && (
                   <picture class="portrait">
@@ -74,16 +83,6 @@ const SIZES = '3rem';
                   </picture>
                 )}
                 <span class="who"><b>{t.name}</b><span class="role">{t.role}</span></span>
-                <!-- the client's own closing pair, not the opening one turned
-                     round: the two are drawn as a set, each with its tails
-                     running the way that mark's tails run. It closes the
-                     quote from the row under it, at the end of the measure,
-                     level with the name — so it is right under the words
-                     without holding a row of its own. -->
-                <svg class="quote close" viewBox="0 0 100 80" aria-hidden="true" fill="currentColor">
-                  <polygon points="1.67 1.64 1.67 43.62 21.43 43.62 1.67 78.36 22.16 78.36 41.9 43.62 41.9 1.64 1.67 1.64"/>
-                  <polygon points="58.1 1.64 58.1 43.62 77.86 43.62 58.1 78.36 78.59 78.36 98.33 43.62 98.33 1.64 58.1 1.64"/>
-                </svg>
               </footer>
             </blockquote>
           </li>
@@ -185,29 +184,16 @@ const SIZES = '3rem';
      broke at seven words a line and read as a column rather than as speech.
      64ch takes most of the column it is given without letting the line run
      past what the eye can carry back. */
-  /* Every slide is as tall as the longest of them, and the marks hold the top
-     and the foot of that space whichever quote is being read — so the frame
-     never moves and only what is inside it changes. The marks are out of the
-     flow: they sit on the corners of the frame and take no room from the
-     quote, so the name follows the last line at the same distance whether
-     the quote is long or short. A short one leaves its air under the name. */
-  .words { position: relative; margin: 0; max-width: 64ch; width: 100%;
+  /* Every slide is as tall as the longest of them. The marks are in the
+     flow, each on a row of its own: the opening pair above the words, the
+     closing pair under them at the end of the measure, and the name after
+     that — so the quote reads open, words, close, name, top to bottom. */
+  .words { margin: 0; max-width: 64ch; width: 100%;
            display: flex; flex-direction: column; --mark: 1.75rem; }
   .words p { margin: 0; }
-  /* the pair frames what was said: one opening above it on the left, one
-     closing under it on the right, at the end of the measure, on the row
-     the name is on. The opening one is out of the flow on desktop, where it
-     holds the corner of the frame; on a phone the column is the whole page
-     and there is no frame to hold, so it sits in the flow before the words. */
   .quote { display: block; flex: none; width: var(--mark); height: auto; color: var(--ink-dim); }
   .open { margin-bottom: var(--s-5); }
-  /* at the head of the row, not its middle: it closes the last line, and the
-     row is as tall as the face */
-  .close { margin-left: auto; align-self: flex-start; }
-  @media (min-width: 860px) {
-    .words { padding-top: calc(var(--mark) * 0.8 + var(--s-5)); }
-    .open { position: absolute; top: 0; left: 0; margin: 0; }
-  }
+  .close { align-self: flex-end; margin-top: var(--s-5); }
   .words p { font-size: var(--t-statement); font-weight: var(--w-title);
              line-height: 1.3; letter-spacing: var(--track-title); color: var(--ink); }
 
