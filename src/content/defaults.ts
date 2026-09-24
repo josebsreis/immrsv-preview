@@ -257,7 +257,9 @@ export const defaultHome: HomeContent = {
   },
   brands: {
     tag: 'Trusted by',
-    items: [...clients, ...clients],
+    /* every mark once: the row shows six at a time and swaps through the
+       pool, so a repeated entry would only be swapped for itself */
+    items: clients,
   },
   testimonials: {
     tag: 'Client stories',

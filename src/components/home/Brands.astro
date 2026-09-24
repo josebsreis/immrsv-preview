@@ -1,22 +1,31 @@
 ---
-/** The clients, as their own marks, each in a frame of its own with air
- *  between them, under a plain label at the left — the same small word the
- *  studios' "What we do" is set in. Hovering slides a panel in from
- *  whichever edge the cursor crossed (scripts/ui/directionalHover.ts). The
- *  files are black artwork, so the theme supplies the filter that flips
- *  them. */
+/** The clients, as their own marks: a rule across the top, the name of the
+ *  row at the left, and at the right — on the page's split, where every
+ *  right-hand column starts — six marks in a lattice of framed cells, three
+ *  across. The row shows six at a time and swaps one for another every so
+ *  often, the mark going out of focus and the next coming in, the way the
+ *  hero's word and the footer's turn over (scripts/ui/brandSwap.ts).
+ *  Hovering slides a panel in from whichever edge the cursor crossed
+ *  (scripts/ui/directionalHover.ts). The files are black artwork, so the
+ *  theme supplies the filter that flips them. */
 import type { HomeContent } from '@lib/sanity/types';
 interface Props { content: HomeContent['brands']; }
 const { content } = Astro.props;
+/** how many stand in the row at once */
+const SHOWN = 6;
+const pool = content.items.map((b) => ({ name: b.name, url: b.logo.url, alt: b.logo.alt ?? b.name }));
+/* six cells whatever the pool holds: with fewer marks than cells some
+   stand twice until the client sends the rest */
+const first = Array.from({ length: SHOWN }, (_, i) => pool[i % pool.length]);
 ---
-{content.items.length > 0 && (
-  <section class="brands" aria-label={content.tag}>
+{pool.length > 0 && (
+  <section class="brands" aria-label={content.tag} data-brands data-pool={JSON.stringify(pool)}>
     <p class="lead label">{content.tag}</p>
     <ul class="grid" data-dhover>
-      {content.items.map((b) => (
-        <li data-dhover-item>
+      {first.map((b, i) => (
+        <li data-dhover-item data-brand-cell data-brand={pool.indexOf(b)}>
           <span class="clip" aria-hidden="true"><span class="tile" data-dhover-tile></span></span>
-          <img src={b.logo.url} alt={b.logo.alt ?? b.name} loading="lazy" />
+          <img src={b.url} alt={b.alt} loading={i < SHOWN ? 'eager' : 'lazy'} />
         </li>
       ))}
     </ul>
@@ -24,17 +33,21 @@ const { content } = Astro.props;
 )}
 
 <style>
-  /* it sits inside the light section, which already holds the page margins */
-  .brands { position: relative; padding: 0 0 var(--section-y); }
+  /* the page's split: the name in the left column, the marks starting
+     where every right-hand column on the page starts; a rule across the
+     top of both, and a section's air under */
+  .brands { position: relative; display: grid;
+            grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
+            column-gap: var(--col-gap); align-items: start;
+            padding: var(--s-6) 0 var(--section-y);
+            border-top: var(--hairline) solid var(--line); }
 
-  /* the label, plain, at the left: the same word and size as the studios'
-     "What we do", naming the row under it */
-  .lead { margin: 0 0 var(--s-5); color: var(--ink-3); }
+  /* the label, plain: the same word and size as the studios' "What we do" */
+  .lead { margin: 0; color: var(--ink-3); }
 
-  /* each mark in a frame of its own, with air between the frames: four to
-     a row at every size but a phone, where it halves */
-  .grid { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: var(--s-4); margin: 0; padding: 0; }
+  /* six marks, three across, each in a frame of its own with air between */
+  .grid { list-style: none; margin: 0; padding: 0; display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); }
   .grid li { position: relative; display: grid; place-items: center;
              height: 8.5rem; padding: var(--s-5); background: var(--ground);
              border: var(--hairline) solid var(--line); border-radius: var(--radius); overflow: hidden; }
@@ -46,13 +59,20 @@ const { content } = Astro.props;
           transition: transform var(--dur-base) var(--ease-panel); }
 
   img { position: relative; max-height: 3.25rem; max-width: 100%; width: auto; object-fit: contain;
-        filter: var(--logo-filter); opacity: 0.82; transition: opacity var(--dur-fast) ease; }
+        filter: var(--logo-filter); opacity: 0.82;
+        /* the swap: out of focus and gone, then the next one in — the
+           hero's own turn, at its own pace */
+        transition: opacity 0.75s ease-in-out, filter 0.75s ease-in-out; }
+  img.out { opacity: 0; filter: var(--logo-filter) blur(9px); }
   @media (hover: hover) and (pointer: fine) { .grid li:hover img { opacity: 1; } }
 
+  @media (max-width: 859px) {
+    .brands { grid-template-columns: minmax(0, 1fr); row-gap: var(--s-5); }
+  }
   @media (max-width: 719px) {
     .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3); }
     .grid li { height: 6.5rem; }
     img { max-height: 2.5rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .tile { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .tile, img { transition: none; } }
 </style>

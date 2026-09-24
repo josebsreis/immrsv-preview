@@ -19,6 +19,7 @@ import { splitChars } from './ui/splitText';
 import { createCursor } from './ui/cursor';
 import { createBlurIn } from './ui/blurIn';
 import { createStudiosOpening } from './ui/studiosOpening';
+import { createBrandSwap } from './ui/brandSwap';
 import { onPage } from './lifecycle';
 import type { Hero } from './hero';
 
@@ -51,6 +52,8 @@ onPage('home', () => {
 
   const forming = document.querySelector<HTMLElement>('[data-forming]');
   if (forming) { add(createForming(forming)); add(createFormingMarks(forming)); }
+  const brands = document.querySelector<HTMLElement>('[data-brands]');
+  if (brands) add(createBrandSwap(brands));
   const opening = document.querySelector<HTMLElement>('[data-studios-opening]');
   if (opening) add(createStudiosOpening(opening));
   const faqs = document.querySelector<HTMLElement>('[data-faqs]');
