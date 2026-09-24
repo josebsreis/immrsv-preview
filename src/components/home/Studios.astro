@@ -65,8 +65,9 @@ const reelFor = (key: string): Shot[] => {
   return own.concat(spare, spread).slice(0, PER_STUDIO);
 };
 
-/** light, dark, light: each panel arrives as its own place */
-const grounds = ['light', 'dark', 'light'] as const;
+/** all three on the light: what tells one from the next, as the top one
+ *  is lifted away, is the shadow it casts on the one beneath */
+const grounds = ['light', 'light', 'light'] as const;
 ---
 {content.items.length > 0 && (
   <div class="studios">
@@ -161,6 +162,11 @@ const grounds = ['light', 'dark', 'light'] as const;
      place in the flow, and the stack's own height is what holds the scroll
      open. */
   .stack[data-live] .studio + .studio { margin-top: -100svh; }
+  /* Three panels on one ground: the one being lifted casts a soft shadow
+     down onto the one beneath, so its edge reads as an edge — a sheet
+     coming off a stack — rather than the two grounds merging. The last has
+     nothing under it to shadow. */
+  .stack[data-live] .studio:not(:last-child) { box-shadow: 0 1.5rem 3.5rem rgb(0 0 0 / 0.16), 0 0.25rem 0.75rem rgb(0 0 0 / 0.06); }
 
   /* ── a panel ─────────────────────────────────────────────────────────
      A screen each, its content pinned to the top and the foot with the
@@ -301,6 +307,8 @@ const grounds = ['light', 'dark', 'light'] as const;
      own height, in the same order. */
   @media (max-width: 859px) {
     .studio { min-height: 0; gap: var(--s-7); padding: var(--section-y) var(--page-x); }
+    /* in the flow, on one ground, a rule between them is the edge */
+    .studio + .studio { border-top: var(--hairline) solid var(--line); }
     /* one column, and never wider than the screen: a `1fr` track is as wide
        as its widest word, and a long button label made it wider */
     .top, .foot { grid-template-columns: minmax(0, 1fr); row-gap: var(--s-6); }
