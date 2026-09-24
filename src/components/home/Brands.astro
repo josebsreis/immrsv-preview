@@ -39,7 +39,8 @@ const first = Array.from({ length: SHOWN }, (_, i) => pool[i % pool.length]);
   .brands { position: relative; display: grid;
             grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
             column-gap: var(--col-gap); align-items: start;
-            padding: var(--s-6) 0 var(--section-y);
+            /* the same air under the rule as the marquee keeps under its own */
+            padding: clamp(2.5rem, 7vh, 5.5rem) 0 var(--section-y);
             border-top: var(--hairline) solid var(--line); }
 
   /* the label, plain: the same word and size as the studios' "What we do" */
