@@ -252,7 +252,8 @@ export const defaultHome: HomeContent = {
     tag: 'Studios',
     title: 'Three studios',
     intro: 'Three doors into the same room. Whichever one you come in by, the same people design it, show it and build it.',
-    statement: 'Architecture, creative media and digital products, one team. We draw the building, render the film and build the product ourselves, so nothing is lost in a handover: what you approve is what gets built. Whichever studio you come in by, you get all three.',
+    claim: "Before it exists, we've already built it.",
+    statement: 'We draw at real scale from the first sketch, render it as it will be seen, and build the product that runs it — one team, start to finish. You see the real thing early, so what you approve is what gets built.',
     items: studios,
   },
   brands: {

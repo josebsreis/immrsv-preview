@@ -1,31 +1,22 @@
 ---
-/** The last stretch of the dark half: the studios announced.
+/** The last stretch of the dark half: how the work is made, shown.
  *
- *  Three columns on the dark ground. At the left, "THREE STUDIOS", in the
- *  hero's voice, the word THREE rolled into place letter by letter — each
- *  letter a drum of the alphabet, already turning as the screen comes up,
- *  stopping on its own letter once it is here (scripts/ui/studiosRoll.ts)
- *  — held at the top of the screen while the rest goes by. Down the middle,
- *  a run of the studios' own work, a handful of frames from across the
- *  projects, one under another, scrolling as the page does — pictures
- *  only, nothing to press. At the right,
- *  held to the foot of the screen, the line about what the three are
- *  together. Then the first studio rides up over it all, as every section
- *  does.
+ *  Three columns on the dark ground. At the left, one line, held at the
+ *  top of the screen while the rest goes by: the practice's claim, that
+ *  the thing is built before it exists. Down the middle, a run of the
+ *  studios' own work, a handful of frames from across the projects, one
+ *  under another, scrolling as the page does — pictures only, nothing to
+ *  press. At the right, held to the foot of the screen, how that is done,
+ *  start to finish. Then the first studio rides up over it all, as every
+ *  section does.
  *
- *  Without script, or for a reader who asked for less motion, the word
- *  simply stands. */
+ *  The studios themselves are not counted again here: the hero and the
+ *  statement have said there are three. */
 import type { HomeContent } from '@lib/sanity/types';
 import work from '../../content/work.generated.json';
 interface Props { content: HomeContent['studios']; }
 const { content } = Astro.props;
 
-const WORD = 'THREE';
-/* the drum: the alphabet twice, so every letter turns at least a full round
-   before it lands — a T two letters in would barely have moved */
-const ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const drum = (ABC + ABC).split('');
-const letters = WORD.split('').map((ch) => ({ ch, at: 26 + ABC.indexOf(ch) }));
 
 /* A handful of frames from across the work: one from each of five projects,
    spread through the delivered list rather than taken off its top, so the
@@ -40,21 +31,12 @@ const picked = Array.from({ length: Math.min(SHOWN, projects.length) }, (_, k) =
 });
 const ladder = (s: { src: string; widths: number[] }, ext: string) => s.widths.map((w) => `${s.src}-${w}.${ext} ${w}w`).join(', ');
 const SIZES = '(max-width: 859px) 100vw, 48vw';
+const claim = content.claim ?? "Before it exists, we've already built it.";
 const line = content.statement ?? content.intro;
 ---
 {content.items.length > 0 && (
-  <section class="opening" data-theme="dark" data-studios-roll aria-labelledby="studios-title">
-    <h2 id="studios-title" class="head" data-roll-head>
-      <span class="roll" role="text" aria-label={WORD}>
-        {letters.map((l, i) => (
-          <span class="slot" style={`--at: ${l.at}; --i: ${letters.length - 1 - i}`} aria-hidden="true">
-            <span class="w">{l.ch}</span>
-            <span class="drum">{drum.map((d) => <span class="d">{d}</span>)}</span>
-          </span>
-        ))}
-      </span>
-      <span class="rest" data-blur-in>Studios</span>
-    </h2>
+  <section class="opening" data-theme="dark" aria-labelledby="studios-title">
+    <h2 id="studios-title" class="head" data-blur-in>{claim}</h2>
 
     <ul class="run">
       {picked.map((s, k) => (
@@ -80,35 +62,12 @@ const line = content.statement ?? content.intro;
              column-gap: var(--s-7); align-items: start;
              padding: var(--section-y) var(--page-x); }
 
-  /* the name holds the head of the screen while the work goes by under it */
+  /* the line holds the head of the screen while the work goes by under it:
+     the statement's voice — a sentence, read, not a name — at its size */
   .head { position: sticky; top: calc(var(--nav-y) * 2 + var(--pill-h) + 2vh); margin: 0;
-          font-size: var(--t-display); line-height: var(--lh-display); }
-  /* one word a line: the roll and the rest are boxes of one line each, set
-     on their own top edges — a clipped box has no baseline to align by */
-  .roll, .rest { display: block; line-height: var(--lh-display); }
-
-  /* a slot is one letter wide — the letter itself holds the width, unseen —
-     and one line tall, and shows one letter of the drum at a time */
-  .slot { position: relative; display: inline-block; overflow: hidden;
-          line-height: var(--lh-display); vertical-align: top; }
-  .w { visibility: hidden; }
-  .drum { position: absolute; left: 0; top: 0; width: 100%; display: flex; flex-direction: column;
-          align-items: center; transform: translateY(calc(var(--at) * -1em * var(--lh-display, 1))); }
-  .d { display: block; height: calc(1em * var(--lh-display, 1)); }
-
-  /* The turn. With script the drums start at the top and, once the screen
-     is on its way up, turn round and round — the first alphabet, over and
-     over — so the word is already scrambling as it comes into view. Once
-     the name is here the script stops each drum where it is and it rolls
-     on, forward, to its letter in the second alphabet, each slot a beat
-     after the one to its right — so the word lands right to left, the way
-     a counter settles. Long and eased hard at the end. */
-  [data-live] .drum { transform: translateY(0); }
-  [data-live].spin .drum { animation: drum 1.1s linear infinite; }
-  @keyframes drum { to { transform: translateY(calc(-26em * var(--lh-display, 1))); } }
-  [data-live].in .drum { animation: none;
-    transform: translateY(calc(var(--at) * -1em * var(--lh-display, 1)));
-    transition: transform 1.8s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i) * 0.09s); }
+          font-family: var(--font-sans); font-stretch: 100%; text-transform: none;
+          font-size: var(--t-h3); font-weight: var(--w-title); line-height: 1.15;
+          letter-spacing: var(--track-title); color: var(--ink); max-width: 16ch; text-wrap: balance; }
 
   /* the run: frames one under another, a hair apart, each the column's width */
   .run { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
@@ -123,6 +82,7 @@ const line = content.statement ?? content.intro;
   @media (max-width: 859px) {
     .opening { grid-template-columns: minmax(0, 1fr); row-gap: var(--s-7); }
     .head, .say { position: static; }
+    .head { max-width: 22ch; }
     .say { max-width: 44ch; }
   }
 </style>

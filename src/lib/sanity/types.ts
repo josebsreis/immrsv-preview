@@ -112,8 +112,10 @@ export interface HomeContent {
     /** the section's own heading, at display scale */
     title: string;
     intro: string;
-    /** the claim the three studios open on, read a word at a time as it is
-     *  scrolled — the argument for the practice in one breath */
+    /** the line held at the head of the screen before the studios: the
+     *  practice's claim, in one breath */
+    claim?: string;
+    /** the line held at its foot: how the work is made, start to finish */
     statement?: string;
     items: Studio[];
   };
