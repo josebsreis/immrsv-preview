@@ -245,13 +245,11 @@ const turns = [
   .facts dt { color: var(--ink-4); margin-bottom: 0.25em; }
   .facts dd { font-size: var(--t-body); color: var(--ink); }
 
-  /* The two turns, stacked and ruled like the questions: a row is the name
-     of the turn at the left and the site's dot at the right, on a hairline;
-     the open row's text stands under it. The name is set in the label voice
+  /* The two turns, stacked like the questions but not ruled: a row is the
+     name of the turn at the left and the site's dot at the right, and the
+     open row's text stands under it. The name is set in the label voice
      at the caption size — a control you are meant to press, not a tag. */
   .turns { width: 100%; }
-  .item { border-top: var(--hairline) solid var(--line); }
-  .item:last-child { border-bottom: var(--hairline) solid var(--line); }
   .q { display: flex; width: 100%; align-items: center; justify-content: space-between;
        gap: var(--s-5); padding: var(--s-4) 0; background: none; border: 0;
        text-align: left; cursor: pointer; font: inherit; color: var(--ink-3);
