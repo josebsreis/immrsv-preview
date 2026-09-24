@@ -23,7 +23,7 @@ export const project = defineType({
         layout: 'grid',
       },
     }),
-    defineField({ name: 'summary', type: 'string', description: 'One line under the title, e.g. "Residential — architecture, archviz, virtual tour"' }),
+    defineField({ name: 'summary', type: 'string', description: 'One line under the title, e.g. "Residential: architecture, archviz, virtual tour"' }),
     defineField({
       name: 'brief',
       title: 'The brief',

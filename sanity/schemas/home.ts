@@ -94,7 +94,7 @@ export const home = defineType({
         defineField({
           name: 'items',
           type: 'array',
-          description: 'Upload the mark in a single colour — the site flips it for the dark background.',
+          description: 'Upload the mark in a single colour. The site flips it for the dark background.',
           of: [{
             type: 'object',
             fields: [
@@ -110,7 +110,7 @@ export const home = defineType({
       name: 'testimonials',
       title: 'Client stories',
       type: 'object',
-      description: 'One at a time, on a reel. The words are the client\'s — do not edit them for length.',
+      description: 'One at a time, on a reel. The words are the client\'s, so do not edit them for length.',
       fields: [
         defineField({ name: 'tag', title: 'Heading', type: 'string', initialValue: 'Client stories' }),
         defineField({
@@ -120,7 +120,7 @@ export const home = defineType({
             type: 'object',
             fields: [
               defineField({ name: 'label', type: 'string',
-                description: 'What the chooser on the left calls this one — a word from the quote itself. Falls back to the name.' }),
+                description: 'What the chooser on the left calls this one: a word from the quote itself. Falls back to the name.' }),
               defineField({ name: 'quote', type: 'text', rows: 5 }),
               defineField({ name: 'name', type: 'string' }),
               defineField({ name: 'role', type: 'string', description: 'e.g. "Principal | Wolcott Architecture"' }),
