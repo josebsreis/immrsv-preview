@@ -1,33 +1,51 @@
 ---
-/** The last screen of the dark half: the studios' name, the width of the
- *  page, cut apart as it is scrolled.
+/** The last screen of the dark half: the studios announced, and the mark
+ *  gone into.
  *
- *  A rule with a small line at its left — "Get to know our" — and the
- *  count at its right, and under it the one word, STUDIOS, margin to
- *  margin. The section is taller than the screen and the word holds still
- *  while it goes by: as it is scrolled it comes apart into a stack of
- *  copies, the back one still and the ones in front shrinking and dropping
- *  (scripts/ui/studiosWord.ts), so that by the foot of the section it is
- *  a fan of slices — and then the first studio, on the light, rides up
- *  over it. The page turns from dark to light by the first panel arriving.
+ *  One sentence, centred, with the mark sitting in it where a word would
+ *  go: "Three studios, one mark. Every face of ◆ is a way in." It assembles
+ *  as the screen arrives — the first line's halves from either side, the
+ *  mark landing between them, the second line from below — and then the
+ *  scroll takes over: the words fall back, the mark lifts out of the line
+ *  and grows, turning a little, until one of its faces is the whole screen.
+ *  The first studio is what is on that face (scripts/ui/studiosOpening.ts).
+ *
+ *  The face's fill is the light half's own ground, so the moment the face
+ *  fills the screen is already the studio's ground, with no step in colour.
  *
  *  Without script, or for a reader who asked for less motion, it is the
- *  word, whole, on one screen. */
+ *  sentence on one screen, and the first studio rides up over it as every
+ *  section did. */
 import type { HomeContent } from '@lib/sanity/types';
+import { SYMBOL } from '@lib/lettermark';
 interface Props { content: HomeContent['studios']; }
 const { content } = Astro.props;
-const count = String(content.items.length).padStart(2, '0');
 ---
 {content.items.length > 0 && (
-  <section class="opening" data-theme="dark" data-studios-word aria-labelledby="studios-title">
-    <div class="track" data-word-track>
-      <div class="pane">
-        <p class="rule label"><span>Get to know our</span><span>{count}</span></p>
+  <section class="opening" data-theme="dark" data-studios-opening aria-labelledby="studios-title">
+    <div class="track" data-opening-track>
+      <div class="pane" data-opening-pane>
         <h2 id="studios-title" class="visually-hidden">{content.title}</h2>
-        <!-- the word, as one SVG text so it can be measured to the page's
-             width and drawn in layers; the script sizes it and does the rest -->
-        <svg class="word" data-word aria-hidden="true" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-          <text x="0" y="0" font-size="100" dominant-baseline="hanging" data-measure>STUDIOS</text>
+        <p class="line" data-opening-line aria-label="Three studios, one mark. Every face of IMMRSV is a way in.">
+          <span class="l1" aria-hidden="true">
+            <span class="part" data-in="left">Three studios,</span>
+            <span class="part" data-in="right">one mark.</span>
+          </span>
+          <span class="l2" data-in="up" aria-hidden="true">
+            Every face of
+            <!-- the slot holds the mark's room in the line whatever the mark
+                 itself is doing, so the large mark can be placed over it -->
+            <span class="slot" data-opening-slot><svg class="mark" data-opening-inline viewBox={SYMBOL.viewBox} focusable="false">
+              {SYMBOL.paths.map((d) => <path d={d} />)}
+            </svg></span>
+            is a way in.
+          </span>
+        </p>
+        <!-- the same mark, drawn large: it stands exactly over the small one
+             when the scroll begins and is carried from there into its face -->
+        <svg class="big" data-opening-mark viewBox={SYMBOL.viewBox} width={SYMBOL.box.w} height={SYMBOL.box.h}
+             aria-hidden="true" focusable="false">
+          {SYMBOL.paths.map((d, i) => <path d={d} data-face={i} />)}
         </svg>
       </div>
     </div>
@@ -36,28 +54,48 @@ const count = String(content.items.length).padStart(2, '0');
 
 <style>
   .opening { position: relative; z-index: var(--z-ui); }
-  /* one screen without script; with it, the screen of scroll the cut runs over */
-  .track { position: relative; min-height: 100svh; }
-  [data-live] .track { height: 220svh; }
-  .pane { position: sticky; top: 0; min-height: 100svh; display: flex; flex-direction: column;
-          justify-content: center; padding: calc(var(--nav-y) * 2 + var(--pill-h)) var(--page-x) var(--page-y);
-          gap: var(--s-7); }
+  /* one screen without script; with it, a screen of scroll for the zoom */
+  .track { min-height: 100svh; position: relative; }
+  [data-live] .track { height: 200svh; }
+  /* the pane is the screen and clips to it: the mark grows far past it */
+  .pane { position: sticky; top: 0; height: 100svh; display: grid; place-items: center;
+          padding: 0 var(--page-x); overflow: clip; }
 
-  /* the rule: the line at its left, the count at its right, a hairline under */
-  .rule { display: flex; justify-content: space-between; margin: 0; padding-bottom: var(--s-4);
-          border-bottom: var(--hairline) solid var(--line); color: var(--ink-3); }
+  /* the sentence: the statement's voice, a size up, centred */
+  .line { position: relative; z-index: 1; margin: 0; max-width: 30ch; text-align: center;
+          font-size: var(--t-h3); font-weight: var(--w-title); line-height: 1.15;
+          letter-spacing: var(--track-title); color: var(--ink); text-wrap: balance;
+          transform-origin: 50% 50%; }
+  .l1, .l2 { display: block; }
+  .part { display: inline-block; }
+  /* the mark in the line, the height of a capital, on the baseline of the words */
+  .slot { display: inline-block; height: 0.92em; aspect-ratio: 184 / 210; vertical-align: -0.1em; }
+  .mark { display: block; width: 100%; height: 100%; fill: currentColor; transform-origin: 50% 50%; }
 
-  /* the word: the display voice, at whatever size spans the page */
-  .word { display: block; width: 100%; height: auto; overflow: visible; }
-  .word text { font-family: var(--font-display); font-stretch: var(--display-stretch);
-               font-weight: var(--w-display); letter-spacing: var(--track-display);
-               text-transform: uppercase; fill: var(--ink); }
-  /* each copy stands on its own ground, which is what hides the copies
-     behind it: `:global`, because the script makes them */
-  .word :global(.ground) { fill: var(--ground); }
+  /* The assembly. Every piece starts out of focus, a short way off its
+     place, and comes in when the screen does: the halves of the first line
+     from either side, the second line from below, the mark scaling into the
+     gap in it with a little overshoot. A short travel — a slide across the
+     screen would be a transition, not an arrival. */
+  [data-live] [data-in] { opacity: 0; filter: blur(8px);
+                          transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out), filter 0.6s var(--ease-out); }
+  [data-live] [data-in="left"] { transform: translateX(-1.5rem); }
+  [data-live] [data-in="right"] { transform: translateX(1.5rem); transition-delay: 0.12s; }
+  [data-live] [data-in="up"] { transform: translateY(1.25rem); transition-delay: 0.45s; }
+  [data-live] .mark { transform: scale(0); transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s; }
+  .in [data-in] { opacity: 1; transform: none; filter: none; }
+  .in .mark { transform: scale(1); }
+
+  /* the large mark: placed by the script, in px from the pane's corner */
+  .big { position: absolute; left: 0; top: 0; transform-origin: 0 0;
+         fill: var(--ink); visibility: hidden; pointer-events: none; will-change: transform; }
+  .opening:not([data-live]) .big { display: none; }
+  /* the face that is gone into carries the light half's ground, so the
+     screen it fills is already the studio's */
+  .big [data-face="2"] { fill: #f5f5f7; }
 
   @media (max-width: 719px) {
     [data-live] .track { height: 180svh; }
-    .pane { gap: var(--s-6); }
+    .line { font-size: var(--t-title); }
   }
 </style>
