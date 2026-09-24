@@ -1,15 +1,16 @@
 ---
 /** The last screen of the dark half: the studios announced.
  *
- *  "THREE STUDIOS", in the hero's voice, with the word THREE rolled into
- *  place letter by letter — each letter a strip of the alphabet that turns,
- *  like the drum of a counter, and stops on its own letter, the last one
- *  first — and the section's line under it. It plays once, as the screen
- *  arrives. Then the first studio rides up over it, as every section does.
+ *  "THREE STUDIOS", in the hero's voice and larger, with the word THREE
+ *  rolled into place letter by letter — each letter a drum of the alphabet
+ *  that is already turning as the screen comes up, and stops on its own
+ *  letter once the screen is here, the last one first — and the section's
+ *  line under it. Then the first studio rides up over it, as every section
+ *  does.
  *
- *  The roll is the styles' own: the script only says when
- *  (scripts/ui/studiosRoll.ts). Without script, or for a reader who asked
- *  for less motion, the word simply stands. */
+ *  The turning and the landing are the styles' own: the script only says
+ *  when (scripts/ui/studiosRoll.ts). Without script, or for a reader who
+ *  asked for less motion, the word simply stands. */
 import type { HomeContent } from '@lib/sanity/types';
 interface Props { content: HomeContent['studios']; }
 const { content } = Astro.props;
@@ -46,8 +47,12 @@ const letters = WORD.split('').map((ch) => ({ ch, at: 26 + ABC.indexOf(ch) }));
   .pane { min-height: 100svh; display: flex; flex-direction: column; align-items: center;
           justify-content: center; text-align: center; padding: 0 var(--page-x); }
 
-  .head { margin: 0; font-size: var(--t-display); white-space: nowrap; }
-  .roll { display: inline-block; }
+  /* a size up from the hero's headline: this is the one word on the screen */
+  .head { margin: 0; font-size: clamp(2.75rem, 7.2vw, 6.5rem); white-space: nowrap; line-height: var(--lh-display); }
+  /* both words are boxes of the same line, set on the same top edge, so
+     their letters sit on one baseline — a clipped box has no baseline of
+     its own to align by */
+  .roll, .rest { display: inline-block; vertical-align: top; line-height: var(--lh-display); }
 
   /* a slot is one letter wide — the letter itself holds the width, unseen —
      and one line tall, and shows one letter of the drum at a time */
@@ -58,14 +63,20 @@ const letters = WORD.split('').map((ch) => ({ ch, at: 26 + ABC.indexOf(ch) }));
           align-items: center; transform: translateY(calc(var(--at) * -1em * var(--lh-display, 1))); }
   .d { display: block; height: calc(1em * var(--lh-display, 1)); }
 
-  /* The turn: from the top of the drum to the letter, once the screen has
-     arrived, each slot a beat after the one to its right — so the word
-     lands right to left, the way a counter settles. Long and eased hard at
-     the end, so the last letters slow into place. */
+  /* The turn. With script the drums start at the top and, once the screen
+     is on its way up, turn round and round — the first alphabet, over and
+     over — so the word is already scrambling as it comes into view. Once
+     the screen is here the script stops each drum where it is and it rolls
+     on, forward, to its letter in the second alphabet, each slot a beat
+     after the one to its right — so the word lands right to left, the way
+     a counter settles. Long and eased hard at the end, so the last letters
+     slow into place. */
   [data-live] .drum { transform: translateY(0); }
-  [data-live].in .drum {
+  [data-live].spin .drum { animation: drum 1.1s linear infinite; }
+  @keyframes drum { to { transform: translateY(calc(-26em * var(--lh-display, 1))); } }
+  [data-live].in .drum { animation: none;
     transform: translateY(calc(var(--at) * -1em * var(--lh-display, 1)));
-    transition: transform 1.6s cubic-bezier(0.16, 1, 0.3, 1) calc(0.12s + var(--i) * 0.08s); }
+    transition: transform 1.8s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i) * 0.09s); }
 
   .intro { max-width: 40ch; margin: var(--s-6) 0 0; text-wrap: balance; font-size: var(--t-lead);
            line-height: var(--lh-lead); letter-spacing: var(--track-lead); color: var(--ink-3); }
