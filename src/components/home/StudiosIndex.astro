@@ -58,7 +58,7 @@ const line = content.statement ?? content.intro;
 
     <ul class="run">
       {picked.map((s, k) => (
-        <li data-rise style={`--i: ${k % 2}`}>
+        <li>
           <!-- pictures, only: nothing to press, nothing under the pointer -->
           <picture class="frame">
             <source srcset={ladder(s, 'avif')} sizes={SIZES} type="image/avif" />
