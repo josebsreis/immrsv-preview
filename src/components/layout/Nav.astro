@@ -15,7 +15,7 @@ const { items } = Astro.props;
 -->
 <header class="nav arrives" data-theme-follows style="--arrive-delay: .5s"
         transition:persist="nav" transition:name="nav" transition:animate="none">
-  <a class="home" href="/" aria-label="IMMRSV — home" data-tap><Wordmark /></a>
+  <a class="home" href="/" aria-label="IMMRSV home" data-tap><Wordmark /></a>
   <nav class="menu" aria-label="Primary">
     {items.map((it) => (
       <a class="item label" href={it.href} data-tap data-dhover-item data-axis="x">

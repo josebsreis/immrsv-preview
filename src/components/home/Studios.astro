@@ -118,7 +118,7 @@ const grounds = ['light', 'light', 'light'] as const;
                 {shots.map((shot, k) => (
                   <a class="frame" href={`/work/${shot.slug}`} data-reel-frame data-reel-frame-name={shot.name} data-tap
                      data-cursor-hover data-cursor-text="Explore project"
-                     aria-label={`${shot.name} — ${s.name}`}>
+                     aria-label={`${shot.name}, ${s.name}`}>
                     <picture>
                       <source srcset={ladder(shot, 'avif')} sizes={REEL_SIZES} type="image/avif" />
                       <img src={`${shot.src}-${shot.widths[1] ?? shot.widths[0]}.webp`} srcset={ladder(shot, 'webp')} sizes={REEL_SIZES}

@@ -17,7 +17,7 @@ const studios: Studio[] = [
     name: 'Architecture + Design',
     promise: 'The building, drawn to the last detail.',
     description:
-      'Concept through construction drawings for houses, interiors and small commercial work. We draw at real scale from the first sketch, so what gets built is what was agreed — and the decisions are made where they are still cheap to make.',
+      'Concept through construction drawings for houses, interiors and small commercial work. We draw at real scale from the first sketch, so what gets built is what was agreed, and the decisions are made where they are still cheap to make.',
     services: ['Concept design', 'Permits', 'Drawings', 'Interiors', 'Site supervision'],
     media: { kind: 'video', url: '/studios/architecture.mp4', poster: '/studios/architecture.jpg', alt: 'Architecture and design' },
   },
@@ -69,14 +69,14 @@ const COPY: Record<StudioKey, Copy> = {
   architecture: {
     summary: 'Architecture and interiors, drawn from the first sketch through to construction.',
     brief:
-      'A plan that had to hold at every scale — how the rooms are entered, where the light lands through the day, and what the structure would allow — settled while the drawings were still soft enough to change.',
+      'A plan that had to hold at every scale: how the rooms are entered, where the light lands through the day, and what the structure would allow. All of it settled while the drawings were still soft enough to change.',
     whatWeDid:
       'We modelled the whole building at real scale and made the decisions inside it, so what was approved on screen is what the contractor was handed. The rooms as built hold the proportions the model promised.',
   },
   media: {
     summary: 'Visualisation and film, made from the drawings rather than around them.',
     brief:
-      'The work had to be seen before it existed, and had to read as the thing itself rather than as a render — accurate to the design, and still worth looking at.',
+      'The work had to be seen before it existed, and had to read as the thing itself rather than as a render. Accurate to the design, and still worth looking at.',
     whatWeDid:
       "We built each shot from the project's own model and lit it like a photograph: real optics, real materials, no flattery the building could not deliver. The images carried the idea to the people who had to approve it.",
   },
@@ -85,7 +85,7 @@ const COPY: Record<StudioKey, Copy> = {
     brief:
       'A great deal of information and very little patience for it: the interface had to make a wide range feel obvious, on a phone as much as on a desk.',
     whatWeDid:
-      'We designed in the browser against real content, so the layout was proven at the sizes people actually use. It shipped and kept working — quick on a phone, easy to keep up to date.',
+      'We designed in the browser against real content, so the layout was proven at the sizes people actually use. It shipped and kept working: quick on a phone, easy to keep up to date.',
   },
 };
 
@@ -228,7 +228,7 @@ export const defaultHome: HomeContent = {
   about: {
     tag: 'What we do',
     statement:
-      'A building, a film and a product are the same problem — someone has to move through it and understand it. Most studios solve one of the three and hand you the rest.\n\n' +
+      'A building, a film and a product are the same problem. Someone has to move through it and understand it. Most studios solve one of the three and hand you the rest.\n\n' +
       'We keep all three under one roof, so the drawing, the image and the interface are made by the same people, and the work arrives whole.',
     /* the question the handover answers ("Before it exists, we've already
        built it"): a line, and a thread drawn down from it to where the
@@ -253,7 +253,7 @@ export const defaultHome: HomeContent = {
     title: 'Three studios',
     intro: 'Three doors into the same room. Whichever one you come in by, the same people design it, show it and build it.',
     claim: "Before it exists, we've already built it.",
-    statement: 'We draw at real scale from the first sketch, render it as it will be seen, and build the product that runs it — one team, start to finish. You see the real thing early, so what you approve is what gets built.',
+    statement: 'We draw at real scale from the first sketch, render it as it will be seen, and build the product that runs it. One team, start to finish. You see the real thing early, so what you approve is what gets built.',
     items: studios,
   },
   brands: {
@@ -283,7 +283,7 @@ export const defaultHome: HomeContent = {
       },
       {
         quote:
-          'Oscar is our everything! For 15 years, he\u2019s been a dream to work with\u2014an incredibly talented, driven designer and a genuinely kind soul. His reliability, communication, and leadership have been vital to our success, and I\u2019m forever grateful to work with him. He has the unique ability to balance creativity with professionalism in every way.',
+          'Oscar is our everything! For 15 years, he\u2019s been a dream to work with, an incredibly talented, driven designer and a genuinely kind soul. His reliability, communication, and leadership have been vital to our success, and I\u2019m forever grateful to work with him. He has the unique ability to balance creativity with professionalism in every way.',
         label: 'Reliability',
         name: 'Carlie Campesi',
         role: 'Partner | LePesi Architecture',
@@ -337,7 +337,7 @@ export const defaultHome: HomeContent = {
     items: [
       {
         q: 'Who actually works on my project?',
-        a: 'Oscar leads every project — the drawings, the direction and the decisions — and he is who you speak to throughout.\n\nA small group of people he has worked with for years comes in where a project needs them. The team changes size; the standard does not.',
+        a: 'Oscar leads every project: the drawings, the direction and the decisions. He is who you speak to throughout.\n\nA small group of people he has worked with for years comes in where a project needs them. The team changes size; the standard does not.',
       },
       {
         q: 'How long does a project take?',
@@ -349,11 +349,11 @@ export const defaultHome: HomeContent = {
       },
       {
         q: 'What do you need from me to start?',
-        a: 'What the project has to do, whatever drawings or references already exist, and one person who can approve things.\n\nIf that is all still unsettled, say so — deciding it is the first part of the work, and it is cheaper to do at the start than halfway through.',
+        a: 'What the project has to do, whatever drawings or references already exist, and one person who can approve things.\n\nIf that is all still unsettled, say so. Deciding it is the first part of the work, and it is cheaper to do at the start than halfway through.',
       },
       {
         q: 'What happens after it is delivered?',
-        a: 'Files are yours, in the formats you can actually use, with nothing withheld.\n\nFor a site or a tool we stay with it — what people do with it once it is live tells us more than what was approved, and we correct against that.',
+        a: 'Files are yours, in the formats you can actually use, with nothing withheld.\n\nFor a site or a tool we stay with it. What people do with it once it is live tells us more than what was approved, and we correct against that.',
       },
       {
         q: 'Do you work with clients outside your region?',
@@ -372,7 +372,7 @@ export const defaultHome: HomeContent = {
     steps: [
       {
         title: 'Understand',
-        body: 'We start by listening. What the project has to do, who moves through it and where the real constraint sits — settled before anything is drawn, while the decisions are still cheap to change.',
+        body: 'We start by listening. What the project has to do, who moves through it and where the real constraint sits, all settled before anything is drawn, while the decisions are still cheap to change.',
       },
       {
         title: 'Design & Build',

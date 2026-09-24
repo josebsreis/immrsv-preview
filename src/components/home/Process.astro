@@ -35,7 +35,7 @@ const marks = steps.length + 1;
           <ol class="steps" data-process-steps>
             {steps.map((s, i) => (
               <li class="step" data-process-step>
-                <span class="label n">Step — {String(i + 1).padStart(2, '0')}</span>
+                <span class="label n">Step {String(i + 1).padStart(2, '0')}</span>
                 <h3>{s.title}</h3>
                 <p>{s.body}</p>
               </li>

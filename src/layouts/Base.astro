@@ -15,8 +15,8 @@ interface Props {
   noNav?: boolean;
   noFooter?: boolean;
 }
-const { title, description = 'IMMRSV — an independent practice working across architecture, creative media and digital products.', theme = 'dark', noNav = false, noFooter = false } = Astro.props;
-const fullTitle = title ? `${title} — ${site.name}` : `${site.name} — Designing the future of experience`;
+const { title, description = 'IMMRSV is an independent practice working across architecture, creative media and digital products.', theme = 'dark', noNav = false, noFooter = false } = Astro.props;
+const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | Designing the future of experience`;
 ---
 <!doctype html>
 <html lang="en" data-theme={theme}>
