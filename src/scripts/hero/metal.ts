@@ -11,7 +11,10 @@
    bright strips — and the mark mirrors that,
    so its highlights move as it turns. The pieces breathe apart and back
    together, the whole leans towards the pointer, and a piece under the
-   pointer flares for a moment.
+   pointer flares for a moment. Each piece is split into its surfaces:
+   as the page arrives they fly in to an outline already standing, and
+   as the hero is scrolled past they come away again and return, the
+   mark moving down the screen as it reassembles.
 
    It answers the page as the particle hero does, and stops drawing once
    the hero has gone by.
@@ -57,7 +60,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
      dark, near see-through, and the shape is drawn by its edges catching
      light — so almost nothing here is lit, and what is, is placed to be
      caught by an edge rather than filled into a face. */
-  const walls = new THREE.Mesh(new THREE.SphereGeometry(20, 16, 8), new THREE.MeshBasicMaterial({ color: 0x020203, side: THREE.BackSide }));
+  const walls = new THREE.Mesh(new THREE.SphereGeometry(20, 16, 8), new THREE.MeshBasicMaterial({ color: 0x07080b, side: THREE.BackSide }));
   walls.layers.set(ROOM); room.add(walls);
   /* warm gold overhead: every edge and step that faces up glows with it */
   const gold = strip(14, 3, 0, 6, 0, 0, 0, 1);
@@ -83,18 +86,69 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   const cx = SYMBOL.box.x + SYMBOL.box.w / 2, cy = SYMBOL.box.y + SYMBOL.box.h / 2;
   const S = 1 / 100;
   const baseMat = new THREE.MeshPhysicalMaterial({
-    color: 0x3a3d42, emissive: new THREE.Color(0x0e1320), emissiveIntensity: 0.15,
+    /* a touch of its own cool glow, so the dark faces still read against the
+       page's dark ground rather than vanishing into it */
+    color: 0x4a4e56, emissive: new THREE.Color(0x1c2638), emissiveIntensity: 0.4,
     /* no `transmission`: it draws the whole scene a second time every frame
        to fake light passing through, and on a black ground plain
        transparency reads the same */
     metalness: 1, roughness: 0.08,
-    transparent: true, opacity: 0.72, clearcoat: 1, clearcoatRoughness: 0.05,
-    envMap: cubeRT.texture, envMapIntensity: 3, side: THREE.DoubleSide, depthWrite: false,
+    transparent: true, opacity: 0.8, clearcoat: 1, clearcoatRoughness: 0.05,
+    envMap: cubeRT.texture, envMapIntensity: 4, side: THREE.DoubleSide, depthWrite: false,
   });
+
+  /* A piece is split into its surfaces — each flat face and each strip of
+     the bevel its own mesh — so that they can come away one by one and
+     leave the piece's outline standing where it was. Triangles are grouped
+     by the plane they lie in; a surface is moved about its own middle. */
+  type Surface = { mesh: THREE.Mesh; home: THREE.Vector3; out: THREE.Vector3; axis: THREE.Vector3; spin: number; lag: number };
+  const hash = (n: number) => { const x = Math.sin(n * 12.9898) * 43758.5453; return x - Math.floor(x); };
+  const split = (geo: THREE.BufferGeometry, mat: THREE.Material, seed: number): Surface[] => {
+    const g = geo.index ? geo.toNonIndexed() : geo;
+    const pos = g.attributes.position.array as ArrayLike<number>;
+    const nrm = g.attributes.normal.array as ArrayLike<number>;
+    const groups = new Map<string, number[]>();
+    const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), n = new THREE.Vector3();
+    for (let t = 0; t < pos.length / 9; t++) {
+      a.fromArray(pos, t * 9); b.fromArray(pos, t * 9 + 3); c.fromArray(pos, t * 9 + 6);
+      n.subVectors(c, b).cross(a.clone().sub(b)).normalize();
+      if (!Number.isFinite(n.x)) continue;
+      const d = n.dot(a);
+      const key = `${Math.round(n.x * 12)},${Math.round(n.y * 12)},${Math.round(n.z * 12)},${Math.round(d * 40)}`;
+      (groups.get(key) ?? groups.set(key, []).get(key)!).push(t);
+    }
+    const out: Surface[] = [];
+    let k = 0;
+    for (const tris of groups.values()) {
+      const P = new Float32Array(tris.length * 9), N = new Float32Array(tris.length * 9);
+      tris.forEach((t, i) => { for (let j = 0; j < 9; j++) { P[i * 9 + j] = pos[t * 9 + j]; N[i * 9 + j] = nrm[t * 9 + j]; } });
+      const sg = new THREE.BufferGeometry();
+      sg.setAttribute('position', new THREE.BufferAttribute(P, 3));
+      sg.setAttribute('normal', new THREE.BufferAttribute(N, 3));
+      sg.computeBoundingBox();
+      const home = new THREE.Vector3(); sg.boundingBox!.getCenter(home);
+      sg.translate(-home.x, -home.y, -home.z);
+      const face = new THREE.Vector3(N[0], N[1], N[2]).normalize();
+      const r = (q: number) => hash(seed * 97 + k * 13 + q);
+      /* out along its own face, a little off it, and further for some */
+      const dir = face.clone().add(new THREE.Vector3(r(1) - 0.5, r(2) - 0.5, r(3) - 0.5).multiplyScalar(0.9)).normalize();
+      const mesh = new THREE.Mesh(sg, mat);
+      mesh.position.copy(home);
+      out.push({ mesh, home, out: dir.multiplyScalar(0.9 + r(4) * 1.4),
+                 axis: new THREE.Vector3(r(5) - 0.5, r(6) - 0.5, r(7) - 0.5).normalize(),
+                 spin: (r(8) - 0.5) * 5, lag: r(9) * 0.35 });
+      k++;
+    }
+    return out;
+  };
+
   const mark = new THREE.Group();
-  type Piece = { mesh: THREE.Mesh; mat: THREE.MeshPhysicalMaterial; dir: THREE.Vector3; flash: number };
+  type Piece = { group: THREE.Group; mat: THREE.MeshPhysicalMaterial; edges: THREE.LineBasicMaterial;
+                 dir: THREE.Vector3; whole: THREE.Mesh; surfaces: Surface[]; flash: number };
   const pieces: Piece[] = [];
-  parsed.paths.forEach((p) => {
+  const hitList: THREE.Mesh[] = [];
+  const owner = new Map<THREE.Object3D, Piece>();
+  parsed.paths.forEach((p, pi) => {
     for (const shape of SVGLoader.createShapes(p)) {
       const geo = new THREE.ExtrudeGeometry(shape, { depth: DEPTH, bevelEnabled: true, bevelThickness: 1.6, bevelSize: 1.3, bevelSegments: 3, curveSegments: 8 });
       // into the page's own frame: centred, y up, a unit about a metre
@@ -104,14 +158,20 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       geo.computeBoundingBox();
       const c = new THREE.Vector3(); geo.boundingBox!.getCenter(c);
       const mat = baseMat.clone();
-      const mesh = new THREE.Mesh(geo, mat);
-      /* a fine line along every edge, the back ones seen through the glass,
-         so the shape is drawn even where no light falls on it */
-      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30),
-        new THREE.LineBasicMaterial({ color: 0xc9d2e0, transparent: true, opacity: 0.13, depthTest: false }));
-      mesh.add(edges);
-      mark.add(mesh);
-      pieces.push({ mesh, mat, dir: c.clone().setZ(0).normalize(), flash: 0 });
+      const group = new THREE.Group();
+      /* the outline: every edge of the piece, the back ones seen through the
+         glass — and what is left standing when the surfaces come away */
+      const edgeMat = new THREE.LineBasicMaterial({ color: 0xd4dcea, transparent: true, opacity: 0.2, depthTest: false });
+      group.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMat));
+      /* whole, the piece is one mesh — one draw instead of dozens — and
+         its surfaces are only shown while it is coming apart */
+      const whole = new THREE.Mesh(geo, mat);
+      const surfaces = split(geo, mat, pi + 1);
+      const piece: Piece = { group, mat, edges: edgeMat, dir: c.clone().setZ(0).normalize(), whole, surfaces, flash: 0 };
+      group.add(whole); hitList.push(whole); owner.set(whole, piece);
+      for (const sf of surfaces) { sf.mesh.visible = false; group.add(sf.mesh); owner.set(sf.mesh, piece); }
+      mark.add(group);
+      pieces.push(piece);
     }
   });
   scene.add(mark);
@@ -119,7 +179,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   /* a little direct light, for the bevels */
   const top = new THREE.DirectionalLight(0xffa24a, 2.2); top.position.set(0.5, 6, 1.5); scene.add(top);
   const rim = new THREE.DirectionalLight(0xff9a50, 1.2); rim.position.set(4, 2, -5); scene.add(rim);
-  const cool = new THREE.DirectionalLight(0xbcd0ff, 0.35); cool.position.set(-4, 0, 4); scene.add(cool);
+  const cool = new THREE.DirectionalLight(0xbcd0ff, 0.9); cool.position.set(-4, 0, 4); scene.add(cool);
 
   /* embers: a few warm sparks drifting slowly up through the dark */
   const EMBERS = narrow ? 18 : 34;
@@ -158,59 +218,86 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   };
   addEventListener('pointermove', onMove, { passive: true });
 
-  let out = 0, exit = 0, released = false, intro = 0, raf = 0, gone = false, recorded = false;
+  let released = false, intro = 0, raf = 0, gone = false, recorded = false;
   let moved = false;
   const clock = new THREE.Clock();
+  const q = new THREE.Quaternion();
+  const smooth = (x: number) => { const t = clamp01(x); return t * t * (3 - 2 * t); };
 
   const frame = () => {
     raf = 0;
     if (gone) return;
     const dt = Math.min(0.05, clock.getDelta());
     const t = clock.elapsedTime;
-    if (released) intro = Math.min(1, intro + dt / 1.8);
-    const ei = 1 - Math.pow(1 - intro, 3);
+    if (released) intro = Math.min(1, intro + dt / 2.2);
+    const ei = smooth(intro);
+
+    /* The scroll, read here rather than handed in: the mark does not fade as
+       the hero goes by. Over the first screen it comes apart — every
+       surface away, the outline left standing — and goes back together as
+       it moves down the screen, so it arrives whole again lower down. */
+    const p = scrollY / innerHeight;
+    const pass = clamp01(p / 0.9);
+    const burst = Math.sin(Math.PI * pass);
+    const low = smooth(pass);
+    /* whole, it stays — then, as the statement comes up over it, it steps
+       back to a shadow behind the words, and goes once they are read */
+    const vis = 1 - 0.7 * smooth((p - 0.85) / 0.45) - 0.3 * smooth((p - 1.5) / 0.5);
+    /* how far apart: all the way as the page arrives, then as the scroll says */
+    const e = Math.max(1 - ei, burst);
 
     mx += (tmx - mx) * 0.05; my += (tmy - my) * 0.05;
     /* turned far enough, slowly, that its thickness shows — then back to
        face the page — and leaning a little towards the pointer */
-    mark.rotation.y = Math.sin(t * 0.22) * 0.95 + mx * 0.3;
+    mark.rotation.y = Math.sin(t * 0.22) * 0.95 + mx * 0.3 + burst * 0.6;
     mark.rotation.x = Math.sin(t * 0.17) * 0.1 - my * 0.18;
-    mark.position.y = Math.sin(t * 0.6) * 0.04 + exit * 1.6;
+    mark.position.y = Math.sin(t * 0.6) * 0.04 - low * 1.35;
+    mark.scale.setScalar(1 - low * 0.18);
 
-    /* the pieces: in from far apart as the page arrives, breathing at rest,
-       and parting again on the way out */
-    const apart = (1 - ei) * 1.4 + BREATHE * (0.5 + 0.5 * Math.sin(t * 0.8)) + exit * 1.2;
     /* which piece is under the pointer: asked only when it has moved */
     if (moved) {
       moved = false;
       ray.setFromCamera(ndc, camera);
-      const hit = ray.intersectObjects(pieces.map((p) => p.mesh), false)[0];
-      const now = hit ? pieces.find((p) => p.mesh === hit.object) ?? null : null;
+      const hit = ray.intersectObjects(hitList, false)[0];
+      const now = hit ? owner.get(hit.object) ?? null : null;
       if (now && now !== hovered) now.flash = 1;
       hovered = now;
     }
-    for (const p of pieces) {
-      p.mesh.position.copy(p.dir).multiplyScalar(apart);
-      p.mesh.position.z = (1 - ei) * -1.2;
-      p.flash *= 0.92;
-      const f = p.flash;
-      p.mat.envMapIntensity = 3 + 1.6 * f;
-      p.mat.roughness = Math.max(0.02, 0.08 - 0.06 * f);
-      p.mat.emissiveIntensity = 0.15 + 0.1 * f;
-      p.mat.opacity = (0.88 - 0.16 * f) * ei;
+
+    const breathe = BREATHE * (0.5 + 0.5 * Math.sin(t * 0.8));
+    for (const pc of pieces) {
+      pc.group.position.copy(pc.dir).multiplyScalar(breathe + e * 0.35);
+      pc.flash *= 0.92;
+      const f = pc.flash;
+      pc.mat.envMapIntensity = 4 + 1.6 * f;
+      pc.mat.roughness = Math.max(0.02, 0.08 - 0.06 * f);
+      pc.mat.emissiveIntensity = 0.4 + 0.2 * f;
+      pc.mat.opacity = (0.8 - 0.12 * f) * vis * (1 - e * 0.35);
+      /* the outline brightens as the surfaces leave it */
+      pc.edges.opacity = (0.2 + 0.45 * e) * vis;
+      const apart = e > 0.002;
+      pc.whole.visible = !apart;
+      for (const sf of pc.surfaces) {
+        sf.mesh.visible = apart;
+        if (!apart) continue;
+        /* each surface on its own clock, so they leave one after another */
+        const k = smooth((e - sf.lag) / (1 - sf.lag));
+        sf.mesh.position.copy(sf.home).addScaledVector(sf.out, k);
+        sf.mesh.quaternion.copy(q.setFromAxisAngle(sf.axis, sf.spin * k));
+      }
     }
 
     /* the room sways slowly, so the highlights travel over the metal */
     const sway = Math.sin(t * 0.15) * 0.35;
     for (let i = 0; i < EMBERS; i++) {
-      const e = seed[i];
-      const y = ((e.y + t * e.v + 2.5) % 5) - 2.5;
-      ember[i * 3] = e.x + Math.sin(t * 0.4 + e.p) * 0.15;
+      const s0 = seed[i];
+      const y = ((s0.y + t * s0.v + 2.5) % 5) - 2.5;
+      ember[i * 3] = s0.x + Math.sin(t * 0.4 + s0.p) * 0.15;
       ember[i * 3 + 1] = y;
-      ember[i * 3 + 2] = e.z;
+      ember[i * 3 + 2] = s0.z;
     }
     emberGeo.attributes.position.needsUpdate = true;
-    (sparks.material as THREE.PointsMaterial).opacity = 0.85 * ei;
+    (sparks.material as THREE.PointsMaterial).opacity = 0.85 * ei * vis;
 
     /* the room is recorded once, and the reflection is turned in place:
        re-recording it was six more renders of the scene every frame */
@@ -221,18 +308,22 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       scene.remove(room);             // recorded: nothing else needs it
       recorded = true;
     }
-    for (const p of pieces) p.mat.envMapRotation.set(0, sway, 0);
-    renderer.domElement.style.opacity = String(1 - out);
+    for (const pc of pieces) pc.mat.envMapRotation.set(0, sway, 0);
     renderer.render(scene, camera);
-    if (out < 0.999) raf = requestAnimationFrame(frame);
+    /* gone from view: nothing is drawn until the page comes back up */
+    if (vis > 0.001) raf = requestAnimationFrame(frame);
   };
   const wake = () => { if (!raf && !gone) raf = requestAnimationFrame(frame); };
+  const onScroll = () => wake();
+  addEventListener('scroll', onScroll, { passive: true });
   wake();
 
   return {
     setReady() { released = true; },
-    setOut(p) { out = clamp01(p); if (out < 0.999) wake(); },
-    setExit(p) { exit = clamp01(p); },
+    /* the page's own fade and exit are not used: the mark answers the
+       scroll itself (above) */
+    setOut() {},
+    setExit() {},
     strike() {},
     showShape() {},
     destroy() {
@@ -240,6 +331,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       if (raf) cancelAnimationFrame(raf);
       removeEventListener('resize', fit);
       removeEventListener('pointermove', onMove);
+      removeEventListener('scroll', onScroll);
       scene.traverse((o) => {
         const m = o as THREE.Mesh;
         m.geometry?.dispose();
