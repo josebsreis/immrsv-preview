@@ -80,7 +80,9 @@ onPage('home', () => {
     /* trials: `?hero=glass` or `?hero=frost` puts the forms in glass
        (hero/glass.ts), `?hero=metal` is the mark as a solid, polished
        object (hero/metal.ts); without any, the particles */
-    const trial = new URLSearchParams(location.search).get('hero');
+    /* the address wins; without one, a preview may be built to open on a
+       trial (PUBLIC_HERO, set per repository) */
+    const trial = new URLSearchParams(location.search).get('hero') ?? (import.meta.env.PUBLIC_HERO || null);
     /* the metal trial also lifts the dark ground a shade (styles/tokens) */
     if (trial === 'metal') document.documentElement.dataset.groundLift = '';
     const load = () =>
