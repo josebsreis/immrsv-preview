@@ -77,11 +77,16 @@ onPage('home', () => {
      and not at all for a reader who asked for less motion. Everything above
      works without it. */
   if (host && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    /* a trial: `?hero=glass` or `?hero=frost` puts the forms in glass
+       instead of particles (hero/glass.ts); without it, the particles */
+    const glass = new URLSearchParams(location.search).get('hero');
     const load = () =>
-      import('./hero')
-        .then(({ createHero }) => {
+      (glass === 'glass' || glass === 'frost'
+        ? import('./hero/glass').then(({ createGlassHero }) => () => createGlassHero({ host, frost: glass === 'frost' }))
+        : import('./hero').then(({ createHero }) => () => createHero({ host })))
+        .then((make) => {
           if (gone) return;               // it arrived after the reader left
-          hero = createHero({ host });
+          hero = make();
           return document.fonts.ready.then(() => { hero?.setReady(); choreography.update(); });
         })
         .catch(() => {});
