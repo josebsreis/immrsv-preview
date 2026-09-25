@@ -14,7 +14,6 @@
  *  statement have said there are three. */
 import type { HomeContent } from '@lib/sanity/types';
 import work from '../../content/work.generated.json';
-import { SYMBOL } from '@lib/lettermark';
 interface Props { content: HomeContent['studios']; }
 const { content } = Astro.props;
 
@@ -39,16 +38,6 @@ const line = content.statement ?? content.intro;
   <section class="opening" data-theme="dark" aria-labelledby="studios-title">
     <h2 id="studios-title" class="head" data-blur-in>{claim}</h2>
 
-    <div class="mid" data-run>
-    <!-- a trial, with ?hero=metal: the mark, small and white, over the run —
-         it holds the middle of the screen as the pictures pass under it,
-         turning as they go, and inverts whatever it crosses
-         (scripts/ui/runMark.ts) -->
-    <div class="pin" aria-hidden="true">
-      <svg class="runmark" data-run-mark viewBox={SYMBOL.viewBox} focusable="false">
-        {SYMBOL.paths.map((d) => <path d={d} />)}
-      </svg>
-    </div>
     <ul class="run">
       {picked.map((s, k) => (
         <li>
@@ -61,7 +50,6 @@ const line = content.statement ?? content.intro;
         </li>
       ))}
     </ul>
-    </div>
 
     <!-- simply there, like the pictures beside it: a fade on arrival could
          land late, with the line held at the foot of the screen -->
@@ -84,16 +72,7 @@ const line = content.statement ?? content.intro;
           letter-spacing: var(--track-title); color: var(--ink); max-width: 16ch; text-wrap: balance; }
 
   /* the run: frames one under another, a hair apart, each the column's width */
-  .mid { position: relative; }
   .run { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
-  /* the small mark: pinned to the middle of the screen for as long as the
-     run is under it; white, and inverting what it crosses */
-  .pin { position: absolute; inset: 0; z-index: 2; pointer-events: none; display: none; }
-  :global(html[data-run-mark]) .pin { display: block; }
-  .runmark { --m: 4rem; position: sticky; top: calc(50svh - var(--m) * 0.57);
-             display: block; width: var(--m); height: auto; margin: 0 auto;
-             fill: #fff; mix-blend-mode: difference; opacity: 0; will-change: transform, opacity; }
-  @media (max-width: 719px) { .runmark { --m: 3rem; } }
   .frame { display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--radius-media);
            background: var(--glass); }
   .frame img { display: block; width: 100%; height: 100%; object-fit: cover; }

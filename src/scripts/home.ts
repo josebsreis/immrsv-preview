@@ -17,7 +17,6 @@ import { splitChars } from './ui/splitText';
 import { createCursor } from './ui/cursor';
 import { createBlurIn } from './ui/blurIn';
 import { createBrandSwap } from './ui/brandSwap';
-import { createRunMark } from './ui/runMark';
 import { onPage } from './lifecycle';
 import type { Hero } from './hero';
 
@@ -48,8 +47,6 @@ onPage('home', () => {
      same driver turns both */
   document.querySelectorAll<HTMLElement>('[data-stats]').forEach((el) => add(createStatsReel(el)));
 
-  const run = document.querySelector<HTMLElement>('[data-run]');
-  if (run) add(createRunMark(run));
   const brands = document.querySelector<HTMLElement>('[data-brands]');
   if (brands) add(createBrandSwap(brands));
   const faqs = document.querySelector<HTMLElement>('[data-faqs]');

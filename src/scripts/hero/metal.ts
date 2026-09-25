@@ -316,12 +316,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     const covered = light ? light.getBoundingClientRect().top <= 0 : false;
     const vis = 1;
     /* how far apart: all the way as the page arrives, then as the scroll says */
-    /* closing over the first part of the handover, then shrinking — facing
-       the page — to the size of the small white mark that takes over from
-       it in front of the pictures, just where it will appear */
-    const closing = smooth(back / 0.35);
-    const shrink = smooth((back - 0.35) / 0.3);
-    const e = Math.max(1 - ei, leave * (1 - closing));
+    const e = Math.max(1 - ei, leave * (1 - back));
     /* apart, it drifts: the far-flung surfaces keep turning, slowly */
     const drift = t * 0.12;
 
@@ -329,14 +324,9 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     /* turned just far enough, slowly, that its thickness and the light on
        its sides show — never so far that it stops reading as the mark —
        and leaning a little towards the pointer */
-    mark.rotation.y = (Math.sin(t * 0.22) * 0.42 * (1 - e * 0.6) + mx * 0.2) * (1 - shrink);
-    mark.rotation.x = (Math.sin(t * 0.17) * 0.1 - my * 0.18) * (1 - shrink);
-    mark.position.y = Math.sin(t * 0.6) * 0.04 * (1 - shrink);
-    /* the small mark's size, in this camera's units: its height on screen
-       over the height the mark itself stands, a unit about a metre */
-    const perUnit = innerHeight / (2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
-    const small = (innerWidth <= 719 ? 48 : 64) * (SYMBOL.box.h / SYMBOL.box.w) / (SYMBOL.box.h * S * perUnit);
-    mark.scale.setScalar(1 + (small - 1) * shrink);
+    mark.rotation.y = Math.sin(t * 0.22) * 0.42 * (1 - e * 0.6) + mx * 0.2;
+    mark.rotation.x = Math.sin(t * 0.17) * 0.1 - my * 0.18;
+    mark.position.y = Math.sin(t * 0.6) * 0.04;
 
     /* which piece is under the pointer: asked only when it has moved */
     if (moved) {
@@ -348,7 +338,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       hovered = now;
     }
 
-    const breathe = BREATHE * (0.5 + 0.5 * Math.sin(t * 0.8)) * (1 - shrink);
+    const breathe = BREATHE * (0.5 + 0.5 * Math.sin(t * 0.8));
     for (const pc of pieces) {
       pc.group.position.copy(pc.dir).multiplyScalar(breathe);
       pc.flash *= 0.92;
