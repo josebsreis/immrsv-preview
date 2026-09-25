@@ -51,33 +51,21 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(k, k, k * 1.04), side: THREE.DoubleSide }));
     m.position.set(x, y, z); m.rotation.set(0, ry, rz); m.layers.set(ROOM); room.add(m); return m;
   };
-  /* the walls: not black but a slow fall from a cool grey overhead to
-     nothing underfoot, so a face turned away from every light still has a
-     tone of its own */
-  const wallGeo = new THREE.SphereGeometry(20, 32, 16);
-  const tone = new Float32Array(wallGeo.attributes.position.count * 3);
-  for (let i = 0; i < wallGeo.attributes.position.count; i++) {
-    const y = wallGeo.attributes.position.getY(i) / 20;
-    const v = 0.02 + 0.2 * Math.pow(Math.max(0, y * 0.5 + 0.5), 2.2);
-    tone.set([v * 0.92, v * 0.97, v * 1.08], i * 3);
-  }
-  wallGeo.setAttribute('color', new THREE.BufferAttribute(tone, 3));
-  const walls = new THREE.Mesh(wallGeo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide }));
+  /* The room is black. Theirs reads as premium because the faces stay
+     dark, near see-through, and the shape is drawn by its edges catching
+     light — so almost nothing here is lit, and what is, is placed to be
+     caught by an edge rather than filled into a face. */
+  const walls = new THREE.Mesh(new THREE.SphereGeometry(20, 16, 8), new THREE.MeshBasicMaterial({ color: 0x020203, side: THREE.BackSide }));
   walls.layers.set(ROOM); room.add(walls);
-  strip(3, 12, -6, 0.5, 2.5, Math.PI / 2.4, 0, 1);           // a tall softbox to the left
-  strip(1.4, 12, 6.2, 0, 1.5, -Math.PI / 2.2, 0, 0.85);      // a narrower one to the right
-  strip(12, 2.4, 0, 6, 1, 0, 0, 0.9).rotation.x = Math.PI / 2;    // a band overhead
-  strip(6, 0.6, 0, -3.5, 5.5, 0, 0.25, 0.8);                 // a sliver low in front
-  /* The faces all look straight back at the viewer — the mark is a flat
-     logo pushed into depth — so what they mirror is what stands behind the
-     viewer. Two tall softboxes there, a little apart, with a gap between:
-     as the mark leans, their edges sweep across the faces. */
-  strip(2.2, 14, -2.6, 0, 9, 0, 0.12, 1.1);
-  strip(1.1, 14, 2.4, 0, 9, 0, -0.08, 0.8);
-  strip(14, 0.35, 0, 2.2, 9, 0, 0, 0.7);
-  // a warm one, behind, for the edges
-  const warm = strip(4, 8, 3.5, 1, -6, 0.3, 0.2, 1);
-  (warm.material as THREE.MeshBasicMaterial).color.setRGB(1, 0.62, 0.3);
+  /* warm gold overhead: every edge and step that faces up glows with it */
+  const gold = strip(14, 3, 0, 6, 0, 0, 0, 1);
+  gold.rotation.x = Math.PI / 2;
+  (gold.material as THREE.MeshBasicMaterial).color.setRGB(1.0, 0.62, 0.26);
+  /* one narrow cool glint behind the viewer, that slides across a face as
+     it turns, and a thin one to either side for the vertical edges */
+  strip(0.35, 14, -1.8, 0, 9, 0, 0.1, 0.9);
+  strip(0.25, 12, -7, 0, 0, Math.PI / 2, 0, 0.7);
+  strip(0.25, 12, 7, 0, 0, -Math.PI / 2, 0, 0.55);
   scene.add(room);
 
 
@@ -93,17 +81,17 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   const cx = SYMBOL.box.x + SYMBOL.box.w / 2, cy = SYMBOL.box.y + SYMBOL.box.h / 2;
   const S = 1 / 100;
   const baseMat = new THREE.MeshPhysicalMaterial({
-    color: 0x3a3d42, emissive: new THREE.Color(0x1a2030), emissiveIntensity: 0.15,
+    color: 0x3a3d42, emissive: new THREE.Color(0x0e1320), emissiveIntensity: 0.15,
     metalness: 1, roughness: 0.08, transmission: 0.35, ior: 2.4, thickness: 0.4,
-    transparent: true, opacity: 0.88, clearcoat: 1, clearcoatRoughness: 0.05,
-    envMap: cubeRT.texture, envMapIntensity: 3, side: THREE.DoubleSide,
+    transparent: true, opacity: 0.72, clearcoat: 1, clearcoatRoughness: 0.05,
+    envMap: cubeRT.texture, envMapIntensity: 3, side: THREE.DoubleSide, depthWrite: false,
   });
   const mark = new THREE.Group();
   type Piece = { mesh: THREE.Mesh; mat: THREE.MeshPhysicalMaterial; dir: THREE.Vector3; flash: number };
   const pieces: Piece[] = [];
   parsed.paths.forEach((p) => {
     for (const shape of SVGLoader.createShapes(p)) {
-      const geo = new THREE.ExtrudeGeometry(shape, { depth: DEPTH, bevelEnabled: true, bevelThickness: 1.2, bevelSize: 0.9, bevelSegments: 2, curveSegments: 8 });
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: DEPTH, bevelEnabled: true, bevelThickness: 1.6, bevelSize: 1.3, bevelSegments: 3, curveSegments: 8 });
       // into the page's own frame: centred, y up, a unit about a metre
       geo.translate(-cx, -cy, -DEPTH / 2);
       geo.scale(S, -S, S);
@@ -112,8 +100,10 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       const c = new THREE.Vector3(); geo.boundingBox!.getCenter(c);
       const mat = baseMat.clone();
       const mesh = new THREE.Mesh(geo, mat);
-      /* a fine line along each piece's edges, to draw it against the dark */
-      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), new THREE.LineBasicMaterial({ color: 0x8a96aa, transparent: true, opacity: 0.12 }));
+      /* a fine line along every edge, the back ones seen through the glass,
+         so the shape is drawn even where no light falls on it */
+      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30),
+        new THREE.LineBasicMaterial({ color: 0xc9d2e0, transparent: true, opacity: 0.13, depthTest: false }));
       mesh.add(edges);
       mark.add(mesh);
       pieces.push({ mesh, mat, dir: c.clone().setZ(0).normalize(), flash: 0 });
@@ -122,9 +112,23 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   scene.add(mark);
 
   /* a little direct light, for the bevels */
-  const key = new THREE.DirectionalLight(0xffffff, 1.2); key.position.set(-3, 4, 5); scene.add(key);
-  const rim = new THREE.DirectionalLight(0xffb070, 1.4); rim.position.set(4, 2, -5); scene.add(rim);
-  scene.add(new THREE.AmbientLight(0x8090a0, 0.15));
+  const top = new THREE.DirectionalLight(0xffa24a, 2.2); top.position.set(0.5, 6, 1.5); scene.add(top);
+  const rim = new THREE.DirectionalLight(0xff9a50, 1.2); rim.position.set(4, 2, -5); scene.add(rim);
+  const cool = new THREE.DirectionalLight(0xbcd0ff, 0.35); cool.position.set(-4, 0, 4); scene.add(cool);
+
+  /* embers: a few warm sparks drifting slowly up through the dark */
+  const EMBERS = narrow ? 18 : 34;
+  const ember = new Float32Array(EMBERS * 3);
+  const seed = Array.from({ length: EMBERS }, (_, i) => {
+    const h = (k: number) => { const x = Math.sin((i + 1) * 12.9898 + k * 78.233) * 43758.5453; return x - Math.floor(x); };
+    return { x: (h(1) - 0.5) * 7, y: (h(2) - 0.5) * 5, z: (h(3) - 0.5) * 4 - 0.5, v: 0.05 + h(4) * 0.12, p: h(5) * 6.283 };
+  });
+  const emberGeo = new THREE.BufferGeometry();
+  emberGeo.setAttribute('position', new THREE.BufferAttribute(ember, 3));
+  const sparks = new THREE.Points(emberGeo, new THREE.PointsMaterial({
+    color: 0xff8a3c, size: 0.035, sizeAttenuation: true, transparent: true, opacity: 0.85,
+    blending: THREE.AdditiveBlending, depthWrite: false }));
+  scene.add(sparks);
 
   /* ── sizing: the mark about half the screen's shorter side ── */
   const fit = () => {
@@ -160,8 +164,10 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     const ei = 1 - Math.pow(1 - intro, 3);
 
     mx += (tmx - mx) * 0.05; my += (tmy - my) * 0.05;
-    mark.rotation.y = Math.sin(t * 0.25) * 0.35 + mx * 0.35;
-    mark.rotation.x = Math.sin(t * 0.19) * 0.12 - my * 0.2;
+    /* turned far enough, slowly, that its thickness shows — then back to
+       face the page — and leaning a little towards the pointer */
+    mark.rotation.y = Math.sin(t * 0.22) * 0.95 + mx * 0.3;
+    mark.rotation.x = Math.sin(t * 0.17) * 0.1 - my * 0.18;
     mark.position.y = Math.sin(t * 0.6) * 0.04 + exit * 1.6;
 
     /* the pieces: in from far apart as the page arrives, breathing at rest,
@@ -186,6 +192,15 @@ export function createMetalHero({ host }: MetalOptions): Hero {
 
     /* the room turns slowly, so the highlights travel over the metal */
     room.rotation.y = Math.sin(t * 0.15) * 0.35;
+    for (let i = 0; i < EMBERS; i++) {
+      const e = seed[i];
+      const y = ((e.y + t * e.v + 2.5) % 5) - 2.5;
+      ember[i * 3] = e.x + Math.sin(t * 0.4 + e.p) * 0.15;
+      ember[i * 3 + 1] = y;
+      ember[i * 3 + 2] = e.z;
+    }
+    emberGeo.attributes.position.needsUpdate = true;
+    (sparks.material as THREE.PointsMaterial).opacity = 0.85 * ei;
 
     /* the room is recorded without the mark in it, then the picture drawn */
     mark.visible = false;
