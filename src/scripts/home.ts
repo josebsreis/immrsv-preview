@@ -79,16 +79,20 @@ onPage('home', () => {
   if (host && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     /* trials: `?hero=glass` or `?hero=frost` puts the forms in glass
        (hero/glass.ts), `?hero=metal` is the mark as a solid, polished
-       object (hero/metal.ts); without any, the particles */
+       object (hero/metal.ts), `?hero=axo` the same mark drawn apart and
+       rebuilt in the studios' stages (hero/axo.ts); without any, the
+       particles */
     const trial = new URLSearchParams(location.search).get('hero');
     /* the metal trial also lifts the dark ground a shade (styles/tokens) */
-    if (trial === 'metal') document.documentElement.dataset.groundLift = '';
+    if (trial === 'metal' || trial === 'axo') document.documentElement.dataset.groundLift = '';
     const load = () =>
       (trial === 'glass' || trial === 'frost'
         ? import('./hero/glass').then(({ createGlassHero }) => () => createGlassHero({ host, frost: trial === 'frost' }))
         : trial === 'metal'
           ? import('./hero/metal').then(({ createMetalHero }) => () => createMetalHero({ host }))
-          : import('./hero').then(({ createHero }) => () => createHero({ host })))
+          : trial === 'axo'
+            ? import('./hero/axo').then(({ createAxoHero }) => () => createAxoHero({ host }))
+            : import('./hero').then(({ createHero }) => () => createHero({ host })))
         .then((make) => {
           if (gone) return;               // it arrived after the reader left
           hero = make();
