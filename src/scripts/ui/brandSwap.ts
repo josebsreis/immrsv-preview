@@ -3,9 +3,8 @@
    often one of them goes out of focus and another comes in where it
    stood — the hero's word and the footer's, done to a picture.
 
-   Which cell turns, and to which mark, is chosen at random each time:
-   a mark not standing anywhere in the row if there is one, otherwise
-   any other than the one it replaces. The row stops turning while it
+   Which cell turns is chosen at random each time, and it takes the mark
+   standing least in the row at that moment. The row stops turning while it
    is off the screen, and does not turn at all for a reader who asked
    for less motion.
    ═══════════════════════════════════════════════════════════════════ */
@@ -17,11 +16,15 @@ const HOLD = 2400;
 /** how long the going mark takes to leave before the next is put in */
 const OUT = 760;
 
-type Mark = { name: string; url: string; alt: string };
+type Mark = { url: string; alt: string };
 
 export function createBrandSwap(root: HTMLElement): BrandSwap {
-  let pool: Mark[] = [];
-  try { pool = JSON.parse(root.dataset.pool ?? '[]'); } catch { pool = []; }
+  /* the pool is read from the template's image tags, whose paths the build
+     has already put under the site's base, rather than kept as data */
+  const tpl = root.querySelector<HTMLTemplateElement>('template[data-brand-pool]');
+  const pool: Mark[] = tpl
+    ? [...tpl.content.querySelectorAll('img')].map((i) => ({ url: i.getAttribute('src') ?? '', alt: i.getAttribute('alt') ?? '' }))
+    : [];
   const cells = [...root.querySelectorAll<HTMLElement>('[data-brand-cell]')];
   if (pool.length < 2 || cells.length === 0) return { destroy() {} };
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return { destroy() {} };
@@ -36,12 +39,15 @@ export function createBrandSwap(root: HTMLElement): BrandSwap {
   let on = false;
   let timer = 0;
 
+  /* The mark shown least in the row right now, other than the one being
+     replaced — so with fewer marks than cells each still stands at most
+     twice, and never three of one mark at once. Ties are broken at random. */
   const pick = (cell: number): number => {
-    const here = new Set(showing);
-    const fresh = pool.map((_, i) => i).filter((i) => !here.has(i));
-    if (fresh.length) return fresh[Math.floor(Math.random() * fresh.length)];
+    const count = pool.map((_, i) => showing.filter((x) => x === i).length);
     const others = pool.map((_, i) => i).filter((i) => i !== showing[cell]);
-    return others[Math.floor(Math.random() * others.length)];
+    const least = Math.min(...others.map((i) => count[i]));
+    const best = others.filter((i) => count[i] === least);
+    return best[Math.floor(Math.random() * best.length)];
   };
 
   const turn = () => {
@@ -59,8 +65,9 @@ export function createBrandSwap(root: HTMLElement): BrandSwap {
       showing[cell] = next;
       cells[cell].dataset.brand = String(next);
       /* in once the file is there, so a slow one does not blink in half-drawn */
-      const arrive = () => { img.classList.remove('out'); busy = -1; };
-      if (img.complete) arrive(); else { img.onload = arrive; later(arrive, 600); }
+      let done = false;
+      const arrive = () => { if (done) return; done = true; img.onload = img.onerror = null; img.classList.remove('out'); busy = -1; };
+      if (img.complete) arrive(); else { img.onload = arrive; img.onerror = arrive; later(arrive, 600); }
     }, OUT);
     timer = window.setTimeout(turn, HOLD);
   };

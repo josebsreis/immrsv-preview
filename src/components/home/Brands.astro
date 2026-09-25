@@ -19,7 +19,7 @@ const pool = content.items.map((b) => ({ name: b.name, url: b.logo.url, alt: b.l
 const first = Array.from({ length: SHOWN }, (_, i) => pool[i % pool.length]);
 ---
 {pool.length > 0 && (
-  <section class="brands" aria-label={content.tag} data-brands data-pool={JSON.stringify(pool)}>
+  <section class="brands" aria-label={content.tag} data-brands>
     <p class="lead label">{content.tag}</p>
     <ul class="grid" data-dhover>
       {first.map((b, i) => (
@@ -29,6 +29,14 @@ const first = Array.from({ length: SHOWN }, (_, i) => pool[i % pool.length]);
         </li>
       ))}
     </ul>
+    <!-- Every mark the row can swap in, as plain image tags in a template:
+         never drawn, but real `src` attributes in the page, so the preview's
+         path rewrite (scripts/rebase.mjs) reaches them. A list kept as JSON
+         in an attribute has its quotes escaped and was skipped, so every
+         swapped-in mark pointed at the site root and failed to load. -->
+    <template data-brand-pool>
+      {pool.map((b) => <img src={b.url} alt={b.alt} />)}
+    </template>
   </section>
 )}
 

@@ -278,7 +278,9 @@
 
 /* the sections sit closer on a phone or a tablet */
 @media (max-width: 859px) {
-  :root { --section-y: 10vh; }
+  /* stacked, there is no narrow column for the instrument to keep to: it
+     takes the page's width like everything else in the column */
+  :root { --section-y: 10vh; --reel-w: 100%; }
 }
 
 /* and the page's own edge comes in on a phone — and the type comes up a
