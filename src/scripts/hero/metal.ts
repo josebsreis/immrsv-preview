@@ -23,7 +23,7 @@ import * as THREE from 'three';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import type { Hero } from './index';
 import { SYMBOL } from '../../lib/lettermark';
-import { stableHeight, widthChanged } from '../ui/viewport';
+import { stableHeight, sizeChanged } from '../ui/viewport';
 
 export interface MetalOptions { host: HTMLElement }
 
@@ -307,7 +307,13 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   fit();
   /* only when the width changes — a browser bar sliding in on a phone is
      not a new screen, and resizing the canvas for it made the mark jump */
-  const onResize = () => { if (widthChanged()) fit(); };
+  let fitW = innerWidth, fitH = stableHeight();
+  const onResize = () => {
+    /* the resize listener in ui/viewport runs first and re-reads the height */
+    if (!sizeChanged(fitW, fitH)) return;
+    fitW = innerWidth; fitH = stableHeight();
+    fit(); wake();
+  };
   addEventListener('resize', onResize);
 
   /* ── the pointer: the whole leans towards it, and a piece under it flares ── */
