@@ -146,6 +146,32 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     return out;
   };
 
+  /* The outline, from the logo's own shape rather than read off the solid:
+     the contour on the front face, the same on the back, and a line down
+     every corner joining the two. Read off the solid by angle, the bevels
+     split each corner into steps too shallow to count, and some corners
+     were never drawn. Each contour is a hair outside its face, so the line
+     sits on the edge rather than inside the glass. */
+  const outline = (shape: THREE.Shape) => {
+    const zF = (DEPTH / 2 + 1.6) * S, zB = -zF;
+    const seg: number[] = [];
+    const loops = [shape.extractPoints(8).shape, ...shape.extractPoints(8).holes];
+    for (const pts of loops) {
+      const ring = pts.slice();
+      if (ring.length > 1 && ring[0].equals(ring[ring.length - 1])) ring.pop();
+      const at = (v: THREE.Vector2) => [(v.x - cx) * S, -(v.y - cy) * S];
+      for (let i = 0; i < ring.length; i++) {
+        const [ax, ay] = at(ring[i]), [bx, by] = at(ring[(i + 1) % ring.length]);
+        seg.push(ax, ay, zF, bx, by, zF);          // front
+        seg.push(ax, ay, zB, bx, by, zB);          // back
+        seg.push(ax, ay, zF, ax, ay, zB);          // the corner, front to back
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(seg, 3));
+    return g;
+  };
+
   const mark = new THREE.Group();
   type Piece = { group: THREE.Group; mat: THREE.MeshPhysicalMaterial; edges: THREE.LineBasicMaterial;
                  dir: THREE.Vector3; whole: THREE.Mesh; surfaces: Surface[]; flash: number };
@@ -166,7 +192,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       /* the outline: every edge of the piece, the back ones seen through the
          glass — and what is left standing when the surfaces come away */
       const edgeMat = new THREE.LineBasicMaterial({ color: 0x8c96a6, transparent: true, opacity: 0.3, depthTest: false });
-      group.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMat));
+      group.add(new THREE.LineSegments(outline(shape), edgeMat));
       /* whole, the piece is one mesh — one draw instead of dozens — and
          its surfaces are only shown while it is coming apart */
       const whole = new THREE.Mesh(geo, mat);
