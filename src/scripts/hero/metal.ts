@@ -301,37 +301,38 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   const flat = new THREE.Scene();
   const flatCam = new THREE.OrthographicCamera(0, 1, 0, -1, -10, 10);
   const RADIUS = 6;
+  /* A sheet over a ball: where the mark stands behind a picture, the
+     picture is pushed out towards the viewer — the paper swells there,
+     bigger as it comes nearer, lit on the side the light is and shaded on
+     the other — and only while the page is moving. Still, it lies flat. */
   const sheetVert = `
-    uniform float uBend; uniform vec2 uSize;
-    varying vec2 vUv; varying vec2 vScreen;
+    uniform vec2 uMark; uniform float uR; uniform float uAmp;
+    varying vec2 vUv; varying vec2 vD; varying float vH;
     void main() {
       vUv = uv;
-      vec3 p = position;
-      /* bowed across its width by the scroll's speed, most at the middle */
-      p.y += sin(uv.x * 3.14159) * uBend / uSize.y;
-      vec4 w = modelMatrix * vec4(p, 1.0);
-      vScreen = vec2(w.x, -w.y);
+      vec4 w = modelMatrix * vec4(position, 1.0);
+      vec2 d = vec2(w.x, -w.y) - uMark;
+      float h = uAmp * exp(-dot(d, d) / (uR * uR));
+      /* nearer is bigger: pushed out from the ball's middle as it rises */
+      w.xy += vec2(d.x, -d.y) * h * 0.32;
+      vD = d; vH = h;
       gl_Position = projectionMatrix * viewMatrix * w;
     }`;
   const sheetFrag = `
-    uniform sampler2D uTex; uniform vec2 uSize; uniform vec2 uCover;
-    uniform vec2 uMark; uniform float uMarkR; uniform float uLens; uniform float uRadius;
-    varying vec2 vUv; varying vec2 vScreen;
+    uniform sampler2D uTex; uniform vec2 uSize; uniform vec2 uCover; uniform float uR; uniform float uRadius;
+    varying vec2 vUv; varying vec2 vD; varying float vH;
     void main() {
       /* the corner the page's pictures take */
       vec2 q = abs(vUv - 0.5) * uSize - (uSize * 0.5 - uRadius);
-      float corner = length(max(q, 0.0)) - uRadius;
-      if (corner > 0.0) discard;
-      /* over the mark: the picture swells towards its middle, and each colour
-         a hair apart at the rim of the swell */
-      vec2 d = vScreen - uMark;
-      float f = smoothstep(uMarkR, 0.0, length(d)) * uLens;
-      vec2 pull = (d / uSize) * f * 0.34;
+      if (length(max(q, 0.0)) - uRadius > 0.0) discard;
       vec2 uv = (vUv - 0.5) * uCover + 0.5;
-      float r = texture2D(uTex, uv - pull * 1.1).r;
-      float g = texture2D(uTex, uv - pull).g;
-      float b = texture2D(uTex, uv - pull * 0.9).b;
-      vec3 col = vec3(r, g, b) * (1.0 + f * 0.07);
+      vec3 col = texture2D(uTex, uv).rgb;
+      /* the swell's slope, lit from above and to the left: brighter where it
+         faces the light, darker where it turns away — the paper's shading */
+      vec2 slope = -2.0 * vD / (uR * uR) * vH * uR;
+      float lit = dot(normalize(vec3(-slope.x, slope.y, 1.0)), normalize(vec3(-0.45, 0.55, 0.7)));
+      float level = dot(vec3(0.0, 0.0, 1.0), normalize(vec3(-0.45, 0.55, 0.7)));
+      col *= 1.0 + (lit - level) * 1.4 + vH * 0.04;
       gl_FragColor = vec4(col, 1.0);
       #include <colorspace_fragment>
     }`;
@@ -344,10 +345,10 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     if (!img) continue;
     const u: Record<string, THREE.IUniform> = {
       uTex: { value: null }, uSize: { value: new THREE.Vector2(1, 1) }, uCover: { value: new THREE.Vector2(1, 1) },
-      uBend: { value: 0 }, uMark: { value: new THREE.Vector2() }, uMarkR: { value: 1 }, uLens: { value: 0 },
+      uMark: { value: new THREE.Vector2() }, uR: { value: 1 }, uAmp: { value: 0 },
       uRadius: { value: RADIUS },
     };
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 24, 1),
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 64, 48),
       new THREE.ShaderMaterial({ uniforms: u, vertexShader: sheetVert, fragmentShader: sheetFrag, depthTest: false, depthWrite: false }));
     mesh.visible = false;
     mesh.frustumCulled = false;
@@ -368,7 +369,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       wake();
     });
   }
-  let lastY = scrollY, speed = 0;
+  let lastY = scrollY, speed = 0, push = 0;
 
   let released = false, intro = 0, raf = 0, gone = false, recorded = false;
   let moved = false;
@@ -463,10 +464,13 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     flatCam.updateProjectionMatrix();
     const dy = scrollY - lastY; lastY = scrollY;
     speed += (dy / Math.max(dt, 1 / 240) - speed) * 0.12;
-    const bend = Math.max(-1, Math.min(1, speed / 2600)) * 38;
+    /* how hard the ball pushes: with the scroll's speed, easing in and out,
+       and nothing at all once the page is still */
+    push += (Math.min(1, Math.abs(speed) / 1800) - push) * 0.1;
+    if (push < 0.002) push = 0;
     const markAt = new THREE.Vector3().setFromMatrixPosition(mark.matrixWorld).project(camera);
     const perUnit = H / (2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
-    const lens = smooth(back / 0.5);
+    const whole = smooth(back / 0.5);
     let any = false;
     for (const sh of sheets) {
       if (!sh.ready) continue;
@@ -481,10 +485,9 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       const tex = sh.u.uTex.value as THREE.Texture;
       const ia = (tex.image?.width ?? 1) / (tex.image?.height ?? 1), pa = r.width / r.height;
       sh.u.uCover.value.set(ia > pa ? pa / ia : 1, ia > pa ? 1 : ia / pa);
-      sh.u.uBend.value = bend;
       sh.u.uMark.value.set((markAt.x * 0.5 + 0.5) * W, (-markAt.y * 0.5 + 0.5) * H);
-      sh.u.uMarkR.value = 1.25 * perUnit * mark.scale.x;
-      sh.u.uLens.value = lens;
+      sh.u.uR.value = 1.05 * perUnit * mark.scale.x;
+      sh.u.uAmp.value = push * whole;
     }
     if (any) { renderer.clearDepth(); renderer.render(flat, flatCam); }
     /* gone from view: nothing is drawn until the page comes back up */
