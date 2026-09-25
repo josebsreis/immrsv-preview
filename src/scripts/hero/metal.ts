@@ -32,6 +32,9 @@ const DEPTH = 26;
 const BREATHE = 0.09;
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
+/** the section before the studios, whose run of pictures this also draws */
+const handoverSection = () => document.getElementById('studios-title')?.closest('section') ?? null;
+
 export function createMetalHero({ host }: MetalOptions): Hero {
   const narrow = matchMedia('(max-width: 719px)').matches;
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
@@ -286,11 +289,92 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   };
   addEventListener('pointermove', onMove, { passive: true });
 
+  /* ── the pictures of the handover section, drawn here too ──
+     The run of pictures under 'Before it exists' is drawn by this canvas
+     as well as by the page: five planes in a second scene, measured off the
+     page's own pictures every frame and laid exactly over them, in screen
+     pixels. Drawn here they can answer what is behind them: they bow with
+     the speed of the scroll, like sheets flexing, and settle flat when it
+     stops; and where the mark stands behind one, the picture swells softly
+     over it, as a lens would. The page's own pictures stay, hidden, for
+     everything that is not this canvas — and come back if it goes. */
+  const flat = new THREE.Scene();
+  const flatCam = new THREE.OrthographicCamera(0, 1, 0, -1, -10, 10);
+  const RADIUS = 6;
+  const sheetVert = `
+    uniform float uBend; uniform vec2 uSize;
+    varying vec2 vUv; varying vec2 vScreen;
+    void main() {
+      vUv = uv;
+      vec3 p = position;
+      /* bowed across its width by the scroll's speed, most at the middle */
+      p.y += sin(uv.x * 3.14159) * uBend / uSize.y;
+      vec4 w = modelMatrix * vec4(p, 1.0);
+      vScreen = vec2(w.x, -w.y);
+      gl_Position = projectionMatrix * viewMatrix * w;
+    }`;
+  const sheetFrag = `
+    uniform sampler2D uTex; uniform vec2 uSize; uniform vec2 uCover;
+    uniform vec2 uMark; uniform float uMarkR; uniform float uLens; uniform float uRadius;
+    varying vec2 vUv; varying vec2 vScreen;
+    void main() {
+      /* the corner the page's pictures take */
+      vec2 q = abs(vUv - 0.5) * uSize - (uSize * 0.5 - uRadius);
+      float corner = length(max(q, 0.0)) - uRadius;
+      if (corner > 0.0) discard;
+      /* over the mark: the picture swells towards its middle, and each colour
+         a hair apart at the rim of the swell */
+      vec2 d = vScreen - uMark;
+      float f = smoothstep(uMarkR, 0.0, length(d)) * uLens;
+      vec2 pull = (d / uSize) * f * 0.34;
+      vec2 uv = (vUv - 0.5) * uCover + 0.5;
+      float r = texture2D(uTex, uv - pull * 1.1).r;
+      float g = texture2D(uTex, uv - pull).g;
+      float b = texture2D(uTex, uv - pull * 0.9).b;
+      vec3 col = vec3(r, g, b) * (1.0 + f * 0.07);
+      gl_FragColor = vec4(col, 1.0);
+      #include <colorspace_fragment>
+    }`;
+  type Sheet = { frame: HTMLElement; img: HTMLImageElement; mesh: THREE.Mesh; u: Record<string, THREE.IUniform>; ready: boolean };
+  const sheets: Sheet[] = [];
+  const loader = new THREE.TextureLoader();
+  const frames = handoverSection() ? Array.from(handoverSection()!.querySelectorAll<HTMLElement>('.run .frame')) : [];
+  for (const frame of frames) {
+    const img = frame.querySelector('img');
+    if (!img) continue;
+    const u: Record<string, THREE.IUniform> = {
+      uTex: { value: null }, uSize: { value: new THREE.Vector2(1, 1) }, uCover: { value: new THREE.Vector2(1, 1) },
+      uBend: { value: 0 }, uMark: { value: new THREE.Vector2() }, uMarkR: { value: 1 }, uLens: { value: 0 },
+      uRadius: { value: RADIUS },
+    };
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 24, 1),
+      new THREE.ShaderMaterial({ uniforms: u, vertexShader: sheetVert, fragmentShader: sheetFrag, depthTest: false, depthWrite: false }));
+    mesh.visible = false;
+    mesh.frustumCulled = false;
+    flat.add(mesh);
+    const sheet: Sheet = { frame, img, mesh, u, ready: false };
+    sheets.push(sheet);
+    /* the picture itself, at the size the page chose for it */
+    const src = img.currentSrc || img.src;
+    loader.load(src, (tex) => {
+      if (gone) { tex.dispose(); return; }
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = 4;
+      u.uTex.value = tex;
+      sheet.ready = true;
+      /* drawn here now: the page's own is kept, unseen, for the rest */
+      img.style.visibility = 'hidden';
+      frame.style.background = 'transparent';
+      wake();
+    });
+  }
+  let lastY = scrollY, speed = 0;
+
   let released = false, intro = 0, raf = 0, gone = false, recorded = false;
   let moved = false;
   const clock = new THREE.Clock();
   /* the section that brings it back together, and the light half that ends it */
-  const handover = document.getElementById('studios-title')?.closest('section') ?? null;
+  const handover = handoverSection();
   const light = document.querySelector<HTMLElement>('[data-light]');
   const smooth = (x: number) => { const t = clamp01(x); return t * t * (3 - 2 * t); };
 
@@ -368,7 +452,41 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       recorded = true;
     }
     for (const pc of pieces) pc.mat.envMapRotation.set(0, sway, 0);
+    renderer.autoClear = false;
+    renderer.clear();
     renderer.render(scene, camera);
+
+    /* the pictures: laid over the page's own, bowed by the scroll's speed,
+       swelling where the mark stands behind them once it is whole again */
+    const W = innerWidth, H = innerHeight;
+    flatCam.left = 0; flatCam.right = W; flatCam.top = 0; flatCam.bottom = -H;
+    flatCam.updateProjectionMatrix();
+    const dy = scrollY - lastY; lastY = scrollY;
+    speed += (dy / Math.max(dt, 1 / 240) - speed) * 0.12;
+    const bend = Math.max(-1, Math.min(1, speed / 2600)) * 38;
+    const markAt = new THREE.Vector3().setFromMatrixPosition(mark.matrixWorld).project(camera);
+    const perUnit = H / (2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
+    const lens = smooth(back / 0.5);
+    let any = false;
+    for (const sh of sheets) {
+      if (!sh.ready) continue;
+      const r = sh.frame.getBoundingClientRect();
+      const on = r.bottom > -60 && r.top < H + 60;
+      sh.mesh.visible = on;
+      if (!on) continue;
+      any = true;
+      sh.mesh.position.set(r.left + r.width / 2, -(r.top + r.height / 2), 0);
+      sh.mesh.scale.set(r.width, r.height, 1);
+      sh.u.uSize.value.set(r.width, r.height);
+      const tex = sh.u.uTex.value as THREE.Texture;
+      const ia = (tex.image?.width ?? 1) / (tex.image?.height ?? 1), pa = r.width / r.height;
+      sh.u.uCover.value.set(ia > pa ? pa / ia : 1, ia > pa ? 1 : ia / pa);
+      sh.u.uBend.value = bend;
+      sh.u.uMark.value.set((markAt.x * 0.5 + 0.5) * W, (-markAt.y * 0.5 + 0.5) * H);
+      sh.u.uMarkR.value = 1.25 * perUnit * mark.scale.x;
+      sh.u.uLens.value = lens;
+    }
+    if (any) { renderer.clearDepth(); renderer.render(flat, flatCam); }
     /* gone from view: nothing is drawn until the page comes back up */
     /* covered by the first studio: nothing is drawn until it is uncovered */
     if (!covered) raf = requestAnimationFrame(frame);
@@ -402,6 +520,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       renderer.dispose();
       renderer.forceContextLoss();
       renderer.domElement.remove();
+      for (const sh of sheets) { sh.img.style.visibility = ''; sh.frame.style.background = ''; (sh.u.uTex.value as THREE.Texture | null)?.dispose(); }
     },
   };
 }
