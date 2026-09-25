@@ -8,7 +8,7 @@
    dark polished metal that lets a third of the light through, under a
    clear coat. What makes it read as expensive is what it reflects: a
    camera inside the scene records the room every frame — a few soft
-   bright strips and some faint orbit lines — and the mark mirrors that,
+   bright strips — and the mark mirrors that,
    so its highlights move as it turns. The pieces breathe apart and back
    together, the whole leans towards the pointer, and a piece under the
    pointer flares for a moment.
@@ -80,21 +80,6 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   (warm.material as THREE.MeshBasicMaterial).color.setRGB(1, 0.62, 0.3);
   scene.add(room);
 
-  /* the orbit lines: faint in the picture, and bright in the reflection */
-  const lines = new THREE.Group();
-  const lineMat = new THREE.LineBasicMaterial({ color: 0x5a6578, transparent: true, opacity: 0.45 });
-  for (let i = 0; i < 5; i++) {
-    const r = 2.6 + i * 0.55;
-    const pts = Array.from({ length: 161 }, (_, k) => {
-      const a = (k / 160) * Math.PI * 2;
-      return new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r * 0.42, 0);
-    });
-    const loop = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat);
-    loop.rotation.set(0.9 + i * 0.22, i * 0.7, 0.35 * i);
-    loop.layers.enable(ROOM);
-    lines.add(loop);
-  }
-  scene.add(lines);
 
   /* the camera inside: six small renders of the room, every frame */
   const cubeRT = new THREE.WebGLCubeRenderTarget(narrow ? 128 : 256, { generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
@@ -127,7 +112,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       const c = new THREE.Vector3(); geo.boundingBox!.getCenter(c);
       const mat = baseMat.clone();
       const mesh = new THREE.Mesh(geo, mat);
-      /* the fine edge line trionn draws over each piece */
+      /* a fine line along each piece's edges, to draw it against the dark */
       const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), new THREE.LineBasicMaterial({ color: 0x8a96aa, transparent: true, opacity: 0.12 }));
       mesh.add(edges);
       mark.add(mesh);
@@ -201,8 +186,6 @@ export function createMetalHero({ host }: MetalOptions): Hero {
 
     /* the room turns slowly, so the highlights travel over the metal */
     room.rotation.y = Math.sin(t * 0.15) * 0.35;
-    lines.rotation.z = t * 0.03;
-    lines.rotation.y = Math.sin(t * 0.1) * 0.3;
 
     /* the room is recorded without the mark in it, then the picture drawn */
     mark.visible = false;
