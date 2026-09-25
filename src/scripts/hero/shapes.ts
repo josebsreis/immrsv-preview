@@ -135,25 +135,42 @@ const TREE: ShapeDef = {
   },
 };
 
-/** A screen: a slab held a few degrees off
- *  vertical on a stem, the way a monitor stands on a desk — thin enough to
- *  read as a surface, not a brick. */
-const SCREEN: ShapeDef = {
-  name: 'screen',
+/** A slab with a phone's rounded corners, extruded: the corners are rounded
+ *  across the face at radius `r`, and the thin edges are rounded at `e`, so
+ *  it reads as a phone and not as a card or a brick. */
+function phoneSlab(x: number, y: number, z: number, hx: number, hy: number, hz: number, r: number, e: number) {
+  const qx = Math.abs(x) - hx + r, qy = Math.abs(y) - hy + r;
+  const face = Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r;
+  const wx = face + e, wz = Math.abs(z) - hz + e;
+  return Math.hypot(Math.max(wx, 0), Math.max(wz, 0)) + Math.min(Math.max(wx, wz), 0) - e;
+}
+
+/** A phone: standing on its end, leaned a little back and turned a touch, the
+ *  screen sunk into its face and the camera block standing proud on its
+ *  back — the two things that tell a phone from a slab as it turns. */
+const PHONE: ShapeDef = {
+  name: 'phone',
   bob: 0.022,
   sway: 0.008,
-  scale: 2.15,
-  lift: -0.44,
-  bounds: [-0.52, -0.04, -0.36, 0.52, 0.92, 0.36],
+  scale: 2.2,
+  lift: -0.5,
+  bounds: [-0.3, 0.04, -0.16, 0.3, 0.96, 0.16],
   sdf(x, y, z) {
-    // the panel, tilted back about x
-    const c = Math.cos(0.13), s = Math.sin(0.13);
-    const py = (y - 0.56) * c + (z - 0.02) * s, pz = -(y - 0.56) * s + (z - 0.02) * c;
-    let panel = roundBox(x, py, pz, 0.40, 0.26, 0.022, 0.016);
-    panel = sub(panel, roundBox(x, py + 0.015, pz - 0.022, 0.355, 0.205, 0.016, 0.008));      // the screen itself, sunk in
-    let d = panel;
-    d = smin(d, capsule(x, y, z, 0, 0.30, 0.02, 0, 0.06, 0.02, 0.038), 0.05);                 // stem
-    d = uni(d, roundBox(x, y - 0.022, z - 0.01, 0.16, 0.020, 0.115, 0.014));                  // foot
+    // leaned back about x, then turned a little about y, round its middle
+    const c = Math.cos(0.1), s = Math.sin(0.1);
+    const ty = y - 0.5;
+    const py = ty * c + z * s, pz0 = -ty * s + z * c;
+    const cy = Math.cos(0.22), sy = Math.sin(0.22);
+    const px = x * cy - pz0 * sy, pz = x * sy + pz0 * cy;
+    // the body: about the proportions of the real thing, 1 wide to 2.05 tall
+    let d = phoneSlab(px, py, pz, 0.195, 0.4, 0.032, 0.075, 0.018);
+    // the screen, sunk a hair into the front, a bezel's width in from the edge
+    d = sub(d, phoneSlab(px, py, pz + 0.034, 0.178, 0.383, 0.01, 0.062, 0.004));
+    // the camera block on the back, top corner, and its three lenses
+    d = uni(d, phoneSlab(px + 0.09, py - 0.29, pz - 0.038, 0.085, 0.085, 0.012, 0.03, 0.006));
+    d = uni(d, capsule(px, py, pz, -0.135, 0.325, -0.05, -0.135, 0.325, -0.066, 0.028));
+    d = uni(d, capsule(px, py, pz, -0.045, 0.325, -0.05, -0.045, 0.325, -0.066, 0.028));
+    d = uni(d, capsule(px, py, pz, -0.09, 0.255, -0.05, -0.09, 0.255, -0.066, 0.028));
     return d;
   },
 };
@@ -161,7 +178,7 @@ const SCREEN: ShapeDef = {
 /* The forms are not an illustration of the three studios — the headline says
    what the work is. They are here to show the mark making things, so the only
    rule is that each one reads at a glance. */
-export const SHAPES: readonly ShapeDef[] = [TREE, FIGURE, SCREEN];
+export const SHAPES: readonly ShapeDef[] = [TREE, FIGURE, PHONE];
 
 /* ── sampling ─────────────────────────────────────────────────────── */
 
