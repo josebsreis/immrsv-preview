@@ -25,7 +25,9 @@ export function createMarquee(el: HTMLElement): Marquee {
   /** px a second at rest */
   const base = Number(el.dataset.marqueeSpeed ?? 46);
   /** how much of a scrolled pixel the band takes on top of that */
-  const drag = Number(el.dataset.marqueeDrag ?? 1.5);
+  /* how much of the page's own speed the band borrows: a little, so a scroll
+     quickens it rather than flinging it */
+  const drag = Number(el.dataset.marqueeDrag ?? 0.6);
 
   /* Enough copies to cover the screen and then some: the loop works by
      sliding one run's width and starting again, so there has to be another
@@ -54,7 +56,9 @@ export function createMarquee(el: HTMLElement): Marquee {
      speed the other. */
   let drift = base * dir, scrollVel = 0, against = 0;
   /** seconds for the borrowed speed, and for the turn, to mostly settle */
-  const SMOOTH = 0.14, TURN = 0.45;
+  /* long, so the band gathers speed and comes about gently rather than
+     jolting: it answers the scroll, it does not jump with it */
+  const SMOOTH = 0.45, TURN = 1.3;
   /** px of scroll the other way before it counts as turning round: a thumb
    *  wobbles, and a wobble is not a change of mind */
   const WOBBLE = 18;
@@ -90,7 +94,7 @@ export function createMarquee(el: HTMLElement): Marquee {
     // The scroll since the last frame, as a speed. It is capped — a flick,
     // or a scroller catching up after a jump, is not a licence to teleport —
     // and then eased into, so uneven events even out over a few frames.
-    const sv = dt > 0 ? Math.max(-4200, Math.min(4200, pending / dt)) : 0;
+    const sv = dt > 0 ? Math.max(-2400, Math.min(2400, pending / dt)) : 0;
     pending = 0;
     scrollVel += (sv - scrollVel) * (1 - Math.exp(-dt / SMOOTH));
     if (Math.abs(scrollVel) < 0.5) scrollVel = 0;

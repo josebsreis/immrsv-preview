@@ -5,6 +5,7 @@
    the nav following whichever ground it is over.
    ═══════════════════════════════════════════════════════════════════ */
 import type { Hero } from '../hero';
+import { stableHeight } from './viewport';
 
 export interface ScrollChoreography { update(): void; destroy(): void; }
 
@@ -45,7 +46,10 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
   let holdTop = 0;
   const fitHold = () => {
     if (!hold) return;
-    holdTop = Math.min(0, innerHeight - hold.offsetHeight);
+    /* the screen's steady height: on a phone the browser's bars come and go
+       as the page turns round, and measured off the window the whole dark
+       half jumped each time */
+    holdTop = Math.min(0, stableHeight() - hold.offsetHeight);
     hold.style.top = holdTop + 'px';
   };
 
@@ -76,7 +80,7 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
   }
 
   function update() {
-    const y = scrollY, vh = innerHeight;
+    const y = scrollY, vh = stableHeight();
     if (veil) veil.style.opacity = (clamp01((y - vh * 0.45) / (vh * 0.85)) * 0.22).toFixed(3);
 
     // the mark belongs to the hero and to nothing after it: as the first

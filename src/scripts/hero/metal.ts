@@ -23,6 +23,7 @@ import * as THREE from 'three';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import type { Hero } from './index';
 import { SYMBOL } from '../../lib/lettermark';
+import { stableHeight, widthChanged } from '../ui/viewport';
 
 export interface MetalOptions { host: HTMLElement }
 
@@ -42,7 +43,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
      are drawn by this canvas too, and at less than that they read soft next
      to the page's own type */
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, narrow ? 1.75 : 2));
-  renderer.setSize(innerWidth, innerHeight, false);
+  renderer.setSize(innerWidth, stableHeight(), false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
@@ -50,7 +51,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   host.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.1, 100);
+  const camera = new THREE.PerspectiveCamera(30, innerWidth / stableHeight(), 0.1, 100);
   camera.position.set(0, 0, 8.5);
 
   /* ── the room it reflects: seen only by the camera inside the scene ── */
@@ -297,14 +298,17 @@ export function createMetalHero({ host }: MetalOptions): Hero {
 
   /* ── sizing: the mark about half the screen's shorter side ── */
   const fit = () => {
-    renderer.setSize(innerWidth, innerHeight, false);
-    camera.aspect = innerWidth / innerHeight;
+    renderer.setSize(innerWidth, stableHeight(), false);
+    camera.aspect = innerWidth / stableHeight();
     // a portrait screen pulls the camera back, so the mark keeps to the width
     camera.position.z = camera.aspect < 1 ? 8.5 / Math.max(0.55, camera.aspect) : 8.5;
     camera.updateProjectionMatrix();
   };
   fit();
-  addEventListener('resize', fit);
+  /* only when the width changes — a browser bar sliding in on a phone is
+     not a new screen, and resizing the canvas for it made the mark jump */
+  const onResize = () => { if (widthChanged()) fit(); };
+  addEventListener('resize', onResize);
 
   /* ── the pointer: the whole leans towards it, and a piece under it flares ── */
   const ray = new THREE.Raycaster();
@@ -312,7 +316,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   let mx = 0, my = 0, tmx = 0, tmy = 0;
   let hovered: Piece | null = null;
   const onMove = (e: PointerEvent) => {
-    tmx = (e.clientX / innerWidth) * 2 - 1; tmy = -(e.clientY / innerHeight) * 2 + 1;
+    tmx = (e.clientX / innerWidth) * 2 - 1; tmy = -(e.clientY / stableHeight()) * 2 + 1;
     ndc.set(tmx, tmy);
     moved = true;
   };
@@ -368,7 +372,11 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   type Sheet = { frame: HTMLElement; img: HTMLImageElement; mesh: THREE.Mesh; u: Record<string, THREE.IUniform>; ready: boolean };
   const sheets: Sheet[] = [];
   const loader = new THREE.TextureLoader();
-  const frames = handoverSection() ? Array.from(handoverSection()!.querySelectorAll<HTMLElement>('.run .frame')) : [];
+  /* Not on a touch screen — a phone or a tablet keeps the page's own
+     pictures: the effect answers a pointer and a wheel, and a phone has
+     neither, only the cost of drawing five large pictures every frame. */
+  const touch = matchMedia('(hover: none), (pointer: coarse)').matches;
+  const frames = !touch && handoverSection() ? Array.from(handoverSection()!.querySelectorAll<HTMLElement>('.run .frame')) : [];
   for (const frame of frames) {
     const img = frame.querySelector('img');
     if (!img) continue;
@@ -403,7 +411,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       wake();
     });
   }
-  let lastY = scrollY, speed = 0, push = 0;
+  let lastY = scrollY, speed = 0, push = 0, eased = scrollY;
 
   let released = false, intro = 0, raf = 0, gone = false, recorded = false;
   let moved = false;
@@ -428,12 +436,20 @@ export function createMetalHero({ host }: MetalOptions): Hero {
        — and only as the section before the studios arrives does it all
        come back to the middle and close. It is never faded: the first
        studio, on the light, simply rides up over it. */
-    const p = scrollY / innerHeight;
+    /* The scroll, eased: the break-up glides after the page rather than
+       snapping to it. On a phone the scroll arrives in bursts, and driven
+       straight off it the pieces jumped with every one. */
+    const vh = stableHeight();
+    eased += (scrollY - eased) * (1 - Math.exp(-dt * 7));
+    if (Math.abs(scrollY - eased) < 0.5) eased = scrollY;
+    const p = eased / vh;
     /* spread over most of two screens, so the surfaces leave slowly — but
        starting at once: eased out, not in, so the first turn of the wheel
        already lifts them, and they settle into their drift at the far end */
     const leave = 1 - Math.pow(1 - clamp01(p / 1.6), 2.4);
-    const back = handover ? smooth((innerHeight - handover.getBoundingClientRect().top) / (innerHeight * 0.85)) : 0;
+    /* the handover's place, taken back by however far the eased scroll
+       still trails the page, so it glides with everything else */
+    const back = handover ? smooth((vh - (handover.getBoundingClientRect().top + (scrollY - eased))) / (vh * 0.85)) : 0;
     const covered = light ? light.getBoundingClientRect().top <= 0 : false;
     const vis = 1;
     /* how far apart: all the way as the page arrives, then as the scroll says */
@@ -495,7 +511,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
 
     /* the pictures: laid over the page's own, bowed by the scroll's speed,
        swelling where the mark stands behind them once it is whole again */
-    const W = innerWidth, H = innerHeight;
+    const W = innerWidth, H = vh;
     flatCam.left = 0; flatCam.right = W; flatCam.top = 0; flatCam.bottom = -H;
     flatCam.updateProjectionMatrix();
     const dy = scrollY - lastY; lastY = scrollY;
@@ -528,7 +544,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     if (any) { renderer.clearDepth(); renderer.render(flat, flatCam); }
     /* gone from view: nothing is drawn until the page comes back up */
     /* covered by the first studio: nothing is drawn until it is uncovered */
-    if (!covered) raf = requestAnimationFrame(frame);
+    if (!covered || eased !== scrollY) raf = requestAnimationFrame(frame);
   };
   const wake = () => { if (!raf && !gone) raf = requestAnimationFrame(frame); };
   const onScroll = () => wake();
@@ -546,7 +562,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     destroy() {
       gone = true;
       if (raf) cancelAnimationFrame(raf);
-      removeEventListener('resize', fit);
+      removeEventListener('resize', onResize);
       removeEventListener('pointermove', onMove);
       removeEventListener('scroll', onScroll);
       scene.traverse((o) => {
