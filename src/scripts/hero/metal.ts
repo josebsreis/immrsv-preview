@@ -140,7 +140,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       mesh.position.copy(home);
       out.push({ mesh, home, out: dir,
                  axis: new THREE.Vector3(r(5) - 0.5, r(6) - 0.5, r(7) - 0.5).normalize(),
-                 spin: (r(8) - 0.5) * 5, lag: r(9) * 0.35 });
+                 spin: (r(8) - 0.5) * 4, lag: r(9) * 0.55 });
       k++;
     }
     return out;
@@ -249,7 +249,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     if (gone) return;
     const dt = Math.min(0.05, clock.getDelta());
     const t = clock.elapsedTime;
-    if (released) intro = Math.min(1, intro + dt / 2.2);
+    if (released) intro = Math.min(1, intro + dt / 3.2);
     const ei = smooth(intro);
 
     /* The scroll, read here rather than handed in. As the hero leaves, the
@@ -260,7 +260,8 @@ export function createMetalHero({ host }: MetalOptions): Hero {
        come back to the middle and close. It is never faded: the first
        studio, on the light, simply rides up over it. */
     const p = scrollY / innerHeight;
-    const leave = smooth(p / 0.7);
+    /* spread over most of two screens, so the surfaces leave slowly */
+    const leave = smooth(p / 1.6);
     const back = handover ? smooth((innerHeight - handover.getBoundingClientRect().top) / (innerHeight * 0.85)) : 0;
     const covered = light ? light.getBoundingClientRect().top <= 0 : false;
     const vis = 1;
@@ -296,7 +297,9 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       pc.mat.emissiveIntensity = 0.15 + 0.1 * f;
       pc.mat.opacity = (0.88 - 0.16 * f) * vis * (1 - e * 0.35);
       /* the outline brightens as the surfaces leave it */
-      pc.edges.opacity = 0.3 * vis;
+      /* the outline is only there while the mark is apart: whole, it is the
+         solid alone */
+      pc.edges.opacity = 0.3 * smooth(e * 1.6) * vis;
       const apart = e > 0.002;
       pc.whole.visible = !apart;
       for (const sf of pc.surfaces) {
