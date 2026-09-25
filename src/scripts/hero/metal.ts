@@ -295,86 +295,156 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   const rim = new THREE.DirectionalLight(0xff9a50, 1.2); rim.position.set(4, 2, -5); scene.add(rim);
   const cool = new THREE.DirectionalLight(0xffffff, 0.55); cool.position.set(-4, 0, 4); scene.add(cool);
 
-  /* ── the flow: lines across the whole hero, as smoke in a wind tunnel ──
-     They run edge to edge a little behind the mark. The ones level with it
-     are drawn in and squeezed through the hollow in its middle — dimmed
-     where they pass behind a face, clear through the opening — and fan out
-     again after; the ones above and below bend around the outside. A soft
-     brightness travels along each, faster through the narrows, as flow
-     speeds up where it is squeezed. The pointer parts them. As the mark
-     comes apart there is nothing left to shape them: they straighten and
-     stir, and take the shape again as it closes. */
-  const LINES = narrow ? 26 : 40, STEPS = 220, FLOW_Z = -0.6;
-  const flowU = {
-    uTime: { value: 0 }, uE: { value: 0 }, uHalf: { value: new THREE.Vector2(4, 2.4) },
-    uMouse: { value: new THREE.Vector2(99, 99) }, uShow: { value: 0 },
+  /* ── the threads: three lines through the mark's open middle ──
+     The mark is hollow at its heart — a tunnel front to back between the
+     three faces — and three fine lines are threaded through it, the way
+     thread goes through the eye of a needle: in from far off to one side
+     and behind, through the opening, and out to the other side and towards
+     the viewer. They live in the mark's own space, so they turn with it and
+     the perspective shows they really pass through. Anchored in the hollow,
+     their tails sway slowly. Along them run a few points of light, drawn
+     in towards the opening like matter to a black hole: slow far out,
+     quicker and quicker, a streak and a flash as they pass through, then
+     thrown out the other side and slowing. The part of anything behind the
+     mark is drawn under the glass, the part in front over it. */
+  const THREADS = 3, RUNNERS = narrow ? 4 : 6, TRAIL = 12;
+  const threadU = { uTime: { value: 0 }, uE: { value: 0 }, uShow: { value: 0 }, uPx: { value: 1 } };
+  /* the same slow sway, here and in the shader, so the lights stay on their line */
+  const SWAY = `
+    float tail = smoothstep(0.35, 3.5, abs(p.x));
+    float amp = tail * (0.1 + 0.35 * uE);
+    p.y += sin(uTime * 0.45 + p.x * 0.7 + aSeed * 6.28) * amp;
+    p.z += cos(uTime * 0.33 + p.x * 0.5 + aSeed * 4.1) * amp * 0.6;`;
+  const sway = (v: THREE.Vector3, t: number, e: number, seed: number) => {
+    const tail = smooth((Math.abs(v.x) - 0.35) / 3.15);
+    const amp = tail * (0.1 + 0.35 * e);
+    v.y += Math.sin(t * 0.45 + v.x * 0.7 + seed * 6.28) * amp;
+    v.z += Math.cos(t * 0.33 + v.x * 0.5 + seed * 4.1) * amp * 0.6;
+    return v;
   };
-  const flow = (() => {
-    const n = LINES * STEPS * 2;
-    const T = new Float32Array(n), Y = new Float32Array(n), SD = new Float32Array(n);
-    let i = 0;
-    for (let l = 0; l < LINES; l++) {
-      const y0 = ((l + 0.5) / LINES) * 2 - 1;        // -1..1 of the screen's height, scaled in the shader
-      const sd = hash(l * 7.31 + 0.5);
-      for (let s = 0; s < STEPS; s++) for (const k of [s, s + 1]) {
-        T[i] = k / STEPS; Y[i] = y0; SD[i] = sd; i++;
+  const threadVert = `
+    uniform float uTime; uniform float uE;
+    attribute float aSeed;
+    varying float vS; varying float vZ;
+    void main() {
+      vec3 p = position;${SWAY}
+      vS = uv.x; vZ = p.z;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+    }`;
+  const threadFrag = (front: boolean) => `
+    uniform float uShow;
+    varying float vS; varying float vZ;
+    void main() {
+      if (${front ? 'vZ < 0.0' : 'vZ >= 0.0'}) discard;
+      /* one quiet tone its whole length, fading only where it leaves the screen */
+      float ends = smoothstep(0.0, 0.12, vS) * smoothstep(1.0, 0.88, vS);
+      gl_FragColor = vec4(vec3(0.85, 0.85, 0.87), 0.2 * ends * uShow);
+      #include <colorspace_fragment>
+    }`;
+  const runnerVert = `
+    uniform float uPx;
+    attribute float aSize; attribute float aGlow;
+    varying float vZ; varying float vGlow;
+    void main() {
+      vZ = position.z; vGlow = aGlow;
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = aSize * uPx / -mv.z;
+      gl_Position = projectionMatrix * mv;
+    }`;
+  const runnerFrag = (front: boolean) => `
+    uniform float uShow;
+    varying float vZ; varying float vGlow;
+    void main() {
+      if (${front ? 'vZ < 0.0' : 'vZ >= 0.0'}) discard;
+      float r = length(gl_PointCoord - 0.5) * 2.0;
+      float soft = smoothstep(1.0, 0.0, r);
+      gl_FragColor = vec4(vec3(1.0), soft * soft * vGlow * uShow);
+      #include <colorspace_fragment>
+    }`;
+  const pair = (vert: string, frag: (f: boolean) => string, blending: THREE.Blending) => [false, true].map((front) =>
+    new THREE.ShaderMaterial({ uniforms: threadU, vertexShader: vert, fragmentShader: frag(front),
+      transparent: true, depthTest: false, depthWrite: false, blending }));
+  const [threadBack, threadFront] = pair(threadVert, threadFrag, THREE.NormalBlending);
+  const [runBack, runFront] = pair(runnerVert, runnerFrag, THREE.AdditiveBlending);
+
+  type Thread = { curve: THREE.CatmullRomCurve3; seed: number; hole: number };
+  const lines: Thread[] = [];
+  const threads = new THREE.Group();
+  for (let i = 0; i < THREADS; i++) {
+    const r = (q: number) => hash(i * 31.7 + q * 5.3 + 2);
+    /* the middle one the other way round: in from the right */
+    const s = i === 1 ? -1 : 1;
+    /* where it crosses the hollow: about its middle, a little apart from the others */
+    const yh = (i - 1) * 0.09, xh = (r(1) - 0.5) * 0.08;
+    /* the tails mostly level: side to side across the hero, a little up or down */
+    const yIn = (r(2) - 0.5) * 1.8, yOut = (r(3) - 0.5) * 1.8;
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-9 * s, yIn * 1.5, -5.5),
+      new THREE.Vector3(-3.2 * s, yIn * 0.7, -1.8),
+      new THREE.Vector3(-0.9 * s, yh + yIn * 0.12, -0.45),
+      new THREE.Vector3(xh - 0.12 * s, yh, -0.1),
+      new THREE.Vector3(xh + 0.12 * s, yh, 0.1),
+      new THREE.Vector3(0.9 * s, yh + yOut * 0.12, 0.45),
+      new THREE.Vector3(3.2 * s, yOut * 0.7, 1.6),
+      new THREE.Vector3(9 * s, yOut * 1.4, 3.8),
+    ], false, 'centripetal');
+    /* the point of the line inside the opening: where it crosses the mark's middle plane */
+    let hole = 0.5, best = Infinity;
+    const v = new THREE.Vector3();
+    for (let k = 0; k <= 800; k++) { const u = k / 800; curve.getPointAt(u, v); if (Math.abs(v.z) < best) { best = Math.abs(v.z); hole = u; } }
+    const seed = r(4);
+    lines.push({ curve, seed, hole });
+    const geo = new THREE.TubeGeometry(curve, 400, 0.0035, 5, false);
+    geo.setAttribute('aSeed', new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count).fill(seed), 1));
+    const back = new THREE.Mesh(geo, threadBack), front = new THREE.Mesh(geo, threadFront);
+    back.renderOrder = -1; front.renderOrder = 10;
+    back.frustumCulled = front.frustumCulled = false;
+    threads.add(back, front);
+  }
+
+  /* the lights: each on a line, each with a short tail of fainter points
+     behind it along the path — long when it is fast, gathered when slow */
+  const runners = Array.from({ length: RUNNERS }, (_, k) => ({ line: k % THREADS, u: hash(k * 3.7 + 11) }));
+  const RP = new Float32Array(RUNNERS * TRAIL * 3), RS = new Float32Array(RUNNERS * TRAIL), RG = new Float32Array(RUNNERS * TRAIL);
+  for (let k = 0; k < RUNNERS; k++) for (let j = 0; j < TRAIL; j++) RS[k * TRAIL + j] = 0.05 * (1 - j / TRAIL) + 0.012;
+  const runGeo = new THREE.BufferGeometry();
+  runGeo.setAttribute('position', new THREE.BufferAttribute(RP, 3));
+  runGeo.setAttribute('aSize', new THREE.BufferAttribute(RS, 1));
+  runGeo.setAttribute('aGlow', new THREE.BufferAttribute(RG, 1));
+  for (const m of [runBack, runFront]) {
+    const pts = new THREE.Points(runGeo, m);
+    pts.renderOrder = m === runBack ? -1 : 11;
+    pts.frustumCulled = false;
+    threads.add(pts);
+  }
+  /* how fast a light moves at a place on its line: a slow drift far out, and
+     a pull that grows sharply towards the opening */
+  const pull = (d: number) => 0.035 + 0.006 / (d + 0.012);
+  const rv = new THREE.Vector3();
+  const moveRunners = (dt: number, t: number, e: number) => {
+    for (let k = 0; k < RUNNERS; k++) {
+      const rn = runners[k], ln = lines[rn.line];
+      const sp = pull(Math.abs(rn.u - ln.hole));
+      rn.u += sp * dt;
+      if (rn.u > 1) rn.u -= 1;
+      for (let j = 0; j < TRAIL; j++) {
+        /* the tail: the same path, a little behind, by how fast it goes */
+        const u = rn.u - j * sp * 0.012;
+        const i = k * TRAIL + j;
+        if (u < 0) { RG[i] = 0; continue; }
+        sway(ln.curve.getPointAt(u, rv), t, e, ln.seed).toArray(RP, i * 3);
+        const near = Math.exp(-Math.pow((u - ln.hole) / 0.025, 2));
+        const ends = smooth(u / 0.12) * smooth((1 - u) / 0.12);
+        /* bright as it passes through: the flash */
+        RG[i] = (1 - j / TRAIL) * (0.55 + 1.6 * near) * ends;
       }
     }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
-    g.setAttribute('aT', new THREE.BufferAttribute(T, 1));
-    g.setAttribute('aY', new THREE.BufferAttribute(Y, 1));
-    g.setAttribute('aSeed', new THREE.BufferAttribute(SD, 1));
-    const m = new THREE.ShaderMaterial({
-      uniforms: flowU, transparent: true, depthTest: false, depthWrite: false,
-      vertexShader: `
-        uniform float uTime; uniform float uE; uniform vec2 uHalf; uniform vec2 uMouse;
-        attribute float aT; attribute float aY; attribute float aSeed;
-        varying float vT; varying float vIn; varying float vSeed; varying float vEnd;
-        void main() {
-          float x = mix(-uHalf.x, uHalf.x, aT);
-          float y0 = aY * uHalf.y * 1.08;
-          float shape = 1.0 - uE;
-          /* the band level with the mark: drawn into the hollow (its middle
-             sits a little below the mark's, and is about 0.4 tall) */
-          const float A = 0.62; const float HC = -0.08; const float HH = 0.19;
-          float inBand = step(abs(y0), A);
-          float wIn = exp(-pow(max(0.0, abs(x) - 0.3) / 0.8, 2.0));
-          float yIn = mix(y0, HC + y0 * (HH / A), wIn * shape);
-          /* the rest: pushed clear of the outside, most at the middle */
-          float ay = abs(y0);
-          float wOut = exp(-pow(x / 1.15, 2.0));
-          float yOut = sign(y0) * (ay + (1.2 - A) * wOut * exp(-(ay - A) / 0.9) * shape);
-          float y = mix(yOut, yIn, inBand);
-          /* apart: nothing to shape them, and they stir */
-          y += uE * 0.28 * sin(x * 1.3 + uTime * 0.7 + aSeed * 6.28) * sin(x * 0.55 - uTime * 0.35 + aSeed * 3.1);
-          /* the pointer parts them */
-          vec2 d = vec2(x, y) - uMouse;
-          y += sign(d.y) * 0.22 * exp(-dot(d, d) / 0.18);
-          vT = aT; vIn = inBand * wIn * shape; vSeed = aSeed;
-          vEnd = smoothstep(0.0, 0.1, aT) * smoothstep(1.0, 0.9, aT);
-          gl_Position = projectionMatrix * viewMatrix * vec4(x, y, ${FLOW_Z.toFixed(2)}, 1.0);
-        }`,
-      fragmentShader: `
-        uniform float uTime; uniform float uShow;
-        varying float vT; varying float vIn; varying float vSeed; varying float vEnd;
-        void main() {
-          /* a soft brightness running along the line, quicker through the narrows */
-          float speed = 0.05 + vSeed * 0.04 + vIn * 0.06;
-          float ph = fract(vT * 1.4 - uTime * speed - vSeed * 5.0);
-          float pulse = smoothstep(0.0, 0.18, ph) * smoothstep(0.34, 0.18, ph);
-          float a = (0.11 + 0.05 * vIn + pulse * (0.22 + 0.12 * vIn)) * vEnd * uShow;
-          gl_FragColor = vec4(vec3(0.72, 0.72, 0.74), a);
-          #include <colorspace_fragment>
-        }`,
-    });
-    const lines = new THREE.LineSegments(g, m);
-    lines.frustumCulled = false;
-    /* drawn first, so the glass lies over them where they pass behind it */
-    lines.renderOrder = -1;
-    return lines;
-  })();
-  scene.add(flow);
+    runGeo.attributes.position.needsUpdate = true;
+    runGeo.attributes.aGlow.needsUpdate = true;
+  };
+  mark.add(threads);
+
+
 
 
   /* ── sizing: the mark about half the screen's shorter side ── */
@@ -384,9 +454,6 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     // a portrait screen pulls the camera back, so the mark keeps to the width
     camera.position.z = camera.aspect < 1 ? 8.5 / Math.max(0.55, camera.aspect) : 8.5;
     camera.updateProjectionMatrix();
-    /* the flow's plane, edge to edge of the screen with a little over */
-    const hh = (camera.position.z - FLOW_Z) * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-    flowU.uHalf.value.set(hh * camera.aspect * 1.04, hh);
   };
   fit();
   /* only when the width changes — a browser bar sliding in on a phone is
@@ -405,11 +472,10 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   const ndc = new THREE.Vector2(9, 9);
   let mx = 0, my = 0, tmx = 0, tmy = 0;
   let hovered: Piece | null = null;
-  let seen = false;
   const onMove = (e: PointerEvent) => {
     tmx = (e.clientX / innerWidth) * 2 - 1; tmy = -(e.clientY / stableHeight()) * 2 + 1;
     ndc.set(tmx, tmy);
-    moved = true; seen = true;
+    moved = true;
   };
   addEventListener('pointermove', onMove, { passive: true });
 
@@ -566,12 +632,12 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       hovered = now;
     }
 
-    flowU.uTime.value = t;
-    flowU.uE.value = e;
+    threadU.uTime.value = t;
+    threadU.uE.value = e;
     /* in with the mark, and quieter once it is apart, under the dark half's words */
-    flowU.uShow.value = ei * (1 - e * 0.45);
-    const fh = flowU.uHalf.value;
-    if (seen) flowU.uMouse.value.set(mx * fh.x, my * fh.y);
+    threadU.uShow.value = ei * (1 - e * 0.4);
+    threadU.uPx.value = renderer.domElement.height * 0.5 * camera.projectionMatrix.elements[5];
+    moveRunners(dt, t, e);
 
     const breathe = BREATHE * (0.5 + 0.5 * Math.sin(t * 0.8));
     for (const pc of pieces) {
