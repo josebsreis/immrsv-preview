@@ -38,9 +38,10 @@ const handoverSection = () => document.getElementById('studios-title')?.closest(
 export function createMetalHero({ host }: MetalOptions): Hero {
   const narrow = matchMedia('(max-width: 719px)').matches;
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-  /* a little under a retina screen's own resolution: the edges are soft
-     and dark, and the difference cannot be seen, only paid for */
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, narrow ? 1.25 : 1.5));
+  /* a retina screen's own resolution: the pictures of the handover section
+     are drawn by this canvas too, and at less than that they read soft next
+     to the page's own type */
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, narrow ? 1.75 : 2));
   renderer.setSize(innerWidth, innerHeight, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -355,12 +356,17 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     flat.add(mesh);
     const sheet: Sheet = { frame, img, mesh, u, ready: false };
     sheets.push(sheet);
-    /* the picture itself, at the size the page chose for it */
-    const src = img.currentSrc || img.src;
+    /* the picture at the largest size it is made in, for a sharp texture at
+       any width the column takes — not the size the page chose for its own */
+    const ladder = (img.getAttribute('srcset') ?? '').split(',').map((c) => c.trim().split(/\s+/))
+      .map(([u, w]) => ({ u, w: parseInt(w, 10) || 0 })).filter((c) => c.u).sort((a, b) => b.w - a.w);
+    const src = ladder[0]?.u || img.currentSrc || img.src;
     loader.load(src, (tex) => {
       if (gone) { tex.dispose(); return; }
       tex.colorSpace = THREE.SRGBColorSpace;
-      tex.anisotropy = 4;
+      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      tex.minFilter = THREE.LinearMipmapLinearFilter;
+      tex.generateMipmaps = true;
       u.uTex.value = tex;
       sheet.ready = true;
       /* drawn here now: the page's own is kept, unseen, for the rest */
