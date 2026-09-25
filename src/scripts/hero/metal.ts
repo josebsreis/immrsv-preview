@@ -445,7 +445,9 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     /* turned just far enough, slowly, that its thickness and the light on
        its sides show — never so far that it stops reading as the mark —
        and leaning a little towards the pointer */
-    mark.rotation.y = Math.sin(t * 0.22) * 0.42 * (1 - e * 0.6) + mx * 0.2;
+    /* a full turn, slowly and without end — about one every twenty-two
+       seconds — so every face and its back take the light in turn */
+    mark.rotation.y = t * 0.28 + mx * 0.2;
     mark.rotation.x = Math.sin(t * 0.17) * 0.1 - my * 0.18;
     mark.position.y = Math.sin(t * 0.6) * 0.04;
 
