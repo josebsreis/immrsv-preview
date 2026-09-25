@@ -86,11 +86,13 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   const cx = SYMBOL.box.x + SYMBOL.box.w / 2, cy = SYMBOL.box.y + SYMBOL.box.h / 2;
   const S = 1 / 100;
   const baseMat = new THREE.MeshPhysicalMaterial({
-    color: 0x3a3d42, emissive: new THREE.Color(0x0e1320), emissiveIntensity: 0.15,
+    /* a faint grey body of its own — neutral, no tint — so the faces read as
+       a dark solid and not only as what they mirror */
+    color: 0x3a3d42, emissive: new THREE.Color(0x2e2f32), emissiveIntensity: 0.75,
     /* no `transmission`: it draws the whole scene a second time every frame
        to fake light passing through, and on a black ground plain
        transparency reads the same */
-    metalness: 1, roughness: 0.08,
+    metalness: 0.8, roughness: 0.08,
     transparent: true, opacity: 0.72, clearcoat: 1, clearcoatRoughness: 0.05,
     envMap: cubeRT.texture, envMapIntensity: 3, side: THREE.DoubleSide, depthWrite: false,
   });
@@ -294,7 +296,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       const f = pc.flash;
       pc.mat.envMapIntensity = 3 + 1.6 * f;
       pc.mat.roughness = Math.max(0.02, 0.08 - 0.06 * f);
-      pc.mat.emissiveIntensity = 0.15 + 0.1 * f;
+      pc.mat.emissiveIntensity = 0.75 + 0.15 * f;
       pc.mat.opacity = (0.88 - 0.16 * f) * vis * (1 - e * 0.35);
       /* the outline brightens as the surfaces leave it */
       /* the outline is only there while the mark is apart: whole, it is the
