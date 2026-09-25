@@ -304,7 +304,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
      the dark behind it, small and far. The paths live in the mark's own
      space, so they turn with it. The part of anything behind the mark is
      drawn under the glass, the part in front over it. */
-  const PATHS = narrow ? 6 : 10, RUNNERS = PATHS, TRAIL = 60, SHOW_LINES = false;
+  const PATHS = narrow ? 50 : 110, RUNNERS = PATHS, TRAIL = 5, SHOW_LINES = false;
   const threadU = { uTime: { value: 0 }, uE: { value: 0 }, uShow: { value: 0 }, uPx: { value: 1 }, uDpr: { value: renderer.getPixelRatio() } };
   /* the same slow sway, here and in the shader, so the lights stay on their line */
   const SWAY = `
@@ -368,13 +368,14 @@ export function createMetalHero({ host }: MetalOptions): Hero {
      to one side at our end, and closes in on the opening as it comes —
      turning about it as it closes, the way things spiral into a drain —
      through the middle, and swallowed by the dark just behind it. */
-  const NEAR = 7.2, FAR = -5;
+  const NEAR = 2, FAR = -0.6;
   for (let i = 0; i < PATHS; i++) {
     const r = (q: number) => hash(i * 31.7 + q * 5.3 + 2);
     /* where it starts around the opening, spread evenly with a little play */
     const a0 = ((i + r(1) * 0.6) / PATHS) * Math.PI * 2;
-    const r0 = 2.6 + r(2) * 1.4;
-    const twist = 0.9 + r(3) * 0.5;
+    const r0 = 1.1 + r(2) * 1.9;
+    /* either way round: no one current, the space itself drawn in */
+    const twist = (r(3) < 0.5 ? -1 : 1) * (0.5 + r(7) * 0.7);
     /* where in the opening it passes: near the middle, a little apart */
     const hx = (r(5) - 0.5) * 0.24, hy = (r(6) - 0.5) * 0.16;
     const pts: THREE.Vector3[] = [];
@@ -409,7 +410,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
      continuous fading streak — long when it is fast, gathered when slow */
   const runners = Array.from({ length: RUNNERS }, (_, k) => ({ line: k % PATHS, u: hash(k * 3.7 + 11) }));
   const RP = new Float32Array(RUNNERS * TRAIL * 3), RS = new Float32Array(RUNNERS * TRAIL), RG = new Float32Array(RUNNERS * TRAIL);
-  for (let k = 0; k < RUNNERS; k++) for (let j = 0; j < TRAIL; j++) RS[k * TRAIL + j] = j === 0 ? 0.05 : 0;
+  for (let k = 0; k < RUNNERS; k++) for (let j = 0; j < TRAIL; j++) RS[k * TRAIL + j] = j === 0 ? 0.018 : 0;
   const runGeo = new THREE.BufferGeometry();
   runGeo.setAttribute('position', new THREE.BufferAttribute(RP, 3));
   runGeo.setAttribute('aSize', new THREE.BufferAttribute(RS, 1));
@@ -450,7 +451,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   }
   /* how fast a light moves at a place on its line: a slow drift far out, and
      a pull that grows sharply towards the opening */
-  const pull = (d: number) => 0.07 + 0.006 / (d + 0.012);
+  const pull = (d: number) => 0.04 + 0.004 / (d + 0.015);
   const rv = new THREE.Vector3();
   const moveRunners = (dt: number, t: number, e: number) => {
     for (let k = 0; k < RUNNERS; k++) {
@@ -464,12 +465,11 @@ export function createMetalHero({ host }: MetalOptions): Hero {
         const i = k * TRAIL + j;
         if (u < 0) { RG[i] = 0; continue; }
         sway(ln.curve.getPointAt(u, rv), t, e, ln.seed).toArray(RP, i * 3);
-        const near = Math.exp(-Math.pow((u - ln.hole) / 0.025, 2));
-        const ends = smooth(u / 0.12) * smooth((1 - u) / 0.12)
-          /* swallowed: gone within a few steps past the opening */
-          * smooth((RP[i * 3 + 2] + 3) / 2.6);
-        /* bright as it passes through: the flash */
-        RG[i] = Math.pow(1 - j / TRAIL, 1.6) * (0.55 + 1.6 * near) * ends;
+        /* seen only near the mark: out of nothing as it closes in, and gone
+           the moment it reaches the opening */
+        const z = RP[i * 3 + 2];
+        const ends = smooth((NEAR - z) / 0.9) * smooth((z - 0.05) / 0.35);
+        RG[i] = Math.pow(1 - j / TRAIL, 1.2) * 0.5 * ends;
       }
     }
     runGeo.attributes.position.needsUpdate = true;
