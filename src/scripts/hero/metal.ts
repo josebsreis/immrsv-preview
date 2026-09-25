@@ -295,6 +295,87 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   const rim = new THREE.DirectionalLight(0xff9a50, 1.2); rim.position.set(4, 2, -5); scene.add(rim);
   const cool = new THREE.DirectionalLight(0xffffff, 0.55); cool.position.set(-4, 0, 4); scene.add(cool);
 
+  /* ── the flow: lines across the whole hero, as smoke in a wind tunnel ──
+     They run edge to edge a little behind the mark. The ones level with it
+     are drawn in and squeezed through the hollow in its middle — dimmed
+     where they pass behind a face, clear through the opening — and fan out
+     again after; the ones above and below bend around the outside. A soft
+     brightness travels along each, faster through the narrows, as flow
+     speeds up where it is squeezed. The pointer parts them. As the mark
+     comes apart there is nothing left to shape them: they straighten and
+     stir, and take the shape again as it closes. */
+  const LINES = narrow ? 26 : 40, STEPS = 220, FLOW_Z = -0.6;
+  const flowU = {
+    uTime: { value: 0 }, uE: { value: 0 }, uHalf: { value: new THREE.Vector2(4, 2.4) },
+    uMouse: { value: new THREE.Vector2(99, 99) }, uShow: { value: 0 },
+  };
+  const flow = (() => {
+    const n = LINES * STEPS * 2;
+    const T = new Float32Array(n), Y = new Float32Array(n), SD = new Float32Array(n);
+    let i = 0;
+    for (let l = 0; l < LINES; l++) {
+      const y0 = ((l + 0.5) / LINES) * 2 - 1;        // -1..1 of the screen's height, scaled in the shader
+      const sd = hash(l * 7.31 + 0.5);
+      for (let s = 0; s < STEPS; s++) for (const k of [s, s + 1]) {
+        T[i] = k / STEPS; Y[i] = y0; SD[i] = sd; i++;
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+    g.setAttribute('aT', new THREE.BufferAttribute(T, 1));
+    g.setAttribute('aY', new THREE.BufferAttribute(Y, 1));
+    g.setAttribute('aSeed', new THREE.BufferAttribute(SD, 1));
+    const m = new THREE.ShaderMaterial({
+      uniforms: flowU, transparent: true, depthTest: false, depthWrite: false,
+      vertexShader: `
+        uniform float uTime; uniform float uE; uniform vec2 uHalf; uniform vec2 uMouse;
+        attribute float aT; attribute float aY; attribute float aSeed;
+        varying float vT; varying float vIn; varying float vSeed; varying float vEnd;
+        void main() {
+          float x = mix(-uHalf.x, uHalf.x, aT);
+          float y0 = aY * uHalf.y * 1.08;
+          float shape = 1.0 - uE;
+          /* the band level with the mark: drawn into the hollow (its middle
+             sits a little below the mark's, and is about 0.4 tall) */
+          const float A = 0.62; const float HC = -0.08; const float HH = 0.19;
+          float inBand = step(abs(y0), A);
+          float wIn = exp(-pow(max(0.0, abs(x) - 0.3) / 0.8, 2.0));
+          float yIn = mix(y0, HC + y0 * (HH / A), wIn * shape);
+          /* the rest: pushed clear of the outside, most at the middle */
+          float ay = abs(y0);
+          float wOut = exp(-pow(x / 1.15, 2.0));
+          float yOut = sign(y0) * (ay + (1.2 - A) * wOut * exp(-(ay - A) / 0.9) * shape);
+          float y = mix(yOut, yIn, inBand);
+          /* apart: nothing to shape them, and they stir */
+          y += uE * 0.28 * sin(x * 1.3 + uTime * 0.7 + aSeed * 6.28) * sin(x * 0.55 - uTime * 0.35 + aSeed * 3.1);
+          /* the pointer parts them */
+          vec2 d = vec2(x, y) - uMouse;
+          y += sign(d.y) * 0.22 * exp(-dot(d, d) / 0.18);
+          vT = aT; vIn = inBand * wIn * shape; vSeed = aSeed;
+          vEnd = smoothstep(0.0, 0.1, aT) * smoothstep(1.0, 0.9, aT);
+          gl_Position = projectionMatrix * viewMatrix * vec4(x, y, ${FLOW_Z.toFixed(2)}, 1.0);
+        }`,
+      fragmentShader: `
+        uniform float uTime; uniform float uShow;
+        varying float vT; varying float vIn; varying float vSeed; varying float vEnd;
+        void main() {
+          /* a soft brightness running along the line, quicker through the narrows */
+          float speed = 0.05 + vSeed * 0.04 + vIn * 0.06;
+          float ph = fract(vT * 1.4 - uTime * speed - vSeed * 5.0);
+          float pulse = smoothstep(0.0, 0.18, ph) * smoothstep(0.34, 0.18, ph);
+          float a = (0.11 + 0.05 * vIn + pulse * (0.22 + 0.12 * vIn)) * vEnd * uShow;
+          gl_FragColor = vec4(vec3(0.72, 0.72, 0.74), a);
+          #include <colorspace_fragment>
+        }`,
+    });
+    const lines = new THREE.LineSegments(g, m);
+    lines.frustumCulled = false;
+    /* drawn first, so the glass lies over them where they pass behind it */
+    lines.renderOrder = -1;
+    return lines;
+  })();
+  scene.add(flow);
+
 
   /* ── sizing: the mark about half the screen's shorter side ── */
   const fit = () => {
@@ -303,6 +384,9 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     // a portrait screen pulls the camera back, so the mark keeps to the width
     camera.position.z = camera.aspect < 1 ? 8.5 / Math.max(0.55, camera.aspect) : 8.5;
     camera.updateProjectionMatrix();
+    /* the flow's plane, edge to edge of the screen with a little over */
+    const hh = (camera.position.z - FLOW_Z) * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    flowU.uHalf.value.set(hh * camera.aspect * 1.04, hh);
   };
   fit();
   /* only when the width changes — a browser bar sliding in on a phone is
@@ -321,10 +405,11 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   const ndc = new THREE.Vector2(9, 9);
   let mx = 0, my = 0, tmx = 0, tmy = 0;
   let hovered: Piece | null = null;
+  let seen = false;
   const onMove = (e: PointerEvent) => {
     tmx = (e.clientX / innerWidth) * 2 - 1; tmy = -(e.clientY / stableHeight()) * 2 + 1;
     ndc.set(tmx, tmy);
-    moved = true;
+    moved = true; seen = true;
   };
   addEventListener('pointermove', onMove, { passive: true });
 
@@ -480,6 +565,13 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       if (now && now !== hovered) now.flash = 1;
       hovered = now;
     }
+
+    flowU.uTime.value = t;
+    flowU.uE.value = e;
+    /* in with the mark, and quieter once it is apart, under the dark half's words */
+    flowU.uShow.value = ei * (1 - e * 0.45);
+    const fh = flowU.uHalf.value;
+    if (seen) flowU.uMouse.value.set(mx * fh.x, my * fh.y);
 
     const breathe = BREATHE * (0.5 + 0.5 * Math.sin(t * 0.8));
     for (const pc of pieces) {
