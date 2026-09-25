@@ -60,7 +60,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
      dark, near see-through, and the shape is drawn by its edges catching
      light — so almost nothing here is lit, and what is, is placed to be
      caught by an edge rather than filled into a face. */
-  const walls = new THREE.Mesh(new THREE.SphereGeometry(20, 16, 8), new THREE.MeshBasicMaterial({ color: 0x07080b, side: THREE.BackSide }));
+  const walls = new THREE.Mesh(new THREE.SphereGeometry(20, 16, 8), new THREE.MeshBasicMaterial({ color: 0x060606, side: THREE.BackSide }));
   walls.layers.set(ROOM); room.add(walls);
   /* warm gold overhead: every edge and step that faces up glows with it */
   const gold = strip(14, 3, 0, 6, 0, 0, 0, 1);
@@ -86,15 +86,13 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   const cx = SYMBOL.box.x + SYMBOL.box.w / 2, cy = SYMBOL.box.y + SYMBOL.box.h / 2;
   const S = 1 / 100;
   const baseMat = new THREE.MeshPhysicalMaterial({
-    /* a touch of its own cool glow, so the dark faces still read against the
-       page's dark ground rather than vanishing into it */
-    color: 0x4a4e56, emissive: new THREE.Color(0x1c2638), emissiveIntensity: 0.4,
+    color: 0x3a3d42, emissive: new THREE.Color(0x0e1320), emissiveIntensity: 0.15,
     /* no `transmission`: it draws the whole scene a second time every frame
        to fake light passing through, and on a black ground plain
        transparency reads the same */
     metalness: 1, roughness: 0.08,
-    transparent: true, opacity: 0.8, clearcoat: 1, clearcoatRoughness: 0.05,
-    envMap: cubeRT.texture, envMapIntensity: 4, side: THREE.DoubleSide, depthWrite: false,
+    transparent: true, opacity: 0.72, clearcoat: 1, clearcoatRoughness: 0.05,
+    envMap: cubeRT.texture, envMapIntensity: 3, side: THREE.DoubleSide, depthWrite: false,
   });
 
   /* A piece is split into its surfaces — each flat face and each strip of
@@ -185,7 +183,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   /* a little direct light, for the bevels */
   const top = new THREE.DirectionalLight(0xffa24a, 2.2); top.position.set(0.5, 6, 1.5); scene.add(top);
   const rim = new THREE.DirectionalLight(0xff9a50, 1.2); rim.position.set(4, 2, -5); scene.add(rim);
-  const cool = new THREE.DirectionalLight(0xbcd0ff, 0.9); cool.position.set(-4, 0, 4); scene.add(cool);
+  const cool = new THREE.DirectionalLight(0xffffff, 0.55); cool.position.set(-4, 0, 4); scene.add(cool);
 
 
   /* ── sizing: the mark about half the screen's shorter side ── */
@@ -267,10 +265,10 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       pc.group.position.copy(pc.dir).multiplyScalar(breathe);
       pc.flash *= 0.92;
       const f = pc.flash;
-      pc.mat.envMapIntensity = 4 + 1.6 * f;
+      pc.mat.envMapIntensity = 3 + 1.6 * f;
       pc.mat.roughness = Math.max(0.02, 0.08 - 0.06 * f);
-      pc.mat.emissiveIntensity = 0.4 + 0.2 * f;
-      pc.mat.opacity = (0.8 - 0.12 * f) * vis * (1 - e * 0.35);
+      pc.mat.emissiveIntensity = 0.15 + 0.1 * f;
+      pc.mat.opacity = (0.88 - 0.16 * f) * vis * (1 - e * 0.35);
       /* the outline brightens as the surfaces leave it */
       pc.edges.opacity = 0.3 * vis;
       const apart = e > 0.002;
