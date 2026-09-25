@@ -60,7 +60,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
      dark, near see-through, and the shape is drawn by its edges catching
      light — so almost nothing here is lit, and what is, is placed to be
      caught by an edge rather than filled into a face. */
-  const walls = new THREE.Mesh(new THREE.SphereGeometry(20, 16, 8), new THREE.MeshBasicMaterial({ color: 0x060606, side: THREE.BackSide }));
+  const walls = new THREE.Mesh(new THREE.SphereGeometry(20, 16, 8), new THREE.MeshBasicMaterial({ color: 0x2a2a2e, side: THREE.BackSide }));
   walls.layers.set(ROOM); room.add(walls);
   /* warm gold overhead: every edge and step that faces up glows with it */
   const gold = strip(14, 3, 0, 6, 0, 0, 0, 1);
