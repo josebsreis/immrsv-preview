@@ -81,6 +81,8 @@ onPage('home', () => {
        (hero/glass.ts), `?hero=metal` is the mark as a solid, polished
        object (hero/metal.ts); without any, the particles */
     const trial = new URLSearchParams(location.search).get('hero');
+    /* the metal trial also lifts the dark ground a shade (styles/tokens) */
+    if (trial === 'metal') document.documentElement.dataset.groundLift = '';
     const load = () =>
       (trial === 'glass' || trial === 'frost'
         ? import('./hero/glass').then(({ createGlassHero }) => () => createGlassHero({ host, frost: trial === 'frost' }))
