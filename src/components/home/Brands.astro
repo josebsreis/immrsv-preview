@@ -60,6 +60,10 @@ const first = Array.from({ length: SHOWN }, (_, i) => pool[i % pool.length]);
   /* a hairline under every mark but those in the last row: three across,
      so the last three go without */
   .grid li:not(:nth-last-child(-n + 3)) { border-bottom: var(--hairline) solid var(--line); }
+  /* the first row starts at the top, level with the label beside it: no air
+     above it, and the same air under it as any row has */
+  .grid li:nth-child(-n + 3) { height: calc(3.25rem + (9rem - 3.25rem) / 2); padding-top: 0;
+                               padding-bottom: calc((9rem - 3.25rem) / 2); }
 
   img { position: relative; max-height: 3.25rem; max-width: 100%; width: auto; object-fit: contain;
         filter: var(--logo-filter); opacity: 0.82;
@@ -76,6 +80,8 @@ const first = Array.from({ length: SHOWN }, (_, i) => pool[i % pool.length]);
     /* two across here, so only the last two go without */
     .grid li:not(:nth-last-child(-n + 3)) { border-bottom: 0; }
     .grid li:not(:nth-last-child(-n + 2)) { border-bottom: var(--hairline) solid var(--line); }
+    /* stacked, the label stands over the grid, so the rows keep their air */
+    .grid li:nth-child(-n + 3) { height: 7.5rem; padding: var(--s-5) var(--s-4); }
     .grid li { height: 7.5rem; }
     img { max-height: 2.5rem; }
   }
