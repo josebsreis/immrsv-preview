@@ -321,9 +321,10 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     const drift = t * 0.12;
 
     mx += (tmx - mx) * 0.05; my += (tmy - my) * 0.05;
-    /* turned far enough, slowly, that its thickness shows — then back to
-       face the page — and leaning a little towards the pointer */
-    mark.rotation.y = Math.sin(t * 0.22) * 0.95 * (1 - e * 0.6) + mx * 0.3;
+    /* turned just far enough, slowly, that its thickness and the light on
+       its sides show — never so far that it stops reading as the mark —
+       and leaning a little towards the pointer */
+    mark.rotation.y = Math.sin(t * 0.22) * 0.42 * (1 - e * 0.6) + mx * 0.2;
     mark.rotation.x = Math.sin(t * 0.17) * 0.1 - my * 0.18;
     mark.position.y = Math.sin(t * 0.6) * 0.04;
 
