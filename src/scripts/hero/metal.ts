@@ -131,10 +131,16 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       const face = new THREE.Vector3(N[0], N[1], N[2]).normalize();
       const r = (q: number) => hash(seed * 97 + k * 13 + q);
       /* out along its own face, a little off it, and further for some */
-      const dir = face.clone().add(new THREE.Vector3(r(1) - 0.5, r(2) - 0.5, r(3) - 0.5).multiplyScalar(0.9)).normalize();
+      /* A long way: out across the screen, not just off the middle — most of
+         the way to the edges, and some right past them. Mostly across the
+         page's plane; a little towards or away, never through the viewer. */
+      const ang = r(1) * Math.PI * 2;
+      const reach = 0.9 + Math.pow(r(2), 1.6) * 4.2;
+      const dir = new THREE.Vector3(Math.cos(ang) * reach * 1.35, Math.sin(ang) * reach, (r(3) - 0.6) * 3.2)
+        .add(face.clone().multiplyScalar(0.8));
       const mesh = new THREE.Mesh(sg, mat);
       mesh.position.copy(home);
-      out.push({ mesh, home, out: dir.multiplyScalar(0.9 + r(4) * 1.4),
+      out.push({ mesh, home, out: dir,
                  axis: new THREE.Vector3(r(5) - 0.5, r(6) - 0.5, r(7) - 0.5).normalize(),
                  spin: (r(8) - 0.5) * 5, lag: r(9) * 0.35 });
       k++;
@@ -161,7 +167,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       const group = new THREE.Group();
       /* the outline: every edge of the piece, the back ones seen through the
          glass — and what is left standing when the surfaces come away */
-      const edgeMat = new THREE.LineBasicMaterial({ color: 0xd4dcea, transparent: true, opacity: 0.2, depthTest: false });
+      const edgeMat = new THREE.LineBasicMaterial({ color: 0x8c96a6, transparent: true, opacity: 0.3, depthTest: false });
       group.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMat));
       /* whole, the piece is one mesh — one draw instead of dozens — and
          its surfaces are only shown while it is coming apart */
@@ -222,6 +228,9 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   let moved = false;
   const clock = new THREE.Clock();
   const q = new THREE.Quaternion();
+  /* the section that brings it back together, and the light half that ends it */
+  const handover = document.getElementById('studios-title')?.closest('section') ?? null;
+  const light = document.querySelector<HTMLElement>('[data-light]');
   const smooth = (x: number) => { const t = clamp01(x); return t * t * (3 - 2 * t); };
 
   const frame = () => {
@@ -232,27 +241,29 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     if (released) intro = Math.min(1, intro + dt / 2.2);
     const ei = smooth(intro);
 
-    /* The scroll, read here rather than handed in: the mark does not fade as
-       the hero goes by. Over the first screen it comes apart — every
-       surface away, the outline left standing — and goes back together as
-       it moves down the screen, so it arrives whole again lower down. */
+    /* The scroll, read here rather than handed in. As the hero leaves, the
+       mark comes apart: the surfaces fly off across the screen and past its
+       edges, and the logo's outline is left standing in the middle. It stays
+       that way through the dark half — the band, the statement, the clients
+       — and only as the section before the studios arrives does it all
+       come back to the middle and close. It is never faded: the first
+       studio, on the light, simply rides up over it. */
     const p = scrollY / innerHeight;
-    const pass = clamp01(p / 0.9);
-    const burst = Math.sin(Math.PI * pass);
-    const low = smooth(pass);
-    /* whole, it stays — then, as the statement comes up over it, it steps
-       back to a shadow behind the words, and goes once they are read */
-    const vis = 1 - 0.7 * smooth((p - 0.85) / 0.45) - 0.3 * smooth((p - 1.5) / 0.5);
+    const leave = smooth(p / 0.7);
+    const back = handover ? smooth((innerHeight - handover.getBoundingClientRect().top) / (innerHeight * 0.85)) : 0;
+    const covered = light ? light.getBoundingClientRect().top <= 0 : false;
+    const vis = 1;
     /* how far apart: all the way as the page arrives, then as the scroll says */
-    const e = Math.max(1 - ei, burst);
+    const e = Math.max(1 - ei, leave * (1 - back));
+    /* apart, it drifts: the far-flung surfaces keep turning, slowly */
+    const drift = t * 0.12;
 
     mx += (tmx - mx) * 0.05; my += (tmy - my) * 0.05;
     /* turned far enough, slowly, that its thickness shows — then back to
        face the page — and leaning a little towards the pointer */
-    mark.rotation.y = Math.sin(t * 0.22) * 0.95 + mx * 0.3 + burst * 0.6;
+    mark.rotation.y = Math.sin(t * 0.22) * 0.95 * (1 - e * 0.6) + mx * 0.3;
     mark.rotation.x = Math.sin(t * 0.17) * 0.1 - my * 0.18;
-    mark.position.y = Math.sin(t * 0.6) * 0.04 - low * 1.35;
-    mark.scale.setScalar(1 - low * 0.18);
+    mark.position.y = Math.sin(t * 0.6) * 0.04;
 
     /* which piece is under the pointer: asked only when it has moved */
     if (moved) {
@@ -266,7 +277,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
 
     const breathe = BREATHE * (0.5 + 0.5 * Math.sin(t * 0.8));
     for (const pc of pieces) {
-      pc.group.position.copy(pc.dir).multiplyScalar(breathe + e * 0.35);
+      pc.group.position.copy(pc.dir).multiplyScalar(breathe);
       pc.flash *= 0.92;
       const f = pc.flash;
       pc.mat.envMapIntensity = 4 + 1.6 * f;
@@ -274,7 +285,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       pc.mat.emissiveIntensity = 0.4 + 0.2 * f;
       pc.mat.opacity = (0.8 - 0.12 * f) * vis * (1 - e * 0.35);
       /* the outline brightens as the surfaces leave it */
-      pc.edges.opacity = (0.2 + 0.45 * e) * vis;
+      pc.edges.opacity = 0.3 * vis;
       const apart = e > 0.002;
       pc.whole.visible = !apart;
       for (const sf of pc.surfaces) {
@@ -283,7 +294,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
         /* each surface on its own clock, so they leave one after another */
         const k = smooth((e - sf.lag) / (1 - sf.lag));
         sf.mesh.position.copy(sf.home).addScaledVector(sf.out, k);
-        sf.mesh.quaternion.copy(q.setFromAxisAngle(sf.axis, sf.spin * k));
+        sf.mesh.quaternion.copy(q.setFromAxisAngle(sf.axis, sf.spin * k + drift * sf.spin * 0.3 * k));
       }
     }
 
@@ -311,7 +322,8 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     for (const pc of pieces) pc.mat.envMapRotation.set(0, sway, 0);
     renderer.render(scene, camera);
     /* gone from view: nothing is drawn until the page comes back up */
-    if (vis > 0.001) raf = requestAnimationFrame(frame);
+    /* covered by the first studio: nothing is drawn until it is uncovered */
+    if (!covered) raf = requestAnimationFrame(frame);
   };
   const wake = () => { if (!raf && !gone) raf = requestAnimationFrame(frame); };
   const onScroll = () => wake();
