@@ -17,6 +17,7 @@ import { splitChars } from './ui/splitText';
 import { createCursor } from './ui/cursor';
 import { createBlurIn } from './ui/blurIn';
 import { createBrandSwap } from './ui/brandSwap';
+import { createRunMark } from './ui/runMark';
 import { onPage } from './lifecycle';
 import type { Hero } from './hero';
 
@@ -47,6 +48,8 @@ onPage('home', () => {
      same driver turns both */
   document.querySelectorAll<HTMLElement>('[data-stats]').forEach((el) => add(createStatsReel(el)));
 
+  const run = document.querySelector<HTMLElement>('[data-run]');
+  if (run) add(createRunMark(run));
   const brands = document.querySelector<HTMLElement>('[data-brands]');
   if (brands) add(createBrandSwap(brands));
   const faqs = document.querySelector<HTMLElement>('[data-faqs]');
@@ -79,20 +82,16 @@ onPage('home', () => {
   if (host && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     /* trials: `?hero=glass` or `?hero=frost` puts the forms in glass
        (hero/glass.ts), `?hero=metal` is the mark as a solid, polished
-       object (hero/metal.ts), `?hero=axo` the same mark drawn apart and
-       rebuilt in the studios' stages (hero/axo.ts); without any, the
-       particles */
+       object (hero/metal.ts); without any, the particles */
     const trial = new URLSearchParams(location.search).get('hero');
     /* the metal trial also lifts the dark ground a shade (styles/tokens) */
-    if (trial === 'metal' || trial === 'axo') document.documentElement.dataset.groundLift = '';
+    if (trial === 'metal') document.documentElement.dataset.groundLift = '';
     const load = () =>
       (trial === 'glass' || trial === 'frost'
         ? import('./hero/glass').then(({ createGlassHero }) => () => createGlassHero({ host, frost: trial === 'frost' }))
         : trial === 'metal'
           ? import('./hero/metal').then(({ createMetalHero }) => () => createMetalHero({ host }))
-          : trial === 'axo'
-            ? import('./hero/axo').then(({ createAxoHero }) => () => createAxoHero({ host }))
-            : import('./hero').then(({ createHero }) => () => createHero({ host })))
+          : import('./hero').then(({ createHero }) => () => createHero({ host })))
         .then((make) => {
           if (gone) return;               // it arrived after the reader left
           hero = make();
