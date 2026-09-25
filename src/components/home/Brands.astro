@@ -55,8 +55,8 @@ const first = Array.from({ length: SHOWN }, (_, i) => pool[i % pool.length]);
   /* six marks, three across, standing free: each centred in its own share
      of the row, with the row's air between them */
   .grid { list-style: none; margin: 0; padding: 0; display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); }
-  .grid li { display: grid; place-items: center; height: 7rem; padding: var(--s-4); }
+          grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 var(--s-6); }
+  .grid li { display: grid; place-items: center; height: 9rem; padding: var(--s-5) var(--s-4); }
   /* a hairline under every mark but those in the last row: three across,
      so the last three go without */
   .grid li:not(:nth-last-child(-n + 3)) { border-bottom: var(--hairline) solid var(--line); }
@@ -72,11 +72,11 @@ const first = Array.from({ length: SHOWN }, (_, i) => pool[i % pool.length]);
     .brands { grid-template-columns: minmax(0, 1fr); row-gap: var(--s-5); }
   }
   @media (max-width: 719px) {
-    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3); }
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--s-5); }
     /* two across here, so only the last two go without */
     .grid li:not(:nth-last-child(-n + 3)) { border-bottom: 0; }
     .grid li:not(:nth-last-child(-n + 2)) { border-bottom: var(--hairline) solid var(--line); }
-    .grid li { height: 6.5rem; }
+    .grid li { height: 7.5rem; }
     img { max-height: 2.5rem; }
   }
   @media (prefers-reduced-motion: reduce) { img { transition: none; } }
