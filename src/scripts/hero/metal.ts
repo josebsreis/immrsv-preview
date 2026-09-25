@@ -395,8 +395,10 @@ export function createMetalHero({ host }: MetalOptions): Hero {
        come back to the middle and close. It is never faded: the first
        studio, on the light, simply rides up over it. */
     const p = scrollY / innerHeight;
-    /* spread over most of two screens, so the surfaces leave slowly */
-    const leave = smooth(p / 1.6);
+    /* spread over most of two screens, so the surfaces leave slowly — but
+       starting at once: eased out, not in, so the first turn of the wheel
+       already lifts them, and they settle into their drift at the far end */
+    const leave = 1 - Math.pow(1 - clamp01(p / 1.6), 2.4);
     const back = handover ? smooth((innerHeight - handover.getBoundingClientRect().top) / (innerHeight * 0.85)) : 0;
     const covered = light ? light.getBoundingClientRect().top <= 0 : false;
     const vis = 1;
