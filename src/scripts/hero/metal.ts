@@ -187,19 +187,6 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   const rim = new THREE.DirectionalLight(0xff9a50, 1.2); rim.position.set(4, 2, -5); scene.add(rim);
   const cool = new THREE.DirectionalLight(0xbcd0ff, 0.9); cool.position.set(-4, 0, 4); scene.add(cool);
 
-  /* embers: a few warm sparks drifting slowly up through the dark */
-  const EMBERS = narrow ? 18 : 34;
-  const ember = new Float32Array(EMBERS * 3);
-  const seed = Array.from({ length: EMBERS }, (_, i) => {
-    const h = (k: number) => { const x = Math.sin((i + 1) * 12.9898 + k * 78.233) * 43758.5453; return x - Math.floor(x); };
-    return { x: (h(1) - 0.5) * 7, y: (h(2) - 0.5) * 5, z: (h(3) - 0.5) * 4 - 0.5, v: 0.05 + h(4) * 0.12, p: h(5) * 6.283 };
-  });
-  const emberGeo = new THREE.BufferGeometry();
-  emberGeo.setAttribute('position', new THREE.BufferAttribute(ember, 3));
-  const sparks = new THREE.Points(emberGeo, new THREE.PointsMaterial({
-    color: 0xff8a3c, size: 0.035, sizeAttenuation: true, transparent: true, opacity: 0.85,
-    blending: THREE.AdditiveBlending, depthWrite: false }));
-  scene.add(sparks);
 
   /* ── sizing: the mark about half the screen's shorter side ── */
   const fit = () => {
@@ -300,22 +287,13 @@ export function createMetalHero({ host }: MetalOptions): Hero {
 
     /* the room sways slowly, so the highlights travel over the metal */
     const sway = Math.sin(t * 0.15) * 0.35;
-    for (let i = 0; i < EMBERS; i++) {
-      const s0 = seed[i];
-      const y = ((s0.y + t * s0.v + 2.5) % 5) - 2.5;
-      ember[i * 3] = s0.x + Math.sin(t * 0.4 + s0.p) * 0.15;
-      ember[i * 3 + 1] = y;
-      ember[i * 3 + 2] = s0.z;
-    }
-    emberGeo.attributes.position.needsUpdate = true;
-    (sparks.material as THREE.PointsMaterial).opacity = 0.85 * ei * vis;
 
     /* the room is recorded once, and the reflection is turned in place:
        re-recording it was six more renders of the scene every frame */
     if (!recorded) {
-      mark.visible = false; sparks.visible = false;
+      mark.visible = false;
       cubeCam.update(renderer, scene);
-      mark.visible = true; sparks.visible = true;
+      mark.visible = true;
       scene.remove(room);             // recorded: nothing else needs it
       recorded = true;
     }
