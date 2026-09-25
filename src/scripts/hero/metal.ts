@@ -307,19 +307,17 @@ export function createMetalHero({ host }: MetalOptions): Hero {
      quicker and quicker, a streak and a flash as they pass through, then
      thrown out the other side and slowing. The part of anything behind the
      mark is drawn under the glass, the part in front over it. */
-  const THREADS = 3, RUNNERS = narrow ? 4 : 6, TRAIL = 12;
+  const THREADS = 3, RUNNERS = narrow ? 4 : 6, TRAIL = 28;
   const threadU = { uTime: { value: 0 }, uE: { value: 0 }, uShow: { value: 0 }, uPx: { value: 1 } };
   /* the same slow sway, here and in the shader, so the lights stay on their line */
   const SWAY = `
-    float tail = smoothstep(0.35, 3.5, abs(p.x));
-    float amp = tail * (0.1 + 0.35 * uE);
-    p.y += sin(uTime * 0.45 + p.x * 0.7 + aSeed * 6.28) * amp;
-    p.z += cos(uTime * 0.33 + p.x * 0.5 + aSeed * 4.1) * amp * 0.6;`;
+    float tail = smoothstep(0.4, 5.0, abs(p.x));
+    float amp = tail * (0.05 + 0.3 * uE);
+    p.y += sin(uTime * 0.4 + p.x * 0.22 + aSeed * 6.28) * amp;`;
   const sway = (v: THREE.Vector3, t: number, e: number, seed: number) => {
-    const tail = smooth((Math.abs(v.x) - 0.35) / 3.15);
-    const amp = tail * (0.1 + 0.35 * e);
-    v.y += Math.sin(t * 0.45 + v.x * 0.7 + seed * 6.28) * amp;
-    v.z += Math.cos(t * 0.33 + v.x * 0.5 + seed * 4.1) * amp * 0.6;
+    const tail = smooth((Math.abs(v.x) - 0.4) / 4.6);
+    const amp = tail * (0.05 + 0.3 * e);
+    v.y += Math.sin(t * 0.4 + v.x * 0.22 + seed * 6.28) * amp;
     return v;
   };
   const threadVert = `
@@ -370,31 +368,33 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   type Thread = { curve: THREE.CatmullRomCurve3; seed: number; hole: number };
   const lines: Thread[] = [];
   const threads = new THREE.Group();
+  /* All three the same way, left to right, on one clean form each: pinched
+     together in the opening and opening out like a bundle either side —
+     the top one rising away, the bottom one falling, the middle nearly
+     straight. Across in depth they pass through the tunnel on a slant and
+     level off, from behind on the left to in front on the right. Long
+     enough that, however the mark turns, their ends are never on screen. */
+  const HALF = 14, BEND = [-0.045, 0.008, 0.055];
   for (let i = 0; i < THREADS; i++) {
     const r = (q: number) => hash(i * 31.7 + q * 5.3 + 2);
-    /* the middle one the other way round: in from the right */
-    const s = i === 1 ? -1 : 1;
-    /* where it crosses the hollow: about its middle, a little apart from the others */
-    const yh = (i - 1) * 0.09, xh = (r(1) - 0.5) * 0.08;
-    /* the tails mostly level: side to side across the hero, a little up or down */
-    const yIn = (r(2) - 0.5) * 1.8, yOut = (r(3) - 0.5) * 1.8;
-    const curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-9 * s, yIn * 1.5, -5.5),
-      new THREE.Vector3(-3.2 * s, yIn * 0.7, -1.8),
-      new THREE.Vector3(-0.9 * s, yh + yIn * 0.12, -0.45),
-      new THREE.Vector3(xh - 0.12 * s, yh, -0.1),
-      new THREE.Vector3(xh + 0.12 * s, yh, 0.1),
-      new THREE.Vector3(0.9 * s, yh + yOut * 0.12, 0.45),
-      new THREE.Vector3(3.2 * s, yOut * 0.7, 1.6),
-      new THREE.Vector3(9 * s, yOut * 1.4, 3.8),
-    ], false, 'centripetal');
+    const yh = (i - 1) * 0.08, c = BEND[i];
+    const pts: THREE.Vector3[] = [];
+    for (let k = 0; k <= 160; k++) {
+      const x = -HALF + (2 * HALF * k) / 160;
+      /* the bundle opens steadily, then runs on straight towards the edges */
+      const reach = Math.sign(x) * Math.min(Math.abs(x), 4) + (Math.abs(x) > 4 ? Math.sign(x) * (Math.abs(x) - 4) * 0.5 : 0);
+      const y = yh + c * reach * reach;
+      const z = 1.0 * Math.tanh(x / 2);
+      pts.push(new THREE.Vector3(x, y, z));
+    }
+    const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
     /* the point of the line inside the opening: where it crosses the mark's middle plane */
     let hole = 0.5, best = Infinity;
     const v = new THREE.Vector3();
     for (let k = 0; k <= 800; k++) { const u = k / 800; curve.getPointAt(u, v); if (Math.abs(v.z) < best) { best = Math.abs(v.z); hole = u; } }
     const seed = r(4);
     lines.push({ curve, seed, hole });
-    const geo = new THREE.TubeGeometry(curve, 400, 0.0035, 5, false);
+    const geo = new THREE.TubeGeometry(curve, 900, 0.0035, 5, false);
     geo.setAttribute('aSeed', new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count).fill(seed), 1));
     const back = new THREE.Mesh(geo, threadBack), front = new THREE.Mesh(geo, threadFront);
     back.renderOrder = -1; front.renderOrder = 10;
@@ -419,7 +419,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   }
   /* how fast a light moves at a place on its line: a slow drift far out, and
      a pull that grows sharply towards the opening */
-  const pull = (d: number) => 0.035 + 0.006 / (d + 0.012);
+  const pull = (d: number) => 0.07 + 0.006 / (d + 0.012);
   const rv = new THREE.Vector3();
   const moveRunners = (dt: number, t: number, e: number) => {
     for (let k = 0; k < RUNNERS; k++) {
@@ -429,7 +429,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       if (rn.u > 1) rn.u -= 1;
       for (let j = 0; j < TRAIL; j++) {
         /* the tail: the same path, a little behind, by how fast it goes */
-        const u = rn.u - j * sp * 0.012;
+        const u = rn.u - j * sp * 0.005;
         const i = k * TRAIL + j;
         if (u < 0) { RG[i] = 0; continue; }
         sway(ln.curve.getPointAt(u, rv), t, e, ln.seed).toArray(RP, i * 3);
