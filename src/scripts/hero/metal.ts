@@ -7,7 +7,7 @@
    edge to catch the light, each face its own piece. The material is
    dark polished metal that lets a third of the light through, under a
    clear coat. What makes it read as expensive is what it reflects: a
-   camera inside the scene records the room every frame — a few soft
+   camera inside the scene records the room once — a few soft
    bright strips — and the mark mirrors that,
    so its highlights move as it turns. The pieces breathe apart and back
    together, the whole leans towards the pointer, and a piece under the
@@ -32,7 +32,9 @@ const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 export function createMetalHero({ host }: MetalOptions): Hero {
   const narrow = matchMedia('(max-width: 719px)').matches;
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, narrow ? 1.5 : 2));
+  /* a little under a retina screen's own resolution: the edges are soft
+     and dark, and the difference cannot be seen, only paid for */
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, narrow ? 1.25 : 1.5));
   renderer.setSize(innerWidth, innerHeight, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -69,7 +71,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   scene.add(room);
 
 
-  /* the camera inside: six small renders of the room, every frame */
+  /* the camera inside: six small renders of the room, made once */
   const cubeRT = new THREE.WebGLCubeRenderTarget(narrow ? 128 : 256, { generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
   const cubeCam = new THREE.CubeCamera(0.1, 100, cubeRT);
   cubeCam.children.forEach((c) => c.layers.enable(ROOM));
@@ -82,7 +84,10 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   const S = 1 / 100;
   const baseMat = new THREE.MeshPhysicalMaterial({
     color: 0x3a3d42, emissive: new THREE.Color(0x0e1320), emissiveIntensity: 0.15,
-    metalness: 1, roughness: 0.08, transmission: 0.35, ior: 2.4, thickness: 0.4,
+    /* no `transmission`: it draws the whole scene a second time every frame
+       to fake light passing through, and on a black ground plain
+       transparency reads the same */
+    metalness: 1, roughness: 0.08,
     transparent: true, opacity: 0.72, clearcoat: 1, clearcoatRoughness: 0.05,
     envMap: cubeRT.texture, envMapIntensity: 3, side: THREE.DoubleSide, depthWrite: false,
   });
@@ -149,10 +154,12 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   const onMove = (e: PointerEvent) => {
     tmx = (e.clientX / innerWidth) * 2 - 1; tmy = -(e.clientY / innerHeight) * 2 + 1;
     ndc.set(tmx, tmy);
+    moved = true;
   };
   addEventListener('pointermove', onMove, { passive: true });
 
-  let out = 0, exit = 0, released = false, intro = 0, raf = 0, gone = false;
+  let out = 0, exit = 0, released = false, intro = 0, raf = 0, gone = false, recorded = false;
+  let moved = false;
   const clock = new THREE.Clock();
 
   const frame = () => {
@@ -173,11 +180,15 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     /* the pieces: in from far apart as the page arrives, breathing at rest,
        and parting again on the way out */
     const apart = (1 - ei) * 1.4 + BREATHE * (0.5 + 0.5 * Math.sin(t * 0.8)) + exit * 1.2;
-    ray.setFromCamera(ndc, camera);
-    const hit = ray.intersectObjects(pieces.map((p) => p.mesh), false)[0];
-    const now = hit ? pieces.find((p) => p.mesh === hit.object) ?? null : null;
-    if (now && now !== hovered) now.flash = 1;
-    hovered = now;
+    /* which piece is under the pointer: asked only when it has moved */
+    if (moved) {
+      moved = false;
+      ray.setFromCamera(ndc, camera);
+      const hit = ray.intersectObjects(pieces.map((p) => p.mesh), false)[0];
+      const now = hit ? pieces.find((p) => p.mesh === hit.object) ?? null : null;
+      if (now && now !== hovered) now.flash = 1;
+      hovered = now;
+    }
     for (const p of pieces) {
       p.mesh.position.copy(p.dir).multiplyScalar(apart);
       p.mesh.position.z = (1 - ei) * -1.2;
@@ -185,13 +196,12 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       const f = p.flash;
       p.mat.envMapIntensity = 3 + 1.6 * f;
       p.mat.roughness = Math.max(0.02, 0.08 - 0.06 * f);
-      p.mat.transmission = 0.35 + 0.32 * f;
       p.mat.emissiveIntensity = 0.15 + 0.1 * f;
       p.mat.opacity = (0.88 - 0.16 * f) * ei;
     }
 
-    /* the room turns slowly, so the highlights travel over the metal */
-    room.rotation.y = Math.sin(t * 0.15) * 0.35;
+    /* the room sways slowly, so the highlights travel over the metal */
+    const sway = Math.sin(t * 0.15) * 0.35;
     for (let i = 0; i < EMBERS; i++) {
       const e = seed[i];
       const y = ((e.y + t * e.v + 2.5) % 5) - 2.5;
@@ -202,11 +212,16 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     emberGeo.attributes.position.needsUpdate = true;
     (sparks.material as THREE.PointsMaterial).opacity = 0.85 * ei;
 
-    /* the room is recorded without the mark in it, then the picture drawn */
-    mark.visible = false;
-    cubeCam.position.copy(mark.position);
-    cubeCam.update(renderer, scene);
-    mark.visible = true;
+    /* the room is recorded once, and the reflection is turned in place:
+       re-recording it was six more renders of the scene every frame */
+    if (!recorded) {
+      mark.visible = false; sparks.visible = false;
+      cubeCam.update(renderer, scene);
+      mark.visible = true; sparks.visible = true;
+      scene.remove(room);             // recorded: nothing else needs it
+      recorded = true;
+    }
+    for (const p of pieces) p.mat.envMapRotation.set(0, sway, 0);
     renderer.domElement.style.opacity = String(1 - out);
     renderer.render(scene, camera);
     if (out < 0.999) raf = requestAnimationFrame(frame);
