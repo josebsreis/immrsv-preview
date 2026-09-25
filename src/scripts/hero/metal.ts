@@ -56,8 +56,30 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   /* ── the room it reflects: seen only by the camera inside the scene ── */
   const ROOM = 1;
   const room = new THREE.Group();
+  /* Every light is a soft glow, bright in its middle and fading to nothing
+     at its edges: a hard-edged panel mirrored in a smooth face showed as
+     the panel — its corners and its straight sides — and read as cheap.
+     A softbox photographed is a glow, not a rectangle. */
+  const glow = (() => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 128;
+    const g = c.getContext('2d')!;
+    const img = g.createImageData(128, 128);
+    for (let y = 0; y < 128; y++) for (let x = 0; x < 128; x++) {
+      const u = Math.abs(x / 63.5 - 1), v = Math.abs(y / 63.5 - 1);
+      const f = Math.pow(Math.max(0, 1 - u * u), 1.6) * Math.pow(Math.max(0, 1 - v * v), 1.6);
+      const i = (y * 128 + x) * 4;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
+      img.data[i + 3] = Math.round(f * 255);
+    }
+    g.putImageData(img, 0, 0);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  })();
   const strip = (w: number, h: number, x: number, y: number, z: number, ry: number, rz = 0, k = 1) => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(k, k, k * 1.04), side: THREE.DoubleSide }));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({
+      color: new THREE.Color(k, k, k * 1.04), map: glow, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
     m.position.set(x, y, z); m.rotation.set(0, ry, rz); m.layers.set(ROOM); room.add(m); return m;
   };
   /* The room is black. Theirs reads as premium because the faces stay
@@ -72,9 +94,13 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   (gold.material as THREE.MeshBasicMaterial).color.setRGB(1.0, 0.62, 0.26);
   /* one narrow cool glint behind the viewer, that slides across a face as
      it turns, and a thin one to either side for the vertical edges */
-  strip(0.35, 14, -1.8, 0, 9, 0, 0.1, 0.9);
-  strip(0.25, 12, -7, 0, 0, Math.PI / 2, 0, 0.7);
-  strip(0.25, 12, 7, 0, 0, -Math.PI / 2, 0, 0.55);
+  strip(1.2, 16, -1.8, 0, 9, 0, 0.1, 0.9);
+  /* and a large soft one behind the viewer, off to one side, for the big
+     faces: they look straight back, and this is what they see — a wide
+     glow that slides across them as the mark turns */
+  strip(9, 11, 3.2, 1.5, 9, 0, 0, 0.38);
+  strip(1.1, 14, -7, 0, 0, Math.PI / 2, 0, 0.7);
+  strip(1.1, 14, 7, 0, 0, -Math.PI / 2, 0, 0.55);
   scene.add(room);
 
 
@@ -94,8 +120,10 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     /* no `transmission`: it draws the whole scene a second time every frame
        to fake light passing through, and on a black ground plain
        transparency reads the same */
-    metalness: 1, roughness: 0.08,
-    transparent: true, opacity: 0.72, clearcoat: 1, clearcoatRoughness: 0.05,
+    /* smooth, but not a mirror: enough roughness that what it reflects is a
+       blur of light, the way satin metal takes a softbox */
+    metalness: 1, roughness: 0.2,
+    transparent: true, opacity: 0.72, clearcoat: 1, clearcoatRoughness: 0.14,
     envMap: cubeRT.texture, envMapIntensity: 3, side: THREE.DoubleSide, depthWrite: false,
   });
 
@@ -437,7 +465,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       pc.flash *= 0.92;
       const f = pc.flash;
       pc.mat.envMapIntensity = 3 + 1.6 * f;
-      pc.mat.roughness = Math.max(0.02, 0.08 - 0.06 * f);
+      pc.mat.roughness = Math.max(0.08, 0.2 - 0.1 * f);
       pc.mat.emissiveIntensity = 0.15 + 0.1 * f;
       pc.mat.opacity = (0.88 - 0.16 * f) * vis * (1 - e * 0.35);
       /* the outline brightens as the surfaces leave it */
