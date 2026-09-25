@@ -95,55 +95,104 @@ export function createMetalHero({ host }: MetalOptions): Hero {
     envMap: cubeRT.texture, envMapIntensity: 3, side: THREE.DoubleSide, depthWrite: false,
   });
 
-  /* A piece is split into its surfaces — each flat face and each strip of
-     the bevel its own mesh — so that they can come away one by one and
-     leave the piece's outline standing where it was. Triangles are grouped
-     by the plane they lie in; a surface is moved about its own middle. */
-  type Surface = { mesh: THREE.Mesh; home: THREE.Vector3; out: THREE.Vector3; axis: THREE.Vector3; spin: number; lag: number };
+  /* A piece comes apart into its surfaces — each flat face and each strip
+     of the bevel — and they leave one by one, the outline left standing.
+     It stays ONE mesh throughout: every vertex carries which surface it
+     belongs to (that surface's middle, where it flies to, how it turns and
+     when it goes), and the graphics card moves them. Split into separate
+     meshes, the see-through faces were blended in a different order the
+     moment the break-up began and the reflections jumped; one mesh, in the
+     triangle order of the whole, looks exactly the same at rest and costs
+     one draw instead of dozens. Triangles are grouped by the plane they lie
+     in. */
   const hash = (n: number) => { const x = Math.sin(n * 12.9898) * 43758.5453; return x - Math.floor(x); };
-  const split = (geo: THREE.BufferGeometry, mat: THREE.Material, seed: number): Surface[] => {
+  const burstable = (geo: THREE.BufferGeometry, seed: number) => {
     const g = geo.index ? geo.toNonIndexed() : geo;
     const pos = g.attributes.position.array as ArrayLike<number>;
     const nrm = g.attributes.normal.array as ArrayLike<number>;
-    const groups = new Map<string, number[]>();
+    const tris = pos.length / 9;
+    /* which surface each triangle is on */
+    const keyOf: string[] = [];
+    const members = new Map<string, number[]>();
     const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), n = new THREE.Vector3();
-    for (let t = 0; t < pos.length / 9; t++) {
+    for (let t = 0; t < tris; t++) {
       a.fromArray(pos, t * 9); b.fromArray(pos, t * 9 + 3); c.fromArray(pos, t * 9 + 6);
       n.subVectors(c, b).cross(a.clone().sub(b)).normalize();
-      if (!Number.isFinite(n.x)) continue;
-      const d = n.dot(a);
-      const key = `${Math.round(n.x * 12)},${Math.round(n.y * 12)},${Math.round(n.z * 12)},${Math.round(d * 40)}`;
-      (groups.get(key) ?? groups.set(key, []).get(key)!).push(t);
+      const key = Number.isFinite(n.x)
+        ? `${Math.round(n.x * 12)},${Math.round(n.y * 12)},${Math.round(n.z * 12)},${Math.round(n.dot(a) * 40)}`
+        : `degenerate-${t}`;
+      keyOf.push(key);
+      (members.get(key) ?? members.set(key, []).get(key)!).push(t);
     }
-    const out: Surface[] = [];
+    /* each surface: its middle, where it goes, how it turns, when */
+    type Plan = { home: THREE.Vector3; out: THREE.Vector3; axis: THREE.Vector3; spin: number; lag: number };
+    const plans = new Map<string, Plan>();
     let k = 0;
-    for (const tris of groups.values()) {
-      const P = new Float32Array(tris.length * 9), N = new Float32Array(tris.length * 9);
-      tris.forEach((t, i) => { for (let j = 0; j < 9; j++) { P[i * 9 + j] = pos[t * 9 + j]; N[i * 9 + j] = nrm[t * 9 + j]; } });
-      const sg = new THREE.BufferGeometry();
-      sg.setAttribute('position', new THREE.BufferAttribute(P, 3));
-      sg.setAttribute('normal', new THREE.BufferAttribute(N, 3));
-      sg.computeBoundingBox();
-      const home = new THREE.Vector3(); sg.boundingBox!.getCenter(home);
-      sg.translate(-home.x, -home.y, -home.z);
-      const face = new THREE.Vector3(N[0], N[1], N[2]).normalize();
+    const box = new THREE.Box3();
+    for (const [key, list] of members) {
+      box.makeEmpty();
+      for (const t of list) for (let v = 0; v < 3; v++) box.expandByPoint(a.fromArray(pos, t * 9 + v * 3));
+      const home = box.getCenter(new THREE.Vector3());
+      const face = new THREE.Vector3().fromArray(nrm, list[0] * 9).normalize();
       const r = (q: number) => hash(seed * 97 + k * 13 + q);
-      /* out along its own face, a little off it, and further for some */
       /* A long way: out across the screen, not just off the middle — most of
          the way to the edges, and some right past them. Mostly across the
          page's plane; a little towards or away, never through the viewer. */
       const ang = r(1) * Math.PI * 2;
       const reach = 0.9 + Math.pow(r(2), 1.6) * 4.2;
-      const dir = new THREE.Vector3(Math.cos(ang) * reach * 1.35, Math.sin(ang) * reach, (r(3) - 0.6) * 3.2)
-        .add(face.clone().multiplyScalar(0.8));
-      const mesh = new THREE.Mesh(sg, mat);
-      mesh.position.copy(home);
-      out.push({ mesh, home, out: dir,
-                 axis: new THREE.Vector3(r(5) - 0.5, r(6) - 0.5, r(7) - 0.5).normalize(),
-                 spin: (r(8) - 0.5) * 4, lag: r(9) * 0.55 });
+      const out = new THREE.Vector3(Math.cos(ang) * reach * 1.35, Math.sin(ang) * reach, (r(3) - 0.6) * 3.2)
+        .add(face.multiplyScalar(0.8));
+      plans.set(key, { home, out, axis: new THREE.Vector3(r(5) - 0.5, r(6) - 0.5, r(7) - 0.5).normalize(),
+                       spin: (r(8) - 0.5) * 4, lag: r(9) * 0.55 });
       k++;
     }
+    /* the whole's own triangle order, each vertex written about its surface */
+    const P = new Float32Array(tris * 9), H = new Float32Array(tris * 9), O = new Float32Array(tris * 9),
+          X = new Float32Array(tris * 9), SP = new Float32Array(tris * 3), LG = new Float32Array(tris * 3);
+    for (let t = 0; t < tris; t++) {
+      const pl = plans.get(keyOf[t])!;
+      for (let v = 0; v < 3; v++) {
+        const i = t * 3 + v;
+        P[i * 3] = pos[i * 3] - pl.home.x; P[i * 3 + 1] = pos[i * 3 + 1] - pl.home.y; P[i * 3 + 2] = pos[i * 3 + 2] - pl.home.z;
+        pl.home.toArray(H, i * 3); pl.out.toArray(O, i * 3); pl.axis.toArray(X, i * 3);
+        SP[i] = pl.spin; LG[i] = pl.lag;
+      }
+    }
+    const out = new THREE.BufferGeometry();
+    out.setAttribute('position', new THREE.BufferAttribute(P, 3));
+    out.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(nrm as ArrayLike<number> as Float32Array), 3));
+    out.setAttribute('aHome', new THREE.BufferAttribute(H, 3));
+    out.setAttribute('aOut', new THREE.BufferAttribute(O, 3));
+    out.setAttribute('aAxis', new THREE.BufferAttribute(X, 3));
+    out.setAttribute('aSpin', new THREE.BufferAttribute(SP, 1));
+    out.setAttribute('aLag', new THREE.BufferAttribute(LG, 1));
     return out;
+  };
+
+  /* the break-up, in the vertex shader: each vertex turned about its
+     surface's middle and carried out along that surface's path, by how far
+     the mark is apart (uE) — each surface on its own clock */
+  const teach = (mat: THREE.MeshPhysicalMaterial) => {
+    const u = { uE: { value: 0 }, uDrift: { value: 0 } };
+    mat.onBeforeCompile = (shader) => {
+      Object.assign(shader.uniforms, u);
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', `#include <common>
+          uniform float uE; uniform float uDrift;
+          attribute vec3 aHome; attribute vec3 aOut; attribute vec3 aAxis; attribute float aSpin; attribute float aLag;
+          vec3 burstTurn(vec3 v, vec3 k, float a) { float c = cos(a), s = sin(a); return v * c + cross(k, v) * s + k * dot(k, v) * (1.0 - c); }`)
+        .replace('#include <beginnormal_vertex>', `
+          float bx = clamp((uE - aLag) / (1.0 - aLag), 0.0, 1.0);
+          float bk = bx * bx * (3.0 - 2.0 * bx);
+          float ba = aSpin * bk * (1.0 + uDrift * 0.3);
+          vec3 objectNormal = burstTurn(vec3(normal), aAxis, ba);
+          #ifdef USE_TANGENT
+            vec3 objectTangent = vec3( tangent.xyz );
+          #endif`)
+        .replace('#include <begin_vertex>', `vec3 transformed = burstTurn(vec3(position), aAxis, ba) + aHome + aOut * bk;`);
+    };
+    mat.customProgramCacheKey = () => 'burst';
+    return u;
   };
 
   /* The outline, from the logo's own shape rather than read off the solid:
@@ -174,7 +223,7 @@ export function createMetalHero({ host }: MetalOptions): Hero {
 
   const mark = new THREE.Group();
   type Piece = { group: THREE.Group; mat: THREE.MeshPhysicalMaterial; edges: THREE.LineBasicMaterial;
-                 dir: THREE.Vector3; whole: THREE.Mesh; surfaces: Surface[]; flash: number };
+                 dir: THREE.Vector3; burst: { uE: { value: number }; uDrift: { value: number } }; flash: number };
   const pieces: Piece[] = [];
   const hitList: THREE.Mesh[] = [];
   const owner = new Map<THREE.Object3D, Piece>();
@@ -193,13 +242,15 @@ export function createMetalHero({ host }: MetalOptions): Hero {
          glass — and what is left standing when the surfaces come away */
       const edgeMat = new THREE.LineBasicMaterial({ color: 0x8c96a6, transparent: true, opacity: 0.3, depthTest: false });
       group.add(new THREE.LineSegments(outline(shape), edgeMat));
-      /* whole, the piece is one mesh — one draw instead of dozens — and
-         its surfaces are only shown while it is coming apart */
-      const whole = new THREE.Mesh(geo, mat);
-      const surfaces = split(geo, mat, pi + 1);
-      const piece: Piece = { group, mat, edges: edgeMat, dir: c.clone().setZ(0).normalize(), whole, surfaces, flash: 0 };
-      group.add(whole); hitList.push(whole); owner.set(whole, piece);
-      for (const sf of surfaces) { sf.mesh.visible = false; group.add(sf.mesh); owner.set(sf.mesh, piece); }
+      /* one mesh, that comes apart in the vertex shader; and the solid as it
+         is, never drawn, for the pointer to find */
+      const burst = teach(mat);
+      const mesh = new THREE.Mesh(burstable(geo, pi + 1), mat);
+      mesh.frustumCulled = false;
+      const probe = new THREE.Mesh(geo, mat);
+      probe.visible = false;
+      const piece: Piece = { group, mat, edges: edgeMat, dir: c.clone().setZ(0).normalize(), burst, flash: 0 };
+      group.add(mesh, probe); hitList.push(probe); owner.set(probe, piece);
       mark.add(group);
       pieces.push(piece);
     }
@@ -238,7 +289,6 @@ export function createMetalHero({ host }: MetalOptions): Hero {
   let released = false, intro = 0, raf = 0, gone = false, recorded = false;
   let moved = false;
   const clock = new THREE.Clock();
-  const q = new THREE.Quaternion();
   /* the section that brings it back together, and the light half that ends it */
   const handover = document.getElementById('studios-title')?.closest('section') ?? null;
   const light = document.querySelector<HTMLElement>('[data-light]');
@@ -300,16 +350,8 @@ export function createMetalHero({ host }: MetalOptions): Hero {
       /* the outline is only there while the mark is apart: whole, it is the
          solid alone */
       pc.edges.opacity = 0.3 * smooth(e * 1.6) * vis;
-      const apart = e > 0.002;
-      pc.whole.visible = !apart;
-      for (const sf of pc.surfaces) {
-        sf.mesh.visible = apart;
-        if (!apart) continue;
-        /* each surface on its own clock, so they leave one after another */
-        const k = smooth((e - sf.lag) / (1 - sf.lag));
-        sf.mesh.position.copy(sf.home).addScaledVector(sf.out, k);
-        sf.mesh.quaternion.copy(q.setFromAxisAngle(sf.axis, sf.spin * k + drift * sf.spin * 0.3 * k));
-      }
+      pc.burst.uE.value = e;
+      pc.burst.uDrift.value = drift;
     }
 
     /* the room sways slowly, so the highlights travel over the metal */
