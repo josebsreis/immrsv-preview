@@ -68,14 +68,32 @@ const reelFor = (key: string): Shot[] => {
 /** all three on the light: what tells one from the next, as the top one
  *  is lifted away, is the shadow it casts on the one beneath */
 const grounds = ['light', 'light', 'light'] as const;
+/* the selected work's dial, brought here: two rings of small ticks round
+   the section's name, the same drawing at a smaller size (units are the
+   viewBox's; the stroke is a hairline whatever size it is drawn at) */
+const DIAL_RINGS = [800, 920];
+const DIAL_SPACING = 30, DIAL_TICK = 20;
+const dialRings = DIAL_RINGS.map((r, k) => {
+  const count = Math.round((2 * Math.PI * r) / DIAL_SPACING);
+  const phase = k % 2 ? Math.PI / count : 0;
+  let d = '';
+  for (let t = 0; t < count; t++) {
+    const a = phase + (t / count) * Math.PI * 2;
+    const c = Math.cos(a), si = Math.sin(a);
+    d += `M${(c * r).toFixed(1)} ${(si * r).toFixed(1)}L${(c * (r + DIAL_TICK)).toFixed(1)} ${(si * (r + DIAL_TICK)).toFixed(1)}`;
+  }
+  return d;
+});
 ---
 {content.items.length > 0 && (
   <div class="studios">
-    <!-- the studios announced: the name and the line that says why,
-         centred over the three -->
-    <div class="head">
+    <!-- the studios announced: the name alone, inside the selected work's
+         dial, its two rings turning against each other with the scroll -->
+    <div class="head" data-studios-dial>
+      <svg class="dial" viewBox="-1000 -1000 2000 2000" aria-hidden="true" focusable="false">
+        {dialRings.map((d, k) => <path class="ring" data-dial-ring={k} d={d} />)}
+      </svg>
       <h2 data-blur-in>{content.title}</h2>
-      <p class="intro" data-rise>{content.intro}</p>
     </div>
     <!-- the stack carries a ground from the start: the nav reads the page's
          themed sections once, before any script has run, so a ground the
@@ -170,13 +188,16 @@ const grounds = ['light', 'light', 'light'] as const;
      — a hairline, the page's own way of parting things, not a shadow. */
   .stack[data-live] .studio { border-bottom: var(--hairline) solid var(--line); }
 
-  /* ── the name ── centred, the way the other work section opens: the
-     three that follow are announced as one, not as a column beside them */
-  .head { text-align: center; padding: var(--section-y) 0 var(--s-8); }
-  .head h2 { margin: 0; font-size: var(--t-h2); font-weight: var(--w-display);
+  /* ── the name ── centred inside the dial, the dial as tall as the
+     screen allows and a hair off the rule of the first panel */
+  .head { position: relative; display: grid; place-items: center;
+          height: min(40rem, 88vw, 86svh); margin: var(--section-y) 0 var(--s-6); }
+  .head h2 { position: relative; margin: 0; text-align: center; font-size: var(--t-h2); font-weight: var(--w-display);
              line-height: var(--lh-display); letter-spacing: var(--track-display); color: var(--ink); }
-  .head .intro { max-width: 42ch; margin: var(--s-4) auto 0; text-wrap: balance;
-                 font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-3); }
+  .head .dial { position: absolute; inset: 0; margin: auto; height: 100%; width: auto; aspect-ratio: 1;
+                pointer-events: none; fill: none; stroke: var(--ink-4); stroke-width: 1; }
+  .head .ring { vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center;
+                will-change: transform; }
 
   /* ── a panel ─────────────────────────────────────────────────────────
      A screen each, its content pinned to the top and the foot with the
