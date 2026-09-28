@@ -29,11 +29,13 @@ const CLEAR = 26;
 
 /** where in the scroll each thing happens */
 const T = {
-  spread: [0.02, 0.24] as const,              // the light opens from the middle, she
-                                              // already standing in it, and the two
-                                              // lines part round it as it grows
-  play: [0.25, 0.9] as const,                 // the frames run, once the light is open
-  beat: 0.3,                                  // the first step begins its pass here…
+  team: [0.0, 0.05] as const,                 // your team: four squares, 'YOUR TEAM,'
+  join: [0.05, 0.11] as const,                // they part, one more joins in the middle,
+                                              // 'EXTENDED.'
+  spread: [0.12, 0.32] as const,              // the new one opens into the light, she
+                                              // standing in it, pushing the lines off
+  play: [0.33, 0.9] as const,                 // the frames run, once the light is open
+  beat: 0.36,                                  // the first step begins its pass here…
   last: 0.93,                                 // …and the last is gone by here, the rest
                                               // spread evenly between, however many
   life: 0.17,                                 // how long one takes to cross — longer
@@ -59,6 +61,7 @@ export function createForming(root: HTMLElement): Forming {
   const canvas = box?.querySelector<HTMLCanvasElement>('canvas');
   if (!track || !win || !box || !canvas) return { update() {}, destroy() {} };
   const halves = [...root.querySelectorAll<HTMLElement>('[data-forming-half]')];
+  const squares = [...root.querySelectorAll<HTMLElement>('[data-forming-team] i')];
   const beats = [...root.querySelectorAll<HTMLElement>('[data-forming-beat]')];
   const ctx = canvas.getContext('2d');
   if (!ctx) return { update() {}, destroy() {} };
@@ -104,7 +107,7 @@ export function createForming(root: HTMLElement): Forming {
      The slot is placed in fractions of the screen and then pinned to whole
      pixels, because its edge and the light ground's edge have to be the
      same edge: half a pixel of disagreement is a grey hairline. */
-  let w = 0, h = 0, sx = 0, sy = 0, sw = 0, sh = 0, leanMax = 0;
+  let w = 0, h = 0, sx = 0, sy = 0, sw = 0, sh = 0, leanMax = 0, sq = 40;
   /** where each of the two lines stands, joined and parted */
   const joined = [0, 0], apart = [0, 0], heights = [0, 0];
   const size = () => {
@@ -132,13 +135,19 @@ export function createForming(root: HTMLElement): Forming {
        is the face's business, her height is the screen's, and she does not
        always stand at the middle of it — on a phone she is lifted to leave
        the foot of the screen to the card that is passing. */
+    if (squares[2]) {
+      squares[2].style.transform = 'none';
+      sq = squares[2].getBoundingClientRect().width || sq;
+      squares[2].style.transform = '';
+    }
     if (halves.length === 2) {
       const mid = sy + sh / 2 - h / 2;
       for (let i = 0; i < 2; i++) {
         const el = halves[i], sign = i ? 1 : -1;
         const lh = el.getBoundingClientRect().height;
         heights[i] = lh;
-        joined[i] = sign * lh * 0.55;
+        // over the row and under it, clear of the squares
+        joined[i] = sign * (sq / 2 + lh / 2 + 22);
         apart[i] = mid + sign * (sh / 2 + CLEAR + lh / 2);
       }
     }
@@ -180,12 +189,31 @@ export function createForming(root: HTMLElement): Forming {
     if (p === last) return;
     last = p;
 
-    // the ground: the mark's five pixels at the middle of the screen, opened
-    // until its four edges have left it
+    /* The row: four of yours come in, one after another; then they step
+       apart from the middle and ours arrives in the gap, dropping into place. */
+    const slot = sq * 1.5;
+    const t = ramp(p, T.team[0], T.team[1]), j = inOut(ramp(p, T.join[0], T.join[1]));
+    const home = [-1.5, -0.5, 0, 0.5, 1.5], parted = [-2, -1, 0, 1, 2];
+    squares.forEach((el, i) => {
+      if (i === 2) {
+        el.style.setProperty('--o', j > 0 ? '1' : '0');
+        el.style.setProperty('--y', `${(-(1 - j) * sq * 1.6).toFixed(1)}px`);
+        el.style.setProperty('--s', (0.4 + 0.6 * j).toFixed(3));
+        return;
+      }
+      const n = i < 2 ? i : i - 1;
+      const a = clamp01(t * 4 - n * 0.9);
+      el.style.setProperty('--o', inOut(a).toFixed(3));
+      el.style.setProperty('--x', `${((home[i] + (parted[i] - home[i]) * j) * slot).toFixed(1)}px`);
+      el.style.setProperty('--y', `${((1 - inOut(a)) * sq * 0.6).toFixed(1)}px`);
+    });
+
+    // the ground: our square, opened until its four edges have left the screen
     const g = inOut(ramp(p, T.spread[0], T.spread[1]));
     const k = 1 - g;
     root.style.setProperty('--g', g.toFixed(3));
-    const gx = (w - 5) / 2, gy = (h - 5) / 2;
+    const gx = (w - sq) / 2, gy = (h - sq) / 2;
+    win.style.visibility = g > 0 ? '' : 'hidden';
     win.style.clipPath = g >= 1 ? 'none'
       : `inset(${(gy * k).toFixed(1)}px ${(gx * k).toFixed(1)}px ${(gy * k).toFixed(1)}px ${(gx * k).toFixed(1)}px)`;
     // the nav takes the ground it stands on, and this section changes its
@@ -201,6 +229,8 @@ export function createForming(root: HTMLElement): Forming {
     const cl = Math.max(0, wl - sx), cr = Math.max(0, (sx + sw) - (w - wl));
     box.style.clipPath = g >= 1 ? 'none' : ct >= sh / 2 || cl >= sw / 2 ? 'inset(50%)'
       : `inset(${ct.toFixed(1)}px ${cr.toFixed(1)}px ${cb.toFixed(1)}px ${cl.toFixed(1)}px)`;
+    // she comes up in the light as it opens, not as a dark patch in a square
+    box.style.opacity = inOut(ramp(g, 0.12, 0.45)).toFixed(3);
 
     /* The two lines are there from the start, one sentence on the dark, and
        part as the light opens — pushed up and down by it and off the screen. */
@@ -211,7 +241,8 @@ export function createForming(root: HTMLElement): Forming {
     halves.forEach((el, i) => {
       const lh = heights[i];
       const m = Math.max(Math.abs(joined[i]), edge + lh * 0.6 + CLEAR * 0.6);
-      el.style.setProperty('--v', '1');
+      // 'YOUR TEAM,' with the four; 'EXTENDED.' as ours joins
+      el.style.setProperty('--v', (i === 0 ? inOut(ramp(p, 0, 0.03)) : j).toFixed(3));
       el.style.setProperty('--dy', `${(Math.sign(apart[i]) * m).toFixed(1)}px`);
     });
 
