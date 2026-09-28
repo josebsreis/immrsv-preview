@@ -40,9 +40,9 @@ const T = {
   merge: [0.085, 0.125] as const,             // the five draw together into one
   spread: [0.13, 0.3] as const,               // and that one opens into the light, she
                                               // standing in it, pushing the lines off
-  play: [0.31, 0.97] as const,                 // the frames run, once the light is open
+  play: [0.31, 0.93] as const,                 // the frames run, once the light is open
   beat: 0.34,                                  // the first step begins its pass here…
-  last: 0.99,                                 // …and the last is gone by here, the rest
+  last: 0.87,                                 // …and the last is gone by here, the rest
                                               // spread evenly between, however many
   life: 0.17,                                 // how long one takes to cross — longer
                                               // than the gap, so two are always going
