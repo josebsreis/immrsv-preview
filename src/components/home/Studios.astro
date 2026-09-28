@@ -71,9 +71,12 @@ const grounds = ['light', 'light', 'light'] as const;
 ---
 {content.items.length > 0 && (
   <div class="studios">
-    <!-- the section's name and its index stand on the dark half, the screen
-         before this (components/home/StudiosIndex.astro); the panels are
-         what that screen promised -->
+    <!-- the studios announced, the way every section is: the name at the
+         left, the line that says why at the right — then the three -->
+    <div class="head">
+      <h2 data-blur-in>{content.title}</h2>
+      <p class="intro" data-rise>{content.intro}</p>
+    </div>
     <!-- the stack carries a ground from the start: the nav reads the page's
          themed sections once, before any script has run, so a ground the
          stack only gave itself later was never read at all -->
@@ -162,11 +165,24 @@ const grounds = ['light', 'light', 'light'] as const;
      place in the flow, and the stack's own height is what holds the scroll
      open. */
   .stack[data-live] .studio + .studio { margin-top: -100svh; }
-  /* Three panels on one ground: the one being lifted casts a soft shadow
-     down onto the one beneath, so its edge reads as an edge — a sheet
-     coming off a stack — rather than the two grounds merging. The last has
-     nothing under it to shadow. */
-  .stack[data-live] .studio:not(:last-child) { box-shadow: 0 1.5rem 3.5rem rgb(0 0 0 / 0.16), 0 0.25rem 0.75rem rgb(0 0 0 / 0.06); }
+  /* Three panels on one ground: the one being lifted away is edged by a
+     rule, so its edge reads as an edge rather than the two grounds merging
+     — a hairline, the page's own way of parting things, not a shadow. */
+  .stack[data-live] .studio { border-bottom: var(--hairline) solid var(--line); }
+
+  /* ── the name ── */
+  .head { display: grid; grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
+          column-gap: var(--col-gap); align-items: center;
+          padding: var(--section-y) 0 var(--s-8); }
+  .head h2 { margin: 0; width: min-content; font-size: var(--t-h2); font-weight: var(--w-display);
+             line-height: var(--lh-display); letter-spacing: var(--track-display); color: var(--ink); }
+  .head .intro { grid-column: 2; margin: 0; max-width: 34ch; font-size: var(--t-body);
+                 line-height: var(--lh-body); color: var(--ink-3); }
+  @media (max-width: 859px) {
+    .head { grid-template-columns: 1fr; gap: var(--s-4); }
+    .head h2 { width: auto; }
+    .head .intro { grid-column: 1; }
+  }
 
   /* ── a panel ─────────────────────────────────────────────────────────
      A screen each, its content pinned to the top and the foot with the
