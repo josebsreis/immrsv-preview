@@ -63,6 +63,7 @@ export function createForming(root: HTMLElement): Forming {
   if (!track || !win || !box || !canvas) return { update() {}, destroy() {} };
   const halves = [...root.querySelectorAll<HTMLElement>('[data-forming-half]')];
   const squares = [...root.querySelectorAll<HTMLElement>('[data-forming-team] i')];
+  const note = root.querySelector<HTMLElement>('.note');
   const beats = [...root.querySelectorAll<HTMLElement>('[data-forming-beat]')];
   const ctx = canvas.getContext('2d');
   if (!ctx) return { update() {}, destroy() {} };
@@ -200,9 +201,13 @@ export function createForming(root: HTMLElement): Forming {
     const home = [-1.5, -0.5, 0, 0.5, 1.5], parted = [-2, -1, 0, 1, 2];
     squares.forEach((el, i) => {
       if (i === 2) {
-        el.style.setProperty('--o', j > 0 ? '1' : '0');
-        // ours grows in, in its place, into the gap the others open
-        el.style.setProperty('--s', j.toFixed(3));
+        /* ours comes down from the top of the screen and settles into the
+           gap the others open for it */
+        const d = ramp(p, T.join[0], T.join[1]);
+        const fall = 1 - Math.pow(1 - d, 3);
+        el.style.setProperty('--o', d > 0 ? '1' : '0');
+        el.style.setProperty('--s', '1');
+        el.style.setProperty('--y', `${(-(1 - fall) * (h / 2 + sq)).toFixed(1)}px`);
         return;
       }
       const n = i < 2 ? i : i - 1;
@@ -216,6 +221,7 @@ export function createForming(root: HTMLElement): Forming {
     const g = inOut(ramp(p, T.spread[0], T.spread[1]));
     root.style.setProperty('--g', g.toFixed(3));
     win.style.visibility = g > 0 ? '' : 'hidden';
+    note?.style.setProperty('--nv', inOut(ramp(p, T.team[0] - 0.04, T.team[0] + 0.03)).toFixed(3));
     // a circle, our dot, widening until it has covered the far corners
     const R = sq / 2 + (Math.hypot(w, h) / 2 + 2 - sq / 2) * g;
     win.style.clipPath = g >= 1 ? 'none' : `circle(${R.toFixed(1)}px at 50% 50%)`;
