@@ -226,12 +226,17 @@ export function createForming(root: HTMLElement): Forming {
        at that travel keeps two cards most of half a screen apart, never a
        pile. */
     const narrow = w <= 719;
-    const span = T.life;
+    /* On a desktop they go by in pairs, one each side at once — the first
+       two together, then the next two — so there are half as many passes
+       and each is given longer. Narrow, one after another, as ever. */
+    const pairs = !narrow;
+    const passes = pairs ? Math.ceil(beats.length / 2) : beats.length;
+    const span = pairs ? T.life * 1.55 : T.life;
     const rise = h * (narrow ? 0.92 : TRAVEL);
     const lean = narrow ? 0 : Math.min(w * LEAN, 96, leanMax);
     beats.forEach((b, i) => {
-      const step = beats.length > 1 ? (T.last - T.beat - span) / (beats.length - 1) : 0;
-      const at = T.beat + i * step;
+      const step = passes > 1 ? (T.last - T.beat - span) / (passes - 1) : 0;
+      const at = T.beat + (pairs ? Math.floor(i / 2) : i) * step;
       const t = ramp(p, at, at + span);
       const v = Math.min(1, ramp(p, at, at + span * 0.2), 1 - ramp(p, at + span * 0.78, at + span));
       b.style.setProperty('--v', v.toFixed(3));
