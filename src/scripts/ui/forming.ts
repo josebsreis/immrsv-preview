@@ -121,6 +121,8 @@ export function createForming(root: HTMLElement): Forming {
     const dpr = Math.min(devicePixelRatio || 1, 2);
     const pr = win.getBoundingClientRect();
     w = pr.width; h = pr.height;
+    // measured as she stands: without the sink or the rise, which move her
+    box.style.transform = '';
     box.style.width = box.style.height = box.style.left = box.style.top = '';
     box.style.translate = '';
     let br = box.getBoundingClientRect();
@@ -270,8 +272,6 @@ export function createForming(root: HTMLElement): Forming {
 
     /* She is seen only inside the light: the same circle, cut out of her
        slot, so it opens from our dot with her already standing in it. */
-    box.style.clipPath = g >= 1 ? 'none'
-      : `circle(${R.toFixed(1)}px at ${(w / 2 - sx).toFixed(1)}px ${(h / 2 - sy).toFixed(1)}px)`;
     /* as the studios' sheet rides over her she sinks back a little under
        it — down and a touch smaller — still turning until she is covered */
     /* …and she comes up the same way as the light opens: from a little
@@ -281,6 +281,18 @@ export function createForming(root: HTMLElement): Forming {
     const off = Math.max(sink, arrive);
     box.style.transformOrigin = '50% 100%';
     box.style.transform = off > 0 ? `translateY(${(off * h * 0.06).toFixed(1)}px) scale(${(1 - off * 0.05).toFixed(4)})` : '';
+    /* The light's circle is her window, exactly: not before it opens, and
+       cut from her in her own coordinates — which are moved and scaled —
+       so the cut lands on the circle on screen, not beside it. */
+    box.style.visibility = g > 0 ? '' : 'hidden';
+    if (g >= 1) box.style.clipPath = 'none';
+    else {
+      const dy = off * h * 0.06, sc = 1 - off * 0.05;
+      const ox = sw / 2, oy = sh;                          // her transform's origin: foot, centre
+      const lx = ox + (w / 2 - sx - ox) / sc;
+      const ly = oy + (h / 2 - sy - oy - dy) / sc;
+      box.style.clipPath = `circle(${(R / sc).toFixed(1)}px at ${lx.toFixed(1)}px ${ly.toFixed(1)}px)`;
+    }
     // no fade: the circle is what reveals her, cutting her out as it grows
     box.style.opacity = '';
 
