@@ -194,13 +194,16 @@ const dialRings = DIAL_RINGS.map((r, k) => {
      panel's top edge, so only its upper half shows and the panel covers
      the rest */
   .head { position: relative; --dial: min(40rem, 88vw);
-          height: calc(var(--dial) / 2); margin-top: var(--section-y);
+          /* the air above is padding, not margin: a margin here passed up
+             through the light half's own top and left a band of it showing
+             the dark half held behind */
+          box-sizing: border-box; height: calc(var(--dial) / 2 + var(--section-y)); padding-top: var(--section-y);
           display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
           padding-bottom: calc(var(--dial) * 0.1); text-align: center; }
   .head .kicker { margin: 0 0 var(--s-3); color: var(--ink-3); }
   .head h2 { position: relative; margin: 0; font-size: var(--t-h2); font-weight: var(--w-display);
              line-height: var(--lh-display); letter-spacing: var(--track-display); color: var(--ink); }
-  .head .dial { position: absolute; left: 50%; top: 0; width: var(--dial); height: var(--dial);
+  .head .dial { position: absolute; left: 50%; top: var(--section-y); width: var(--dial); height: var(--dial);
                 translate: -50% 0; pointer-events: none; fill: none; stroke: var(--ink-4); stroke-width: 1; }
   .head .ring { vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center;
                 will-change: transform; }
