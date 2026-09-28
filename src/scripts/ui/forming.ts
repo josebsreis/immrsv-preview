@@ -274,15 +274,11 @@ export function createForming(root: HTMLElement): Forming {
       : `circle(${R.toFixed(1)}px at ${(w / 2 - sx).toFixed(1)}px ${(h / 2 - sy).toFixed(1)}px)`;
     /* as the studios' sheet rides over her she sinks back a little under
        it — down and a touch smaller — still turning until she is covered */
-    /* …and she comes up the same way as the light opens: from a little
-       lower and a touch smaller, into her place — the leaving, backwards */
     const sink = inOut(ramp(p, riseFrom, 1));
-    const arrive = 1 - inOut(ramp(g, 0.05, 0.75));
-    const off = Math.max(sink, arrive);
     box.style.transformOrigin = '50% 100%';
-    box.style.transform = off > 0 ? `translateY(${(off * h * 0.06).toFixed(1)}px) scale(${(1 - off * 0.05).toFixed(4)})` : '';
+    box.style.transform = sink > 0 ? `translateY(${(sink * h * 0.06).toFixed(1)}px) scale(${(1 - sink * 0.05).toFixed(4)})` : '';
     // she comes up in the light as it opens, not as a dark patch in a square
-    box.style.opacity = inOut(ramp(g, 0.06, 0.3)).toFixed(3);
+    box.style.opacity = inOut(ramp(g, 0.12, 0.45)).toFixed(3);
 
     /* The two lines are there from the start, one sentence on the dark, and
        part as the light opens — pushed up and down by it and off the screen. */
