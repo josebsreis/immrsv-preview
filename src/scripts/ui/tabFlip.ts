@@ -10,8 +10,8 @@ export function createTabFlip(tab: HTMLElement): TabFlip {
     raf = 0;
     const r = tab.getBoundingClientRect();
     const vh = innerHeight;
-    // lying as its foot enters the screen, standing by the time it is a third of the way up
-    const t = Math.max(0, Math.min(1, (vh - r.bottom) / (vh * 0.34)));
+    // lying as its foot enters the screen, standing by the time it is well over halfway up
+    const t = Math.max(0, Math.min(1, (vh - r.bottom) / (vh * 0.62)));
     const e = 1 - Math.pow(1 - t, 3);
     tab.style.setProperty('--flip', (1 - e).toFixed(3));
   };
