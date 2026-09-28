@@ -40,7 +40,7 @@ const T = {
   merge: [0.085, 0.125] as const,             // the five draw together into one
   spread: [0.13, 0.3] as const,               // and that one opens into the light, she
                                               // standing in it, pushing the lines off
-  play: [0.31, 0.93] as const,                 // the frames run, once the light is open
+  play: [0.31, 1.0] as const,                   // the frames run, once the light is open
   beat: 0.34,                                  // the first step begins its pass here…
   last: 0.87,                                 // …and the last is gone by here, the rest
                                               // spread evenly between, however many
@@ -190,6 +190,7 @@ export function createForming(root: HTMLElement): Forming {
 
   /* ── the scroll ──────────────────────────────────────────────────── */
   let last = -1;
+  let riseFrom = 1;
   /** held at one moment by the dev hook below, and then not scroll-driven */
   let pinned = false;
   const update = () => {
@@ -198,6 +199,9 @@ export function createForming(root: HTMLElement): Forming {
     if (r.height < 1) return;
     /* below 0 while the section is still coming up the screen: the row is
        already telling its story then, so there is no empty dark between */
+    /* where the studios' sheet starts up over the last screen: from here
+       she sinks back under it */
+    riseFrom = Math.max(0, (r.height - 2 * h) / Math.max(1, r.height - h));
     apply(Math.max(-0.25, Math.min(1, -r.top / Math.max(1, r.height - h))));
   };
   const apply = (p: number) => {
@@ -268,6 +272,11 @@ export function createForming(root: HTMLElement): Forming {
        slot, so it opens from our dot with her already standing in it. */
     box.style.clipPath = g >= 1 ? 'none'
       : `circle(${R.toFixed(1)}px at ${(w / 2 - sx).toFixed(1)}px ${(h / 2 - sy).toFixed(1)}px)`;
+    /* as the studios' sheet rides over her she sinks back a little under
+       it — down and a touch smaller — still turning until she is covered */
+    const sink = inOut(ramp(p, riseFrom, 1));
+    box.style.transformOrigin = '50% 100%';
+    box.style.transform = sink > 0 ? `translateY(${(sink * h * 0.06).toFixed(1)}px) scale(${(1 - sink * 0.05).toFixed(4)})` : '';
     // she comes up in the light as it opens, not as a dark patch in a square
     box.style.opacity = inOut(ramp(g, 0.12, 0.45)).toFixed(3);
 
