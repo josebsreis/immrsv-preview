@@ -75,7 +75,7 @@ const grounds = ['light', 'light', 'light'] as const;
          its foot, whose sides run down into the first studio's top rule —
          the heading drawn as part of the sheet the studios are on -->
     <div class="head">
-      <div class="tab">
+      <div class="tab" data-studios-tab>
         <p class="kicker label">Meet our</p>
         <h2 data-blur-in>{content.title}</h2>
       </div>
@@ -175,7 +175,11 @@ const grounds = ['light', 'light', 'light'] as const;
 
   /* ── the name, on a tab ── it stands on the first panel's top rule,
      with no air between, so its sides and that rule are one line */
-  .head { display: flex; justify-content: center; padding-top: var(--section-y); }
+  .head { display: flex; justify-content: center; padding-top: var(--section-y);
+          perspective: 900px; perspective-origin: 50% 0%; }
+  /* hinged at its foot: it comes up the screen lying back, and stands as it
+     arrives (--flip, 1 lying to 0 standing, from scripts/ui/tabFlip.ts) */
+  .tab { transform-origin: 50% 100%; transform: rotateX(calc(var(--flip, 0) * 82deg)); }
   .tab { text-align: center; padding: var(--s-7) var(--s-9, 4rem) var(--s-7);
          border: var(--hairline) solid var(--line); border-bottom: 0;
          border-radius: 1.5rem 1.5rem 0 0;
