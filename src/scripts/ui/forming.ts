@@ -169,6 +169,12 @@ export function createForming(root: HTMLElement): Forming {
       leanMax = Math.max(0, sx - (cr.left - pr.left) - cr.width - SHY);
     }
 
+    /* the sheet that rides over her is see-through above the studios' tab,
+       so she goes under the tab rather than under a wall: its ground starts
+       where the tab ends */
+    const head = document.querySelector<HTMLElement>('.studios .head');
+    head?.closest<HTMLElement>('[data-next]')?.style.setProperty('--lip', `${head.offsetHeight}px`);
+
     last = -1;
     draw();
   };
@@ -192,7 +198,9 @@ export function createForming(root: HTMLElement): Forming {
     if (r.height < 1) return;
     /* below 0 while the section is still coming up the screen: the row is
        already telling its story then, so there is no empty dark between */
-    apply(Math.max(-0.25, Math.min(1, -r.top / Math.max(1, r.height - h))));
+    /* the last screen of the track is the hold: she stands finished while
+       the next sheet rides over her, so the story runs over the rest */
+    apply(Math.max(-0.25, Math.min(1, -r.top / Math.max(1, r.height - h * 2))));
   };
   const apply = (p: number) => {
     if (p === last) return;

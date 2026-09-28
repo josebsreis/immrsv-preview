@@ -178,7 +178,9 @@ const grounds = ['light', 'light', 'light'] as const;
   .head { display: flex; justify-content: center; padding-top: var(--section-y); }
   .tab { text-align: center; padding: var(--s-7) var(--s-9, 4rem) var(--s-7);
          border: var(--hairline) solid var(--line); border-bottom: 0;
-         border-radius: 1.5rem 1.5rem 0 0; }
+         border-radius: 1.5rem 1.5rem 0 0;
+         /* filled: it is the lip of the sheet she goes under */
+         background: var(--ground); }
   .tab .kicker { margin: 0 0 var(--s-3); color: var(--ink-3); }
   .tab h2 { margin: 0; font-size: var(--t-h2); font-weight: var(--w-display);
             line-height: var(--lh-display); letter-spacing: var(--track-display); color: var(--ink); }

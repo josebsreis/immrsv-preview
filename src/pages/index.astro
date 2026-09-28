@@ -69,5 +69,14 @@ const projects = await getProjects();
   .clients { position: relative; z-index: var(--z-ui); padding: var(--section-y) var(--page-x) 0; }
   /* no air at its head: the first studio's panel is the head of the light
      half, and it is the whole of the seam */
-  .next { background: var(--ground); color: var(--ink); padding: 0 var(--page-x); }
+  /* The studios' sheet rides up over the figure's last screen: pulled up a
+     screen, over it, and see-through down to the foot of its tab (--lip,
+     measured by the forming script) so she is covered by the tab and the
+     first panel, not by a wall of ground coming up the screen. */
+  .next { position: relative; z-index: 1; background: var(--ground); color: var(--ink); padding: 0 var(--page-x); }
+  /* only while the figure's section is live: without it there is no held
+     last screen to ride over */
+  .light:has([data-forming][data-live]) .next {
+    margin-top: -100vh; margin-top: -100svh;
+    background: linear-gradient(var(--ground), var(--ground)) 0 var(--lip, 0px) / 100% 100% no-repeat; }
 </style>

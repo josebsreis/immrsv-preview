@@ -158,7 +158,9 @@ const {
   /* one screen until the script has it: the line, on the light, and nothing
      that needs scrolling through */
   .track { height: 100vh; position: relative; }
-  [data-live] .track { height: 640vh; }
+  /* one screen more than the story needs: she holds, finished, while the
+     studios' sheet rides up over her */
+  [data-live] .track { height: 740vh; }
   /* The section carries both grounds at once — it is the change from one to
      the other — so the two are named here rather than taken from the theme:
      its own `data-theme` flips partway through, for the nav's sake, and the
@@ -275,7 +277,7 @@ const {
      up from the foot of the screen, crosses her and leaves at the head, the
      way a list scrolls over a picture that holds still. */
   @media (max-width: 719px) {
-    [data-live] .track { height: 580vh; }
+    [data-live] .track { height: 680vh; }
     .slot { height: min(56vh, 128vw); }
     .title { font-size: var(--t-small); }
     /* from the middle, and the script carries it the height of the screen */
