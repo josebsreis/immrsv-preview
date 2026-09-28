@@ -281,7 +281,8 @@ export function createForming(root: HTMLElement): Forming {
     const sink = inOut(ramp(p, riseFrom, 1));
     const arrive = 1 - (1 - Math.pow(1 - ramp(g, 0.02, 0.8), 3));
     const dy = sink * h * 0.06 + arrive * (sh * 0.5 + 24);
-    const sc = 1 - sink * 0.05;
+    // a touch smaller as she comes up, full size as she settles; smaller again as she goes
+    const sc = (1 - sink * 0.05) * (1 - arrive * 0.1);
     box.style.transformOrigin = '50% 100%';
     box.style.transform = dy > 0.1 ? `translateY(${dy.toFixed(1)}px) scale(${sc.toFixed(4)})` : '';
     /* The light's circle is her window, exactly: not before it opens, and
