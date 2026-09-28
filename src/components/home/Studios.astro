@@ -71,7 +71,7 @@ const grounds = ['light', 'light', 'light'] as const;
 /* the selected work's dial, brought here: two rings of small ticks round
    the section's name, the same drawing at a smaller size (units are the
    viewBox's; the stroke is a hairline whatever size it is drawn at) */
-const DIAL_RINGS = [800, 920];
+const DIAL_RINGS = [940];
 const DIAL_SPACING = 30, DIAL_TICK = 20;
 const dialRings = DIAL_RINGS.map((r, k) => {
   const count = Math.round((2 * Math.PI * r) / DIAL_SPACING);
@@ -88,8 +88,8 @@ const dialRings = DIAL_RINGS.map((r, k) => {
 {content.items.length > 0 && (
   <div class="studios">
     <!-- the studios announced: the name under an arch — the selected work's
-         dial, its top half; the rest goes on behind the first studio, which
-         covers it — its two rings turning against each other with the scroll -->
+         dial, its top half, one ring; the rest goes on behind the first studio,
+         which covers it — turning with the scroll -->
     <div class="head" data-studios-dial>
       <svg class="dial" viewBox="-1000 -1000 2000 2000" aria-hidden="true" focusable="false">
         {dialRings.map((d, k) => <path class="ring" data-dial-ring={k} d={d} />)}
@@ -193,17 +193,17 @@ const dialRings = DIAL_RINGS.map((r, k) => {
   /* ── the name ── under an arch: the dial's middle sits on the first
      panel's top edge, so only its upper half shows and the panel covers
      the rest */
-  .head { position: relative; --dial: min(40rem, 88vw);
+  .head { position: relative; --dial: min(72rem, 118vw); --above: var(--s-6);
           /* the air above is padding, not margin: a margin here passed up
              through the light half's own top and left a band of it showing
              the dark half held behind */
-          box-sizing: border-box; height: calc(var(--dial) / 2 + var(--section-y)); padding-top: var(--section-y);
+          box-sizing: border-box; height: calc(var(--dial) / 2 + var(--above)); padding-top: var(--above);
           display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-          padding-bottom: calc(var(--dial) * 0.1); text-align: center; }
+          padding-bottom: calc(var(--dial) * 0.08); text-align: center; overflow: hidden; }
   .head .kicker { margin: 0 0 var(--s-3); color: var(--ink-3); }
   .head h2 { position: relative; margin: 0; font-size: var(--t-h2); font-weight: var(--w-display);
              line-height: var(--lh-display); letter-spacing: var(--track-display); color: var(--ink); }
-  .head .dial { position: absolute; left: 50%; top: var(--section-y); width: var(--dial); height: var(--dial);
+  .head .dial { position: absolute; left: 50%; top: var(--above); width: var(--dial); height: var(--dial);
                 translate: -50% 0; pointer-events: none; fill: none; stroke: var(--ink-4); stroke-width: 1; }
   .head .ring { vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center;
                 will-change: transform; }
