@@ -29,14 +29,14 @@ const CLEAR = 26;
 
 /** where in the scroll each thing happens */
 const T = {
-  team: [-0.13, -0.02] as const,              // your team: four dots, 'YOUR TEAM,' — while
-                                              // the section is still rising into view
-  join: [0.02, 0.09] as const,                // they part, one more joins in the middle,
-                                              // 'EXTENDED.'
-  spread: [0.1, 0.3] as const,              // the new one opens into the light, she
-                                              // standing in it, pushing the lines off
-  play: [0.33, 0.9] as const,                 // the frames run, once the light is open
-  beat: 0.36,                                  // the first step begins its pass here…
+  team: [-0.12, -0.06] as const,               // your team: four dots, 'YOUR TEAM,' — while
+                                              // the section is still rising over the logos
+  join: [-0.06, 0.0] as const,                // they part and ours falls into the gap,
+                                              // 'EXTENDED.' — landing as the section lands
+  spread: [0.02, 0.22] as const,              // ours opens into the light, she standing
+                                              // in it, pushing the lines off
+  play: [0.23, 0.9] as const,                 // the frames run, once the light is open
+  beat: 0.27,                                  // the first step begins its pass here…
   last: 0.93,                                 // …and the last is gone by here, the rest
                                               // spread evenly between, however many
   life: 0.17,                                 // how long one takes to cross — longer
