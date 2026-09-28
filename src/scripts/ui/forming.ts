@@ -222,8 +222,9 @@ export function createForming(root: HTMLElement): Forming {
     root.style.setProperty('--g', g.toFixed(3));
     win.style.visibility = g > 0 ? '' : 'hidden';
     note?.style.setProperty('--nv', inOut(ramp(p, T.team[0] - 0.04, T.team[0] + 0.03)).toFixed(3));
-    // a circle, our dot, widening until it has covered the far corners
-    const R = sq / 2 + (Math.hypot(w, h) / 2 + 2 - sq / 2) * g;
+    // a circle, opening out of our mark until it has covered the far corners
+    // from nothing, behind our mark, filling it in as it grows past it
+    const R = (Math.hypot(w, h) / 2 + 2) * g;
     win.style.clipPath = g >= 1 ? 'none' : `circle(${R.toFixed(1)}px at 50% 50%)`;
     // the nav takes the ground it stands on, and this section changes its
     // own — only once the light has filled the screen, not while the nav
