@@ -212,30 +212,23 @@ export function createForming(root: HTMLElement): Forming {
       el.style.setProperty('--y', `${((1 - inOut(a)) * sq * 0.6).toFixed(1)}px`);
     });
 
-    // the ground: our square, opened until its four edges have left the screen
+    // the ground: our dot, opened until it has covered the screen
     const g = inOut(ramp(p, T.spread[0], T.spread[1]));
-    const k = 1 - g;
     root.style.setProperty('--g', g.toFixed(3));
-    const gx = (w - sq) / 2, gy = (h - sq) / 2;
     win.style.visibility = g > 0 ? '' : 'hidden';
-    // round while it is small — it starts as our dot — and square by the time
-    // it fills the screen
-    const rr = (sq / 2) * Math.pow(k, 2);
-    win.style.clipPath = g >= 1 ? 'none'
-      : `inset(${(gy * k).toFixed(1)}px ${(gx * k).toFixed(1)}px ${(gy * k).toFixed(1)}px ${(gx * k).toFixed(1)}px round ${rr.toFixed(1)}px)`;
+    // a circle, our dot, widening until it has covered the far corners
+    const R = sq / 2 + (Math.hypot(w, h) / 2 + 2 - sq / 2) * g;
+    win.style.clipPath = g >= 1 ? 'none' : `circle(${R.toFixed(1)}px at 50% 50%)`;
     // the nav takes the ground it stands on, and this section changes its
     // own — only once the light has filled the screen, not while the nav
     // is still over the dark
     const ground = g >= 1 ? 'light' : 'dark';
     if (root.dataset.theme !== ground) root.dataset.theme = ground;
 
-    /* She is seen only inside the light: the same window, cut out of her
-       slot, so it opens from a speck with her already standing in it. */
-    const wt = gy * k, wl = gx * k;
-    const ct = Math.max(0, wt - sy), cb = Math.max(0, (sy + sh) - (h - wt));
-    const cl = Math.max(0, wl - sx), cr = Math.max(0, (sx + sw) - (w - wl));
-    box.style.clipPath = g >= 1 ? 'none' : ct >= sh / 2 || cl >= sw / 2 ? 'inset(50%)'
-      : `inset(${ct.toFixed(1)}px ${cr.toFixed(1)}px ${cb.toFixed(1)}px ${cl.toFixed(1)}px round ${(ct > 0 && cl > 0 ? rr : 0).toFixed(1)}px)`;
+    /* She is seen only inside the light: the same circle, cut out of her
+       slot, so it opens from our dot with her already standing in it. */
+    box.style.clipPath = g >= 1 ? 'none'
+      : `circle(${R.toFixed(1)}px at ${(w / 2 - sx).toFixed(1)}px ${(h / 2 - sy).toFixed(1)}px)`;
     // she comes up in the light as it opens, not as a dark patch in a square
     box.style.opacity = inOut(ramp(g, 0.12, 0.45)).toFixed(3);
 
@@ -244,7 +237,7 @@ export function createForming(root: HTMLElement): Forming {
     /* Each rides just outside the light's edge, so it is never over her,
        and is carried off the top and the foot of the screen with it: once
        the light is open she stands alone. */
-    const edge = h / 2 - wt;
+    const edge = R;
     halves.forEach((el, i) => {
       const lh = heights[i];
       const m = Math.max(Math.abs(joined[i]), edge + lh * 0.6 + CLEAR * 0.6);
