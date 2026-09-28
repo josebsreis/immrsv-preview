@@ -202,6 +202,12 @@ const {
            text-transform: var(--display-case);
            font-size: var(--t-lead); font-weight: var(--w-display);
            letter-spacing: var(--track-display); color: var(--ink); }
+  /* Live, the sentence is on screen before the light is: white on the dark,
+     and as the light opens behind it, dark on the light — letter by letter
+     where the edge crosses it, by drawing it as the difference from what is
+     under it rather than in a colour of its own. */
+  [data-live] .pane { isolation: isolate; }
+  [data-live] .title { color: #fff; mix-blend-mode: difference; }
   .half { position: absolute; left: var(--page-x); right: var(--page-x); top: 50%;
           text-align: center; --v: 1; --dy: 0px; }
   [data-live] .half { opacity: var(--v);

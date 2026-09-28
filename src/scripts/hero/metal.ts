@@ -33,8 +33,10 @@ const DEPTH = 26;
 const BREATHE = 0.09;
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
-/** the section before the studios, whose run of pictures this also draws */
-const handoverSection = () => document.getElementById('studios-title')?.closest('section') ?? null;
+/** the section the mark closes for: the studios' opening if it is on the
+ *  page (its run of pictures this also draws), else the handover after the logos */
+const handoverSection = () => document.getElementById('studios-title')?.closest('section')
+  ?? document.querySelector<HTMLElement>('[data-forming]');
 
 export function createMetalHero({ host }: MetalOptions): Hero {
   const narrow = matchMedia('(max-width: 719px)').matches;

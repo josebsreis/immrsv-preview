@@ -5,7 +5,6 @@ import Hero from '@components/hero/Hero.astro';
 import Marquee from '@components/home/Marquee.astro';
 import Manifesto from '@components/home/Manifesto.astro';
 import Studios from '@components/home/Studios.astro';
-import StudiosIndex from '@components/home/StudiosIndex.astro';
 import Testimonials from '@components/home/Testimonials.astro';
 import Faqs from '@components/home/Faqs.astro';
 import WorkPile from '@components/home/WorkPile.astro';
@@ -22,13 +21,9 @@ const projects = await getProjects();
       <Marquee items={home.studios.items.map((s) => s.name)} />
       <Manifesto content={home.about} />
       {/* the firms the practice has worked for, right after it has said what
-          it is: the marks are the receipt for the statement */}
+          it is: the marks are the receipt for the statement. The dark half
+          ends here; 'Your team, extended.' opens out of it, on the light */}
       <div class="clients"><Brands content={home.brands} /></div>
-      {/* the dark half ends on the studios' opening — the claim, and the
-          three of them pictured — a screen on the dark ground; the first
-          studio, on the light, rides up over it, so the page turns light by
-          the first panel arriving */}
-      <StudiosIndex content={home.studios} />
       <div class="scrim" data-scrim aria-hidden="true"></div>
     </div>
 

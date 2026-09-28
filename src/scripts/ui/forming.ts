@@ -29,11 +29,11 @@ const CLEAR = 26;
 
 /** where in the scroll each thing happens */
 const T = {
-  spread: [0.0, 0.16] as const,               // the mark grows into the light ground
-  title: [0.1, 0.17] as const,                // the two lines land, and stay
-  part: [0.22, 0.36] as const,                // they part, and she opens in the gap
-  play: [0.3, 0.9] as const,                  // the frames run
-  beat: 0.4,                                  // the first step begins its pass here…
+  spread: [0.02, 0.24] as const,              // the light opens from the middle, she
+                                              // already standing in it, and the two
+                                              // lines part round it as it grows
+  play: [0.2, 0.9] as const,                  // the frames run
+  beat: 0.3,                                  // the first step begins its pass here…
   last: 0.93,                                 // …and the last is gone by here, the rest
                                               // spread evenly between, however many
   life: 0.17,                                 // how long one takes to cross — longer
@@ -106,7 +106,7 @@ export function createForming(root: HTMLElement): Forming {
      same edge: half a pixel of disagreement is a grey hairline. */
   let w = 0, h = 0, sx = 0, sy = 0, sw = 0, sh = 0, leanMax = 0;
   /** where each of the two lines stands, joined and parted */
-  const joined = [0, 0], apart = [0, 0];
+  const joined = [0, 0], apart = [0, 0], heights = [0, 0];
   const size = () => {
     const dpr = Math.min(devicePixelRatio || 1, 2);
     const pr = win.getBoundingClientRect();
@@ -137,6 +137,7 @@ export function createForming(root: HTMLElement): Forming {
       for (let i = 0; i < 2; i++) {
         const el = halves[i], sign = i ? 1 : -1;
         const lh = el.getBoundingClientRect().height;
+        heights[i] = lh;
         joined[i] = sign * lh * 0.55;
         apart[i] = mid + sign * (sh / 2 + CLEAR + lh / 2);
       }
@@ -190,17 +191,25 @@ export function createForming(root: HTMLElement): Forming {
     const ground = g > 0.5 ? 'light' : 'dark';
     if (root.dataset.theme !== ground) root.dataset.theme = ground;
 
-    // she opens in the gap the two lines make: a sliver at the middle, grown
-    // to her full height. Nothing of her before her time
-    const o = inOut(ramp(p, T.part[0], T.part[1]));
-    box.style.clipPath = o <= 0 ? 'inset(50% 0)' : o >= 1 ? 'none'
-      : `inset(${((sh / 2) * (1 - o)).toFixed(1)}px 0)`;
+    /* She is already there in the light as it opens: the same window, cut
+       out of her slot, so the opening shows her rather than a blank. */
+    const wt = gy * k, wl = gx * k;
+    const ct = Math.max(0, wt - sy), cb = Math.max(0, (sy + sh) - (h - wt));
+    const cl = Math.max(0, wl - sx), cr = Math.max(0, (sx + sw) - (w - wl));
+    box.style.clipPath = g >= 1 ? 'none' : ct >= sh / 2 || cl >= sw / 2 ? 'inset(50%)'
+      : `inset(${ct.toFixed(1)}px ${cr.toFixed(1)}px ${cb.toFixed(1)}px ${cl.toFixed(1)}px)`;
 
-    // the two lines: they arrive together, part one up and one down, and stay
-    const v = ramp(p, T.title[0], T.title[1]).toFixed(3);
+    /* The two lines are there from the start, one sentence on the dark, and
+       part as the light opens — pushed up and down by it and off the screen. */
+    /* Each rides just outside the light's edge, so it is never over her,
+       and is carried off the top and the foot of the screen with it: once
+       the light is open she stands alone. */
+    const edge = h / 2 - wt;
     halves.forEach((el, i) => {
-      el.style.setProperty('--v', v);
-      el.style.setProperty('--dy', `${(joined[i] + (apart[i] - joined[i]) * o).toFixed(1)}px`);
+      const lh = heights[i];
+      const m = Math.max(Math.abs(joined[i]), edge + lh * 0.6 + CLEAR * 0.6);
+      el.style.setProperty('--v', '1');
+      el.style.setProperty('--dy', `${(Math.sign(apart[i]) * m).toFixed(1)}px`);
     });
 
     // the frame
