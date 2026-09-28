@@ -16,7 +16,7 @@ const projects = await getProjects();
 ---
 <Base theme="dark">
   <main class="main" data-page="home">
-    <div class="dark" data-hold>
+    <div class="dark">
       <Hero content={home.hero} featured={home.featuredProject} />
       <Marquee items={home.studios.items.map((s) => s.name)} />
       <Manifesto content={home.about} />
@@ -52,10 +52,10 @@ const projects = await getProjects();
 
 <style>
   .main { position: relative; z-index: var(--z-main); }
-  /* the dark half holds once its end meets the bottom of the screen (the top
-     offset is set in JS: viewport − height), and the light half rides up over
-     it — the first studio at its head */
-  .dark { position: sticky; top: 0; z-index: 1; }
+  /* the dark half scrolls away like any other part of the page: what comes
+     after it starts on the same dark ground, so a half held still and ridden
+     over read as the logos being swallowed by nothing */
+  .dark { position: relative; z-index: 1; }
   /* the dark half is put out as the light one climbs over it */
   /* inside the held half's own stacking context, so it is a local number and
      not a page layer — it only has to sit over the panels in there, which

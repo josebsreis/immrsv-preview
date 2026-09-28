@@ -29,10 +29,11 @@ const CLEAR = 26;
 
 /** where in the scroll each thing happens */
 const T = {
-  team: [0.0, 0.05] as const,                 // your team: four squares, 'YOUR TEAM,'
-  join: [0.05, 0.11] as const,                // they part, one more joins in the middle,
+  team: [-0.13, -0.02] as const,              // your team: four dots, 'YOUR TEAM,' — while
+                                              // the section is still rising into view
+  join: [0.02, 0.09] as const,                // they part, one more joins in the middle,
                                               // 'EXTENDED.'
-  spread: [0.12, 0.32] as const,              // the new one opens into the light, she
+  spread: [0.1, 0.3] as const,              // the new one opens into the light, she
                                               // standing in it, pushing the lines off
   play: [0.33, 0.9] as const,                 // the frames run, once the light is open
   beat: 0.36,                                  // the first step begins its pass here…
@@ -183,22 +184,25 @@ export function createForming(root: HTMLElement): Forming {
     if (pinned) return;
     const r = track.getBoundingClientRect();
     if (r.height < 1) return;
-    apply(clamp01(-r.top / Math.max(1, r.height - h)));
+    /* below 0 while the section is still coming up the screen: the row is
+       already telling its story then, so there is no empty dark between */
+    apply(Math.max(-0.25, Math.min(1, -r.top / Math.max(1, r.height - h))));
   };
   const apply = (p: number) => {
     if (p === last) return;
     last = p;
 
     /* The row: four of yours come in, one after another; then they step
-       apart from the middle and ours arrives in the gap, dropping into place. */
+       apart from the middle and ours grows into the gap.
+       (Dots; `sq` is a dot's width.) */
     const slot = sq * 1.5;
     const t = ramp(p, T.team[0], T.team[1]), j = inOut(ramp(p, T.join[0], T.join[1]));
     const home = [-1.5, -0.5, 0, 0.5, 1.5], parted = [-2, -1, 0, 1, 2];
     squares.forEach((el, i) => {
       if (i === 2) {
         el.style.setProperty('--o', j > 0 ? '1' : '0');
-        el.style.setProperty('--y', `${(-(1 - j) * sq * 1.6).toFixed(1)}px`);
-        el.style.setProperty('--s', (0.4 + 0.6 * j).toFixed(3));
+        // ours grows in, in its place, into the gap the others open
+        el.style.setProperty('--s', j.toFixed(3));
         return;
       }
       const n = i < 2 ? i : i - 1;
@@ -214,8 +218,11 @@ export function createForming(root: HTMLElement): Forming {
     root.style.setProperty('--g', g.toFixed(3));
     const gx = (w - sq) / 2, gy = (h - sq) / 2;
     win.style.visibility = g > 0 ? '' : 'hidden';
+    // round while it is small — it starts as our dot — and square by the time
+    // it fills the screen
+    const rr = (sq / 2) * Math.pow(k, 2);
     win.style.clipPath = g >= 1 ? 'none'
-      : `inset(${(gy * k).toFixed(1)}px ${(gx * k).toFixed(1)}px ${(gy * k).toFixed(1)}px ${(gx * k).toFixed(1)}px)`;
+      : `inset(${(gy * k).toFixed(1)}px ${(gx * k).toFixed(1)}px ${(gy * k).toFixed(1)}px ${(gx * k).toFixed(1)}px round ${rr.toFixed(1)}px)`;
     // the nav takes the ground it stands on, and this section changes its
     // own — only once the light has filled the screen, not while the nav
     // is still over the dark
@@ -228,7 +235,7 @@ export function createForming(root: HTMLElement): Forming {
     const ct = Math.max(0, wt - sy), cb = Math.max(0, (sy + sh) - (h - wt));
     const cl = Math.max(0, wl - sx), cr = Math.max(0, (sx + sw) - (w - wl));
     box.style.clipPath = g >= 1 ? 'none' : ct >= sh / 2 || cl >= sw / 2 ? 'inset(50%)'
-      : `inset(${ct.toFixed(1)}px ${cr.toFixed(1)}px ${cb.toFixed(1)}px ${cl.toFixed(1)}px)`;
+      : `inset(${ct.toFixed(1)}px ${cr.toFixed(1)}px ${cb.toFixed(1)}px ${cl.toFixed(1)}px round ${(ct > 0 && cl > 0 ? rr : 0).toFixed(1)}px)`;
     // she comes up in the light as it opens, not as a dark patch in a square
     box.style.opacity = inOut(ramp(g, 0.12, 0.45)).toFixed(3);
 
@@ -242,7 +249,7 @@ export function createForming(root: HTMLElement): Forming {
       const lh = heights[i];
       const m = Math.max(Math.abs(joined[i]), edge + lh * 0.6 + CLEAR * 0.6);
       // 'YOUR TEAM,' with the four; 'EXTENDED.' as ours joins
-      el.style.setProperty('--v', (i === 0 ? inOut(ramp(p, 0, 0.03)) : j).toFixed(3));
+      el.style.setProperty('--v', (i === 0 ? inOut(ramp(p, T.team[0], T.team[0] + 0.05)) : j).toFixed(3));
       el.style.setProperty('--dy', `${(Math.sign(apart[i]) * m).toFixed(1)}px`);
     });
 
