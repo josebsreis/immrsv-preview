@@ -179,6 +179,8 @@ const {
           height: min(66vh, 132vw); aspect-ratio: 9 / 16;
           background: #f5f5f7; overflow: hidden; clip-path: inset(50%); }
   .forming:not([data-live]) .slot { display: none; }
+  /* while she stands on the dark, cut out: nothing of the slot but her */
+  .slot:global(.on-dark) { background: transparent; }
   /* The film's studio backdrop is taken out when the frames are baked —
      each frame divided by its own backdrop, so what was grey is the page's
      light exactly and she stands on the page itself, no panel. The edges

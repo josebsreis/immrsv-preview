@@ -32,7 +32,7 @@ const T = {
   spread: [0.02, 0.24] as const,              // the light opens from the middle, she
                                               // already standing in it, and the two
                                               // lines part round it as it grows
-  play: [0.2, 0.9] as const,                  // the frames run
+  play: [0.25, 0.9] as const,                 // the frames run, once the light is open
   beat: 0.3,                                  // the first step begins its pass here…
   last: 0.93,                                 // …and the last is gone by here, the rest
                                               // spread evenly between, however many
@@ -83,9 +83,15 @@ export function createForming(root: HTMLElement): Forming {
     im.src = SRC(i);
     im.decode().then(() => { frames[i] = im; if (i === shown) draw(); }).catch(() => {});
   };
+  /* Her first frame cut out, on nothing: she stands on the dark before the
+     light arrives, and it opens behind her. */
+  const cut = new Image();
+  let cutReady = false;
   const warm = () => {
     if (warmed) return;
     warmed = true;
+    cut.src = '/forming/cut.avif';
+    cut.decode().then(() => { cutReady = true; last = -1; update(); }).catch(() => {});
     for (let i = 0; i < N; i += 8) fetch(i);
     for (let i = 0; i < N; i++) fetch(i);
   };
@@ -156,9 +162,12 @@ export function createForming(root: HTMLElement): Forming {
     last = -1;
     draw();
   };
+  /** she is on the dark, the light still opening behind her */
+  let opening = true;
   const draw = () => {
-    const im = nearest(shown);
+    const im = opening && cutReady ? cut : nearest(shown);
     if (!im || sw < 1) return;
+    ctx.clearRect(0, 0, sw, sh);
     // cover: the figure is centred in the frame, so a centred crop keeps her
     const s = Math.max(sw / im.naturalWidth, sh / im.naturalHeight);
     const dw = im.naturalWidth * s, dh = im.naturalHeight * s;
@@ -187,17 +196,27 @@ export function createForming(root: HTMLElement): Forming {
     const gx = (w - 5) / 2, gy = (h - 5) / 2;
     win.style.clipPath = g >= 1 ? 'none'
       : `inset(${(gy * k).toFixed(1)}px ${(gx * k).toFixed(1)}px ${(gy * k).toFixed(1)}px ${(gx * k).toFixed(1)}px)`;
-    // the nav takes the ground it stands on, and this section changes its own
-    const ground = g > 0.5 ? 'light' : 'dark';
+    // the nav takes the ground it stands on, and this section changes its
+    // own — only once the light has filled the screen, not while the nav
+    // is still over the dark
+    const ground = g >= 1 ? 'light' : 'dark';
     if (root.dataset.theme !== ground) root.dataset.theme = ground;
 
-    /* She is already there in the light as it opens: the same window, cut
-       out of her slot, so the opening shows her rather than a blank. */
+    /* She is there from the start, cut out, standing on the dark; the light
+       opens behind her, and once it has filled the screen the film takes
+       over — on the light the two are the same picture. Until the cut-out
+       has arrived, the window is cut out of her slot instead, as before. */
     const wt = gy * k, wl = gx * k;
-    const ct = Math.max(0, wt - sy), cb = Math.max(0, (sy + sh) - (h - wt));
-    const cl = Math.max(0, wl - sx), cr = Math.max(0, (sx + sw) - (w - wl));
-    box.style.clipPath = g >= 1 ? 'none' : ct >= sh / 2 || cl >= sw / 2 ? 'inset(50%)'
-      : `inset(${ct.toFixed(1)}px ${cr.toFixed(1)}px ${cb.toFixed(1)}px ${cl.toFixed(1)}px)`;
+    const nowOpening = g < 1;
+    if (nowOpening !== opening) { opening = nowOpening; draw(); }
+    box.classList.toggle('on-dark', opening && cutReady);
+    if (opening && cutReady) box.style.clipPath = 'none';
+    else {
+      const ct = Math.max(0, wt - sy), cb = Math.max(0, (sy + sh) - (h - wt));
+      const cl = Math.max(0, wl - sx), cr = Math.max(0, (sx + sw) - (w - wl));
+      box.style.clipPath = g >= 1 ? 'none' : ct >= sh / 2 || cl >= sw / 2 ? 'inset(50%)'
+        : `inset(${ct.toFixed(1)}px ${cr.toFixed(1)}px ${cb.toFixed(1)}px ${cl.toFixed(1)}px)`;
+    }
 
     /* The two lines are there from the start, one sentence on the dark, and
        part as the light opens — pushed up and down by it and off the screen. */
@@ -207,7 +226,10 @@ export function createForming(root: HTMLElement): Forming {
     const edge = h / 2 - wt;
     halves.forEach((el, i) => {
       const lh = heights[i];
-      const m = Math.max(Math.abs(joined[i]), edge + lh * 0.6 + CLEAR * 0.6);
+      /* she is on screen from the start, so the lines start clear of her —
+         one over her head, one under her feet — until the light reaches them */
+      const rest = cutReady ? Math.abs(apart[i]) : Math.abs(joined[i]);
+      const m = Math.max(rest, edge + lh * 0.6 + CLEAR * 0.6);
       el.style.setProperty('--v', '1');
       el.style.setProperty('--dy', `${(Math.sign(apart[i]) * m).toFixed(1)}px`);
     });
