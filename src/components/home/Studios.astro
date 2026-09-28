@@ -71,8 +71,8 @@ const grounds = ['light', 'light', 'light'] as const;
 ---
 {content.items.length > 0 && (
   <div class="studios">
-    <!-- the studios announced, the way every section is: the name at the
-         left, the line that says why at the right — then the three -->
+    <!-- the studios announced: the name and the line that says why,
+         centred over the three -->
     <div class="head">
       <h2 data-blur-in>{content.title}</h2>
       <p class="intro" data-rise>{content.intro}</p>
@@ -170,19 +170,13 @@ const grounds = ['light', 'light', 'light'] as const;
      — a hairline, the page's own way of parting things, not a shadow. */
   .stack[data-live] .studio { border-bottom: var(--hairline) solid var(--line); }
 
-  /* ── the name ── */
-  .head { display: grid; grid-template-columns: minmax(0, var(--col-side)) minmax(0, 1fr);
-          column-gap: var(--col-gap); align-items: center;
-          padding: var(--section-y) 0 var(--s-8); }
-  .head h2 { margin: 0; width: min-content; font-size: var(--t-h2); font-weight: var(--w-display);
+  /* ── the name ── centred, the way the other work section opens: the
+     three that follow are announced as one, not as a column beside them */
+  .head { text-align: center; padding: var(--section-y) 0 var(--s-8); }
+  .head h2 { margin: 0; font-size: var(--t-h2); font-weight: var(--w-display);
              line-height: var(--lh-display); letter-spacing: var(--track-display); color: var(--ink); }
-  .head .intro { grid-column: 2; margin: 0; max-width: 34ch; font-size: var(--t-body);
-                 line-height: var(--lh-body); color: var(--ink-3); }
-  @media (max-width: 859px) {
-    .head { grid-template-columns: 1fr; gap: var(--s-4); }
-    .head h2 { width: auto; }
-    .head .intro { grid-column: 1; }
-  }
+  .head .intro { max-width: 42ch; margin: var(--s-4) auto 0; text-wrap: balance;
+                 font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-3); }
 
   /* ── a panel ─────────────────────────────────────────────────────────
      A screen each, its content pinned to the top and the foot with the
