@@ -204,6 +204,10 @@ export function createForming(root: HTMLElement): Forming {
     const slot = sq * 1.5;
     const t = ramp(p, T.team[0], T.team[1]), j = inOut(ramp(p, T.join[0], T.join[1]));
     const home = [-1.5, -0.5, 0, 0.5, 1.5], parted = [-2, -1, 0, 1, 2];
+    /* the others hold together until ours is almost down, and are pushed
+       apart by it as it goes in — not a gap waiting for it */
+    const dFall = ramp(p, T.join[0], T.join[1]);
+    const make = 1 - Math.pow(1 - ramp(dFall, 0.72, 1), 3);
     /* the knock of the landing: out and back, a little past, and still */
     const knock = (u: number) => (u <= 0 || u >= 1 ? 0 : Math.sin(u * Math.PI * 1.6) * Math.exp(-u * 3.2));
     const im = ramp(p, T.impact[0], T.impact[1]);
@@ -231,7 +235,7 @@ export function createForming(root: HTMLElement): Forming {
       const ring = Math.abs(i - 2);
       const push = knock(clamp01((im - (ring - 1) * 0.18) / 0.82)) * sq * 0.35 * Math.sign(i - 2);
       const lit = inOut(ramp(p, T.lit[0] + (ring - 1) * 0.022, T.lit[1] - (2 - ring) * 0.022));
-      const x = (home[i] + (parted[i] - home[i]) * j) * slot * (1 - mg) + push;
+      const x = (home[i] + (parted[i] - home[i]) * make) * slot * (1 - mg) + push;
       el.style.setProperty('--o', inOut(a).toFixed(3));
       el.style.setProperty('--x', `${x.toFixed(1)}px`);
       el.style.setProperty('--y', `${((1 - inOut(a)) * sq * 0.6).toFixed(1)}px`);
