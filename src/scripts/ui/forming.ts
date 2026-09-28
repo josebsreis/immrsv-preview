@@ -249,6 +249,9 @@ export function createForming(root: HTMLElement): Forming {
       const m = Math.max(Math.abs(joined[i]), edge + lh * 0.6 + CLEAR * 0.6);
       // 'YOUR TEAM,' with the four; 'EXTENDED.' as ours joins
       el.style.setProperty('--v', (i === 0 ? inOut(ramp(p, T.team[0], T.team[0] + 0.05)) : j).toFixed(3));
+      /* 'EXTENDED.' does what it says: it comes in narrow and widens to the
+         face's widest as ours lands — Archivo is variable in width, 62–125% */
+      if (i === 1) el.style.fontStretch = `${(62 + (125 - 62) * j).toFixed(1)}%`;
       el.style.setProperty('--dy', `${(Math.sign(apart[i]) * m).toFixed(1)}px`);
     });
 
