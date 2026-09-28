@@ -87,12 +87,14 @@ const dialRings = DIAL_RINGS.map((r, k) => {
 ---
 {content.items.length > 0 && (
   <div class="studios">
-    <!-- the studios announced: the name alone, inside the selected work's
-         dial, its two rings turning against each other with the scroll -->
+    <!-- the studios announced: the name under an arch — the selected work's
+         dial, its top half; the rest goes on behind the first studio, which
+         covers it — its two rings turning against each other with the scroll -->
     <div class="head" data-studios-dial>
       <svg class="dial" viewBox="-1000 -1000 2000 2000" aria-hidden="true" focusable="false">
         {dialRings.map((d, k) => <path class="ring" data-dial-ring={k} d={d} />)}
       </svg>
+      <p class="kicker label">Meet our</p>
       <h2 data-blur-in>{content.title}</h2>
     </div>
     <!-- the stack carries a ground from the start: the nav reads the page's
@@ -188,14 +190,18 @@ const dialRings = DIAL_RINGS.map((r, k) => {
      — a hairline, the page's own way of parting things, not a shadow. */
   .stack[data-live] .studio { border-bottom: var(--hairline) solid var(--line); }
 
-  /* ── the name ── centred inside the dial, the dial as tall as the
-     screen allows and a hair off the rule of the first panel */
-  .head { position: relative; display: grid; place-items: center;
-          height: min(40rem, 88vw, 86svh); margin: var(--section-y) 0 var(--s-6); }
-  .head h2 { position: relative; margin: 0; text-align: center; font-size: var(--t-h2); font-weight: var(--w-display);
+  /* ── the name ── under an arch: the dial's middle sits on the first
+     panel's top edge, so only its upper half shows and the panel covers
+     the rest */
+  .head { position: relative; --dial: min(40rem, 88vw);
+          height: calc(var(--dial) / 2); margin-top: var(--section-y);
+          display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+          padding-bottom: calc(var(--dial) * 0.1); text-align: center; }
+  .head .kicker { margin: 0 0 var(--s-3); color: var(--ink-3); }
+  .head h2 { position: relative; margin: 0; font-size: var(--t-h2); font-weight: var(--w-display);
              line-height: var(--lh-display); letter-spacing: var(--track-display); color: var(--ink); }
-  .head .dial { position: absolute; inset: 0; margin: auto; height: 100%; width: auto; aspect-ratio: 1;
-                pointer-events: none; fill: none; stroke: var(--ink-4); stroke-width: 1; }
+  .head .dial { position: absolute; left: 50%; top: 0; width: var(--dial); height: var(--dial);
+                translate: -50% 0; pointer-events: none; fill: none; stroke: var(--ink-4); stroke-width: 1; }
   .head .ring { vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center;
                 will-change: transform; }
 
