@@ -19,7 +19,6 @@ import { splitChars } from './ui/splitText';
 import { createCursor } from './ui/cursor';
 import { createBlurIn } from './ui/blurIn';
 import { createBrandSwap } from './ui/brandSwap';
-import { createStudiosMap } from './ui/studiosMap';
 import { onPage } from './lifecycle';
 import type { Hero } from './hero';
 
@@ -52,8 +51,6 @@ onPage('home', () => {
 
   const forming = document.querySelector<HTMLElement>('[data-forming]');
   if (forming) { add(createForming(forming)); add(createFormingMarks(forming)); }
-  const map = document.querySelector<HTMLElement>('[data-studios-map]');
-  if (map) add(createStudiosMap(map));
   const brands = document.querySelector<HTMLElement>('[data-brands]');
   if (brands) add(createBrandSwap(brands));
   const faqs = document.querySelector<HTMLElement>('[data-faqs]');

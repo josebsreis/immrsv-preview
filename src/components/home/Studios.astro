@@ -68,28 +68,14 @@ const reelFor = (key: string): Shot[] => {
 /** all three on the light: what tells one from the next, as the top one
  *  is lifted away, is the shadow it casts on the one beneath */
 const grounds = ['light', 'light', 'light'] as const;
-import { SYMBOL } from '../../lib/lettermark';
-/** each studio is a face of the mark: the top over it all is the building,
- *  then the image, then the product (paths: top, left, right) */
-const FACE: Record<string, number> = { architecture: 0, media: 1, products: 2 };
 ---
 {content.items.length > 0 && (
   <div class="studios">
-    <!-- the studios announced by the mark itself: its three faces are the
-         three studios, and as the heading comes up they come apart a little,
-         each named -->
+    <!-- the studios announced: the name and the line that says why,
+         centred over the three -->
     <div class="head">
       <h2 data-blur-in>{content.title}</h2>
-      <figure class="map" data-studios-map aria-hidden="true">
-        <svg viewBox={SYMBOL.viewBox}>
-          {SYMBOL.paths.map((d, k) => <path d={d} data-face={k} />)}
-        </svg>
-        {content.items.map((st, i) => (
-          <span class={`tag t${FACE[st.key] ?? i}`}>
-            <b>{String(i + 1).padStart(2, '0')}</b> {st.name}
-          </span>
-        ))}
-      </figure>
+      <p class="intro" data-rise>{content.intro}</p>
     </div>
     <!-- the stack carries a ground from the start: the nav reads the page's
          themed sections once, before any script has run, so a ground the
@@ -105,7 +91,7 @@ const FACE: Record<string, number> = { architecture: 0, media: 1, products: 2 };
                  style={`--z: ${content.items.length - i}`} aria-labelledby={`studio-${s.key}`}>
           <div class="top">
             <div class="mark">
-              <span class="n" data-rise>{String(i + 1).padStart(2, '0')}<svg class="glyph" viewBox={SYMBOL.viewBox} aria-hidden="true">{SYMBOL.paths.map((d, k) => <path d={d} class={k === (FACE[s.key] ?? i) ? 'on' : ''} />)}</svg></span>
+              <span class="n" data-rise>{String(i + 1).padStart(2, '0')}</span>
               <h3 id={`studio-${s.key}`} data-blur-in><span>{s.name.split(' ')[0]}</span> {s.name.split(' ').slice(1).join(' ')}</h3>
             </div>
             <div class="say">
@@ -183,35 +169,6 @@ const FACE: Record<string, number> = { architecture: 0, media: 1, products: 2 };
      rule, so its edge reads as an edge rather than the two grounds merging
      — a hairline, the page's own way of parting things, not a shadow. */
   .stack[data-live] .studio { border-bottom: var(--hairline) solid var(--line); }
-
-  /* ── the map: the mark, its faces the studios ── */
-  .map { position: relative; width: 7.5rem; margin: var(--s-8) auto 0; }
-  .map svg { display: block; width: 100%; overflow: visible; }
-  .map path { fill: var(--ink); transition: none;
-              transform: translate(calc(var(--fx, 0) * var(--e, 0) * 1px), calc(var(--fy, 0) * var(--e, 0) * 1px)); }
-  .map path[data-face="0"] { --fx: 0; --fy: -14; }
-  .map path[data-face="1"] { --fx: -12; --fy: 7; }
-  .map path[data-face="2"] { --fx: 12; --fy: 7; }
-  /* each face named, on a hairline leading to it */
-  .map .tag { position: absolute; white-space: nowrap; display: flex; align-items: center; gap: var(--s-3);
-              font-size: var(--t-label); letter-spacing: var(--track-label, 0.08em); text-transform: uppercase;
-              color: var(--ink-2); opacity: var(--e, 0); }
-  .map .tag b { font-weight: inherit; color: var(--ink-3); }
-  .map .tag::before { content: ''; order: var(--line-order, 0); width: calc(2.5rem * var(--e, 0));
-                      height: var(--hairline); background: var(--line-strong, var(--ink-4)); }
-  .map .t0 { left: 62%; top: 4%; --line-order: -1; }
-  .map .t1 { right: 88%; top: 64%; flex-direction: row-reverse; --line-order: -1; }
-  .map .t2 { left: 88%; top: 64%; --line-order: -1; }
-  @media (max-width: 719px) {
-    .map { width: 5.5rem; }
-    .map .tag { font-size: 0.5625rem; }
-    .map .tag::before { width: calc(1.25rem * var(--e, 0)); }
-  }
-
-  /* the panel's number carries its face of the mark */
-  .glyph { display: inline-block; height: 0.62em; width: auto; margin-left: 0.35em; vertical-align: 0.02em; overflow: visible; }
-  .glyph path { fill: none; stroke: currentColor; stroke-width: 7; }
-  .glyph path.on { fill: var(--ink); stroke: var(--ink); }
 
   /* ── the name ── centred, the way the other work section opens: the
      three that follow are announced as one, not as a column beside them */
