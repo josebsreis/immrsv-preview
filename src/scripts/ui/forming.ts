@@ -29,14 +29,19 @@ const CLEAR = 26;
 
 /** where in the scroll each thing happens */
 const T = {
-  team: [-0.12, -0.06] as const,               // your team: four dots, 'YOUR TEAM,' — while
+  team: [-0.085, -0.045] as const,              // your team: four dots, 'YOUR TEAM,' — while
                                               // the section is still rising over the logos
-  join: [-0.06, 0.0] as const,                // they part and ours falls into the gap,
-                                              // 'EXTENDED.' — landing as the section lands
-  spread: [0.02, 0.22] as const,              // ours opens into the light, she standing
-                                              // in it, pushing the lines off
-  play: [0.23, 0.9] as const,                 // the frames run, once the light is open
-  beat: 0.27,                                  // the first step begins its pass here…
+  join: [-0.045, 0.0] as const,                // they part and ours falls into the gap,
+                                              // gathering speed, 'EXTENDED.'
+  impact: [0.0, 0.035] as const,              // it lands with weight: a squash, and the
+                                              // knock runs out through the others
+  lit: [0.03, 0.085] as const,                // the light passes from ours out through
+                                              // the team, the nearest first
+  merge: [0.085, 0.125] as const,             // the five draw together into one
+  spread: [0.13, 0.3] as const,               // and that one opens into the light, she
+                                              // standing in it, pushing the lines off
+  play: [0.31, 0.9] as const,                 // the frames run, once the light is open
+  beat: 0.34,                                  // the first step begins its pass here…
   last: 0.93,                                 // …and the last is gone by here, the rest
                                               // spread evenly between, however many
   life: 0.17,                                 // how long one takes to cross — longer
@@ -64,7 +69,6 @@ export function createForming(root: HTMLElement): Forming {
   const halves = [...root.querySelectorAll<HTMLElement>('[data-forming-half]')];
   const squares = [...root.querySelectorAll<HTMLElement>('[data-forming-team] i')];
   const note = root.querySelector<HTMLElement>('.note');
-  const words = [...root.querySelectorAll<HTMLElement>('[data-forming-word]')];
   const beats = [...root.querySelectorAll<HTMLElement>('[data-forming-beat]')];
   const ctx = canvas.getContext('2d');
   if (!ctx) return { update() {}, destroy() {} };
@@ -198,31 +202,46 @@ export function createForming(root: HTMLElement): Forming {
        apart from the middle and ours grows into the gap.
        (Dots; `sq` is a dot's width.) */
     const slot = sq * 1.5;
-    let dotY = 0, falling = false;
     const t = ramp(p, T.team[0], T.team[1]), j = inOut(ramp(p, T.join[0], T.join[1]));
     const home = [-1.5, -0.5, 0, 0.5, 1.5], parted = [-2, -1, 0, 1, 2];
+    /* the knock of the landing: out and back, a little past, and still */
+    const knock = (u: number) => (u <= 0 || u >= 1 ? 0 : Math.sin(u * Math.PI * 1.6) * Math.exp(-u * 3.2));
+    const im = ramp(p, T.impact[0], T.impact[1]);
+    /* the five drawing together, and the grey-to-light of each */
+    const mg = inOut(ramp(p, T.merge[0], T.merge[1]));
+    const DARK = [44, 44, 48], LIGHT = [245, 245, 247];
+    const tone = (k: number) => `rgb(${DARK.map((c, n) => Math.round(c + (LIGHT[n] - c) * k)).join(' ')})`;
     squares.forEach((el, i) => {
       if (i === 2) {
-        /* ours comes down from the top of the screen and settles into the
-           gap the others open for it */
+        /* ours comes down from the top of the screen, gathering speed, into
+           the gap the others open for it — and lands with weight */
         const d = ramp(p, T.join[0], T.join[1]);
-        const fall = 1 - Math.pow(1 - d, 3);
+        const fall = d * d;
+        const dotY = -(1 - fall) * (h / 2 + sq);
+        const sqz = knock(im) * 0.9;
         el.style.setProperty('--o', d > 0 ? '1' : '0');
         el.style.setProperty('--s', '1');
-        dotY = -(1 - fall) * (h / 2 + sq);
-        falling = d > 0 && d < 1;
-        el.style.setProperty('--y', `${dotY.toFixed(1)}px`);
+        el.style.setProperty('--y', `${(dotY + sqz * sq * 0.12).toFixed(1)}px`);
+        el.style.transform = `translate(var(--x, 0px), var(--y, 0px)) scale(${(1 + sqz * 0.22).toFixed(3)}, ${(1 - sqz * 0.22).toFixed(3)})`;
         return;
       }
       const n = i < 2 ? i : i - 1;
       const a = clamp01(t * 4 - n * 0.9);
+      /* nearest first: the two beside ours, then the two at the ends */
+      const ring = Math.abs(i - 2);
+      const push = knock(clamp01((im - (ring - 1) * 0.18) / 0.82)) * sq * 0.35 * Math.sign(i - 2);
+      const lit = inOut(ramp(p, T.lit[0] + (ring - 1) * 0.022, T.lit[1] - (2 - ring) * 0.022));
+      const x = (home[i] + (parted[i] - home[i]) * j) * slot * (1 - mg) + push;
       el.style.setProperty('--o', inOut(a).toFixed(3));
-      el.style.setProperty('--x', `${((home[i] + (parted[i] - home[i]) * j) * slot).toFixed(1)}px`);
+      el.style.setProperty('--x', `${x.toFixed(1)}px`);
       el.style.setProperty('--y', `${((1 - inOut(a)) * sq * 0.6).toFixed(1)}px`);
+      el.style.background = tone(lit);
     });
 
     // the ground: our dot, opened until it has covered the screen
     const g = inOut(ramp(p, T.spread[0], T.spread[1]));
+    // the merged five hide under the light as it opens
+    squares.forEach((el) => { if (g > 0) el.style.setProperty('--o', '0'); });
     root.style.setProperty('--g', g.toFixed(3));
     win.style.visibility = g > 0 ? '' : 'hidden';
     note?.style.setProperty('--nv', inOut(ramp(p, T.team[0] - 0.04, T.team[0] + 0.03)).toFixed(3));
@@ -254,15 +273,6 @@ export function createForming(root: HTMLElement): Forming {
       // 'YOUR TEAM,' with the four; 'EXTENDED.' as ours joins
       el.style.setProperty('--v', (i === 0 ? inOut(ramp(p, T.team[0], T.team[0] + 0.05)) : j).toFixed(3));
       el.style.setProperty('--dy', `${(Math.sign(apart[i]) * m).toFixed(1)}px`);
-      /* 'YOUR' and 'TEAM,' step aside as ours falls through between them,
-         and close again once it has gone by */
-      if (i === 0 && words.length === 2) {
-        const reach = sq * 0.5 + lh * 0.5 + 14;
-        const near = falling ? clamp01(1 - Math.abs(dotY - Math.sign(apart[i]) * m) / reach) : 0;
-        const push = inOut(near) * (sq * 0.55 + 8);
-        words[0].style.setProperty('--wx', `${(-push).toFixed(1)}px`);
-        words[1].style.setProperty('--wx', `${push.toFixed(1)}px`);
-      }
     });
 
     // the frame
