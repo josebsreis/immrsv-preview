@@ -40,9 +40,9 @@ const T = {
   merge: [0.085, 0.125] as const,             // the five draw together into one
   spread: [0.13, 0.3] as const,               // and that one opens into the light, she
                                               // standing in it, pushing the lines off
-  play: [0.31, 0.9] as const,                 // the frames run, once the light is open
+  play: [0.31, 0.97] as const,                 // the frames run, once the light is open
   beat: 0.34,                                  // the first step begins its pass here…
-  last: 0.93,                                 // …and the last is gone by here, the rest
+  last: 0.99,                                 // …and the last is gone by here, the rest
                                               // spread evenly between, however many
   life: 0.17,                                 // how long one takes to cross — longer
                                               // than the gap, so two are always going
@@ -198,9 +198,7 @@ export function createForming(root: HTMLElement): Forming {
     if (r.height < 1) return;
     /* below 0 while the section is still coming up the screen: the row is
        already telling its story then, so there is no empty dark between */
-    /* the last screen of the track is the hold: she stands finished while
-       the next sheet rides over her, so the story runs over the rest */
-    apply(Math.max(-0.25, Math.min(1, -r.top / Math.max(1, r.height - h * 2))));
+    apply(Math.max(-0.25, Math.min(1, -r.top / Math.max(1, r.height - h))));
   };
   const apply = (p: number) => {
     if (p === last) return;

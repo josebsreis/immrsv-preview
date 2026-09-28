@@ -79,4 +79,6 @@ const projects = await getProjects();
   .light:has([data-forming][data-live]) .next {
     margin-top: -100vh; margin-top: -100svh;
     background: linear-gradient(var(--ground), var(--ground)) 0 var(--lip, 0px) / 100% 100% no-repeat; }
+  /* and the tab meets her straight away, with no air above it */
+  .light:has([data-forming][data-live]) .next :global(.studios .head) { padding-top: 0; }
 </style>
