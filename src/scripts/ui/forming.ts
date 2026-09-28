@@ -276,18 +276,20 @@ export function createForming(root: HTMLElement): Forming {
        it — down and a touch smaller — still turning until she is covered */
     /* …and she comes up the same way as the light opens: from a little
        lower and a touch smaller, into her place — the leaving, backwards */
+    /* …and she comes up into the light as it opens: from below, her head
+       first, climbing into her place as the circle grows round her */
     const sink = inOut(ramp(p, riseFrom, 1));
-    const arrive = 1 - inOut(ramp(g, 0.05, 0.75));
-    const off = Math.max(sink, arrive);
+    const arrive = 1 - (1 - Math.pow(1 - ramp(g, 0.02, 0.8), 3));
+    const dy = sink * h * 0.06 + arrive * (sh * 0.5 + 24);
+    const sc = 1 - sink * 0.05;
     box.style.transformOrigin = '50% 100%';
-    box.style.transform = off > 0 ? `translateY(${(off * h * 0.06).toFixed(1)}px) scale(${(1 - off * 0.05).toFixed(4)})` : '';
+    box.style.transform = dy > 0.1 ? `translateY(${dy.toFixed(1)}px) scale(${sc.toFixed(4)})` : '';
     /* The light's circle is her window, exactly: not before it opens, and
        cut from her in her own coordinates — which are moved and scaled —
        so the cut lands on the circle on screen, not beside it. */
     box.style.visibility = g > 0 ? '' : 'hidden';
     if (g >= 1) box.style.clipPath = 'none';
     else {
-      const dy = off * h * 0.06, sc = 1 - off * 0.05;
       const ox = sw / 2, oy = sh;                          // her transform's origin: foot, centre
       const lx = ox + (w / 2 - sx - ox) / sc;
       const ly = oy + (h / 2 - sy - oy - dy) / sc;
