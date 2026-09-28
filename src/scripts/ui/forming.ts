@@ -64,6 +64,7 @@ export function createForming(root: HTMLElement): Forming {
   const halves = [...root.querySelectorAll<HTMLElement>('[data-forming-half]')];
   const squares = [...root.querySelectorAll<HTMLElement>('[data-forming-team] i')];
   const note = root.querySelector<HTMLElement>('.note');
+  const words = [...root.querySelectorAll<HTMLElement>('[data-forming-word]')];
   const beats = [...root.querySelectorAll<HTMLElement>('[data-forming-beat]')];
   const ctx = canvas.getContext('2d');
   if (!ctx) return { update() {}, destroy() {} };
@@ -197,6 +198,7 @@ export function createForming(root: HTMLElement): Forming {
        apart from the middle and ours grows into the gap.
        (Dots; `sq` is a dot's width.) */
     const slot = sq * 1.5;
+    let dotY = 0, falling = false;
     const t = ramp(p, T.team[0], T.team[1]), j = inOut(ramp(p, T.join[0], T.join[1]));
     const home = [-1.5, -0.5, 0, 0.5, 1.5], parted = [-2, -1, 0, 1, 2];
     squares.forEach((el, i) => {
@@ -207,7 +209,9 @@ export function createForming(root: HTMLElement): Forming {
         const fall = 1 - Math.pow(1 - d, 3);
         el.style.setProperty('--o', d > 0 ? '1' : '0');
         el.style.setProperty('--s', '1');
-        el.style.setProperty('--y', `${(-(1 - fall) * (h / 2 + sq)).toFixed(1)}px`);
+        dotY = -(1 - fall) * (h / 2 + sq);
+        falling = d > 0 && d < 1;
+        el.style.setProperty('--y', `${dotY.toFixed(1)}px`);
         return;
       }
       const n = i < 2 ? i : i - 1;
@@ -250,6 +254,15 @@ export function createForming(root: HTMLElement): Forming {
       // 'YOUR TEAM,' with the four; 'EXTENDED.' as ours joins
       el.style.setProperty('--v', (i === 0 ? inOut(ramp(p, T.team[0], T.team[0] + 0.05)) : j).toFixed(3));
       el.style.setProperty('--dy', `${(Math.sign(apart[i]) * m).toFixed(1)}px`);
+      /* 'YOUR' and 'TEAM,' step aside as ours falls through between them,
+         and close again once it has gone by */
+      if (i === 0 && words.length === 2) {
+        const reach = sq * 0.5 + lh * 0.5 + 14;
+        const near = falling ? clamp01(1 - Math.abs(dotY - Math.sign(apart[i]) * m) / reach) : 0;
+        const push = inOut(near) * (sq * 0.55 + 8);
+        words[0].style.setProperty('--wx', `${(-push).toFixed(1)}px`);
+        words[1].style.setProperty('--wx', `${push.toFixed(1)}px`);
+      }
     });
 
     // the frame
@@ -303,7 +316,7 @@ export function createForming(root: HTMLElement): Forming {
     if (q.has('f')) {
       const pane = box.parentElement!;
       pane.style.position = 'fixed'; pane.style.inset = '0'; pane.style.zIndex = '99';
-      const at = clamp01(Number(q.get('f')));
+      const at = Math.max(-0.25, Math.min(1, Number(q.get("f"))));
       pinned = true;
       warm();
       const hold = () => { size(); last = -1; apply(at); };
