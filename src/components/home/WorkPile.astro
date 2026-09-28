@@ -181,7 +181,11 @@ const rings = RINGS.map((r, k) => {
      card you cannot see must not be the one a click lands on */
   .card[data-pile-status="gone"] { pointer-events: none; }
 
-  .media { display: block; aspect-ratio: 16 / 10; overflow: hidden;
+  /* positioned, so it paints over the plate by DOM order alone: the plate
+     was under it by a negative z-index, and a child at a negative level
+     inside a layer that is being transformed is a thing browsers get wrong
+     — the plate flashed through the picture's edge as the card moved */
+  .media { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden;
            border-radius: var(--radius-media); background: var(--surface); }
   .link { display: block; color: inherit; }
   .media img { width: 100%; height: 100%; object-fit: cover; pointer-events: none;
@@ -195,15 +199,25 @@ const rings = RINGS.map((r, k) => {
      to the picture's own edge, where it cannot be seen, until the card is
      the one on show — and then it opens out from under it. The clip takes
      the clicks with it, so a closed plate's button cannot be pressed. */
-  .plate { position: absolute; z-index: -1;
+  .plate { position: absolute;
            inset: calc(var(--frame) * -1) calc(var(--frame) * -1) calc(var(--foot) * -1);
            background: var(--surface); border-radius: var(--radius-media);
-           /* closed a pixel inside the picture's edge, not on it: exactly on
-              it, the plate's white shows through the antialiasing at the
-              rounded corners as a hairline round every card at the side */
+           /* Closed, it is clipped inside the picture's edge — and it is also
+              not there: opacity 0 and hidden. A clip alone left a hairline of
+              white at the rounded corners whenever the card's scale and turn
+              put the two edges on different pixels, which is any time it
+              moved. It fades as it closes and comes up as it opens, so the
+              opening from under the picture still reads. */
            clip-path: inset(calc(var(--frame) + 1px) calc(var(--frame) + 1px) calc(var(--foot) + 1px) calc(var(--frame) + 1px) round var(--radius-media));
-           transition: clip-path var(--dur-base) var(--ease-panel); }
-  .card[data-pile-status="active"] .plate { clip-path: inset(0 round var(--radius-media)); }
+           opacity: 0; visibility: hidden;
+           /* on its own layer while it is shown (hidden, it has none), so a
+              clip and a fade running under a card that is itself moving are
+              not repainted into the card's picture every frame */
+           will-change: clip-path, opacity; backface-visibility: hidden;
+           transition: clip-path var(--dur-base) var(--ease-panel), opacity var(--dur-base) var(--ease-panel),
+                       visibility 0s linear var(--dur-base); }
+  .card[data-pile-status="active"] .plate { clip-path: inset(0 round var(--radius-media));
+                                            opacity: 1; visibility: visible; transition-delay: 0s; }
 
   .bar { position: absolute; left: 0; right: 0; bottom: 0; height: var(--foot);
          display: flex; align-items: center; justify-content: space-between;

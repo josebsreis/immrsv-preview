@@ -170,6 +170,16 @@ export function createWorkPile(root: HTMLElement): WorkPile {
   let now: Pose[] = cards.map((_, i) => poseFor(offset(i, 0, n)));
   let from: Pose[] = now, to: Pose[] = now;
   let start = 0, raf = 0;
+  /** the card a throw is bringing to the middle, whose frame waits to open
+   *  until it is in front — opened at once it stood out white round a card
+   *  still behind the one it was replacing, a flash for the first half of
+   *  every throw */
+  let pending = -1;
+  const arrive = () => {
+    if (pending < 0) return;
+    cards[pending].dataset.pileStatus = 'active';
+    pending = -1;
+  };
 
   const paint = (i: number) => {
     const card = cards[i], p = now[i];
@@ -182,6 +192,8 @@ export function createWorkPile(root: HTMLElement): WorkPile {
     raf = 0;
     const k = Math.min(1, (t - start) / MS);
     const e = elastic(k);
+    // past the middle of the move the card coming in is in front: its frame opens
+    if (e >= 0.5) arrive();
     now = cards.map((_, i) => mix(from[i], to[i], e));
     cards.forEach((_, i) => paint(i));
     if (k < 1) raf = requestAnimationFrame(tick);
@@ -196,9 +208,12 @@ export function createWorkPile(root: HTMLElement): WorkPile {
     turnDial(turns);
     // a throw kicks the dial, and it runs down again
     if (by) kick = KICK;
+    pending = -1;
     cards.forEach((card, i) => {
       const d = offset(i, at, n);
-      card.dataset.pileStatus = statusFor(d);
+      // the one thrown to the middle is 'near' until it gets there
+      if (d === 0 && by) { card.dataset.pileStatus = 'near'; pending = i; }
+      else card.dataset.pileStatus = statusFor(d);
       // only the card on show can be reached from the keyboard: the others
       // are brought to the middle first
       card.querySelectorAll<HTMLElement>('a').forEach((a) => a.setAttribute('tabindex', d === 0 ? '0' : '-1'));
@@ -212,6 +227,7 @@ export function createWorkPile(root: HTMLElement): WorkPile {
     if (still || document.visibilityState !== 'visible') {
       now = to;
       cards.forEach((_, i) => paint(i));
+      arrive();
       return;
     }
     start = performance.now();
