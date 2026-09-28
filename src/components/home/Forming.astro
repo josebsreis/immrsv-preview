@@ -156,11 +156,6 @@ import { SYMBOL } from '../../lib/lettermark';
 
 <style>
   .forming { position: relative; }
-  /* the edge it rides up over the logos on: a rule, as the logos have above
-     them. On the section, not the pane, so it goes up and away with the
-     section's top once the pane is pinned */
-  .forming::before { content: ''; position: absolute; left: 0; right: 0; top: 0; z-index: 2;
-                     height: var(--hairline); background: rgb(255 255 255 / 0.12); pointer-events: none; }
   /* one screen until the script has it: the line, on the light, and nothing
      that needs scrolling through */
   .track { height: 100vh; position: relative; }
