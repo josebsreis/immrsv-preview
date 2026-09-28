@@ -17,7 +17,7 @@ const projects = await getProjects();
 <Base theme="dark">
   <main class="main" data-page="home">
     <div class="dark">
-      <Hero content={home.hero} featured={home.featuredProject} />
+      <Hero content={home.hero} />
       <Marquee items={home.studios.items.map((s) => s.name)} />
       <Manifesto content={home.about} />
       {/* the firms the practice has worked for, right after it has said what

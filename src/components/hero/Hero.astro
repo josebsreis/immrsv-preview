@@ -1,14 +1,13 @@
 ---
 /** The hero: the particle mark (a client island booted by src/scripts/home.ts)
  *  behind an edge-anchored layer of DOM — statement, CTAs, and a bottom row
- *  holding the cue, the sentence and the featured project. Copy comes in as props. */
+ *  holding the cue at the left and the sentence at the right. Copy comes in as props. */
 import Button from '@components/ui/Button.astro';
 import ScrollCue from '@components/ui/ScrollCue.astro';
-import FeaturedProject from '@components/hero/FeaturedProject.astro';
 import type { HomeContent } from '@lib/sanity/types';
 
-interface Props { content: HomeContent['hero']; featured?: HomeContent['featuredProject']; }
-const { content, featured } = Astro.props;
+interface Props { content: HomeContent['hero']; }
+const { content } = Astro.props;
 const [line1, line2 = ''] = content.headline.split('\n');
 ---
 <div class="canvas-host" data-hero-canvas></div>
@@ -30,7 +29,6 @@ const [line1, line2 = ''] = content.headline.split('\n');
   <div class="bottom">
     <div class="cue-slot"><ScrollCue /></div>
     <div class="desc-slot"><p class="desc arrives" style="--arrive-delay: .7s">{content.description}</p></div>
-    {featured && <div class="feat-slot"><FeaturedProject project={featured} /></div>}
   </div>
 </section>
 
@@ -54,28 +52,19 @@ const [line1, line2 = ''] = content.headline.split('\n');
   .rot :global(i.out) { opacity: 0; filter: blur(9px); }
   .cta { display: flex; gap: var(--s-2); margin-top: 2.375rem; }
 
-  /* the anchored bottom row: cue at the left edge, the sentence centred in
-     whatever is left between it and the card, the card at the right edge */
+  /* the anchored bottom row: the cue at the left edge, the sentence at the right */
   .bottom { position: absolute; left: var(--page-x); right: var(--page-x); bottom: var(--page-y); z-index: var(--z-ui);
             display: flex; align-items: flex-end; gap: var(--s-6); }
   .cue-slot { flex: none; }
-  .desc-slot { flex: 1 1 auto; min-width: 0; display: flex; justify-content: center; }
+  .desc-slot { flex: 1 1 auto; min-width: 0; display: flex; justify-content: flex-end; }
   .desc { max-width: 20.625rem; font-size: var(--t-lead); line-height: var(--lh-lead);
           letter-spacing: var(--track-lead); color: var(--ink); }
-  .feat-slot { flex: none; }
-
-  /* too narrow for three across: the card stands down and the row keeps its
-     two corners — the cue at the left, the sentence at the right */
-  @media (max-width: 1099px) {
-    .feat-slot { display: none; }
-  }
   @media (min-width: 720px) and (max-width: 1099px) {
-    .desc-slot { justify-content: flex-end; }
     .desc { max-width: 24rem; font-size: var(--t-body); }
   }
 
-  /* the card takes too much of a phone screen — the sentence carries it, with
-     the cue reduced to its squares beside it */
+  /* a phone: the sentence carries the row, with the cue reduced to its
+     squares beside it */
   @media (max-width: 719px) {
     .lead { left: var(--page-x); top: 6.5rem; }
     .cta { flex-direction: column; align-items: flex-start; }
