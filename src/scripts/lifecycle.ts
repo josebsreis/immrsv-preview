@@ -88,14 +88,36 @@ function reread(): void {
                  && !el.hasAttribute('data-theme-follows'));
 }
 
+/** Which themed section is at a line down the screen: whichever covers it,
+ *  a later one in the document winning a tie — which is what makes a sticky
+ *  half riding over another resolve to the one on top. The one rule for
+ *  "what ground is here", used by the nav (at its own line) and the page
+ *  change (at the middle of the screen). */
+function sectionAt(y: number, list: HTMLElement[] = sections): HTMLElement | null {
+  let hit: HTMLElement | null = null;
+  for (const el of list) {
+    const box = el.getBoundingClientRect();
+    if (box.height > 0 && box.top <= y && box.bottom > y) hit = el;
+  }
+  return hit;
+}
+
 function paintNav(): void {
   if (followers.length === 0) return;
-  let ground = document.documentElement.dataset.theme ?? 'dark';
-  for (const el of sections) {
-    const box = el.getBoundingClientRect();
-    if (box.top <= probeY && box.bottom > probeY) ground = el.dataset.theme ?? ground;
-  }
+  const ground = sectionAt(probeY)?.dataset.theme ?? document.documentElement.dataset.theme ?? 'dark';
   for (const el of followers) if (el.dataset.theme !== ground) el.dataset.theme = ground;
+}
+
+/** The ground and the ink actually on screen at a line (the middle, if not
+ *  given), read fresh from the page as it is now: the colours the section
+ *  there sets for itself, or the body's if none covers it. */
+export function groundAt(y = innerHeight / 2): { ground: string; ink: string } {
+  reread();
+  const el = sectionAt(y) ?? document.body;
+  const cs = getComputedStyle(el);
+  const ground = cs.getPropertyValue('--ground').trim() || getComputedStyle(document.body).backgroundColor;
+  const ink = cs.getPropertyValue('--ink').trim() || getComputedStyle(document.body).color;
+  return { ground, ink };
 }
 
 const onScroll = () => paintNav();

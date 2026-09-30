@@ -11,6 +11,8 @@
    project is dark-then-light rather than a flash of the wrong one.
    Registered once; the layer persists, so it is found afresh each time. */
 
+import { groundAt } from '../lifecycle';
+
 const FADE = 280, BUILD = 480, STAGGER = 60, HOLD = 40, APART = 380, REVEAL = 420;
 const snap = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
 const inOut = 'cubic-bezier(0.65, 0, 0.35, 1)';
@@ -38,10 +40,21 @@ export function createCurtain() {
   const faces = (c: HTMLElement) => [...c.querySelectorAll<SVGPathElement>('path')];
   const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
   /** the ground and the ink of the page as it is now */
-  const tone = (c: HTMLElement) => {
-    const b = getComputedStyle(document.body);
-    c.style.setProperty('--c-ground', b.backgroundColor);
-    c.style.setProperty('--c-ink', b.color);
+  /* the ground and ink of whatever section is in the middle of the screen
+     — not the page's base, which on the home page is dark under light
+     sections — so a light section going to a light page stays light */
+  const tone = (c: HTMLElement, blend: boolean) => {
+    const { ground, ink } = groundAt();
+    // set outright as it starts: blended, it came up from whatever colour it
+    // was last used on — the dark home under a light page, as a grey flash
+    if (!blend) { c.style.transition = 'none'; c.querySelectorAll('path').forEach((p) => { p.style.transition = 'none'; }); }
+    c.style.setProperty('--c-ground', ground);
+    c.style.setProperty('--c-ink', ink);
+    if (!blend) {
+      void c.offsetWidth;
+      c.style.transition = '';
+      c.querySelectorAll('path').forEach((p) => { p.style.transition = ''; });
+    }
   };
   let covered = false;
 
@@ -52,7 +65,7 @@ export function createCurtain() {
       const c = el();
       if (!c) return load();
       c.getAnimations({ subtree: true }).forEach((a) => a.cancel());
-      tone(c);
+      tone(c, false);
       c.classList.add('on');
       // 1. the page goes
       const fade = c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE, easing: 'ease-out', fill: 'forwards' });
@@ -81,7 +94,7 @@ export function createCurtain() {
     if (!c || !covered) return;
     covered = false;
     // the ground takes the new page's, under the mark, before it goes
-    tone(c);
+    tone(c, true);
     await wait(HOLD);
     /* 3. unlocked: the mark turns on and fades, still whole — its faces
           opening a hair as it goes — as the new page comes up */
