@@ -161,6 +161,11 @@ export function createForming(root: HTMLElement): Forming {
       }
     }
 
+    /* the cards all as tall as the tallest, at this width */
+    root.style.removeProperty('--beat-h');
+    const tallest = Math.max(0, ...beats.map((b) => b.getBoundingClientRect().height));
+    if (tallest) root.style.setProperty('--beat-h', `${Math.ceil(tallest)}px`);
+
     /* How far a card may lean in before it would touch her — measured, not
        assumed, because the slot's width answers to the screen's height and a
        short wide screen leaves far less room than a tall one. */

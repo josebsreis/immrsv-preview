@@ -244,7 +244,12 @@ const {
      its pass and back out as it leaves — so the four read as things going by
      rather than as a list being ticked. The arc is written from script as two
      offsets, because the page is one place where a sine is worth the read. */
+  /* All six the same height — the tallest one's, measured by the script
+     (--beat-h), and never less than a floor — with more room inside: the
+     word at the top, the line at the foot, the air between them. */
   .beat { position: absolute; top: 50%; width: min(25rem, 31vw);
+          display: flex; flex-direction: column; box-sizing: border-box;
+          padding: var(--s-6); min-height: max(var(--beat-h, 0px), 15rem);
           color: var(--ink); pointer-events: none;
           opacity: var(--v, 0); --v: 0; --ax: 0px; --ay: 0px;
           transform: translate(var(--ax), calc(-50% + var(--ay))); }
@@ -270,7 +275,7 @@ const {
             margin: calc(var(--dot) / -2); border-radius: 50%; background: var(--ink-4);
             translate: var(--x) var(--y); will-change: translate, scale, opacity; }
 
-  .line { margin: 0; font-size: var(--t-small); color: var(--ink-2); line-height: var(--lh-body); }
+  .line { margin: auto 0 0; font-size: var(--t-small); color: var(--ink-2); line-height: var(--lh-body); }
 
   /* Narrow: she takes the width and stands in the middle of the screen, the
      line reads as two halves above and below her, and her steps do not pass
