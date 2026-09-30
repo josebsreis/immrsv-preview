@@ -212,6 +212,21 @@ body.ready .arrives { animation: arrive var(--dur-slow) ease both; animation-del
 ::view-transition-group(*) { animation-duration: 0.62s; animation-timing-function: var(--ease-out); }
 ::view-transition-group(root) { animation-duration: 0s; }
 
+/* Into or out of a project, in three beats rather than all at once
+   (scripts/lifecycle.ts marks the change): the page around the picture goes
+   first, quickly; the picture travels on the bare ground; and only once it
+   has landed does the new page come up round it. */
+/* the travelling picture itself: its two sizes simply swap, with no
+   crossfade of their own to muddy the move (a named image outranks the
+   wildcard, so root's rules below still win for the page) */
+html[data-carry]::view-transition-old(*) { animation: none; opacity: 0; }
+html[data-carry]::view-transition-new(*) { animation: none; }
+html[data-carry]::view-transition-group(*) { animation-delay: 0.14s; animation-duration: 0.72s;
+                                             animation-timing-function: cubic-bezier(0.65, 0, 0.2, 1); }
+html[data-carry]::view-transition-group(root) { animation: none; }
+html[data-carry]::view-transition-old(root) { animation: page-out 0.26s var(--ease-out) both; opacity: 1; }
+html[data-carry]::view-transition-new(root) { animation: page-in 0.5s var(--ease-out) 0.78s both; }
+
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
