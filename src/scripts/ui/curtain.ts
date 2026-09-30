@@ -11,7 +11,7 @@
    of the section in the middle of the screen, and a change of ground is the
    new page dissolving up through the old one, slowly, once the name has
    gone. Registered once; the layer persists, so it is found afresh. */
-import { groundAt } from '../lifecycle';
+import { groundAt, holdNav } from '../lifecycle';
 
 const FADE = 280, LETTERS = 520, SPREAD = 260, READ = 260, OUT = 380, REVEAL = 420, REVEAL_TURN = 820;
 /** the nav's mark: the first three shapes of the wordmark, turned together
@@ -82,6 +82,10 @@ export function createCurtain() {
       c.getAnimations({ subtree: true }).forEach((a) => a.cancel());
       tone(c);
       spell(c, '');
+      // the nav keeps the ground it has until the new page comes up — and is
+      // let go regardless if the page never does
+      holdNav(true);
+      setTimeout(() => holdNav(false), 6000);
       c.classList.add('on');
       // 1. the page goes, and the nav's mark turns the first half of its turn
       const fade = c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE, easing: 'ease-out', fill: 'forwards' });
@@ -126,6 +130,10 @@ export function createCurtain() {
     });
     turn.forEach((a) => a.cancel());
     turn = [];
+    /* the nav turns with the page: as the new page is a third of the way
+       up through the ground, with its own colour transition carrying it */
+    const upAt = OUT + SPREAD * 0.6 + 60;
+    setTimeout(() => holdNav(false), upAt + (changes ? REVEAL_TURN : REVEAL) * 0.3);
     const reveal = c.animate([{ opacity: 1 }, { opacity: 0 }],
       // only once the name has blurred right away
       changes
@@ -135,5 +143,6 @@ export function createCurtain() {
     c.classList.remove('on');
     c.getAnimations({ subtree: true }).forEach((a) => a.cancel());
     spell(c, '');
+    holdNav(false);
   });
 }

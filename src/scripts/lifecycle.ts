@@ -102,8 +102,18 @@ function sectionAt(y: number, list: HTMLElement[] = sections): HTMLElement | nul
   return hit;
 }
 
+/** Held while a page change is on screen (scripts/ui/curtain.ts): the nav
+ *  keeps the ground it had until the new page actually comes up, then takes
+ *  the new one with it — not at the swap, behind a curtain still showing the
+ *  old ground, where it flipped to dark on dark. */
+let held = false;
+export function holdNav(on: boolean): void {
+  held = on;
+  if (!on) { reread(); paintNav(); }
+}
+
 function paintNav(): void {
-  if (followers.length === 0) return;
+  if (held || followers.length === 0) return;
   const ground = sectionAt(probeY)?.dataset.theme ?? document.documentElement.dataset.theme ?? 'dark';
   for (const el of followers) if (el.dataset.theme !== ground) el.dataset.theme = ground;
 }
