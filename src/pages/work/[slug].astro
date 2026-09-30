@@ -38,6 +38,12 @@ const media: Media[] = project.media.length
    it needs rather than the biggest one there is. It matches the grid below:
    the media has the page to itself when the halves stack. */
 const SIZES = '(max-width: 859px) 100vw, 72vw';
+/* The first picture, when it is the card's own, is named for the page change:
+   the card's picture on the home page or the work index travels to become
+   it (styles/global.css). The card and the page hold the same picture at
+   different sizes, so they are matched on the picture's ladder, not its url. */
+const isCover = (m: Media) => m.kind === 'image' && !!project.cover &&
+  (m.url === project.cover.url || (!!m.webpSrcset && m.webpSrcset === project.cover.webpSrcset));
 const facts = [
   project.location && { k: 'Location', v: project.location },
   project.year && { k: 'Year', v: String(project.year) },
@@ -120,7 +126,7 @@ const turns = [
                  poster={m.poster} width={m.width} height={m.height}
                  aria-label={m.alt ?? project.title}></video>
         ) : (
-          <picture class="item">
+          <picture class="item" style={i === 0 && isCover(m) ? `view-transition-name: cover-${project.slug}` : undefined}>
             {m.avif && <source srcset={m.avifSrcset ?? m.avif} sizes={SIZES} type="image/avif" />}
             <img src={m.url} srcset={m.webpSrcset} sizes={SIZES} alt={m.alt ?? project.title}
                  width={m.width} height={m.height}
@@ -331,6 +337,9 @@ const turns = [
   .item { display: block; width: 100%; }
   .media img, .media video { width: 100%; height: auto; display: block;
                              background: var(--glass); border-radius: var(--radius-media); }
+  /* the first picture is the one the card's picture becomes: its own edge
+     is rounded and clipped, so what travels has the card's corners */
+  .item { overflow: hidden; border-radius: var(--radius-media); }
   .none { padding: var(--s-8) 0; color: var(--ink-3); }
 
   /* stacked: the written half stops holding still and becomes the head of

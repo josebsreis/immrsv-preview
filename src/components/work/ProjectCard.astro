@@ -14,7 +14,7 @@ const SIZES = [
 ].join(', ');
 ---
 <a class="card" href={`/work/${project.slug}`} data-tap data-studios={project.studios.join(' ')}>
-  <div class="media">
+  <div class="media" transition:name={`cover-${project.slug}`} transition:animate="initial">
     {project.cover
       ? <picture>
           {project.cover.avifSrcset && <source srcset={project.cover.avifSrcset} sizes={SIZES} type="image/avif" />}

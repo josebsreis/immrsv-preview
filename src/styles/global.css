@@ -204,6 +204,14 @@ body.ready .arrives { animation: arrive var(--dur-slow) ease both; animation-del
 @keyframes page-out { to { opacity: 0; } }
 @keyframes page-in { from { opacity: 0; } }
 
+/* The one thing that does travel: a project's picture. Clicked in the pile
+   or on the work index, it grows and moves to become the project page's
+   first picture, and shrinks back into its card on the way out — the same
+   picture on both pages carries the same name (cover-<slug>). The pace is
+   the site's, a little slower than the fade under it. */
+::view-transition-group(*) { animation-duration: 0.62s; animation-timing-function: var(--ease-out); }
+::view-transition-group(root) { animation-duration: 0s; }
+
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root), ::view-transition-new(root) { animation: none; }

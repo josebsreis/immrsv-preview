@@ -93,7 +93,9 @@ const rings = RINGS.map((r, k) => {
                 </div>
               </div>
 
-              <div class="media">
+              <!-- named for the page change: this picture travels to become the
+                   project page's first, and back (styles/global.css) -->
+              <div class="media" transition:name={`cover-${p.slug}`} transition:animate="initial">
                 <picture>
                   {p.cover!.avifSrcset && <source srcset={p.cover!.avifSrcset} sizes={SIZES} type="image/avif" />}
                   <img src={p.cover!.url} srcset={p.cover!.webpSrcset} sizes={SIZES}
