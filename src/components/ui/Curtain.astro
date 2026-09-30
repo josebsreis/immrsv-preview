@@ -25,5 +25,7 @@ import { SYMBOL } from '../../lib/lettermark';
              background: var(--c-ground, #060606); transition: background-color 0.3s ease; }
   .curtain.on { visibility: visible; pointer-events: auto; }
   .mark { width: clamp(2rem, 3.2vw, 2.75rem); height: auto; overflow: visible; }
-  .mark path { fill: var(--c-ink, #f3f3f4); opacity: 0; transition: fill 0.3s ease; }
+  .mark path { fill: var(--c-ink, #f3f3f4); opacity: 0; transition: fill 0.3s ease;
+               /* each face turns about its own middle */
+               transform-box: fill-box; transform-origin: center; }
 </style>
