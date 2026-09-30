@@ -9,13 +9,6 @@
 export interface WorkFilter { destroy(): void; }
 
 const ALL = 'all';
-/* How the wave is timed. The stylesheet holds the same three numbers: a card
-   leaves in OUT, each one starts STEP after the one before it, and no card
-   waits longer than CAP steps — without that ceiling a full grid would take
-   half a second just to clear. */
-const OUT = 300;
-const STEP = 30;
-const CAP = 5;
 
 export function createWorkFilter(root: ParentNode = document): WorkFilter {
   const bar = root.querySelector<HTMLElement>('[data-filter]');
@@ -23,12 +16,8 @@ export function createWorkFilter(root: ParentNode = document): WorkFilter {
   if (!bar || !grid) return { destroy() {} };
 
   const buttons = Array.from(bar.querySelectorAll<HTMLButtonElement>('[data-filter-key]'));
-  /* the stand-in line when a studio is empty: one thing, so it goes as a
-     block rather than joining the wave */
-  const veiled: HTMLElement[] = [];
   const items = Array.from(grid.querySelectorAll<HTMLElement>('[data-studios]'));
   const empty = root.querySelector<HTMLElement>('[data-filter-empty]');
-  if (empty) veiled.push(empty);
   const count = root.querySelector<HTMLElement>('[data-filter-count]');
   const keys = new Set(buttons.map((b) => b.dataset.filterKey!));
 
@@ -95,46 +84,99 @@ export function createWorkFilter(root: ParentNode = document): WorkFilter {
   }
 
   /**
-   * The change, made card by card.
+   * The change, as one movement rather than a blink.
    *
-   * The set does not blur as one sheet — each card goes out for itself, a
-   * beat after the one before it, softening and shrinking as it leaves; the
-   * filter is applied while none of them can be seen, which is also when the
-   * rows close up and the page changes height; then the new set arrives the
-   * same way. The wave is capped, so fourteen cards do not take fourteen
-   * beats to go.
+   * The cards that stay never go: each glides from where it was to where
+   * the new set puts it. The ones that leave fade where they stand — lifted
+   * out of the grid first, so the rest can close up round them while they
+   * go. The ones that arrive come up in their places, a beat apart. The grid
+   * eases to its new height, so what is under it slides rather than jumps.
+   * (Measured first, then last, then played back from the one to the other:
+   * the cards are moved with `translate`, which the hover's `transform` does
+   * not touch.)
    *
    * A reader who asked for less motion gets the change and nothing else.
    */
-  let swap: ReturnType<typeof setTimeout> | undefined;
-
-  /** deal the cards their place in the wave, in the order they are read */
-  function order(list: HTMLElement[]) {
-    list.forEach((el, i) => el.style.setProperty('--n', String(i)));
-  }
-  const here = () => items.filter((el) => !el.hasAttribute('data-off'));
+  const MOVE = 620, LEAVE = 260, ARRIVE = 520, STAGGER = 45;
+  const glide = 'cubic-bezier(0.65, 0, 0.25, 1)';
+  let running: Animation[] = [];
+  let tidy: ReturnType<typeof setTimeout> | undefined;
 
   function change(apply: () => void) {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return apply();
 
-    clearTimeout(swap);
-    const leaving = here();
-    order(leaving);
-    for (const el of leaving) el.setAttribute('data-swap', '');
-    for (const el of veiled) el.setAttribute('data-swap', '');
+    // anything still moving from the last change lands where it was going
+    running.forEach((a) => a.finish());
+    running = [];
+    clearTimeout(tidy);
+    for (const el of items) {
+      if (el.style.position === 'absolute') {
+        el.style.position = el.style.left = el.style.top = el.style.width = el.style.height = '';
+      }
+    }
 
-    swap = setTimeout(() => {
-      apply();
-      order(here());
-      /* one frame with the new set still veiled, so nothing is seen arriving
-         at the wrong opacity before the grid has settled at its new height */
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        /* every card, not only the ones arriving: one left blurred while it
-           was filtered out would come back invisible the next time round */
-        for (const el of items) el.removeAttribute('data-swap');
-        for (const el of veiled) el.removeAttribute('data-swap');
-      }));
-    }, OUT + STEP * CAP);
+    const box = grid!.getBoundingClientRect();
+    const before = new Map<HTMLElement, DOMRect>();
+    for (const el of items) if (!el.hasAttribute('data-off')) before.set(el, el.getBoundingClientRect());
+    const oldH = box.height;
+
+    apply();
+
+    const after = new Set(items.filter((el) => !el.hasAttribute('data-off')));
+    const leaving = [...before.keys()].filter((el) => !after.has(el));
+
+    /* the leaving, lifted out where they stood, so the grid closes up
+       round them as they fade */
+    for (const el of leaving) {
+      const r = before.get(el)!;
+      el.removeAttribute('data-off');
+      el.style.position = 'absolute';
+      el.style.left = `${r.left - box.left}px`;
+      el.style.top = `${r.top - box.top}px`;
+      el.style.width = `${r.width}px`;
+      el.style.height = `${r.height}px`;
+      el.style.pointerEvents = 'none';
+    }
+
+    const newH = grid!.getBoundingClientRect().height;
+
+    for (const el of leaving) {
+      running.push(el.animate([{ opacity: 1, scale: '1' }, { opacity: 0, scale: '0.96' }],
+        { duration: LEAVE, easing: 'ease-in', fill: 'forwards' }));
+    }
+    let n = 0;
+    for (const el of items) {
+      if (!after.has(el)) continue;
+      const was = before.get(el);
+      if (was) {
+        // stays: from its old place to its new one
+        const now = el.getBoundingClientRect();
+        const dx = was.left - now.left, dy = was.top - now.top;
+        if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+          running.push(el.animate([{ translate: `${dx}px ${dy}px` }, { translate: '0 0' }],
+            { duration: MOVE, easing: glide }));
+        }
+      } else {
+        // arrives: up in its place, a beat after the one before it
+        running.push(el.animate([{ opacity: 0, scale: '0.94' }, { opacity: 1, scale: '1' }],
+          { duration: ARRIVE, delay: LEAVE * 0.6 + Math.min(n, 6) * STAGGER, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'backwards' }));
+        n++;
+      }
+    }
+    if (Math.abs(newH - oldH) > 0.5) {
+      running.push(grid!.animate([{ height: `${oldH}px` }, { height: `${newH}px` }],
+        { duration: MOVE, easing: glide }));
+    }
+
+    // the leaving go back to being simply filtered out once they have faded
+    tidy = setTimeout(() => {
+      for (const el of leaving) {
+        if (after.has(el)) continue;
+        el.style.position = el.style.left = el.style.top = el.style.width = el.style.height = el.style.pointerEvents = '';
+        el.getAnimations().forEach((a) => a.cancel());
+        el.setAttribute('data-off', '');
+      }
+    }, LEAVE + 20);
   }
 
   function go(key: string, push: boolean) {
@@ -159,7 +201,7 @@ export function createWorkFilter(root: ParentNode = document): WorkFilter {
 
   return {
     destroy() {
-      clearTimeout(swap);
+      clearTimeout(tidy);
       bar.removeEventListener('click', onClick);
       removeEventListener('popstate', onPop);
     },

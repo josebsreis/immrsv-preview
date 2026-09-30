@@ -16,7 +16,8 @@ const { projects, columns = 3 } = Astro.props;
   /* the rows are wider than the columns because a caption sits in them: the
      channel between two pictures is --gap-media, the space under a name is
      not the same thing */
-  .grid { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+  /* positioned: a card leaving is lifted out and fades where it stood */
+  .grid { position: relative; display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
           gap: var(--s-5) var(--gap-media); }
   @media (max-width: 1099px) { .grid { grid-template-columns: repeat(min(var(--cols, 3), 2), minmax(0, 1fr)); } }
   @media (max-width: 719px) { .grid { grid-template-columns: 1fr; gap: var(--s-5); } }
