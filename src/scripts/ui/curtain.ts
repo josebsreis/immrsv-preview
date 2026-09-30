@@ -17,8 +17,9 @@ const inOut = 'cubic-bezier(0.65, 0, 0.35, 1)';
 /** where each face comes from and goes to, in the mark's own units: the top
  *  one from above, the two lower ones from their own sides */
 const FROM = [[0, -26], [-23, 14], [23, 14]];
-/** how far each face is turned as it flies in, about its own middle */
-const SPIN = [-120, 140, -140];
+/** how much of that the faces are apart at the ends of the move: a hair,
+ *  so the mark reads as one thing turning, not three pieces */
+const GAP = 0.3;
 
 let wired = false;
 
@@ -55,27 +56,22 @@ export function createCurtain() {
       c.classList.add('on');
       // 1. the page goes
       const fade = c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE, easing: 'ease-out', fill: 'forwards' });
-      /* 2. the mark locks together, like a key turned: the whole of it
-            swings round a quarter-turn and more as its faces fly in, each
-            spinning into its place on its own; it overshoots a touch, and
-            clicks — a small pulse — as it locks */
+      /* 2. the mark turns into place like a key in a lock, whole: it swings
+            round from a quarter-turn and more, a touch past, and settles —
+            its three faces, a hair apart as it starts, closing up as it turns */
       const svg = c.querySelector<SVGSVGElement>('svg')!;
       const start = FADE * 0.5;
       const turn = svg.animate([
-        { transform: 'rotate(-150deg) scale(0.7)' },
-        { transform: 'rotate(8deg) scale(1)', offset: 0.78 },
-        { transform: 'rotate(0deg) scale(1)' },
-      ], { duration: BUILD + STAGGER * 2, delay: start, easing: 'cubic-bezier(0.3, 0, 0.2, 1)', fill: 'forwards' });
+        { transform: 'rotate(-120deg) scale(0.85)', opacity: 0 },
+        { transform: 'rotate(-60deg) scale(0.95)', opacity: 1, offset: 0.35 },
+        { transform: 'rotate(6deg) scale(1)', offset: 0.8 },
+        { transform: 'rotate(0deg) scale(1)', opacity: 1 },
+      ], { duration: BUILD, delay: start, easing: 'cubic-bezier(0.3, 0, 0.2, 1)', fill: 'forwards' });
       const build = faces(c).map((f, i) => f.animate([
-        { opacity: 0, transform: `translate(${FROM[i][0]}px, ${FROM[i][1]}px) rotate(${SPIN[i]}deg)` },
-        { opacity: 1, transform: 'translate(0, 0) rotate(0deg)' },
-      ], { duration: BUILD, delay: start + i * STAGGER, easing: snap, fill: 'forwards' }));
-      const click = turn.finished.then(() => svg.animate([
-        { transform: 'rotate(0deg) scale(1)' },
-        { transform: 'rotate(0deg) scale(1.1)', offset: 0.35 },
-        { transform: 'rotate(0deg) scale(1)' },
-      ], { duration: 220, easing: 'ease-out', fill: 'forwards' }).finished);
-      await Promise.all([fade.finished, ...build.map((b) => b.finished), click, load()]);
+        { opacity: 1, transform: `translate(${FROM[i][0] * GAP}px, ${FROM[i][1] * GAP}px)` },
+        { opacity: 1, transform: 'translate(0, 0)' },
+      ], { duration: BUILD * 0.8, delay: start + BUILD * 0.15, easing: snap, fill: 'forwards' }));
+      await Promise.all([fade.finished, turn.finished, ...build.map((b) => b.finished), load()]);
       covered = true;
     };
   });
@@ -87,15 +83,15 @@ export function createCurtain() {
     // the ground takes the new page's, under the mark, before it goes
     tone(c);
     await wait(HOLD);
-    /* 3. unlocked: the mark turns on, and its faces spin off the way they
-          came and fade, as the new page comes up */
+    /* 3. unlocked: the mark turns on and fades, still whole — its faces
+          opening a hair as it goes — as the new page comes up */
     const svg = c.querySelector<SVGSVGElement>('svg')!;
-    svg.animate([{ transform: 'rotate(0deg) scale(1)' }, { transform: 'rotate(70deg) scale(0.85)' }],
-      { duration: APART + STAGGER, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards' });
+    svg.animate([{ transform: 'rotate(0deg) scale(1)', opacity: 1 }, { transform: 'rotate(60deg) scale(0.9)', opacity: 0 }],
+      { duration: APART, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards' });
     const apart = faces(c).map((f, i) => f.animate([
-      { opacity: 1, transform: 'translate(0, 0) rotate(0deg)' },
-      { opacity: 0, transform: `translate(${FROM[i][0] * 0.8}px, ${FROM[i][1] * 0.8}px) rotate(${-SPIN[i] * 0.6}deg)` },
-    ], { duration: APART, delay: i * STAGGER * 0.6, easing: inOut, fill: 'forwards' }));
+      { transform: 'translate(0, 0)' },
+      { transform: `translate(${FROM[i][0] * GAP}px, ${FROM[i][1] * GAP}px)` },
+    ], { duration: APART, easing: inOut, fill: 'forwards' }));
     const reveal = c.animate([{ opacity: 1 }, { opacity: 0 }],
       { duration: REVEAL, delay: APART * 0.4, easing: 'ease-in-out', fill: 'forwards' });
     await Promise.all([reveal.finished, ...apart.map((a) => a.finished)]);
