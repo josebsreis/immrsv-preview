@@ -21,11 +21,11 @@
              display: grid; place-items: center; padding: 0 var(--page-x);
              opacity: 0; visibility: hidden; background: var(--c-ground, #060606); }
   .curtain.on { visibility: visible; pointer-events: auto; }
-  /* the name, in the display voice, at the size of a section's */
+  /* the name, in the display voice, at the size of a line rather than a heading */
   .name { margin: 0; text-align: center; color: var(--c-ink, #f3f3f4);
           font-family: var(--font-display); font-stretch: var(--display-stretch);
           text-transform: var(--display-case); font-weight: var(--w-display);
-          font-size: var(--t-h2); line-height: var(--lh-display); letter-spacing: var(--track-display); }
+          font-size: var(--t-statement); line-height: var(--lh-display); letter-spacing: var(--track-display); }
   /* the letters, the site's blur-in: out of focus and gone, then in */
   .name :global(.w) { display: inline-block; white-space: nowrap; }
   .name :global(.ch) { display: inline-block; font-style: normal;

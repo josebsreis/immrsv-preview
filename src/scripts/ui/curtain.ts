@@ -127,9 +127,10 @@ export function createCurtain() {
     turn.forEach((a) => a.cancel());
     turn = [];
     const reveal = c.animate([{ opacity: 1 }, { opacity: 0 }],
+      // only once the name has blurred right away
       changes
-        ? { duration: REVEAL_TURN, delay: OUT * 0.8, easing: 'cubic-bezier(0.45, 0, 0.25, 1)', fill: 'forwards' }
-        : { duration: REVEAL, delay: OUT * 0.5, easing: 'ease-in-out', fill: 'forwards' });
+        ? { duration: REVEAL_TURN, delay: OUT + SPREAD * 0.6 + 60, easing: 'cubic-bezier(0.45, 0, 0.25, 1)', fill: 'forwards' }
+        : { duration: REVEAL, delay: OUT + SPREAD * 0.6 + 60, easing: 'ease-in-out', fill: 'forwards' });
     await Promise.all([reveal.finished, ...finish.map((a) => a.finished)]);
     c.classList.remove('on');
     c.getAnimations({ subtree: true }).forEach((a) => a.cancel());
