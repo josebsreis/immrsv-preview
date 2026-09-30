@@ -100,7 +100,9 @@ export function createCurtain() {
       // 2. the new page's name, out of a blur, a letter at a time
       const letters = spell(c, nameOf(ev.newDocument, ev.to));
       void c.offsetWidth;
-      letters.forEach((ch) => setTimeout(() => ch.classList.remove('out'), Math.random() * SPREAD));
+      // in from the left, a letter after the one before it
+      const step = SPREAD / Math.max(1, letters.length - 1);
+      letters.forEach((ch, i) => setTimeout(() => ch.classList.remove('out'), i * step));
       await wait(LETTERS + READ);
       covered = true;
     };
@@ -121,7 +123,10 @@ export function createCurtain() {
     const changes = from.replace(/\s/g, '') !== to.replace(/\s/g, '');
     // 3. the name goes back into its blur, the mark finishes its turn, and
     //    the page comes up
-    c.querySelectorAll<HTMLElement>('.ch').forEach((ch) => setTimeout(() => ch.classList.add('out'), Math.random() * SPREAD * 0.6));
+    // and back out from the right, the way it came
+    const gone = [...c.querySelectorAll<HTMLElement>('.ch')];
+    const back = (SPREAD * 0.6) / Math.max(1, gone.length - 1);
+    gone.forEach((ch, i) => setTimeout(() => ch.classList.add('out'), (gone.length - 1 - i) * back));
     const finish = markPaths().map((p) => {
       p.style.transformBox = 'view-box';
       p.style.transformOrigin = MARK_CENTRE;
