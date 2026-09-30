@@ -16,7 +16,7 @@ const snap = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
 const inOut = 'cubic-bezier(0.65, 0, 0.35, 1)';
 /** where each face comes from and goes to, in the mark's own units: the top
  *  one from above, the two lower ones from their own sides */
-const FROM = [[0, -40], [-36, 22], [36, 22]];
+const FROM = [[0, -26], [-23, 14], [23, 14]];
 
 let wired = false;
 
