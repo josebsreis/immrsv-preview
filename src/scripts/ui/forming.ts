@@ -52,6 +52,8 @@ const T = {
    long has to land rather than stop. */
 /** how far a card travels up the screen, and how far it leans in at the middle */
 const TRAVEL = 0.46, LEAN = 0.07;
+/** the clear air between two cards following each other up the same side */
+const BEAT_GAP = 56;
 /** the air a card keeps from her at its innermost */
 const SHY = 24;
 
@@ -114,7 +116,7 @@ export function createForming(root: HTMLElement): Forming {
      The slot is placed in fractions of the screen and then pinned to whole
      pixels, because its edge and the light ground's edge have to be the
      same edge: half a pixel of disagreement is a grey hairline. */
-  let w = 0, h = 0, sx = 0, sy = 0, sw = 0, sh = 0, leanMax = 0, sq = 40;
+  let w = 0, h = 0, sx = 0, sy = 0, sw = 0, sh = 0, leanMax = 0, sq = 40, beatH = 0;
   /** where each of the two lines stands, joined and parted */
   const joined = [0, 0], apart = [0, 0], heights = [0, 0];
   const size = () => {
@@ -165,6 +167,8 @@ export function createForming(root: HTMLElement): Forming {
     root.style.removeProperty('--beat-h');
     const tallest = Math.max(0, ...beats.map((b) => b.getBoundingClientRect().height));
     if (tallest) root.style.setProperty('--beat-h', `${Math.ceil(tallest)}px`);
+    // and as they are drawn, the floor included
+    beatH = beats[0]?.getBoundingClientRect().height ?? tallest;
 
     /* How far a card may lean in before it would touch her — measured, not
        assumed, because the slot's width answers to the screen's height and a
@@ -338,7 +342,13 @@ export function createForming(root: HTMLElement): Forming {
     const pairs = !narrow;
     const passes = pairs ? Math.ceil(beats.length / 2) : beats.length;
     const span = pairs ? T.life * 1.55 : T.life;
-    const rise = h * (narrow ? 0.92 : TRAVEL);
+    /* How far a card travels. At least the screen's share — and far enough
+       that two cards following each other up the same side are always a
+       card's height and a clear gap apart: the gap between them in the
+       scroll, as a share of one crossing, times the travel, is how far
+       apart they stand. */
+    const gapStep = (T.last - T.beat - span) / Math.max(1, passes - 1);
+    const rise = Math.max(h * (narrow ? 0.92 : TRAVEL), ((beatH + BEAT_GAP) * span) / Math.max(gapStep, 0.001));
     const lean = narrow ? 0 : Math.min(w * LEAN, 96, leanMax);
     beats.forEach((b, i) => {
       const step = passes > 1 ? (T.last - T.beat - span) / (passes - 1) : 0;
