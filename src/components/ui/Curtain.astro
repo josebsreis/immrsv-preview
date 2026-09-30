@@ -1,15 +1,12 @@
 ---
-/** Between pages: the page fades away under the nav, which stays; the mark
- *  assembles in the middle of the empty ground — its three faces, the three
- *  studios, coming together — and as it comes apart again the next page
- *  fades in round it. It persists across pages so it is the same layer
- *  going and coming (scripts/ui/curtain.ts). */
-import { SYMBOL } from '../../lib/lettermark';
+/** Between pages: the page fades away under the nav, which stays, and the
+ *  mark in the nav turns like a key; in the middle of the empty ground the
+ *  next page's name comes up, letter by letter out of a blur, and as it
+ *  goes the new page fades in round it. It persists across pages so it is
+ *  the same layer going and coming (scripts/ui/curtain.ts). */
 ---
 <div class="curtain" data-curtain transition:persist="curtain" aria-hidden="true">
-  <svg class="mark" viewBox={SYMBOL.viewBox}>
-    {SYMBOL.paths.map((d, k) => <path d={d} data-face={k} />)}
-  </svg>
+  <p class="name" data-curtain-name></p>
 </div>
 
 <script>
@@ -21,11 +18,17 @@ import { SYMBOL } from '../../lib/lettermark';
   /* over the page, under the nav — the nav stays through the change — and
      not there at all until it is used */
   .curtain { position: fixed; inset: 0; z-index: var(--z-ui); pointer-events: none;
-             display: grid; place-items: center; opacity: 0; visibility: hidden;
-             background: var(--c-ground, #060606); transition: background-color 0.3s ease; }
+             display: grid; place-items: center; padding: 0 var(--page-x);
+             opacity: 0; visibility: hidden; background: var(--c-ground, #060606); }
   .curtain.on { visibility: visible; pointer-events: auto; }
-  .mark { width: clamp(2rem, 3.2vw, 2.75rem); height: auto; overflow: visible; }
-  .mark path { fill: var(--c-ink, #f3f3f4); opacity: 0; transition: fill 0.3s ease;
-               /* each face turns about its own middle */
-               transform-box: fill-box; transform-origin: center; }
+  /* the name, in the display voice, at the size of a section's */
+  .name { margin: 0; text-align: center; color: var(--c-ink, #f3f3f4);
+          font-family: var(--font-display); font-stretch: var(--display-stretch);
+          text-transform: var(--display-case); font-weight: var(--w-display);
+          font-size: var(--t-h2); line-height: var(--lh-display); letter-spacing: var(--track-display); }
+  /* the letters, the site's blur-in: out of focus and gone, then in */
+  .name :global(.w) { display: inline-block; white-space: nowrap; }
+  .name :global(.ch) { display: inline-block; font-style: normal;
+                       transition: opacity 0.5s ease-in-out, filter 0.5s ease-in-out; }
+  .name :global(.ch.out) { opacity: 0; filter: blur(9px); }
 </style>

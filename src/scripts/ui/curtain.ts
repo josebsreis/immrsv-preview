@@ -1,27 +1,22 @@
 /* The page change, in three beats:
-     1. the page fades away under the nav (which persists and stays put);
-     2. the mark assembles in the middle — its three faces coming in from a
-        little way off and closing into one — while the next page loads;
-     3. the new page is swapped in behind, and as the mark comes apart again
-        the ground fades off and the new page appears.
+     1. the page fades away under the nav (which persists and stays put), and
+        the mark in the nav turns, like a key, as the next page loads;
+     2. the next page's name comes up in the middle, letter by letter out of
+        a blur — the site's own way of bringing a word in;
+     3. the new page is swapped in behind; the name blurs away, the mark
+        finishes its turn, and the new page comes up through the ground.
 
    It wraps the router's own loader rather than racing it, so the swap only
    ever happens behind a covered screen. The layer takes the ground and ink
-   of whichever page is under it, so going from the dark home to a light
-   project is dark-then-light rather than a flash of the wrong one.
-   Registered once; the layer persists, so it is found afresh each time. */
-
+   of the section in the middle of the screen, and a change of ground is the
+   new page dissolving up through the old one, slowly, once the name has
+   gone. Registered once; the layer persists, so it is found afresh. */
 import { groundAt } from '../lifecycle';
 
-const FADE = 280, BUILD = 480, STAGGER = 60, HOLD = 40, APART = 380, REVEAL = 420, REVEAL_TURN = 820;
-const snap = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
-const inOut = 'cubic-bezier(0.65, 0, 0.35, 1)';
-/** where each face comes from and goes to, in the mark's own units: the top
- *  one from above, the two lower ones from their own sides */
-const FROM = [[0, -26], [-23, 14], [23, 14]];
-/** how much of that the faces are apart at the ends of the move: a hair,
- *  so the mark reads as one thing turning, not three pieces */
-const GAP = 0.3;
+const FADE = 280, LETTERS = 520, SPREAD = 260, READ = 260, OUT = 380, REVEAL = 420, REVEAL_TURN = 820;
+/** the nav's mark: the first three shapes of the wordmark, turned together
+ *  about their own middle (in the wordmark's units) */
+const MARK_CENTRE = '102px 116px';
 
 let wired = false;
 
@@ -32,59 +27,77 @@ export function createCurtain() {
 
   /* the router's own crossfade is not wanted under the curtain; the swap
      copies the new page's attributes onto <html>, so it is set again after */
-  const mark = () => { document.documentElement.dataset.curtained = ''; };
-  mark();
-  document.addEventListener('astro:after-swap', mark);
+  const flag = () => { document.documentElement.dataset.curtained = ''; };
+  flag();
+  document.addEventListener('astro:after-swap', flag);
 
   const el = () => document.querySelector<HTMLElement>('[data-curtain]');
-  const faces = (c: HTMLElement) => [...c.querySelectorAll<SVGPathElement>('path')];
   const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-  /** the ground and the ink of the page as it is now */
-  /* the ground and ink of whatever section is in the middle of the screen
-     — not the page's base, which on the home page is dark under light
-     sections — so a light section going to a light page stays light */
-  const tone = (c: HTMLElement, blend: boolean) => {
+  const markPaths = () => [...document.querySelectorAll<SVGPathElement>('nav .home svg path, .home svg path')].slice(0, 3);
+
+  /* the ground and ink of the section in the middle of the screen, set
+     outright: blended, it came up from the last colour it was used on */
+  const tone = (c: HTMLElement) => {
     const { ground, ink } = groundAt();
-    // set outright as it starts: blended, it came up from whatever colour it
-    // was last used on — the dark home under a light page, as a grey flash
-    if (!blend) { c.style.transition = 'none'; c.querySelectorAll('path').forEach((p) => { p.style.transition = 'none'; }); }
     c.style.setProperty('--c-ground', ground);
     c.style.setProperty('--c-ink', ink);
-    if (!blend) {
-      void c.offsetWidth;
-      c.style.transition = '';
-      c.querySelectorAll('path').forEach((p) => { p.style.transition = ''; });
-    }
   };
-  let covered = false;
+
+  /** what a page is called: its own title, less the site's name; the home
+   *  page's title is the tagline, so it is simply Home */
+  const nameOf = (doc: Document | undefined, to: URL) => {
+    const path = to.pathname.replace(/^\/immrsv-preview[^/]*/, '').replace(/\/$/, '') || '/';
+    if (path === '/') return 'Home';
+    const t = (doc?.title ?? '').split('|').map((x) => x.trim()).filter((x) => x && x !== 'IMMRSV');
+    return t[0] || path.split('/').pop()!.replace(/-/g, ' ');
+  };
+
+  const spell = (c: HTMLElement, text: string) => {
+    const p = c.querySelector<HTMLElement>('[data-curtain-name]')!;
+    p.textContent = '';
+    for (const w of text.split(/(\s+)/)) {
+      if (!w) continue;
+      if (/^\s+$/.test(w)) { p.append(' '); continue; }
+      const span = document.createElement('span');
+      span.className = 'w';
+      for (const ch of w) {
+        const i = document.createElement('i');
+        i.className = 'ch out';
+        i.textContent = ch;
+        span.append(i);
+      }
+      p.append(span);
+    }
+    return [...p.querySelectorAll<HTMLElement>('.ch')];
+  };
+
+  let covered = false, turn: Animation[] = [];
 
   document.addEventListener('astro:before-preparation', (e) => {
-    const ev = e as Event & { loader: () => Promise<void> };
+    const ev = e as Event & { loader: () => Promise<void>; newDocument?: Document; to: URL };
     const load = ev.loader;
     ev.loader = async () => {
       const c = el();
       if (!c) return load();
       c.getAnimations({ subtree: true }).forEach((a) => a.cancel());
-      tone(c, false);
+      tone(c);
+      spell(c, '');
       c.classList.add('on');
-      // 1. the page goes
+      // 1. the page goes, and the nav's mark turns the first half of its turn
       const fade = c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE, easing: 'ease-out', fill: 'forwards' });
-      /* 2. the mark turns into place like a key in a lock, whole: it swings
-            round from a quarter-turn and more, a touch past, and settles —
-            its three faces, a hair apart as it starts, closing up as it turns */
-      const svg = c.querySelector<SVGSVGElement>('svg')!;
-      const start = FADE * 0.5;
-      const turn = svg.animate([
-        { transform: 'rotate(-120deg) scale(0.85)', opacity: 0 },
-        { transform: 'rotate(-60deg) scale(0.95)', opacity: 1, offset: 0.35 },
-        { transform: 'rotate(6deg) scale(1)', offset: 0.8 },
-        { transform: 'rotate(0deg) scale(1)', opacity: 1 },
-      ], { duration: BUILD, delay: start, easing: 'cubic-bezier(0.3, 0, 0.2, 1)', fill: 'forwards' });
-      const build = faces(c).map((f, i) => f.animate([
-        { opacity: 1, transform: `translate(${FROM[i][0] * GAP}px, ${FROM[i][1] * GAP}px)` },
-        { opacity: 1, transform: 'translate(0, 0)' },
-      ], { duration: BUILD * 0.8, delay: start + BUILD * 0.15, easing: snap, fill: 'forwards' }));
-      await Promise.all([fade.finished, turn.finished, ...build.map((b) => b.finished), load()]);
+      turn.forEach((a) => a.cancel());
+      turn = markPaths().map((p) => {
+        p.style.transformBox = 'view-box';
+        p.style.transformOrigin = MARK_CENTRE;
+        return p.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(180deg)' }],
+          { duration: FADE + LETTERS, easing: 'cubic-bezier(0.5, 0, 0.3, 1)', fill: 'forwards' });
+      });
+      await Promise.all([fade.finished, load()]);
+      // 2. the new page's name, out of a blur, a letter at a time
+      const letters = spell(c, nameOf(ev.newDocument, ev.to));
+      void c.offsetWidth;
+      letters.forEach((ch) => setTimeout(() => ch.classList.remove('out'), Math.random() * SPREAD));
+      await wait(LETTERS + READ);
       covered = true;
     };
   });
@@ -93,34 +106,33 @@ export function createCurtain() {
     const c = el();
     if (!c || !covered) return;
     covered = false;
-    /* The ground is not changed under the mark: it stays the old page's, and
-       the change of colour is the new page coming up through it — dark into
-       light or light into dark as one slow dissolve, after the mark has gone,
-       rather than a quick swap of colour while it was still on screen. */
+    /* The ground is not changed under the name: a change of colour is the
+       new page coming up through the old one, after the name has gone. */
     const from = getComputedStyle(c).backgroundColor;
     const probe = document.createElement('i');
     probe.style.color = groundAt().ground;
     document.body.append(probe);
     const to = getComputedStyle(probe).color;
     probe.remove();
-    const turns = from.replace(/\s/g, '') !== to.replace(/\s/g, '');
-    await wait(HOLD);
-    /* 3. unlocked: the mark turns on and fades, still whole — its faces
-          opening a hair as it goes — as the new page comes up */
-    const svg = c.querySelector<SVGSVGElement>('svg')!;
-    svg.animate([{ transform: 'rotate(0deg) scale(1)', opacity: 1 }, { transform: 'rotate(60deg) scale(0.9)', opacity: 0 }],
-      { duration: APART, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards' });
-    const apart = faces(c).map((f, i) => f.animate([
-      { transform: 'translate(0, 0)' },
-      { transform: `translate(${FROM[i][0] * GAP}px, ${FROM[i][1] * GAP}px)` },
-    ], { duration: APART, easing: inOut, fill: 'forwards' }));
+    const changes = from.replace(/\s/g, '') !== to.replace(/\s/g, '');
+    // 3. the name goes back into its blur, the mark finishes its turn, and
+    //    the page comes up
+    c.querySelectorAll<HTMLElement>('.ch').forEach((ch) => setTimeout(() => ch.classList.add('out'), Math.random() * SPREAD * 0.6));
+    const finish = markPaths().map((p) => {
+      p.style.transformBox = 'view-box';
+      p.style.transformOrigin = MARK_CENTRE;
+      return p.animate([{ transform: 'rotate(180deg)' }, { transform: 'rotate(360deg)' }],
+        { duration: OUT + REVEAL, easing: 'cubic-bezier(0.3, 0, 0.2, 1)' });
+    });
+    turn.forEach((a) => a.cancel());
+    turn = [];
     const reveal = c.animate([{ opacity: 1 }, { opacity: 0 }],
-      turns
-        // a change of ground: once the mark has gone, and slowly
-        ? { duration: REVEAL_TURN, delay: APART * 0.75, easing: 'cubic-bezier(0.45, 0, 0.25, 1)', fill: 'forwards' }
-        : { duration: REVEAL, delay: APART * 0.4, easing: 'ease-in-out', fill: 'forwards' });
-    await Promise.all([reveal.finished, ...apart.map((a) => a.finished)]);
+      changes
+        ? { duration: REVEAL_TURN, delay: OUT * 0.8, easing: 'cubic-bezier(0.45, 0, 0.25, 1)', fill: 'forwards' }
+        : { duration: REVEAL, delay: OUT * 0.5, easing: 'ease-in-out', fill: 'forwards' });
+    await Promise.all([reveal.finished, ...finish.map((a) => a.finished)]);
     c.classList.remove('on');
     c.getAnimations({ subtree: true }).forEach((a) => a.cancel());
+    spell(c, '');
   });
 }
