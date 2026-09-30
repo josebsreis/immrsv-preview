@@ -1,34 +1,31 @@
 /* ═══════════════════════════════════════════════════════════════════
-   The handover's marks: six thin-line solids (lib/formingShapes.ts),
-   turning slowly on the spot about a leaning axis, each at its own pace so
-   no two turn in step. Every frame each is projected flat and drawn as one
-   hairline path. Only the ones on screen are drawn, and nothing at all
-   while the section is away or for a reader who asked for less motion —
-   they get each solid seen straight on, still.
+   The handover's marks: a few plain lines each, drawing what its card
+   says (components/home/Forming.astro). Each is shown as its card comes
+   up — its lines draw on and its one moving part moves — and put away
+   again once the card has gone, so it plays each time a card passes.
+   Nothing runs while the section is away.
    ═══════════════════════════════════════════════════════════════════ */
-import { SHAPES, pathOf } from '../../lib/formingShapes';
 
 export interface FormingMarks { destroy(): void }
 
-/** rad/s, each mark on its own pace */
-const SPEED = [0.35, 0.28, 0.32, 0.4, 0.3, 0.37];
-
 export function createFormingMarks(root: HTMLElement): FormingMarks {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return { destroy() {} };
-  const marks = [...root.querySelectorAll<SVGSVGElement>('[data-forming-mark]')].map((el, m) => ({
-    path: el.querySelector('path')!, card: el.closest<HTMLElement>('[data-forming-beat]'),
-    shape: SHAPES[Number(el.dataset.shape) || 0], speed: SPEED[m % SPEED.length], phase: m * 1.7,
-  })).filter((m) => m.path);
+  const marks = [...root.querySelectorAll<SVGSVGElement>('[data-forming-mark]')].map((el) => ({
+    el, card: el.closest<HTMLElement>('[data-forming-beat]'),
+  }));
   if (marks.length === 0) return { destroy() {} };
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    marks.forEach((m) => m.el.setAttribute('data-shown', ''));
+    return { destroy() {} };
+  }
 
   let raf = 0, visible = false;
-  const frame = (now: number) => {
+  const frame = () => {
     raf = 0;
-    const t = now / 1000;
-    for (const mk of marks) {
-      // a card that cannot be seen is not drawn
-      if (mk.card && parseFloat(mk.card.style.getPropertyValue('--v') || '0') <= 0.01) continue;
-      mk.path.setAttribute('d', pathOf(mk.shape, t * mk.speed + mk.phase));
+    for (const m of marks) {
+      const v = parseFloat(m.card?.style.getPropertyValue('--v') || '0');
+      // shown once its card is well up; put away once it has all but gone
+      if (v > 0.35) m.el.setAttribute('data-shown', '');
+      else if (v < 0.02) m.el.removeAttribute('data-shown');
     }
     if (visible) raf = requestAnimationFrame(frame);
   };
@@ -38,10 +35,5 @@ export function createFormingMarks(root: HTMLElement): FormingMarks {
   });
   io.observe(root.querySelector('[data-forming-pane]') ?? root);
 
-  return {
-    destroy() {
-      io.disconnect();
-      cancelAnimationFrame(raf); raf = 0;
-    },
-  };
+  return { destroy() { io.disconnect(); cancelAnimationFrame(raf); raf = 0; } };
 }

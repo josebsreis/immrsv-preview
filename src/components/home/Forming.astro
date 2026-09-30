@@ -28,10 +28,10 @@ interface Props {
   steps?: { word: string; line: string }[];
 }
 
-/** One mark for each step: a thin-line solid (lib/formingShapes.ts) —
- *  two rings, a lattice, a sphere, a helix, a cube, a torus — drawn here seen
- *  straight on and turned slowly on the spot by scripts/ui/formingMarks.ts. */
-import { SHAPES, pathOf } from '../../lib/formingShapes';
+/** One mark for each step: a few plain lines that draw what its card says.
+ *  Still drawings on one small grid, one weight; as a card arrives its
+ *  lines draw on and its one moving part makes its move (formingMarks.ts
+ *  sets `data-shown`), then they hold. */
 const {
   lead = 'Your team,',
   tail = 'extended.',
@@ -80,8 +80,45 @@ const {
           <li class={`beat panel ${i % 2 ? 'right' : 'left'}`} data-forming-beat>
             <div class="head">
               <h3 class="word">{s.word}</h3>
-              <svg class="mark" data-forming-mark data-shape={i % SHAPES.length} viewBox="0 0 48 48" aria-hidden="true">
-                <path d={pathOf(SHAPES[i % SHAPES.length], i * 1.7)} />
+              <svg class="mark" data-forming-mark data-shape={i} viewBox="0 0 48 48" aria-hidden="true">
+                {i === 0 && (<>
+                  {/* scale without the overhead: the output steps up, the base stays short */}
+                  <path class="base" d="M8 40H26" pathLength="1" />
+                  {[[10, 8], [20, 16], [30, 26]].map(([x, hgt], k) => (
+                    <path class="bar" style={`--k: ${k}`} d={`M${x} 40V${40 - hgt}H${x + 7}V40`} pathLength="1" />
+                  ))}
+                </>)}
+                {i === 1 && (<>
+                  {/* one partner, more capabilities: one point, reaching many */}
+                  <circle cx="24" cy="24" r="3.5" pathLength="1" />
+                  {[[9, 11], [39, 11], [9, 37], [39, 37]].map(([x, y], k) => (<>
+                    <path class="reach" style={`--k: ${k}`} d={`M${24 + (x - 24) * 0.2} ${24 + (y - 24) * 0.2}L${x + (24 - x) * 0.18} ${y + (24 - y) * 0.18}`} pathLength="1" />
+                    <circle class="node" style={`--k: ${k}`} cx={x} cy={y} r="2.5" pathLength="1" />
+                  </>))}
+                </>)}
+                {i === 2 && (<>
+                  {/* built into your workflow: the line you run, and the piece that completes it */}
+                  <path d="M4 32H16M32 32H44" pathLength="1" />
+                  <path class="drop" d="M16 32V22H32V32" pathLength="1" />
+                </>)}
+                {i === 3 && (<>
+                  {/* from concept to experience: the sketch, and the thing */}
+                  <path class="sketch" d="M5 17H19V31H5Z" />
+                  <path class="arrow" d="M22.5 24H28M25.5 21L28.5 24L25.5 27" pathLength="1" />
+                  <path class="made" d="M31 17H45V31H31Z" pathLength="1" />
+                </>)}
+                {i === 4 && (<>
+                  {/* capacity when it matters: the gauge, swung up */}
+                  <path d="M9 34A15 15 0 0 1 39 34" pathLength="1" />
+                  <path d="M24 16V19M13.4 23.4L15.5 25.5M34.6 23.4L32.5 25.5" pathLength="1" />
+                  <path class="needle" d="M24 34L24 22" pathLength="1" />
+                  <circle cx="24" cy="34" r="1.8" pathLength="1" />
+                </>)}
+                {i === 5 && (<>
+                  {/* more than production: the work, and something more on top */}
+                  <path d="M10 20H32V42H10Z" pathLength="1" />
+                  <path class="spark" d="M37 13V7M41 16L46 13M40 11L44 7" pathLength="1" />
+                </>)}
               </svg>
             </div>
             <p class="line">{s.line}</p>
@@ -208,10 +245,41 @@ const {
      the card read as having twice the padding above as at its sides. The
      margins give back what it stands proud of the word by, so the row is the
      word's height and the mark overhangs into the card's own padding. */
-  /* the mark: a hairline drawing, the ink's own grey, turning slowly */
+  /* The mark: a few pale lines on one grid. Hidden until its card is up
+     (data-shown); then its lines draw on and its moving part moves. */
   .mark { flex: none; width: 3rem; height: 3rem; margin-block: -0.8rem; overflow: visible; }
-  .mark path { fill: none; stroke: #c4c4c8; stroke-width: 1.9; vector-effect: non-scaling-stroke;
-               stroke-linejoin: round; stroke-linecap: round; }
+  .mark :global(path), .mark :global(circle) {
+    fill: none; stroke: #b9b9be; stroke-width: 1.6;
+    stroke-linejoin: round; stroke-linecap: round;
+    stroke-dasharray: 1; stroke-dashoffset: 1;
+    transition: stroke-dashoffset 0.7s cubic-bezier(0.65, 0, 0.35, 1); }
+  .mark[data-shown] :global(path), .mark[data-shown] :global(circle) { stroke-dashoffset: 0; }
+  /* one after another where there are several of a kind */
+  .mark :global(.bar), .mark :global(.reach), .mark :global(.node) { transition-delay: calc(0.15s + var(--k) * 0.1s); }
+  /* the bars rise from the base */
+  .mark :global(.bar) { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(0.2);
+                        transition: stroke-dashoffset 0.6s ease calc(0.15s + var(--k) * 0.1s),
+                                    transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.15s + var(--k) * 0.1s); }
+  .mark[data-shown] :global(.bar) { transform: none; }
+  /* the missing piece drops into the line */
+  .mark :global(.drop) { transform: translateY(-9px); transition: stroke-dashoffset 0.5s ease, transform 0.7s cubic-bezier(0.3, 1.4, 0.5, 1) 0.2s; }
+  .mark[data-shown] :global(.drop) { transform: none; }
+  /* the sketch is dashed and simply there; the arrow, then the thing */
+  .mark :global(.sketch) { stroke-dasharray: 2 2.5; stroke-dashoffset: 0; opacity: 0; transition: opacity 0.4s ease; }
+  .mark[data-shown] :global(.sketch) { opacity: 1; }
+  .mark :global(.arrow) { transition-delay: 0.25s; }
+  .mark :global(.made) { transition-delay: 0.45s; }
+  /* the needle swings up from the left */
+  .mark :global(.needle) { transform-origin: 24px 34px; transform: rotate(-80deg);
+                           transition: stroke-dashoffset 0.3s ease, transform 0.9s cubic-bezier(0.3, 1.3, 0.5, 1) 0.2s; }
+  .mark[data-shown] :global(.needle) { transform: rotate(35deg); }
+  /* the spark pops, once the work is drawn */
+  .mark :global(.spark) { transform-box: fill-box; transform-origin: 0% 100%; transform: scale(0.3);
+                          transition: stroke-dashoffset 0.35s ease 0.5s, transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) 0.5s; }
+  .mark[data-shown] :global(.spark) { transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .mark :global(path), .mark :global(circle) { transition: none; }
+  }
 
   .line { margin: auto 0 0; font-size: var(--t-small); color: var(--ink-2); line-height: var(--lh-body); }
 
