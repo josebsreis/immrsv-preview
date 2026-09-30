@@ -13,7 +13,7 @@
 
 import { groundAt } from '../lifecycle';
 
-const FADE = 280, BUILD = 480, STAGGER = 60, HOLD = 40, APART = 380, REVEAL = 420;
+const FADE = 280, BUILD = 480, STAGGER = 60, HOLD = 40, APART = 380, REVEAL = 420, REVEAL_TURN = 820;
 const snap = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
 const inOut = 'cubic-bezier(0.65, 0, 0.35, 1)';
 /** where each face comes from and goes to, in the mark's own units: the top
@@ -93,8 +93,17 @@ export function createCurtain() {
     const c = el();
     if (!c || !covered) return;
     covered = false;
-    // the ground takes the new page's, under the mark, before it goes
-    tone(c, true);
+    /* The ground is not changed under the mark: it stays the old page's, and
+       the change of colour is the new page coming up through it — dark into
+       light or light into dark as one slow dissolve, after the mark has gone,
+       rather than a quick swap of colour while it was still on screen. */
+    const from = getComputedStyle(c).backgroundColor;
+    const probe = document.createElement('i');
+    probe.style.color = groundAt().ground;
+    document.body.append(probe);
+    const to = getComputedStyle(probe).color;
+    probe.remove();
+    const turns = from.replace(/\s/g, '') !== to.replace(/\s/g, '');
     await wait(HOLD);
     /* 3. unlocked: the mark turns on and fades, still whole — its faces
           opening a hair as it goes — as the new page comes up */
@@ -106,7 +115,10 @@ export function createCurtain() {
       { transform: `translate(${FROM[i][0] * GAP}px, ${FROM[i][1] * GAP}px)` },
     ], { duration: APART, easing: inOut, fill: 'forwards' }));
     const reveal = c.animate([{ opacity: 1 }, { opacity: 0 }],
-      { duration: REVEAL, delay: APART * 0.4, easing: 'ease-in-out', fill: 'forwards' });
+      turns
+        // a change of ground: once the mark has gone, and slowly
+        ? { duration: REVEAL_TURN, delay: APART * 0.75, easing: 'cubic-bezier(0.45, 0, 0.25, 1)', fill: 'forwards' }
+        : { duration: REVEAL, delay: APART * 0.4, easing: 'ease-in-out', fill: 'forwards' });
     await Promise.all([reveal.finished, ...apart.map((a) => a.finished)]);
     c.classList.remove('on');
     c.getAnimations({ subtree: true }).forEach((a) => a.cancel());
