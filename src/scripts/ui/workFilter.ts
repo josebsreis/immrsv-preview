@@ -44,12 +44,35 @@ export function createWorkFilter(root: ParentNode = document): WorkFilter {
    * and it has to say so in that frame, or the press reads as having missed.
    * Only the cards wait for their turn.
    */
+  /* The fill travels: it slides out of the pill that was chosen towards the
+     new one, and into the new one from that same side — left to right when
+     the choice moves right, right to left when it moves left. */
+  const SLIDE = 420, EASE = 'cubic-bezier(0.65, 0, 0.35, 1)';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let current: string | null = null;
   function mark(key: string) {
+    const from = buttons.findIndex((b) => b.dataset.filterKey === current);
+    const to = buttons.findIndex((b) => b.dataset.filterKey === key);
+    const right = to > from;
     for (const b of buttons) {
       const on = b.dataset.filterKey === key;
       b.setAttribute('aria-pressed', String(on));
       b.toggleAttribute('data-on', on);
     }
+    if (current !== null && current !== key && from >= 0 && to >= 0 && !reduce) {
+      const fillOf = (i: number) => buttons[i].querySelector<HTMLElement>('[data-filter-fill]');
+      // out of the old one, towards the new
+      fillOf(from)?.animate([
+        { clipPath: 'inset(0 0 0 0)' },
+        { clipPath: right ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)' },
+      ], { duration: SLIDE, easing: EASE });
+      // into the new one, from the side it came from
+      fillOf(to)?.animate([
+        { clipPath: right ? 'inset(0 100% 0 0)' : 'inset(0 0 0 100%)' },
+        { clipPath: 'inset(0 0 0 0)' },
+      ], { duration: SLIDE, delay: SLIDE * 0.35, easing: EASE, fill: 'backwards' });
+    }
+    current = key;
   }
 
   /** show what matches; the label under the bar says how many */

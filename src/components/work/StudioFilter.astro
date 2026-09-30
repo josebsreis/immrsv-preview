@@ -22,6 +22,10 @@ const options = [
             data-tap data-dhover-item data-axis="x">
       <span class="tile" data-dhover-tile aria-hidden="true"></span>
       <span class="txt">{o.label}</span>
+      <!-- the chosen fill, with the label again in the ground's colour on it:
+           it slides in and out from the side the choice came from, and the
+           letters turn exactly where its edge crosses them -->
+      <span class="fill" data-filter-fill aria-hidden="true"><span class="txt">{o.label}</span></span>
     </button>
   ))}
 </div>
@@ -36,8 +40,12 @@ const options = [
           height: var(--pill-h); padding: 0 var(--s-4); color: var(--ink-3);
           transition: color var(--dur-fast) ease, background var(--dur-fast) ease; }
   @media (hover: hover) and (pointer: fine) { .pill:hover { color: var(--ink); background-image: linear-gradient(var(--glass), var(--glass)); } }
-  /* the chosen one is solid: it wants no veil and no tint under it */
-  .pill[data-on], .pill[data-on]:hover { color: var(--ground); background: var(--ink); }
+  /* the chosen one is solid: the fill covers it, and it wants no tint under it */
+  .pill[data-on]:hover { background: none; }
+  .fill { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 var(--s-4);
+          background: var(--ink); color: var(--ground); pointer-events: none;
+          clip-path: inset(0 100% 0 0); }
+  .pill[data-on] .fill { clip-path: inset(0 0 0 0); }
   .tile { position: absolute; inset: 0; background: var(--glass-hover);
           transform: translateX(-100%); will-change: transform;
           transition: transform var(--dur-base) var(--ease-panel); }
