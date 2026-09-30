@@ -1,0 +1,33 @@
+---
+/** Between pages: a dark panel comes up over the page with the mark in its
+ *  middle, the mark's three faces — the three studios — closing together as
+ *  it covers the screen. The next page is fetched and put in place behind
+ *  it, and the panel lifts away off the top. It persists across pages so it
+ *  is the same panel going up as coming down (scripts/ui/curtain.ts). */
+import { SYMBOL } from '../../lib/lettermark';
+---
+<div class="curtain" data-curtain transition:persist="curtain" aria-hidden="true">
+  <svg class="mark" viewBox={SYMBOL.viewBox}>
+    {SYMBOL.paths.map((d, k) => <path d={d} data-face={k} />)}
+  </svg>
+</div>
+
+<script>
+  import { createCurtain } from '../../scripts/ui/curtain';
+  createCurtain();
+</script>
+
+<style>
+  /* over everything, the nav included; not there at all until it is used */
+  .curtain { position: fixed; inset: 0; z-index: 2147483000; pointer-events: none;
+             background: #060606; display: grid; place-items: center;
+             transform: translateY(100%); visibility: hidden; }
+  .curtain.on { visibility: visible; pointer-events: auto; }
+  .mark { width: clamp(2.75rem, 5vw, 4rem); height: auto; overflow: visible; }
+  .mark path { fill: #f3f3f4; transition: transform 0.5s var(--ease-snap, cubic-bezier(0.2, 0.8, 0.2, 1)),
+                                           opacity 0.35s ease; }
+  /* apart, each face a little way off along its own direction */
+  .curtain:not(.closed) .mark path[data-face="0"] { transform: translate(0, -26px); opacity: 0; }
+  .curtain:not(.closed) .mark path[data-face="1"] { transform: translate(-22px, 13px); opacity: 0; }
+  .curtain:not(.closed) .mark path[data-face="2"] { transform: translate(22px, 13px); opacity: 0; }
+</style>

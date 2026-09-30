@@ -203,6 +203,10 @@ body.ready .arrives { animation: arrive var(--dur-slow) ease both; animation-del
    it — nothing travels, here or anywhere else something appears */
 @keyframes page-out { to { opacity: 0; } }
 @keyframes page-in { from { opacity: 0; } }
+/* under the curtain (components/ui/Curtain.astro) the swap happens behind a
+   covered screen, so the router's crossfade has nothing to do */
+html[data-curtained]::view-transition-old(root),
+html[data-curtained]::view-transition-new(root) { animation: none; }
 
 
 @media (prefers-reduced-motion: reduce) {
