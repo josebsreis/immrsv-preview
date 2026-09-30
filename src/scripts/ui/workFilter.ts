@@ -105,15 +105,14 @@ export function createWorkFilter(root: ParentNode = document): WorkFilter {
   function change(apply: () => void) {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return apply();
 
-    // anything still moving from the last change lands where it was going
+    /* A card still fading out from the last change is put away first — its
+       fade cancelled, not finished: finished, its 'gone' held on after it,
+       and the next change that brought it back brought it back invisible.
+       Everything else still moving lands where it was going. */
+    clearTimeout(tidy);
     running.forEach((a) => a.finish());
     running = [];
-    clearTimeout(tidy);
-    for (const el of items) {
-      if (el.style.position === 'absolute') {
-        el.style.position = el.style.left = el.style.top = el.style.width = el.style.height = '';
-      }
-    }
+    putAway();
 
     const box = grid!.getBoundingClientRect();
     const before = new Map<HTMLElement, DOMRect>();
@@ -130,6 +129,7 @@ export function createWorkFilter(root: ParentNode = document): WorkFilter {
     for (const el of leaving) {
       const r = before.get(el)!;
       el.removeAttribute('data-off');
+      el.dataset.leaving = '';
       el.style.position = 'absolute';
       el.style.left = `${r.left - box.left}px`;
       el.style.top = `${r.top - box.top}px`;
@@ -147,6 +147,8 @@ export function createWorkFilter(root: ParentNode = document): WorkFilter {
     let n = 0;
     for (const el of items) {
       if (!after.has(el)) continue;
+      // whatever it was doing before this change, it starts clean
+      el.getAnimations().forEach((a) => a.cancel());
       const was = before.get(el);
       if (was) {
         // stays: from its old place to its new one
@@ -169,14 +171,19 @@ export function createWorkFilter(root: ParentNode = document): WorkFilter {
     }
 
     // the leaving go back to being simply filtered out once they have faded
-    tidy = setTimeout(() => {
-      for (const el of leaving) {
-        if (after.has(el)) continue;
-        el.style.position = el.style.left = el.style.top = el.style.width = el.style.height = el.style.pointerEvents = '';
-        el.getAnimations().forEach((a) => a.cancel());
-        el.setAttribute('data-off', '');
-      }
-    }, LEAVE + 20);
+    tidy = setTimeout(putAway, LEAVE + 20);
+  }
+
+  /** every card lifted out to fade: its fade dropped, its place given back,
+   *  and filtered out as it should be */
+  function putAway() {
+    for (const el of items) {
+      if (el.dataset.leaving === undefined) continue;
+      delete el.dataset.leaving;
+      el.getAnimations().forEach((a) => a.cancel());
+      el.style.position = el.style.left = el.style.top = el.style.width = el.style.height = el.style.pointerEvents = '';
+      el.setAttribute('data-off', '');
+    }
   }
 
   function go(key: string, push: boolean) {
