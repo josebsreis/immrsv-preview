@@ -28,65 +28,10 @@ interface Props {
   steps?: { word: string; line: string }[];
 }
 
-/** One mark for each step: a small cluster of particles, the hero's own
- *  material at the scale of an icon. Each is a solid in three dimensions —
- *  two rings, a lattice, a sphere, a helix — that turns slowly on the spot
- *  (scripts/ui/formingMarks.ts), so it keeps its shape while it moves: a
- *  figure turning reads as one thing; a figure whose points each wander
- *  reads as none. The four are different enough to tell apart at a glance,
- *  and they gather out of nothing as the card arrives. Coordinates are px
- *  from the centre of a 48px box, z towards the reader. */
-type P3 = { x: number; y: number; z: number };
-const ring = (r: number, n: number, axis: 'y' | 'x' | 'z', off = 0): P3[] =>
-  Array.from({ length: n }, (_, i) => {
-    const a = off + (i / n) * Math.PI * 2, c = Math.cos(a) * r, s = Math.sin(a) * r;
-    return axis === 'z' ? { x: c, y: s, z: 0 } : axis === 'y' ? { x: c, y: 0, z: s } : { x: 0, y: c, z: s };
-  });
-const marks: P3[][] = [
-  /* understand: a focus — a point, and two rings round it at right angles */
-  [{ x: 0, y: 0, z: 0 }, ...ring(17, 18, 'y'), ...ring(17, 18, 'x', Math.PI / 18)],
-  /* build: a lattice — three by three by three */
-  (() => { const out: P3[] = []; for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (let k = -1; k <= 1; k++)
-      out.push({ x: i * 10, y: j * 10, z: k * 10 }); return out; })(),
-  /* show: a sphere — points spread evenly over it */
-  Array.from({ length: 36 }, (_, i) => {
-    const y = 1 - (i / 35) * 2, r = Math.sqrt(1 - y * y), a = i * 2.39996;
-    return { x: Math.cos(a) * r * 18, y: y * 18, z: Math.sin(a) * r * 18 };
-  }),
-  /* refine: a helix — the same turn, a step higher each time */
-  Array.from({ length: 30 }, (_, i) => {
-    const a = i * 0.7, r = 14;
-    return { x: Math.cos(a) * r, y: (i / 29 - 0.5) * 38, z: Math.sin(a) * r };
-  }),
-  /* a cube's edges — the mark's own form, drawn in points */
-  (() => { const out: P3[] = []; const e = 13;
-    for (const a of [-e, e]) for (const b of [-e, e]) for (let k = 0; k <= 4; k++) {
-      const c = -e + (k / 4) * 2 * e;
-      out.push({ x: c, y: a, z: b }, { x: a, y: c, z: b }, { x: a, y: b, z: c });
-    }
-    return out.filter((p, i, all) => all.findIndex((q) => q.x === p.x && q.y === p.y && q.z === p.z) === i); })(),
-  /* a ring round a ring: a torus */
-  Array.from({ length: 40 }, (_, i) => {
-    const u = (i / 40) * Math.PI * 2, v = i * 2.4;
-    const R = 13, r = 5.5;
-    return { x: (R + r * Math.cos(v)) * Math.cos(u), y: r * Math.sin(v), z: (R + r * Math.cos(v)) * Math.sin(u) };
-  }),
-];
-/** A mark as its particles: where each sits, where it arrives from and its
- *  turn to arrive. Deterministic — the same numbers every build — from a
- *  small hash of the seat, so nothing is random at runtime and the markup
- *  is stable. The arrival order is shuffled by the same hash, so the figure
- *  gathers rather than draws. */
-const hash = (n: number) => { let x = (n + 1) * 2654435761; x ^= x >>> 13; x *= 1274126177; x ^= x >>> 16; return (x >>> 0) / 4294967296; };
-const dots = (pts: P3[], seed: number) => {
-  const out = pts.map((pt, j) => {
-    const h = (k: number) => hash(seed * 997 + j * 13 + k);
-    const ang = h(1) * Math.PI * 2, far = 12 + h(2) * 14;
-    return { ...pt, dx: Math.cos(ang) * far, dy: Math.sin(ang) * far, k: h(3) };
-  });
-  out.sort((a, b) => a.k - b.k);
-  return out.map((d, i) => ({ ...d, i: i / Math.max(1, out.length - 1) }));
-};
+/** One mark for each step: a thin-line solid (lib/formingShapes.ts) —
+ *  two rings, a lattice, a sphere, a helix, a cube, a torus — drawn here seen
+ *  straight on and turned slowly on the spot by scripts/ui/formingMarks.ts. */
+import { SHAPES, pathOf } from '../../lib/formingShapes';
 const {
   lead = 'Your team,',
   tail = 'extended.',
@@ -135,15 +80,9 @@ const {
           <li class={`beat panel ${i % 2 ? 'right' : 'left'}`} data-forming-beat>
             <div class="head">
               <h3 class="word">{s.word}</h3>
-              <!-- each particle carries its seat in three dimensions, where it
-                   arrives from and its turn; the script turns the solid and
-                   writes where each one is -->
-              <span class="mark" data-forming-mark aria-hidden="true">
-                {dots(marks[i % marks.length], i).map((d) => (
-                  <i data-p={`${d.x.toFixed(1)},${d.y.toFixed(1)},${d.z.toFixed(1)},${d.dx.toFixed(1)},${d.dy.toFixed(1)},${d.i.toFixed(3)}`}
-                     style={`--x: ${d.x.toFixed(1)}px; --y: ${d.y.toFixed(1)}px`}></i>
-                ))}
-              </span>
+              <svg class="mark" data-forming-mark data-shape={i % SHAPES.length} viewBox="0 0 48 48" aria-hidden="true">
+                <path d={pathOf(SHAPES[i % SHAPES.length], i * 1.7)} />
+              </svg>
             </div>
             <p class="line">{s.line}</p>
           </li>
@@ -269,11 +208,10 @@ const {
      the card read as having twice the padding above as at its sides. The
      margins give back what it stands proud of the word by, so the row is the
      word's height and the mark overhangs into the card's own padding. */
-  .mark { position: relative; flex: none; width: 3rem; height: 3rem; --dot: 3px;
-          margin-block: -0.8rem; }
-  .mark i { position: absolute; left: 50%; top: 50%; width: var(--dot); height: var(--dot);
-            margin: calc(var(--dot) / -2); border-radius: 50%; background: var(--ink-4);
-            translate: var(--x) var(--y); will-change: translate, scale, opacity; }
+  /* the mark: a hairline drawing, the ink's own grey, turning slowly */
+  .mark { flex: none; width: 3rem; height: 3rem; margin-block: -0.8rem; overflow: visible; }
+  .mark path { fill: none; stroke: var(--ink-3); stroke-width: 1; vector-effect: non-scaling-stroke;
+               stroke-linejoin: round; stroke-linecap: round; }
 
   .line { margin: auto 0 0; font-size: var(--t-small); color: var(--ink-2); line-height: var(--lh-body); }
 

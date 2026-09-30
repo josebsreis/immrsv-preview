@@ -1,59 +1,37 @@
 /* ═══════════════════════════════════════════════════════════════════
-   The handover's marks: four small solids made of particles, turning.
-
-   Each mark is a set of points in three dimensions, carried on the dots
-   themselves. Every frame the solid is turned a little further about a
-   tilted axis and projected flat, and each dot is put where its point
-   lands. Every dot the same size and the same ink: the turn is read from
-   the movement alone, and a figure whose dots differ in weight reads as
-   uneven when it happens to be still. The whole figure moves as one thing,
-   which is what keeps it a figure.
-
-   Each is always whole: the card fades in and out as it passes, but the
-   figure on it does not assemble or come apart — scrolled through quickly,
-   a figure caught half-built read as broken.
-
-   It runs only while the section is on screen, and not at all for a reader
-   who asked for less motion: they get each solid seen straight on, still.
+   The handover's marks: six thin-line solids (lib/formingShapes.ts),
+   turning slowly on the spot about a leaning axis, each at its own pace so
+   no two turn in step. Every frame each is projected flat and drawn as one
+   hairline path. Only the ones on screen are drawn, and nothing at all
+   while the section is away or for a reader who asked for less motion —
+   they get each solid seen straight on, still.
    ═══════════════════════════════════════════════════════════════════ */
+import { SHAPES, pathOf } from '../../lib/formingShapes';
 
 export interface FormingMarks { destroy(): void }
 
-/** rad/s, each mark on its own pace so the four never turn in step */
-const SPEED = [0.35, 0.28, 0.32, 0.4];
-/** the axis leans out of the screen, so a ring is never seen edge-on for long */
-const TILT = 0.55;
+/** rad/s, each mark on its own pace */
+const SPEED = [0.35, 0.28, 0.32, 0.4, 0.3, 0.37];
 
 export function createFormingMarks(root: HTMLElement): FormingMarks {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return { destroy() {} };
-  const marks = [...root.querySelectorAll<HTMLElement>('[data-forming-mark]')].map((el, m) => {
-    const dots = [...el.querySelectorAll<HTMLElement>('i')];
-    const p = dots.map((d) => (d.dataset.p ?? '').split(',').map(Number));
-    return { el, dots, p, speed: SPEED[m % SPEED.length], phase: m * 1.7 };
-  });
+  const marks = [...root.querySelectorAll<SVGSVGElement>('[data-forming-mark]')].map((el, m) => ({
+    path: el.querySelector('path')!, card: el.closest<HTMLElement>('[data-forming-beat]'),
+    shape: SHAPES[Number(el.dataset.shape) || 0], speed: SPEED[m % SPEED.length], phase: m * 1.7,
+  })).filter((m) => m.path);
   if (marks.length === 0) return { destroy() {} };
 
-  const ct = Math.cos(TILT), st = Math.sin(TILT);
   let raf = 0, visible = false;
-
   const frame = (now: number) => {
     raf = 0;
     const t = now / 1000;
     for (const mk of marks) {
-      const th = t * mk.speed + mk.phase, c = Math.cos(th), s = Math.sin(th);
-      mk.dots.forEach((d, i) => {
-        const [x, y, z] = mk.p[i];
-        // turn about the vertical, then lean the whole thing towards the reader
-        const x1 = x * c + z * s, z1 = -x * s + z * c;
-        const y2 = y * ct - z1 * st;
-        d.style.translate = `${x1.toFixed(1)}px ${y2.toFixed(1)}px`;
-      });
+      // a card that cannot be seen is not drawn
+      if (mk.card && parseFloat(mk.card.style.getPropertyValue('--v') || '0') <= 0.01) continue;
+      mk.path.setAttribute('d', pathOf(mk.shape, t * mk.speed + mk.phase));
     }
     if (visible) raf = requestAnimationFrame(frame);
   };
-  // the pane, not the section: the section is several screens tall and the
-  // pane is the one screen of it that is pinned while it plays — and, in the
-  // dev pin, the only part of it that is on screen at all
   const io = new IntersectionObserver(([e]) => {
     visible = e.isIntersecting;
     if (visible && !raf) raf = requestAnimationFrame(frame);
