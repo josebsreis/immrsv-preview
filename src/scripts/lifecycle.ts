@@ -62,24 +62,6 @@ document.addEventListener('astro:before-swap', () => {
     .forEach((el) => el.classList.remove('arrives'));
 });
 
-/* ── a project's picture carried in three beats ─────────────────────────
-   Into a project page or out of one, the change is a sequence rather than
-   one crossfade: the page around the picture goes, the picture travels on
-   its own, and the new page comes up round it once it has landed. The
-   timings are in styles/global.css under html[data-carry]; this marks the
-   change for them. It is set after the swap, because the swap copies the
-   new page's own attributes onto <html>, and cleared when it has finished. */
-const isProject = (u: URL) => /^\/work\/[^/]+\/?$/.test(u.pathname.replace(/^\/immrsv-preview[^/]*/, ''));
-let carry = false;
-document.addEventListener('astro:before-swap', (e) => {
-  const ev = e as Event & { from: URL; to: URL; viewTransition?: ViewTransition };
-  carry = isProject(ev.from) || isProject(ev.to);
-  ev.viewTransition?.finished.finally(() => { delete document.documentElement.dataset.carry; });
-});
-document.addEventListener('astro:after-swap', () => {
-  if (carry) document.documentElement.dataset.carry = '';
-});
-
 /* ── the nav takes the ground it is standing on ──────────────────────────
    The nav is fixed and persists across navigations, so it has to be told
    what is under it — and every page now has both grounds in it, the black
