@@ -76,7 +76,6 @@ export function createForming(root: HTMLElement): Forming {
   const note = root.querySelector<HTMLElement>('.note');
   const plumb = root.querySelector<HTMLElement>('[data-forming-plumb]');
   const rings = [...root.querySelectorAll<HTMLElement>('[data-forming-ring]')];
-  const echoes = [...root.querySelectorAll<HTMLElement>('[data-forming-echo]')];
   const beats = [...root.querySelectorAll<HTMLElement>('[data-forming-beat]')];
   const ctx = canvas.getContext('2d');
   if (!ctx) return { update() {}, destroy() {} };
@@ -86,6 +85,8 @@ export function createForming(root: HTMLElement): Forming {
      light, at one screen tall — see the component's own styles. */
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return { update() {}, destroy() {} };
   root.dataset.live = '';
+  /* the slot's stylesheet hides her by a clip; the rings' mask does that now */
+  box.style.clipPath = 'none';
 
   /* ── frames ──────────────────────────────────────────────────────────
      Three megabytes of stills is not something to fetch while the reader
@@ -294,26 +295,51 @@ export function createForming(root: HTMLElement): Forming {
       el.style.background = tone(lit);
     });
 
-    // the ground: our dot, opened until it has covered the screen
-    const g = inOut(ramp(p, T.spread[0], T.spread[1]));
+    /* The ground: the light comes on in rings, as a curtain does in bars —
+       a band round our dot, then the next out and the next, each thickening
+       from its own middle line until it meets its neighbours, so for a
+       moment the screen is rings of light and dark and then it is light. */
+    const G = ramp(p, T.spread[0], T.spread[1]);
+    const g = G;
     // the merged five hide under the light as it opens
     squares.forEach((el) => { if (g > 0) el.style.setProperty('--o', '0'); });
     root.style.setProperty('--g', g.toFixed(3));
     win.style.visibility = g > 0 ? '' : 'hidden';
     note?.style.setProperty('--nv', inOut(ramp(p, T.team[0] - 0.04, T.team[0] + 0.03)).toFixed(3));
-    // a circle, our dot, widening until it has covered the far corners
-    const R = sq / 2 + (Math.hypot(w, h) / 2 + 2 - sq / 2) * g;
-    win.style.clipPath = g >= 1 ? 'none' : `circle(${R.toFixed(1)}px at 50% 50%)`;
-    /* The echoes all leave the dot as the light does, but quicker, the
-       outermost quickest: rings stacked ahead of the light, each a step
-       nearer its colour, and the light last, covering them all. */
     const far = Math.hypot(w, h) / 2 + 2;
-    echoes.forEach((el, k) => {
-      const lead = 1 - (echoes.length - k) * 0.17;
-      const e = inOut(ramp(p, T.spread[0], T.spread[0] + (T.spread[1] - T.spread[0]) * lead));
-      el.style.visibility = e > 0 && g < 1 ? 'visible' : 'hidden';
-      el.style.clipPath = `circle(${(sq / 2 + (far - sq / 2) * e).toFixed(1)}px at 50% 50%)`;
-    });
+    const n = Math.max(6, Math.min(12, Math.round(far / 70)));
+    const band = far / n;
+    /* each ring takes RING of the passage, and they start one after another
+       from the middle, so the last is closing as the passage ends */
+    const RING = 0.45, step = (1 - RING) / (n - 1);
+    const lit: [number, number][] = g > 0 ? [[0, sq / 2]] : [];
+    for (let k = 0; k < n; k++) {
+      const u = inOut(clamp01((G - k * step) / RING));
+      if (u <= 0) break;
+      const c = (k + 0.5) * band, t = u * (band / 2 + 0.75);
+      const a = Math.max(0, c - t), z = c + t, prev = lit[lit.length - 1];
+      /* rings that have met are one band: drawn as two, the soft edges
+         where they touch would leave a dark hairline between them */
+      if (prev && a <= prev[1] + 1.5) prev[1] = Math.max(prev[1], z);
+      else lit.push([a, z]);
+    }
+    /* the light's front: where the outermost ring has started, moving on
+       smoothly between them — what the two lines are pushed off by */
+    const R = Math.max(sq / 2, Math.min(far, (G / step + 0.5) * band));
+    /* the rings as a mask: a radial gradient with a hard step at each edge
+       (a pixel wide, so the edge is smooth rather than stair-stepped) */
+    const rings = (k: number, x: number, y: number) => {
+      const stops = ['transparent 0px'];
+      for (const [a, b] of lit) {
+        const A = a / k, B = b / k;
+        if (A > 0.5) stops.push(`transparent ${(A - 0.5).toFixed(1)}px`, `#000 ${(A + 0.5).toFixed(1)}px`);
+        else stops.push('#000 0px');
+        stops.push(`#000 ${(B - 0.5).toFixed(1)}px`, `transparent ${(B + 0.5).toFixed(1)}px`);
+      }
+      return `radial-gradient(circle at ${x.toFixed(1)}px ${y.toFixed(1)}px, ${stops.join(', ')})`;
+    };
+    const veil = (el: HTMLElement, m: string) => { el.style.maskImage = m; el.style.setProperty('-webkit-mask-image', m); };
+    veil(win, g >= 1 ? 'none' : rings(1, w / 2, h / 2));
     // the nav takes the ground it stands on, and this section changes its
     // own — only once the light has filled the screen, not while the nav
     // is still over the dark
@@ -339,12 +365,12 @@ export function createForming(root: HTMLElement): Forming {
        cut from her in her own coordinates — which are moved and scaled —
        so the cut lands on the circle on screen, not beside it. */
     box.style.visibility = g > 0 ? '' : 'hidden';
-    if (g >= 1) box.style.clipPath = 'none';
+    if (g >= 1) veil(box, 'none');
     else {
       const ox = sw / 2, oy = sh;                          // her transform's origin: foot, centre
       const lx = ox + (w / 2 - sx - ox) / sc;
       const ly = oy + (h / 2 - sy - oy - dy) / sc;
-      box.style.clipPath = `circle(${(R / sc).toFixed(1)}px at ${lx.toFixed(1)}px ${ly.toFixed(1)}px)`;
+      veil(box, rings(sc, lx, ly));
     }
     // no fade: the circle is what reveals her, cutting her out as it grows
     box.style.opacity = '';
