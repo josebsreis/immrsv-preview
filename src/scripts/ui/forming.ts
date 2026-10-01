@@ -76,6 +76,7 @@ export function createForming(root: HTMLElement): Forming {
   const note = root.querySelector<HTMLElement>('.note');
   const plumb = root.querySelector<HTMLElement>('[data-forming-plumb]');
   const rings = [...root.querySelectorAll<HTMLElement>('[data-forming-ring]')];
+  const echoes = [...root.querySelectorAll<HTMLElement>('[data-forming-echo]')];
   const beats = [...root.querySelectorAll<HTMLElement>('[data-forming-beat]')];
   const ctx = canvas.getContext('2d');
   if (!ctx) return { update() {}, destroy() {} };
@@ -303,6 +304,16 @@ export function createForming(root: HTMLElement): Forming {
     // a circle, our dot, widening until it has covered the far corners
     const R = sq / 2 + (Math.hypot(w, h) / 2 + 2 - sq / 2) * g;
     win.style.clipPath = g >= 1 ? 'none' : `circle(${R.toFixed(1)}px at 50% 50%)`;
+    /* The echoes all leave the dot as the light does, but quicker, the
+       outermost quickest: rings stacked ahead of the light, each a step
+       nearer its colour, and the light last, covering them all. */
+    const far = Math.hypot(w, h) / 2 + 2;
+    echoes.forEach((el, k) => {
+      const lead = 1 - (echoes.length - k) * 0.17;
+      const e = inOut(ramp(p, T.spread[0], T.spread[0] + (T.spread[1] - T.spread[0]) * lead));
+      el.style.visibility = e > 0 && g < 1 ? 'visible' : 'hidden';
+      el.style.clipPath = `circle(${(sq / 2 + (far - sq / 2) * e).toFixed(1)}px at 50% 50%)`;
+    });
     // the nav takes the ground it stands on, and this section changes its
     // own — only once the light has filled the screen, not while the nav
     // is still over the dark
