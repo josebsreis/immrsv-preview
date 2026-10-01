@@ -30,8 +30,8 @@ interface Props {
 
 /** One mark for each step, from Arcticons (github.com/Arcticons-Team/Arcticons,
  *  CC BY-SA 4.0 — credited on the terms page): upscale-media, more-sharing, aia-connect, concepts,
- *  network-speed, lego-builder. Thin rounded lines on a 48 grid; as a card arrives its lines
- *  draw on (formingMarks.ts sets `data-shown`), then they hold. */
+ *  network-speed, lego-builder. Thin rounded lines on a 48 grid,
+ *  always whole. */
 const ICONS: string[][] = [["M35.464 24.008V12.536H23.992", "M24.01 34.596H38.5a4 4 0 0 0 4-4V9.5a4 4 0 0 0-4-4H17.404a4 4 0 0 0-4 4v14.49m22.06-11.454L15.167 32.833", "M13.404 17.998H9.5a4 4 0 0 0-4 4V38.5a4 4 0 0 0 4 4h16.502a4 4 0 0 0 4-4v-3.904"], ["M2.5 24.0a21.5 21.5 0 1 0 43.0 0a21.5 21.5 0 1 0 -43.0 0", "M6.244 11.876h25.751M4.456 32.961h21.621m-23.49-7.028h35.326m-34.8-7.028H20.16m-7.028 7.028l7.028-7.028l-7.028-7.028m14.178 4.685l4.686-4.685L27.31 7.19m-5.918 30.456l4.686-4.685l-7.029-7.029m14.178 4.686l4.686-4.685l-4.686-4.686"], ["M28.846 32.93a2.399 2.399 0 0 0 1.046 4.558a2.4 2.4 0 1 0-1.046-4.56l-2.174-4.959a5.7 5.7 0 0 1-2.76.71a5.7 5.7 0 0 1-2.034-.372m2.849-10.962a5.68 5.68 0 0 0-4.112.99m-2.543 18.956a3.2 3.2 0 1 0-2.176 6.02a3.2 3.2 0 0 0 2.176-6.021l3.806-8.983a5.7 5.7 0 0 1-3.513-6.639l-4.931-.827a3.7 3.7 0 0 1-7.35-.614a3.7 3.7 0 1 1 7.35.614m5.345-4.917a2.3 2.3 0 0 1-2.944-3.535a2.3 2.3 0 0 1 2.944 3.535l1.836 2.412a5.7 5.7 0 0 0-2.25 3.332m11.624-2.747a3.3 3.3 0 1 0 5.279-3.96a3.3 3.3 0 0 0-5.28 3.96l-1.367.85c.648.946.994 2.066.992 3.212c0 .515-.07 1.014-.197 1.49m4.53 1.503a4 4 0 0 0 3.844 5.105a4 4 0 1 0 0-7.995a4 4 0 0 0-3.845 2.89l-4.53-1.504a5.7 5.7 0 0 1-2.742 3.496M25.56 10.674q.195.025.396.025a3.1 3.1 0 1 0-3.1-3.1v.002a3.1 3.1 0 0 0 2.703 3.073l-.83 6.67a5.7 5.7 0 0 1 3.893 2.427"], ["M33.409000000000006 8.308a3.599 3.599 0 1 0 7.198 0a3.599 3.599 0 1 0 -7.198 0", "M16.337 42.804A20.393 20.393 0 1 1 34.09 6.201m7.31 25.633l1.222.794m-4.018 4.012l1.142.985m-5.436 2.757l.788 1.025m-6.077 1.313l.404 1.253m-5.712-.636l-.04 1.194m-5.515-1.791l-.275 1.188M45.5 27.264h-5.438l-4.964-1.497l.079-4.097l4.885-1.497H45.5", "m35.098 25.767l-5.515-2.127l5.594-1.97"], ["M34.628 24.08a14.704 14.704 0 0 0-22.673 1.725", "M43.5 20.585a23.808 23.808 0 0 0-39 0m39 0l-21.483 8.463a5.558 5.558 0 1 0 6.212 8.779l.015.02Z"], ["M35.71 32.744v-1.64a.383.383 0 0 0-.382-.382h-4.767a.383.383 0 0 0-.383.383v1.64", "M28.472 32.744H10.583V43.5h26.834V32.744zm-10.65-10.756V20.35a.383.383 0 0 0-.383-.383h-4.767a.383.383 0 0 0-.383.383v1.64", "M19.528 21.988h-8.945v10.756h17.889V21.988z", "M26.766 21.988V20.35a.383.383 0 0 0-.382-.383h-4.767a.383.383 0 0 0-.383.383v1.64m-10.107-4.943L12.502 6.38l8.87 1.143l-1.374 10.667zm8.524-9.862l.211-1.637a.385.385 0 0 0-.333-.431l-4.76-.614a.385.385 0 0 0-.431.333l-.211 1.637"]];
 const {
   lead = 'Your team,',
@@ -82,7 +82,7 @@ const {
             <div class="head">
               <h3 class="word">{s.word}</h3>
               <svg class="mark" data-forming-mark viewBox="0 0 48 48" aria-hidden="true">
-                {ICONS[i % ICONS.length].map((d) => <path d={d} pathLength="1" />)}
+                {ICONS[i % ICONS.length].map((d) => <path d={d}  />)}
               </svg>
             </div>
             <p class="line">{s.line}</p>
@@ -201,19 +201,13 @@ const {
   .word { margin: 0; font-size: var(--t-title); font-weight: var(--w-display);
           letter-spacing: var(--track-display); line-height: var(--lh-title); }
   /* The mark: the drawing's own hairline, one step under the title's ink —
-     dark, but not the darkest thing on the card — hidden until its card is up (data-shown),
-     then drawn on, one stroke a beat after the one before. */
+     dark, but not the darkest thing on the card. Always whole: it comes and
+     goes with its card, nothing drawn on, so a quick scroll never catches
+     it half there. */
   .mark { flex: none; width: 3.5rem; height: 3.5rem; margin-block: -1rem; overflow: visible; }
   .mark :global(path) {
     fill: none; stroke: var(--ink-2); stroke-width: 1;
-    stroke-linejoin: round; stroke-linecap: round;
-    stroke-dasharray: 1; stroke-dashoffset: 1;
-    transition: stroke-dashoffset 0.9s cubic-bezier(0.65, 0, 0.35, 1); }
-  .mark :global(path:nth-child(2)) { transition-delay: 0.12s; }
-  .mark :global(path:nth-child(3)) { transition-delay: 0.24s; }
-  .mark :global(path:nth-child(n + 4)) { transition-delay: 0.36s; }
-  .mark[data-shown] :global(path) { stroke-dashoffset: 0; }
-  @media (prefers-reduced-motion: reduce) { .mark :global(path) { transition: none; } }
+    stroke-linejoin: round; stroke-linecap: round; }
 
   .line { margin: auto 0 0; font-size: var(--t-small); color: var(--ink-2); line-height: var(--lh-body); }
 

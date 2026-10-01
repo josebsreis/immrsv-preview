@@ -12,7 +12,6 @@ import { createStudioStack } from './ui/studioStack';
 import { createWorkPile } from './ui/workPile';
 import { createProcessRail } from './ui/processRail';
 import { createForming } from './ui/forming';
-import { createFormingMarks } from './ui/formingMarks';
 import { createFaqs } from './ui/faqs';
 import { createVideoInView } from './ui/videoInView';
 import { splitChars } from './ui/splitText';
@@ -51,7 +50,7 @@ onPage('home', () => {
   document.querySelectorAll<HTMLElement>('[data-stats]').forEach((el) => add(createStatsReel(el)));
 
   const forming = document.querySelector<HTMLElement>('[data-forming]');
-  if (forming) { add(createForming(forming)); add(createFormingMarks(forming)); }
+  if (forming) add(createForming(forming));
   const tab = document.querySelector<HTMLElement>('[data-studios-tab]');
   if (tab) add(createTabFlip(tab));
   const brands = document.querySelector<HTMLElement>('[data-brands]');
