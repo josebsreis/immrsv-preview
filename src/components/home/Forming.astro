@@ -200,11 +200,12 @@ const {
           gap: var(--s-5); margin-bottom: var(--s-6); }
   .word { margin: 0; font-size: var(--t-title); font-weight: var(--w-display);
           letter-spacing: var(--track-display); line-height: var(--lh-title); }
-  /* The mark: thin lines in the title's ink, hidden until its card is up (data-shown),
+  /* The mark: the drawing's own hairline, one step under the title's ink —
+     dark, but not the darkest thing on the card — hidden until its card is up (data-shown),
      then drawn on, one stroke a beat after the one before. */
-  .mark { flex: none; width: 3rem; height: 3rem; margin-block: -0.8rem; overflow: visible; }
+  .mark { flex: none; width: 3.5rem; height: 3.5rem; margin-block: -1rem; overflow: visible; }
   .mark :global(path) {
-    fill: none; stroke: var(--ink); stroke-width: 1.6;
+    fill: none; stroke: var(--ink-2); stroke-width: 1;
     stroke-linejoin: round; stroke-linecap: round;
     stroke-dasharray: 1; stroke-dashoffset: 1;
     transition: stroke-dashoffset 0.9s cubic-bezier(0.65, 0, 0.35, 1); }
