@@ -1,5 +1,5 @@
-/** The last word of the headline cycles: letters blur out in a random
- *  order, the next word blurs in the same way. Words come from the element's
+/** The last word of the headline cycles: letters blur out right to left,
+ *  then the next word blurs in left to right. Words come from the element's
  *  `data-words` (JSON array); the first is the resting word.
  *
  *  It rotates on its own timer until something takes it over. The hero does:
@@ -30,12 +30,14 @@ export function createRotatingWord(el: HTMLElement, opts: { hold?: number; first
     if (word === words[idx] && !busy) return;
     if (busy) { queued = word; return; }
     busy = true;
-    Array.from(el.children).forEach((l) => later(() => l.classList.add('out'), Math.random() * 320));
+    const going = Array.from(el.children);
+    going.forEach((l, n) => later(() => l.classList.add('out'), (going.length - 1 - n) * (320 / Math.max(1, going.length - 1))));
     later(() => {
       idx = Math.max(0, words.indexOf(word));
       set(word, true);
       void el.offsetWidth;                                             // paint the hidden state before releasing
-      Array.from(el.children).forEach((l) => later(() => l.classList.remove('out'), 40 + Math.random() * 340));
+      const coming = Array.from(el.children);
+      coming.forEach((l, n) => later(() => l.classList.remove('out'), 40 + n * (340 / Math.max(1, coming.length - 1))));
       later(() => {
         busy = false;
         if (queued !== null) { const q = queued; queued = null; goto(q); }

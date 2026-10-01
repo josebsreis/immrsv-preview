@@ -1,7 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    A heading that comes in as the headline's last word does: its letters
-   are out of focus and gone until the heading is scrolled to, then each
-   sharpens and appears on its own, in no order, over a short spread — so
+   are out of focus and gone until the heading is scrolled to, then they
+   sharpen and appear one after another, left to right, over a short
+   spread — so
    the name of a section arrives the way the name of the site did, and
    quickly, rather than fading in as one slab.
 
@@ -16,7 +17,7 @@
 
 export interface BlurIn { destroy(): void }
 
-/** the longest any one letter waits before coming in, ms */
+/** how long the sweep takes from the first letter to the last, ms */
 const SPREAD = 300;
 
 export function createBlurIn(root: ParentNode = document): BlurIn {
@@ -58,9 +59,9 @@ export function createBlurIn(root: ParentNode = document): BlurIn {
     for (const e of entries) {
       if (!e.isIntersecting) continue;
       seen.unobserve(e.target);
-      e.target.querySelectorAll<HTMLElement>('.ch').forEach((ch) => {
-        later(() => ch.classList.remove('out'), Math.random() * SPREAD);
-      });
+      const chs = e.target.querySelectorAll<HTMLElement>('.ch');
+      const step = chs.length > 1 ? SPREAD / (chs.length - 1) : 0;
+      chs.forEach((ch, n) => later(() => ch.classList.remove('out'), n * step));
     }
   }, { rootMargin: '0px 0px -14% 0px' });
   heads.forEach((h) => seen.observe(h));
