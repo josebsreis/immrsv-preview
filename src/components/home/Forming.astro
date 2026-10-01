@@ -200,16 +200,7 @@ const {
           gap: var(--s-5); margin-bottom: var(--s-6); }
   .word { margin: 0; font-size: var(--t-title); font-weight: var(--w-display);
           letter-spacing: var(--track-display); line-height: var(--lh-title); }
-  /* The mark: a cluster of particles. The script places each one every
-     frame — the solid turning, and each particle arriving from a little way
-     off, small, one after another, as the card comes in. Without script
-     every particle sits at its seat as seen straight on. */
-  /* It is taller than the word beside it, and must not set the row's height:
-     with the row as tall as the mark the word floated in the middle of it and
-     the card read as having twice the padding above as at its sides. The
-     margins give back what it stands proud of the word by, so the row is the
-     word's height and the mark overhangs into the card's own padding. */
-  /* The mark: pale thin lines, hidden until its card is up (data-shown),
+  /* The mark: thin lines in the title's ink, hidden until its card is up (data-shown),
      then drawn on, one stroke a beat after the one before. */
   .mark { flex: none; width: 3rem; height: 3rem; margin-block: -0.8rem; overflow: visible; }
   .mark :global(path) {
