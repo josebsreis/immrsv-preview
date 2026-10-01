@@ -61,6 +61,12 @@ const {
       <!-- a two-line note at the head of the section, in small capitals, as
            the selected work has; the light swallows it as it opens -->
       <p class="note label">{note.split('\n').map((l, i) => (<>{i > 0 && <br />}{l}</>))}</p>
+      <!-- drawn behind the row, in hairline: the plumb line ours falls down,
+           and the rings its landing sends out -->
+      <div class="lines" aria-hidden="true">
+        <b class="plumb" data-forming-plumb></b>
+        <b class="ring" data-forming-ring></b><b class="ring" data-forming-ring></b><b class="ring" data-forming-ring></b>
+      </div>
       <!-- the picture of the sentence: your team, four dots; one more
            joins in the middle, and it is the one the light opens from -->
       <div class="team" data-forming-team aria-hidden="true">
@@ -122,6 +128,16 @@ const {
             width: var(--sq); height: var(--sq); border-radius: 50%; background: #2c2c30;
             opacity: var(--o, 0); transform: translate(var(--x, 0px), var(--y, 0px)) scale(var(--s, 1)); }
   .team i.us { background: #f5f5f7; }
+  /* Hairlines on the dark, placed by the script: a plumb line from the top
+     of the screen to ours as it falls, fading out towards the top; and the
+     rings of the landing, centred on it. */
+  .lines { position: absolute; inset: 0; pointer-events: none; }
+  .forming:not([data-live]) .lines { display: none; }
+  .plumb { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; margin-left: -0.5px;
+           background: linear-gradient(rgb(255 255 255 / 0), rgb(255 255 255 / 0.32)) no-repeat;
+           background-size: 100% 0; }
+  .ring { position: absolute; left: 50%; top: 50%; width: 0; height: 0; border-radius: 50%;
+          border: 1px solid rgb(255 255 255 / 0.5); opacity: 0; translate: -50% -50%; }
   .note { position: absolute; left: 0; right: 0; top: calc(var(--page-y) + var(--s-6) + 3rem); margin: 0;
           text-align: center; line-height: 1.7; color: rgb(255 255 255 / 0.45);
           opacity: var(--nv, 0); }

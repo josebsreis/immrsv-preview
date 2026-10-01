@@ -74,6 +74,8 @@ export function createForming(root: HTMLElement): Forming {
   const halves = [...root.querySelectorAll<HTMLElement>('[data-forming-half]')];
   const squares = [...root.querySelectorAll<HTMLElement>('[data-forming-team] i')];
   const note = root.querySelector<HTMLElement>('.note');
+  const plumb = root.querySelector<HTMLElement>('[data-forming-plumb]');
+  const rings = [...root.querySelectorAll<HTMLElement>('[data-forming-ring]')];
   const beats = [...root.querySelectorAll<HTMLElement>('[data-forming-beat]')];
   const ctx = canvas.getContext('2d');
   if (!ctx) return { update() {}, destroy() {} };
@@ -166,6 +168,21 @@ export function createForming(root: HTMLElement): Forming {
       }
     }
 
+    /* The plumb line stops short of the note at the head of the screen and
+       starts again past it, so the small type is never struck through. Over
+       'YOUR TEAM,' it runs on: at that size it barely shows. */
+    if (plumb) {
+      const pad = 10, cuts: [number, number][] = [];
+      if (note) { const nr = note.getBoundingClientRect(); if (nr.height) cuts.push([nr.top - pr.top, nr.bottom - pr.top]); }
+      const stops = ['#000 0px'];
+      for (const [a, b] of cuts.sort((x, y) => x[0] - y[0])) {
+        stops.push(`#000 ${(a - pad).toFixed(1)}px`, `transparent ${(a - pad).toFixed(1)}px`,
+                   `transparent ${(b + pad).toFixed(1)}px`, `#000 ${(b + pad).toFixed(1)}px`);
+      }
+      const m = `linear-gradient(${stops.join(', ')})`;
+      plumb.style.maskImage = m; plumb.style.setProperty('-webkit-mask-image', m);
+    }
+
     /* the cards all as tall as the tallest, at this width */
     root.style.removeProperty('--beat-h');
     const tallest = Math.max(0, ...beats.map((b) => b.getBoundingClientRect().height));
@@ -200,6 +217,30 @@ export function createForming(root: HTMLElement): Forming {
     const s = Math.max(sw / im.naturalWidth, sh / im.naturalHeight);
     const dw = im.naturalWidth * s, dh = im.naturalHeight * s;
     ctx.drawImage(im, (sw - dw) / 2, (sh - dh) / 2, dw, dh);
+  };
+
+  /* ── the hairlines ──────────────────────────────────────────────────
+     A plumb line follows ours down from the top of the screen and finds the
+     middle with it; once it has landed, the line is drawn up into it, top
+     first, as the light passes along the row. The landing sends out three
+     rings, one after another, wider and fainter as they go. */
+  const hairlines = (p: number) => {
+    if (plumb) {
+      const d = ramp(p, T.join[0], T.join[1]);
+      const dotTop = h / 2 - (1 - d * d) * (h / 2 + sq) - sq / 2;
+      const up = inOut(ramp(p, T.impact[1], T.lit[1]));
+      const top = Math.max(0, dotTop) * up;
+      const len = d > 0 ? Math.max(0, dotTop - top) : 0;
+      plumb.style.backgroundPosition = `0 ${top.toFixed(1)}px`;
+      plumb.style.backgroundSize = `100% ${len.toFixed(1)}px`;
+    }
+    rings.forEach((el, k) => {
+      const u = ramp(p, T.impact[0] + k * 0.009, T.impact[0] + 0.05 + k * 0.009);
+      const grow = 1 - Math.pow(1 - u, 3);
+      const r = sq / 2 + grow * sq * (3 + k * 1.6);
+      el.style.width = el.style.height = `${(2 * r).toFixed(1)}px`;
+      el.style.opacity = u > 0 && u < 1 ? (Math.pow(1 - u, 1.6) * (1 - k * 0.25)).toFixed(3) : '0';
+    });
   };
 
   /* ── the scroll ──────────────────────────────────────────────────── */
@@ -239,6 +280,7 @@ export function createForming(root: HTMLElement): Forming {
     const mg = inOut(ramp(p, T.merge[0], T.merge[1]));
     const DARK = [44, 44, 48], LIGHT = [245, 245, 247];
     const tone = (k: number) => `rgb(${DARK.map((c, n) => Math.round(c + (LIGHT[n] - c) * k)).join(' ')})`;
+    hairlines(p);
     squares.forEach((el, i) => {
       if (i === 2) {
         /* ours comes down from the top of the screen, gathering speed, into
