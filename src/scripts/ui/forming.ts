@@ -168,21 +168,6 @@ export function createForming(root: HTMLElement): Forming {
       }
     }
 
-    /* The plumb line stops short of the note at the head of the screen and
-       starts again past it, so the small type is never struck through. Over
-       'YOUR TEAM,' it runs on: at that size it barely shows. */
-    if (plumb) {
-      const pad = 10, cuts: [number, number][] = [];
-      if (note) { const nr = note.getBoundingClientRect(); if (nr.height) cuts.push([nr.top - pr.top, nr.bottom - pr.top]); }
-      const stops = ['#000 0px'];
-      for (const [a, b] of cuts.sort((x, y) => x[0] - y[0])) {
-        stops.push(`#000 ${(a - pad).toFixed(1)}px`, `transparent ${(a - pad).toFixed(1)}px`,
-                   `transparent ${(b + pad).toFixed(1)}px`, `#000 ${(b + pad).toFixed(1)}px`);
-      }
-      const m = `linear-gradient(${stops.join(', ')})`;
-      plumb.style.maskImage = m; plumb.style.setProperty('-webkit-mask-image', m);
-    }
-
     /* the cards all as tall as the tallest, at this width */
     root.style.removeProperty('--beat-h');
     const tallest = Math.max(0, ...beats.map((b) => b.getBoundingClientRect().height));
