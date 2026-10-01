@@ -31,17 +31,20 @@ const CLEAR = 26;
 const T = {
   team: [-0.085, -0.045] as const,              // your team: four dots, 'YOUR TEAM,' — while
                                               // the section is still rising over the logos
-  join: [-0.045, 0.0] as const,                // they part and ours falls into the gap,
-                                              // gathering speed, 'EXTENDED.'
-  impact: [0.0, 0.035] as const,              // it lands with weight: a squash, and the
+  join: [0.0, 0.045] as const,                 // once the section has reached the top —
+                                              // not before, where it would seem to come
+                                              // out of the picture above — they part and
+                                              // ours falls into the gap, gathering speed,
+                                              // 'EXTENDED.'
+  impact: [0.045, 0.08] as const,              // it lands with weight: a squash, and the
                                               // knock runs out through the others
-  lit: [0.03, 0.085] as const,                // the light passes from ours out through
+  lit: [0.075, 0.13] as const,                // the light passes from ours out through
                                               // the team, the nearest first
-  merge: [0.085, 0.125] as const,             // the five draw together into one
-  spread: [0.13, 0.3] as const,               // and that one opens into the light, she
+  merge: [0.13, 0.17] as const,             // the five draw together into one
+  spread: [0.175, 0.33] as const,               // and that one opens into the light, she
                                               // standing in it, pushing the lines off
-  play: [0.31, 1.0] as const,                   // the frames run, once the light is open
-  beat: 0.34,                                  // the first step begins its pass here…
+  play: [0.34, 1.0] as const,                   // the frames run, once the light is open
+  beat: 0.37,                                  // the first step begins its pass here…
   last: 0.87,                                 // …and the last is gone by here, the rest
                                               // spread evenly between, however many
   life: 0.17,                                 // how long one takes to cross — longer
