@@ -43,8 +43,7 @@ const note = content.tag.split('\n');
    the viewBox's; the stroke is a hairline whatever the size it is drawn at. */
 const RINGS = [445, 540];
 const SPACING = 20, TICK = 12;
-/* one path a ring: each turns on its own — slowly, the two against each
-   other, faster under the hand (scripts/ui/workPile.ts) */
+/* one path a ring */
 const rings = RINGS.map((r, k) => {
   const count = Math.round((2 * Math.PI * r) / SPACING);
   const phase = k % 2 ? Math.PI / count : 0;
@@ -153,10 +152,8 @@ const rings = RINGS.map((r, k) => {
      the table, the cards being 16:10 — and larger than the screen either
      way, so its rings leave the section rather than end inside it. It fades
      out towards its edge, where it would otherwise stop on the section's
-     border as a hard line. Each ring turns on its own, written by the
-     script every frame while the section is on screen: slowly at rest, the
-     two against each other; with the hand while the pile is dragged; and
-     with a kick when a card is thrown. */
+     border as a hard line. It stands still: turning, it was drawn again
+     every frame, and that was the pile's weight outside Chrome. */
   .dial { position: absolute; left: 50%; top: calc(var(--card-w) * 0.3125);
           /* the page caps pictures at their column; this one is meant to
              run off the screen, so it is let out of that */
@@ -165,9 +162,7 @@ const rings = RINGS.map((r, k) => {
           fill: none; stroke: var(--ink-dim); stroke-width: 1;
           -webkit-mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
           mask-image: radial-gradient(closest-side, #000 62%, transparent 100%); }
-  /* each ring turns about the middle of the drawing, which is its own centre */
-  .ring { vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center;
-          will-change: transform; }
+  .ring { vector-effect: non-scaling-stroke; }
 
   .list { position: relative; list-style: none; display: grid; justify-items: center;
           padding-bottom: calc(var(--foot) + var(--s-4));

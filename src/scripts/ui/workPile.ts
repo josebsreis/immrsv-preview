@@ -74,12 +74,6 @@ const MIN = 7;
 /** a tenth of the width, and the throw goes through */
 const THRESHOLD = 0.1;
 const MS = 600;
-/** how far the dial behind the pile turns for one card thrown */
-const TURN = 4;
-/** the dial at rest: degrees a second, the inner ring one way and the outer
- *  the other; under the hand it is this many times faster, and a throw
- *  kicks it and lets it run down */
-const DRIFT = 0.9, HELD = 6, KICK = 40, RUNDOWN = 0.7;
 
 /* GSAP's elastic.out(1.2, 1): one overshoot past the mark and back, which is
    the card landing rather than bouncing */
@@ -107,31 +101,12 @@ export function createWorkPile(root: HTMLElement): WorkPile {
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   let at = 0;
-  /** every card the pile has moved on by, both ways, so the dial behind it
-   *  keeps turning the way the pile went rather than running back round when
-   *  the count wraps */
-  let turns = 0;
-  /* the two rings: each has its own angle, and both take the pile's turn —
-     the inner one with it and the outer one against it — on top of their
-     own slow drift, which runs the whole time the section is on screen */
-  const rings = [...root.querySelectorAll<SVGElement>('[data-pile-ring]')];
-  let hand = 0, spin = [0, 0], kick = 0, dialRaf = 0, dialLast = 0, seen = false;
-  const turnDial = (by: number) => { hand = by * TURN; };
-  const dialFrame = (t: number) => {
-    dialRaf = 0;
-    const dt = Math.min(0.05, (t - (dialLast || t)) / 1000);
-    dialLast = t;
-    const rate = DRIFT * (root.dataset.drag ? HELD : 1) + kick;
-    kick *= Math.exp(-dt / RUNDOWN);
-    spin = [spin[0] + rate * dt, spin[1] - rate * dt];
-    rings.forEach((r, i) => { r.style.transform = `rotate(${(spin[i] + (i ? hand : -hand)).toFixed(2)}deg)`; });
-    if (seen) dialRaf = requestAnimationFrame(dialFrame);
-  };
-  const dialIo = new IntersectionObserver(([e]) => {
-    seen = e.isIntersecting;
-    if (seen && !dialRaf && !still) { dialLast = 0; dialRaf = requestAnimationFrame(dialFrame); }
-  });
-  if (rings.length) dialIo.observe(root);
+  /* The dial behind the pile stands still, as Osmo's does. It turned —
+     two rings of some three hundred ticks, against each other, the whole
+     time the section was on screen — and a rotating drawing is drawn
+     again from scratch every frame: nothing a Mac's GPU notices, but in
+     Firefox, Safari and on a Windows laptop it was most of what made the
+     pile heavy. */
 
   /* Stacked, the dial is fitted to the section rather than to the screen.
      Sized by the screen it bore no relation to the room it had: on a phone
@@ -203,11 +178,7 @@ export function createWorkPile(root: HTMLElement): WorkPile {
   function settle(index: number) {
     const target = ((index % n) + n) % n;
     const by = offset(target, at, n);
-    turns += by;
     at = target;
-    turnDial(turns);
-    // a throw kicks the dial, and it runs down again
-    if (by) kick = KICK;
     pending = -1;
     cards.forEach((card, i) => {
       const d = offset(i, at, n);
@@ -311,7 +282,6 @@ export function createWorkPile(root: HTMLElement): WorkPile {
       return { ...mix(a, b, k), z: front ? b.z : a.z };
     });
     if (!followRaf) followRaf = requestAnimationFrame(follow);
-    turnDial(turns + (next - at) * k);
   };
 
   const onUp = () => {
@@ -362,7 +332,6 @@ export function createWorkPile(root: HTMLElement): WorkPile {
   return {
     destroy() {
       cancelAnimationFrame(raf); cancelAnimationFrame(followRaf);
-      cancelAnimationFrame(dialRaf); dialIo.disconnect();
       removeEventListener('resize', fitDial);
       list.removeEventListener('pointerdown', onDown);
       removeEventListener('pointermove', onMove);
