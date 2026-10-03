@@ -17,46 +17,42 @@
  *
  *  The work is links now. Each frame opens the project it shows, which is why
  *  nothing in the reel follows the pointer — see scripts/ui/studioReel.ts. */
-import type { HomeContent } from '@lib/sanity/types';
+import type { HomeContent, Project } from '@lib/sanity/types';
 import Button from '@components/ui/Button.astro';
-import work from '../../content/work.generated.json';
 
-interface Props { content: HomeContent['studios']; }
-const { content } = Astro.props;
+interface Props { content: HomeContent['studios']; projects: Project[]; }
+const { content, projects } = Astro.props;
 
-/* The studios' own work, as delivered by the client and squeezed down by
-   scripts/images.mjs. */
-const FOLDER: Record<string, string> = { architecture: 'architecture-design', media: 'creative-media', products: 'digital-products' };
 /** every panel carries the same count, so the three reels read as three of
  *  one thing rather than as three different amounts of work */
 const PER_STUDIO = 3;
-type Shot = { src: string; name: string; slug: string; widths: number[] };
-type Delivered = { studio: string; name: string; slug: string; images: { src: string; widths: number[] }[] };
-const projects = work as Delivered[];
-/** the still, extension-less; the ladder of widths that exists of it rides
- *  alongside, so the browser picks the one its screen wants */
-const frame = (im: { src: string; widths: number[] }) => im.src;
-const ladder = (s: Shot, ext: string) => s.widths.map((w) => `${s.src}-${w}.${ext} ${w}w`).join(', ');
+/* The studios' own work, from the projects — Sanity's, or the delivered
+   folders until it has them — so a project added there turns up here too. */
+type Shot = { url: string; avif?: string; webp?: string; name: string; slug: string };
+const stills = (p: Project): Shot[] => p.media
+  .filter((m) => m.kind === 'image')
+  .map((m) => ({ url: m.url, avif: m.avifSrcset, webp: m.webpSrcset, name: p.title, slug: p.slug }));
 /** the reel is a band under half the page wide, and the whole page on a phone */
 const REEL_SIZES = '(max-width: 859px) 100vw, 42vw';
-/** every render there is, in delivery order */
-const everything: Shot[] = projects.flatMap((p) => p.images.map((im) => ({ src: frame(im), widths: im.widths, name: p.name, slug: p.slug })));
+/** every render there is, in the projects' order */
+const everything: Shot[] = projects.flatMap(stills);
 
 /**
  * A studio's three frames: its own projects first, one frame each. A studio
  * with fewer than three borrows — its own spare renders before anyone else's,
  * then work from across the practice, spread through the pool rather than
  * taken off the top so the borrowed frames are not all the same building.
- * Stand-ins until the client sends the rest; nothing here is invented.
  */
 const reelFor = (key: string): Shot[] => {
-  const mine = projects.filter((p) => p.studio === FOLDER[key]);
-  const own: Shot[] = mine.map((p) => ({ src: frame(p.images[0]), widths: p.images[0].widths, name: p.name, slug: p.slug })).slice(0, PER_STUDIO);
+  const mine = projects.filter((p) => p.studios[0] === key);
+  // one frame a project, and never the same picture twice in a reel
+  const own: Shot[] = mine.map((p) => stills(p)[0]).filter(Boolean)
+    .filter((sh, k, all) => all.findIndex((o) => o.url === sh.url) === k).slice(0, PER_STUDIO);
   if (own.length >= PER_STUDIO) return own;
 
-  const spare: Shot[] = mine.flatMap((p) => p.images.slice(1).map((im) => ({ src: frame(im), widths: im.widths, name: p.name, slug: p.slug })));
-  const taken = new Set(own.concat(spare).map((s) => s.src));
-  const rest = everything.filter((s) => !taken.has(s.src));
+  const spare: Shot[] = mine.flatMap((p) => stills(p).slice(1));
+  const taken = new Set(own.concat(spare).map((s) => s.url));
+  const rest = everything.filter((s) => !taken.has(s.url));
   const want = PER_STUDIO - own.length - spare.length;
   const spread: Shot[] = [];
   for (let k = 0; k < want && rest.length; k++) {
@@ -128,8 +124,8 @@ const grounds = ['light', 'light', 'light'] as const;
                      data-cursor-hover data-cursor-text="Explore project"
                      aria-label={`${shot.name}, ${s.name}`}>
                     <picture>
-                      <source srcset={ladder(shot, 'avif')} sizes={REEL_SIZES} type="image/avif" />
-                      <img src={`${shot.src}-${shot.widths[1] ?? shot.widths[0]}.webp`} srcset={ladder(shot, 'webp')} sizes={REEL_SIZES}
+                      {shot.avif && <source srcset={shot.avif} sizes={REEL_SIZES} type="image/avif" />}
+                      <img src={shot.url} srcset={shot.webp} sizes={REEL_SIZES}
                            alt="" loading={k === 0 ? 'eager' : 'lazy'} decoding="async" />
                     </picture>
                   </a>
