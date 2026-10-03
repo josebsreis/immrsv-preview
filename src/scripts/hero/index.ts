@@ -49,10 +49,15 @@ export function createHero(opts: HeroOptions): Hero {
   const mobile = () => innerWidth <= cfg.mobileMax;
 
   // ── renderer / camera / scene ──────────────────────────────────────
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, premultipliedAlpha: true });
-  /** a phone's ceiling: it starts at the config's and only ever comes down */
+  /* The canvas is only ever given one finished picture — the scene is drawn
+     into a texture of its own and laid over it full-screen (hero/lens) — so
+     smoothing its edges and giving it a depth buffer were work for nothing,
+     every frame, on the screen's every pixel. */
+  const renderer = new THREE.WebGLRenderer({ antialias: false, depth: false, stencil: false, alpha: true, premultipliedAlpha: true });
+  /** the ceilings: they start at the config's and only ever come down */
   let mobileDpr = cfg.renderer.dprMobile;
-  const dpr = () => Math.min(devicePixelRatio, mobile() ? mobileDpr : cfg.renderer.dpr);
+  let deskDpr = cfg.renderer.dpr;
+  const dpr = () => Math.min(devicePixelRatio, mobile() ? mobileDpr : deskDpr);
   renderer.setPixelRatio(dpr());
   renderer.setSize(innerWidth, innerHeight);
   renderer.setClearColor(cfg.renderer.ground, 0);
@@ -268,14 +273,17 @@ export function createHero(opts: HeroOptions): Hero {
     lens.resize();
     material.uniforms.uPx.value = cfg.mark.pointPx * renderer.getPixelRatio();
   }
-  /* A phone is drawn as sharp as its display, and watched: over each run of
-     frames, once the intro's first hitches are past, the average frame is
-     taken, and one slower than the config allows steps the resolution down —
-     three, then two, then the floor — and never back up, so it cannot hunt.
-     The motion is the thing; the sharpness is what is left over for it. */
+  /* Drawn as sharp as the display, and watched: over each run of frames,
+     once the intro's first hitches are past, the average frame is taken,
+     and one slower than the config allows steps the resolution down — a
+     phone three, two, then its floor; a desk two, one and a half, then one —
+     and never back up, so it cannot hunt. The motion is the thing; the
+     sharpness is what is left over for it. A laptop on its integrated
+     graphics was held at two whatever it managed. */
   let watchT = 0, watchN = 0, watchFrom = 0;
+  const atFloor = () => (mobile() ? mobileDpr <= cfg.renderer.dprMobileFloor : deskDpr <= 1);
   const watchFrames = (t: number, dt: number) => {
-    if (!mobile() || mobileDpr <= cfg.renderer.dprMobileFloor) return;
+    if (atFloor() || renderer.getPixelRatio() <= 1) return;
     if (!watchFrom) watchFrom = t + 2;
     if (t < watchFrom) return;
     watchT += dt; watchN++;
@@ -283,7 +291,8 @@ export function createHero(opts: HeroOptions): Hero {
     const slow = watchT / watchN > cfg.renderer.slowFrame;
     watchT = 0; watchN = 0;
     if (!slow) return;
-    mobileDpr = mobileDpr > 2 ? 2 : cfg.renderer.dprMobileFloor;
+    if (mobile()) mobileDpr = mobileDpr > 2 ? 2 : cfg.renderer.dprMobileFloor;
+    else deskDpr = deskDpr > 1.5 ? 1.5 : 1;
     applyDpr();
     watchFrom = t + 1;           // the resize is a hitch of its own: let it pass
   };
