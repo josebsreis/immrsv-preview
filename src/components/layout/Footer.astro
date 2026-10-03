@@ -118,6 +118,7 @@ const legal = [
 <script>
   import { createWordmarkLetters } from '../../scripts/ui/wordmarkLetters';
   import { createRotatingWord } from '../../scripts/ui/rotatingWord';
+  import { watchSight } from '../../scripts/ui/inSight';
 
   /* The footer is on every page, so it wires itself rather than waiting for a
      page's own entry — and it has to unwire itself too: the footer is not
@@ -127,6 +128,7 @@ const legal = [
   let letters: { destroy(): void } | null = null;
   let word: { destroy(): void } | null = null;
   let seen: IntersectionObserver | null = null;
+  let clockSight: { destroy(): void } | null = null;
 
   const start = () => {
     // the letters answer the cursor: nothing to shove without one
@@ -171,12 +173,18 @@ const legal = [
       }
     };
     tick();
-    // on the second: the studio's own time, running
-    clock = setInterval(tick, 1000);
+    // on the second: the studio's own time, running — while it can be seen
+    // (it is hidden on a phone, and below the fold on every page)
+    clockSight = watchSight(time, (on) => {
+      if (clock) { clearInterval(clock); clock = undefined; }
+      if (on) { tick(); clock = setInterval(tick, 1000); }
+    });
   };
 
   const stop = () => {
     if (clock) clearInterval(clock);
+    clock = undefined;
+    clockSight?.destroy(); clockSight = null;
     letters?.destroy();
     letters = null;
     seen?.disconnect(); seen = null;

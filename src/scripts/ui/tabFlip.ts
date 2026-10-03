@@ -15,12 +15,20 @@ export function createTabFlip(tab: HTMLElement): TabFlip {
     const e = 1 - Math.pow(1 - t, 3);
     tab.style.setProperty('--flip', (1 - e).toFixed(3));
   };
-  const onScroll = () => { if (!raf) raf = requestAnimationFrame(frame); };
+  /* measured on the scroll only while the tab is near the screen: it read
+     its own box on every scroll frame of the whole homepage */
+  let near = false;
+  const onScroll = () => { if (near && !raf) raf = requestAnimationFrame(frame); };
+  // one last measure on the way out too, so it is left lying or standing
+  const io = new IntersectionObserver(([e]) => { near = e.isIntersecting; if (!raf) raf = requestAnimationFrame(frame); },
+                                      { rootMargin: '25% 0px' });
+  io.observe(tab);
   addEventListener('scroll', onScroll, { passive: true });
   addEventListener('resize', onScroll);
   frame();
   return {
     destroy() {
+      io.disconnect();
       removeEventListener('scroll', onScroll);
       removeEventListener('resize', onScroll);
       if (raf) cancelAnimationFrame(raf);

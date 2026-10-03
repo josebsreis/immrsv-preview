@@ -63,6 +63,14 @@ const projects = await getProjects();
      ride at --z-ui */
   .scrim { position: fixed; inset: 0; z-index: calc(var(--z-ui) + 1);
            background: var(--ground); opacity: 0; pointer-events: none; }
+  /* Covered edge to edge by the light half (scripts/ui/scrollChoreography),
+     the held half's full-screen layers — the figure's canvas, its veil and
+     this scrim — are let go: unseen, they were still blended into every
+     frame that changed. Only these: the words in it stay where a screen
+     reader can find them. */
+  .dark[data-covered] .scrim,
+  .dark[data-covered] :global([data-veil]),
+  .dark[data-covered] :global([data-hero-canvas]) { visibility: hidden; }
   .light { position: relative; z-index: var(--z-ui); }
   /* the clients' lattice holds the page margins itself here, on the dark
      ground, a section's air above it */

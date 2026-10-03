@@ -220,6 +220,11 @@ html[data-curtained]::view-transition-new(root) { animation: none; }
   ::view-transition-group(*) { animation: none; }
 }
 
+/* An infinite animation on something that cannot be seen — off the screen,
+   or under a section laid over it — is held where it is (scripts/ui/
+   inSight): most browsers keep working one out every frame regardless. */
+[data-unseen], [data-unseen] * { animation-play-state: paused !important; }
+
 /* filtered out — the Work page's studio filter. It leaves rather than fades,
    and takes its space with it, so the grid closes up behind it. Here with the
    other behaviour attributes rather than in the card: what is hidden is the

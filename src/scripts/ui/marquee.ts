@@ -13,6 +13,8 @@
    entirely when the band is off screen.
    ═══════════════════════════════════════════════════════════════════ */
 
+import { watchSight } from './inSight';
+
 export interface Marquee { destroy(): void }
 
 export function createMarquee(el: HTMLElement): Marquee {
@@ -113,18 +115,26 @@ export function createMarquee(el: HTMLElement): Marquee {
   };
   const stop = () => { live = false; cancelAnimationFrame(raf); };
 
-  // a band nobody can see does not need to move
-  const io = new IntersectionObserver(([e]) => (e.isIntersecting ? start() : stop()), { rootMargin: '20% 0px' });
-  io.observe(el);
+  /* A band nobody can see does not need to move — off the screen, or under
+     the light half, which covers it for most of the page. Its pips stop
+     glimmering with it. */
+  let inSight = false;
+  const io = watchSight(el, (seen) => {
+    inSight = seen;
+    el.toggleAttribute('data-unseen', !seen);
+    if (seen) start(); else stop();
+  }, { rootMargin: '20% 0px' });
   addEventListener('scroll', onScroll, { passive: true });
   const onResize = () => fill();
   addEventListener('resize', onResize);
-  const onVisibility = () => { if (document.hidden) stop(); else start(); };
+  // back from another tab it starts again only if it can be seen; it used
+  // to start whatever, and then ran off the screen for good
+  const onVisibility = () => { if (document.hidden) stop(); else if (inSight) start(); };
   document.addEventListener('visibilitychange', onVisibility);
 
   return {
     destroy() {
-      stop(); io.disconnect();
+      stop(); io.destroy();
       removeEventListener('scroll', onScroll);
       removeEventListener('resize', onResize);
       document.removeEventListener('visibilitychange', onVisibility);

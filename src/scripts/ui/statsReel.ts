@@ -5,6 +5,8 @@
    a reader who asked for less motion — they get every slide as a list.
    ═══════════════════════════════════════════════════════════════════ */
 
+import { watchSight } from './inSight';
+
 export interface StatsReel { destroy(): void; }
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -45,7 +47,9 @@ export function createStatsReel(root: HTMLElement): StatsReel {
       if (t >= 1) show(i + 1);
     }
     if (bar) bar.style.transform = `scaleX(${t.toFixed(4)})`;
-    raf = requestAnimationFrame(frame);
+    // on only while it can be seen: it ran every frame, off the screen and
+    // under the light half too, for the whole visit
+    raf = visible ? requestAnimationFrame(frame) : 0;
   }
 
   const step = (d: number) => { show(i + d); last = performance.now(); };
@@ -60,16 +64,17 @@ export function createStatsReel(root: HTMLElement): StatsReel {
   next?.addEventListener('click', onNext);
   jumps.forEach((j) => j.addEventListener('click', onJump));
 
-  const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; last = performance.now(); }, { threshold: 0.35 });
-  io.observe(root);
+  const io = watchSight(root, (seen) => {
+    visible = seen; last = performance.now();
+    if (seen && !raf && !still) raf = requestAnimationFrame(frame);
+  }, { threshold: 0.35 });
 
   show(0);
-  if (!still) raf = requestAnimationFrame(frame);
-  else root.dataset.statsStill = '';                                 // CSS shows every slide instead
+  if (still) root.dataset.statsStill = '';                                 // CSS shows every slide instead
 
   return {
     destroy() {
-      cancelAnimationFrame(raf); io.disconnect();
+      cancelAnimationFrame(raf); io.destroy();
       prev?.removeEventListener('click', onPrev);
       next?.removeEventListener('click', onNext);
       jumps.forEach((j) => j.removeEventListener('click', onJump));

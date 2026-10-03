@@ -9,6 +9,8 @@
    for less motion.
    ═══════════════════════════════════════════════════════════════════ */
 
+import { watchSight } from './inSight';
+
 export interface BrandSwap { destroy(): void }
 
 /** how long each mark stands before one of the six is swapped, ms */
@@ -72,16 +74,16 @@ export function createBrandSwap(root: HTMLElement): BrandSwap {
     timer = window.setTimeout(turn, HOLD);
   };
 
-  /* runs only while the row is on the screen */
-  const seen = new IntersectionObserver(([e]) => {
-    if (e.isIntersecting && !on) { on = true; timer = window.setTimeout(turn, HOLD); }
-    else if (!e.isIntersecting && on) { on = false; clearTimeout(timer); }
+  /* runs only while the row can be seen — on the screen, and not under the
+     light half, which covers it for most of the page */
+  const seen = watchSight(root, (in_) => {
+    if (in_ && !on) { on = true; timer = window.setTimeout(turn, HOLD); }
+    else if (!in_ && on) { on = false; clearTimeout(timer); }
   }, { threshold: 0.2 });
-  seen.observe(root);
 
   return {
     destroy() {
-      on = false; clearTimeout(timer); seen.disconnect();
+      on = false; clearTimeout(timer); seen.destroy();
       timeouts.forEach(clearTimeout);
     },
   };

@@ -6,6 +6,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import type { Hero } from '../hero';
 import { stableHeight } from './viewport';
+import { announceCover } from './inSight';
 
 export interface ScrollChoreography { update(): void; destroy(): void; }
 
@@ -36,6 +37,7 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
   }, { rootMargin: '0px 0px -14% 0px' });
   document.querySelectorAll<HTMLElement>('[data-rise]').forEach((el) => rising.observe(el));
   const hold = document.querySelector<HTMLElement>('[data-hold]');
+  let covered = false;
   const scrim = document.querySelector<HTMLElement>('[data-scrim]');
   /* the light half of the page: its head is where the handover begins, and
      how far it has climbed is what puts the dark half out */
@@ -118,12 +120,24 @@ export function createScrollChoreography(getHero: () => Hero | null): ScrollChor
 
     // how far the light half has climbed over the held one: 0 as its head
     // reaches the bottom of the screen, 1 once it owns the whole of it
-    const over = light ? clamp01((vh - light.getBoundingClientRect().top) / vh) : 0;
+    const lightTop = light ? light.getBoundingClientRect().top : vh;
+    const over = light ? clamp01((vh - lightTop) / vh) : 0;
     // the held half creeps up rather than standing still, and goes out
     if (hold) hold.style.top = (holdTop - over * vh * HOLD_DRIFT).toFixed(1) + 'px';
-    // …and the light half is told, for the thread it carries over the seam
-    if (light) light.style.setProperty('--over', over.toFixed(3));
     if (scrim) scrim.style.opacity = (over * HOLD_SHADE).toFixed(3);
+    /* Once the light half owns the whole screen the held one is under it
+       edge to edge, and says so: its figure, its veils and its reels stop,
+       and the full-screen layers it leaves in the compositor are let go.
+       Set a little past the top and cleared at it, so a scroll resting on
+       the line does not flick it. */
+    if (hold) {
+      const now = covered ? lightTop <= 0 : lightTop < -vh * 0.05;
+      if (now !== covered) {
+        covered = now;
+        hold.toggleAttribute('data-covered', covered);
+        announceCover();
+      }
+    }
 
     /* the nav's colour is not decided here: it reads the section under it,
        wherever it is, which is the only way it can also answer to the black

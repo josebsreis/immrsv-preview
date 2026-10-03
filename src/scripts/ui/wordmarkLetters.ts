@@ -93,6 +93,7 @@ export function createWordmarkLetters(
     L.el.classList.add('lit');
     clearTimeout(L.timer);
     L.timer = window.setTimeout(() => L.el.classList.remove('lit'), C.hold);
+    wake();
   }
 
   const enters = letters.map((L) => {
@@ -101,13 +102,21 @@ export function createWordmarkLetters(
     return fn;
   });
 
+  /* The springs run only while a letter is still moving: once every one
+     has landed the loop stops, and a touch starts it again. It ran every
+     frame for the whole visit, on every page, whether or not anything had
+     been touched. */
   let raf = 0, last = performance.now(), running = true;
+  function wake() {
+    if (!raf && running) { last = performance.now(); raf = requestAnimationFrame(frame); }
+  }
   function frame(now: number) {
-    raf = requestAnimationFrame(frame);
+    raf = 0;
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
     last = now;
     if (!running) return;
 
+    let moving = false;
     for (const L of letters) {
       // a spring home, damped — the shove decays and the letter lands where it started
       L.vx += -C.stiffness * L.x * dt; L.vx *= Math.exp(-C.damping * dt); L.x += L.vx * dt;
@@ -120,15 +129,16 @@ export function createWordmarkLetters(
         if (L.x || L.y || L.r) { L.x = L.y = L.r = 0; L.el.style.transform = ''; }
         continue;
       }
+      moving = true;
       L.el.style.transform = `translate(${(L.x / scale).toFixed(3)}px, ${(L.y / scale).toFixed(3)}px) rotate(${L.r.toFixed(3)}deg)`;
     }
+    if (moving) raf = requestAnimationFrame(frame);
   }
 
-  const io = new IntersectionObserver(([e]) => { running = e.isIntersecting; last = performance.now(); }, { rootMargin: '20% 0px' });
+  const io = new IntersectionObserver(([e]) => { running = e.isIntersecting; if (running) wake(); }, { rootMargin: '20% 0px' });
   io.observe(host);
   const ro = new ResizeObserver(measure);
   ro.observe(host);
-  raf = requestAnimationFrame(frame);
 
   return {
     destroy() {

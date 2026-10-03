@@ -19,6 +19,7 @@ import { createCursor } from './ui/cursor';
 import { createBlurIn } from './ui/blurIn';
 import { createBrandSwap } from './ui/brandSwap';
 import { createTabFlip } from './ui/tabFlip';
+import { pauseUnseen } from './ui/inSight';
 import { onPage } from './lifecycle';
 import type { Hero } from './hero';
 
@@ -53,6 +54,8 @@ onPage('home', () => {
   if (forming) add(createForming(forming));
   const tab = document.querySelector<HTMLElement>('[data-studios-tab]');
   if (tab) add(createTabFlip(tab));
+  // infinite CSS animations — the scroll cue's steps — rest when unseen
+  add(pauseUnseen());
   const brands = document.querySelector<HTMLElement>('[data-brands]');
   if (brands) add(createBrandSwap(brands));
   const faqs = document.querySelector<HTMLElement>('[data-faqs]');

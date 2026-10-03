@@ -5,7 +5,7 @@
 interface Props { href?: string; label?: string; compact?: boolean; class?: string; }
 const { href = '#about', label = 'Scroll down', compact = true, class: cls } = Astro.props;
 ---
-<a class:list={['cue', 'arrives', { compact }, cls]} href={href} data-tap style="--arrive-delay: .8s">
+<a class:list={['cue', 'arrives', { compact }, cls]} href={href} data-tap data-pause-unseen style="--arrive-delay: .8s">
   <span class="stack" aria-hidden="true"><i></i><i></i><i></i></span>
   <span class="label">{label}</span>
 </a>

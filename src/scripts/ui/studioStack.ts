@@ -17,6 +17,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 import { syncNavTheme } from '../lifecycle';
+import { announceCover } from './inSight';
 
 export interface StudioStack { destroy(): void }
 
@@ -73,8 +74,19 @@ export function createStudioStack(root: HTMLElement): StudioStack {
     syncNavTheme();
   };
 
+  /* A panel lying wholly under the one above it says so, and its reel
+     stops (scripts/ui/inSight): unseen, it kept turning its pictures. */
+  const cover = (flags: boolean[]) => {
+    let changed = false;
+    panels.forEach((el, i) => {
+      if (el.hasAttribute('data-covered') !== flags[i]) { el.toggleAttribute('data-covered', flags[i]); changed = true; }
+    });
+    if (changed) announceCover();
+  };
+
   const clear = () => {
     for (const el of panels) el.style.transform = '';
+    cover(panels.map(() => false));
     root.removeAttribute('data-live');
     root.dataset.theme = 'light';
     voteAsStack(false);
@@ -95,14 +107,18 @@ export function createStudioStack(root: HTMLElement): StudioStack {
        are. The last panel never goes — the page scrolls on past it. */
     const ph = r.height / n;
     let top = n - 1;
+    const under = panels.map(() => false);
     for (let i = 0; i < n - 1; i++) {
       const local = clamp01(p * (n - 1) - i);
       const leave = clamp01((local - HOLD) / (1 - HOLD));
+      // the one beneath is hidden whole until this one starts to lift
+      if (leave <= 0) for (let j = i + 1; j < n; j++) under[j] = true;
       panels[i].style.transform = leave <= 0 ? '' : `translateY(${(-leave * 100).toFixed(2)}%)`;
       if (leave > 0) unfold(panels[i + 1]);
       // it is the one under the nav while its foot is still below the nav's line
       if (top === n - 1 && (1 - leave) * ph > navLine) top = i;
     }
+    cover(under);
     // whichever is showing tells the nav what it is standing on: all three
     // cover the nav's probe at once, so none of them can answer for itself
     // …and says so the moment it changes: the nav only looks again on the next

@@ -16,6 +16,8 @@
    the arrows point — over the one before it, still sitting underneath.
    ═══════════════════════════════════════════════════════════════════ */
 
+import { watchSight } from './inSight';
+
 export interface StudioReel { destroy(): void }
 
 /* The curtain: over a second, and eased at both ends — it gathers itself,
@@ -73,8 +75,12 @@ export function createStudioReel(el: HTMLElement): StudioReel {
       frame.animate([{ clipPath: down ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)' },
                      { clipPath: 'inset(0 0 0 0)' }], { duration: MS, easing: EASE });
     }
-    // the frame you were on keeps its place in the stack, directly beneath
+    // the frame you were on keeps its place in the stack, directly beneath;
+    // every frame under those two is let go — they all stood there whole,
+    // painted under the picture on show
+    const was = at;
     at = i;
+    frames.forEach((f, k) => { f.style.visibility = k === at || k === was ? '' : 'hidden'; });
     mark();
   }
 
@@ -97,7 +103,9 @@ export function createStudioReel(el: HTMLElement): StudioReel {
       if (t >= 1) show(at + 1, true);
     }
     if (bar) bar.style.transform = `scaleX(${t.toFixed(4)})`;
-    raf = requestAnimationFrame(frame);
+    // on only while it can be seen — off the screen, or on a panel another
+    // lies over, it stops
+    raf = visible ? requestAnimationFrame(frame) : 0;
   }
 
   /** a step by hand gives the frame it lands on a full turn */
@@ -113,20 +121,21 @@ export function createStudioReel(el: HTMLElement): StudioReel {
   band.addEventListener('focusin', hold);
   band.addEventListener('focusout', release);
 
-  const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; last = performance.now(); }, { threshold: 0.35 });
-  io.observe(el);
+  const io = watchSight(el, (seen) => {
+    visible = seen; last = performance.now();
+    if (seen && !raf && !still) raf = requestAnimationFrame(frame);
+  }, { threshold: 0.35 });
 
   frames.forEach((f, i) => {
     f.style.clipPath = i === 0 ? 'inset(0 0 0 0)' : 'inset(0 0 0 100%)';
     f.style.zIndex = i === 0 ? '1' : '';
   });
   mark();
-  if (!still) raf = requestAnimationFrame(frame);
 
   return {
     destroy() {
       cancelAnimationFrame(raf);
-      near.disconnect(); io.disconnect();
+      near.disconnect(); io.destroy();
       prev?.removeEventListener('click', onPrev);
       next?.removeEventListener('click', onNext);
       band.removeEventListener('pointerenter', hold);

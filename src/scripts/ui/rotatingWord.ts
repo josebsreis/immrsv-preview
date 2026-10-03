@@ -5,6 +5,8 @@
  *  It rotates on its own timer until something takes it over. The hero does:
  *  once the mark is making forms, the sentence names the one standing, so the
  *  headline and the cloud say the same thing at the same moment. */
+import { watchSight } from './inSight';
+
 export interface RotatingWord {
   /** say this word next — the caller is driving now, so the timer stands down */
   show(word: string | null): void;
@@ -46,13 +48,21 @@ export function createRotatingWord(el: HTMLElement, opts: { hold?: number; first
     }, 900);
   };
   const next = () => { if (words.length > 1) goto(words[(idx + 1) % words.length]); };
-  const arm = () => { clearTimeout(timer); if (!reduced && !driven) timer = window.setTimeout(next, hold); };
+  /* it turns only while it can be seen: it ran on its timer for the whole
+     visit, off the screen and under the light half alike */
+  let unseen = false, primed = false;
+  const arm = () => { clearTimeout(timer); if (!reduced && !driven && !unseen) timer = window.setTimeout(next, hold); };
+  const sight = watchSight(el, (seen) => {
+    unseen = !seen;
+    if (unseen) clearTimeout(timer);
+    else if (!busy && primed) arm();
+  });
 
   set(words[0] ?? el.textContent ?? '', false);
-  timer = window.setTimeout(arm, firstDelay);
+  timer = window.setTimeout(() => { primed = true; arm(); }, firstDelay);
   return {
     show(word) { driven = true; clearTimeout(timer); goto(word ?? words[0] ?? ''); },
     drive() { driven = true; clearTimeout(timer); },
-    destroy() { clearTimeout(timer); timeouts.forEach(clearTimeout); },
+    destroy() { clearTimeout(timer); timeouts.forEach(clearTimeout); sight.destroy(); },
   };
 }
