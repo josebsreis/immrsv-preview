@@ -22,14 +22,16 @@ if (!prefix) { console.error('usage: rebase.mjs /prefix'); process.exit(1); }
 
 /** everything the site serves from its own root */
 const OWNED = ['work', 'studios', 'brands', 'team', 'audio', 'shapes',
-               'forming', 'fonts', 'testimonials', 'favicon.svg', '_astro'];
+               'forming', 'fonts', 'testimonials', 'favicon.svg', '_astro',
+               'favicon-32.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png',
+               'site.webmanifest', 'og.jpg', 'sitemap.xml'];
 /** the files a path can be written in */
 const TEXT = new Set(['.html', '.css', '.js', '.json', '.xml', '.txt', '.webmanifest']);
 
 const opener = `(?<=["'(\`]|,\\s)`;
 const assets = new RegExp(`${opener}/(${OWNED.join('|')})\\b`, 'g');
-/** the two internal routes, and the home page */
-const routes = new RegExp(`${opener}/(work/[a-z0-9-]+|work|)(?=["')\`])`, 'g');
+/** the internal routes, and the home page */
+const routes = new RegExp(`${opener}/(work/[a-z0-9-]+|work|privacy|terms|)(?=["')\`])`, 'g');
 
 let files = 0, hits = 0;
 async function walk(dir) {

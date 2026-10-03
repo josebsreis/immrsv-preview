@@ -74,6 +74,9 @@ const hidden = forced || seo?.noIndex || import.meta.env.PUBLIC_NOINDEX === '1';
     {jsonLd.map((d) => <script type="application/ld+json" set:html={JSON.stringify(d)} />)}
     <meta name="theme-color" content={theme === 'dark' ? '#060606' : '#ffffff'} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <!-- the one file the page is set in: fetched alongside the CSS rather
          than after it, so the swap happens before the first paint is read -->
     <link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
