@@ -14,9 +14,6 @@ interface Props { content: HomeContent['testimonials']; }
 const { content } = Astro.props;
 const items = content.items;
 const total = String(items.length).padStart(2, '0');
-/** the portraits are written by scripts/images.mjs conventions: an
- *  extension-less path with a width and a format hung off it */
-const shot = (url: string, w: number, ext: string) => `${url}-${w}.${ext}`;
 const SIZES = '3rem';
 ---
 {items.length > 0 && (
@@ -74,10 +71,8 @@ const SIZES = '3rem';
               <footer class="by">
                 {t.portrait && (
                   <picture class="portrait">
-                    <source srcset={`${shot(t.portrait.url, 420, 'avif')} 420w, ${shot(t.portrait.url, 840, 'avif')} 840w`}
-                            sizes={SIZES} type="image/avif" />
-                    <img src={shot(t.portrait.url, 420, 'webp')}
-                         srcset={`${shot(t.portrait.url, 420, 'webp')} 420w, ${shot(t.portrait.url, 840, 'webp')} 840w`}
+                    {t.portrait.avifSrcset && <source srcset={t.portrait.avifSrcset} sizes={SIZES} type="image/avif" />}
+                    <img src={t.portrait.url} srcset={t.portrait.webpSrcset}
                          sizes={SIZES} alt={t.portrait.alt ?? t.name}
                          width="420" height="420" loading="lazy" decoding="async" />
                   </picture>

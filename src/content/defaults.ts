@@ -41,6 +41,13 @@ const studios: Studio[] = [
   },
 ];
 
+/** a portrait written by scripts/images.mjs: two widths, each in AVIF and WebP */
+const face = (path: string, alt: string) => ({
+  url: `${path}-420.webp`, alt, width: 420, height: 420,
+  avifSrcset: `${path}-420.avif 420w, ${path}-840.avif 840w`,
+  webpSrcset: `${path}-420.webp 420w, ${path}-840.webp 840w`,
+});
+
 /** Fallback content so the site builds and previews before Sanity is connected.
  *  Once PUBLIC_SANITY_PROJECT_ID is set, Sanity wins and these are only used
  *  for fields the editor has left empty. */
@@ -277,7 +284,7 @@ export const defaultHome: HomeContent = {
         label: 'Vision',
         name: 'Carlos Carrasquillo',
         role: 'Principal | Wolcott Architecture',
-        portrait: { url: '/testimonials/carlos-carrasquillo', alt: 'Carlos Carrasquillo' },
+        portrait: face('/testimonials/carlos-carrasquillo', 'Carlos Carrasquillo'),
       },
       {
         quote:
@@ -285,7 +292,7 @@ export const defaultHome: HomeContent = {
         label: 'Reliability',
         name: 'Carlie Campesi',
         role: 'Partner | LePesi Architecture',
-        portrait: { url: '/testimonials/carlie-campesi', alt: 'Carlie Campesi' },
+        portrait: face('/testimonials/carlie-campesi', 'Carlie Campesi'),
       },
       {
         quote:
@@ -293,7 +300,7 @@ export const defaultHome: HomeContent = {
         label: 'Clarity',
         name: 'Stephen Lesko',
         role: 'Partner | LePesi Architecture',
-        portrait: { url: '/testimonials/stephen-lesko', alt: 'Stephen Lesko' },
+        portrait: face('/testimonials/stephen-lesko', 'Stephen Lesko'),
       },
       {
         quote:
@@ -301,7 +308,7 @@ export const defaultHome: HomeContent = {
         label: 'Collaboration',
         name: 'Joe Ho',
         role: 'Studio Director | Wolcott Architecture',
-        portrait: { url: '/testimonials/joe-ho', alt: 'Joe Ho' },
+        portrait: face('/testimonials/joe-ho', 'Joe Ho'),
       },
       {
         quote:
@@ -309,7 +316,7 @@ export const defaultHome: HomeContent = {
         label: 'Refinement',
         name: 'Matthew Citron',
         role: 'Principal | Alvarez & Marsal Capital RE',
-        portrait: { url: '/testimonials/matthew-citron', alt: 'Matthew Citron' },
+        portrait: face('/testimonials/matthew-citron', 'Matthew Citron'),
       },
     ],
   },
