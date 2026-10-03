@@ -29,6 +29,20 @@ const updated = /^\d{4}-\d{2}-\d{2}$/.test(raw)
       <slot name="after" />
     </div>
   </main>
+  <!-- A page with nothing of its own to wire still has to say it is ready:
+       the menu and the footer's buttons come in on that, and without it a
+       privacy policy opened from a link had no menu at all. -->
+  <script>
+    import { onPage } from '../../scripts/lifecycle';
+    import { createSmoothScroll } from '../../scripts/ui/smoothScroll';
+    import { createDirectionalHover } from '../../scripts/ui/directionalHover';
+    import { splitChars } from '../../scripts/ui/splitText';
+    onPage('legal', () => {
+      document.body.classList.add('ready');
+      document.fonts.ready.then(() => splitChars());
+      return [createSmoothScroll(), createDirectionalHover()];
+    });
+  </script>
 </Base>
 
 <style>

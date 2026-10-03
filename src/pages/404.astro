@@ -1,0 +1,41 @@
+---
+/** The page for an address that leads nowhere: said plainly, with the two
+ *  places someone was most likely looking for. Kept out of search engines. */
+import Base from '@layouts/Base.astro';
+import Button from '@components/ui/Button.astro';
+---
+<Base theme="dark" title="Page not found" noIndex>
+  <main class="lost" data-page="lost" data-theme="dark">
+    <p class="label code">404</p>
+    <h1 data-blur-in>This page doesn’t exist.</h1>
+    <p class="line">The link may be old, or the address mistyped. The work and the studio are a click away.</p>
+    <div class="acts">
+      <Button href="/" label="Back to home" />
+      <Button href="/work" label="See the work" />
+    </div>
+  </main>
+  <script>
+    import { onPage } from '../scripts/lifecycle';
+    import { createSmoothScroll } from '../scripts/ui/smoothScroll';
+    import { createDirectionalHover } from '../scripts/ui/directionalHover';
+    import { createBlurIn } from '../scripts/ui/blurIn';
+    import { splitChars } from '../scripts/ui/splitText';
+    onPage('lost', () => {
+      document.body.classList.add('ready');
+      document.fonts.ready.then(() => splitChars());
+      return [createSmoothScroll(), createDirectionalHover(), createBlurIn()];
+    });
+  </script>
+</Base>
+
+<style>
+  .lost { min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; justify-content: center;
+          align-items: center; text-align: center; gap: var(--s-5);
+          padding: calc(var(--nav-y) * 2 + var(--pill-h)) var(--page-x) var(--section-y);
+          background: var(--ground); color: var(--ink); }
+  .code { color: var(--ink-3); }
+  h1 { font-size: var(--t-h2); font-weight: var(--w-display); line-height: var(--lh-display);
+       letter-spacing: var(--track-display); max-width: 16ch; }
+  .line { max-width: 40ch; font-size: var(--t-lead); line-height: var(--lh-lead); color: var(--ink-3); }
+  .acts { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s-3); margin-top: var(--s-3); }
+</style>
