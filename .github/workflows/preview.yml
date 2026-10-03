@@ -46,9 +46,6 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # which hero a preview opens on without an address flag (the
-          # repository's own variable; unset, the particles)
-          PUBLIC_HERO: ${{ vars.PUBLIC_HERO }}
           # a preview is not the site: kept out of search engines
           PUBLIC_NOINDEX: '1'
 

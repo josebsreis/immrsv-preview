@@ -86,20 +86,8 @@ onPage('home', () => {
      and not at all for a reader who asked for less motion. Everything above
      works without it. */
   if (host && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    /* trials: `?hero=glass` or `?hero=frost` puts the forms in glass
-       (hero/glass.ts), `?hero=metal` is the mark as a solid, polished
-       object (hero/metal.ts); without any, the particles */
-    /* the address wins; without one, a preview may be built to open on a
-       trial (PUBLIC_HERO, set per repository) */
-    const trial = new URLSearchParams(location.search).get('hero') ?? (import.meta.env.PUBLIC_HERO || null);
-    /* the metal trial also lifts the dark ground a shade (styles/tokens) */
-    if (trial === 'metal') document.documentElement.dataset.groundLift = '';
     const load = () =>
-      (trial === 'glass' || trial === 'frost'
-        ? import('./hero/glass').then(({ createGlassHero }) => () => createGlassHero({ host, frost: trial === 'frost' }))
-        : trial === 'metal'
-          ? import('./hero/metal').then(({ createMetalHero }) => () => createMetalHero({ host }))
-          : import('./hero').then(({ createHero }) => () => createHero({ host })))
+      import('./hero').then(({ createHero }) => () => createHero({ host }))
         .then((make) => {
           if (gone) return;               // it arrived after the reader left
           hero = make();

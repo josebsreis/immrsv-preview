@@ -308,16 +308,4 @@
    --bp-wide:   1099px   featured card hides; the sentence stays left
    Keep src/lib/breakpoints.ts in sync. */
 
-/* A trial (with `?hero=metal`): the dark ground lifted from near-black to a
-   very dark grey, so a black object reads against it rather than into it.
-   Everything else in the dark theme stays; the surfaces step up with it so
-   the pills keep their edge. */
-:root[data-ground-lift],
-:root[data-ground-lift] [data-theme="dark"],
-:root[data-ground-lift] [data-panel="dark"] {
-  --ground: #0b0b0c;
-  --ground-rgb: 11 11 12;
-  --veil: rgb(11 11 12 / 0.62);
-  --surface: #151517;
-}
 
