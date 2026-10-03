@@ -8,11 +8,10 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "cms:tag": "sanity exec scripts/cms/tag-assets.mjs --with-user-token --"
+    "cms:tag": "sanity exec scripts/cms/tag-assets.mjs --with-user-token --",
+    "studio:deploy": "sanity build .sanity-studio -y && sanity deploy .sanity-studio --no-build -y"
   },
   "dependencies": {
-    "@astrojs/react": "^6.0.5",
-    "@sanity/astro": "^3.5.1",
     "@sanity/client": "^8.6.0",
     "@sanity/image-url": "^2.1.1",
     "@sanity/orderable-document-list": "^2.0.25",
@@ -22,6 +21,7 @@
     "react-dom": "^19.2.8",
     "sanity": "^6.17.0",
     "sanity-plugin-media": "^6.3.2",
+    "styled-components": "^6.5.3",
     "three": "^0.185.1",
     "vgpu": "^0.4.0"
   },

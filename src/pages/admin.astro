@@ -1,0 +1,20 @@
+---
+/* /admin: the way in to the editor, which Sanity hosts. The same address on
+   every site made for this client, so there is one thing to remember. The
+   page only sends the reader on — at once, with a link for the rare browser
+   that does not follow. */
+const STUDIO = 'https://immrsv.sanity.studio/';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta http-equiv="refresh" content={`0; url=${STUDIO}`} />
+    <title>Editor | IMMRSV</title>
+    <script is:inline define:vars={{ STUDIO }}>location.replace(STUDIO);</script>
+    <style>body { font: 16px/1.5 system-ui, sans-serif; background: #060606; color: #fff; display: grid; place-items: center; min-height: 100vh; margin: 0; } a { color: inherit; }</style>
+  </head>
+  <body><p>Opening the editor… <a href={STUDIO}>Continue</a></p></body>
+</html>

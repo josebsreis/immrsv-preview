@@ -1,12 +1,8 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
-import sanity from '@sanity/astro';
 import { loadEnv } from 'vite';
 
 const env = loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), '');
-const projectId = env.PUBLIC_SANITY_PROJECT_ID ?? '';
-const dataset = env.PUBLIC_SANITY_DATASET ?? 'production';
 
 export default defineConfig({
   site: env.PUBLIC_SITE_URL || 'https://immrsv.studio',
@@ -15,22 +11,9 @@ export default defineConfig({
      and each was waiting on two requests before it could paint a thing.
      Inlined, the first paint has nothing to wait for. */
   build: { inlineStylesheets: 'always' },
-  integrations: [
-    // Content + the embedded Studio at /admin. Without a project id the
-    // integration is skipped entirely so the site still builds from defaults.
-    ...(projectId
-      ? [
-          sanity({
-            projectId,
-            dataset,
-            useCdn: false,
-            apiVersion: '2026-01-01',
-            studioBasePath: '/admin',
-          }),
-          react(),
-        ]
-      : []),
-  ],
+  /* The editor is not part of the site: it is hosted by Sanity at
+     immrsv.sanity.studio, and /admin only points there (src/pages/admin.astro).
+     The content is read at build time by src/lib/sanity. */
   vite: {
     ssr: { noExternal: ['three'] },
     build: {

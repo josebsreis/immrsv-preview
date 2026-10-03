@@ -9,8 +9,10 @@ import { CogIcon } from '@sanity/icons/Cog';
 import { DocumentTextIcon } from '@sanity/icons/DocumentText';
 import { schemaTypes } from './sanity/schemas';
 
-/** The Studio, embedded at /admin. The project lives in Oscar's organization
- *  (manage.sanity.io); inviting someone is done there, nothing here changes.
+/** The Studio, hosted by Sanity at https://immrsv.sanity.studio — and reached
+ *  from the site at /admin, which only points there (src/pages/admin.astro).
+ *  Deployed with `npm run studio:deploy`. The project lives in Oscar's
+ *  organization (manage.sanity.io); inviting someone is done there.
  *
  *  The sidebar is the site, in the order someone would look for things: the
  *  homepage, the work, then what every page shares, then the small print.
@@ -18,8 +20,9 @@ import { schemaTypes } from './sanity/schemas';
 export default defineConfig({
   name: 'immrsv',
   title: 'IMMRSV',
-  projectId: import.meta.env.PUBLIC_SANITY_PROJECT_ID,
-  dataset: import.meta.env.PUBLIC_SANITY_DATASET || 'production',
+  /* not secrets: the project and dataset are in every public request */
+  projectId: '74hn5mqs',
+  dataset: 'production',
   plugins: [
     structureTool({
       title: 'Content',

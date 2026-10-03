@@ -1,0 +1,3 @@
+# Cloudflare Pages: the editor is hosted by Sanity; /admin is the way in.
+/admin      https://immrsv.sanity.studio/  302
+/admin/*    https://immrsv.sanity.studio/  302
