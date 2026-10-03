@@ -77,13 +77,11 @@ const hidden = forced || seo?.noIndex || import.meta.env.PUBLIC_NOINDEX === '1';
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <!-- the one file the page is set in: fetched alongside the CSS rather
-         than after it, so the swap happens before the first paint is read -->
-    <link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
-    <!-- Archivo, variable in width and weight; to be self-hosted before launch -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" />
+    <!-- the one file the page is set in — Archivo, variable in width and
+         weight, served from the site itself (no visitor is sent to Google
+         for it) — fetched alongside the CSS rather than after it, so the
+         swap happens before the first paint is read -->
+    <link rel="preload" href="/fonts/Archivo-latin.woff2" as="font" type="font/woff2" crossorigin />
     <!-- pages swap in place: the nav stays put and the rest cross-fades -->
     <ClientRouter />
     <slot name="head" />
