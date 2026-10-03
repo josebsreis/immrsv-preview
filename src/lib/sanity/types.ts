@@ -63,8 +63,6 @@ export interface Project {
   _id: string;
   title: string;
   slug: string;
-  year?: number;
-  location?: string;
   studios: StudioKey[];
   summary?: string;
   /** what we did on it — the list in the project page's left column */

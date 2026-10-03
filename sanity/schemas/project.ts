@@ -43,8 +43,6 @@ export const project = defineType({
     }),
     defineField({ name: 'summary', title: 'Line under the title', type: 'string', group: 'basics',
       description: 'One line, e.g. "Residential: architecture, archviz, virtual tour".' }),
-    defineField({ name: 'location', type: 'string', group: 'basics', description: 'Optional. Shown beside the text when filled in.' }),
-    defineField({ name: 'year', type: 'number', group: 'basics', description: 'Optional. Shown beside the text when filled in.' }),
 
     defineField({
       name: 'brief',
@@ -130,9 +128,6 @@ export const project = defineType({
     defineField({ name: 'liveUrl', title: 'Live link (old)', type: 'url', group: 'links', hidden: ({ value }) => !value,
       description: 'Replaced by Buttons above. Still shown as a "View live" button until Buttons is filled in.' }),
 
-    // replaced by dragging in the list, and no longer read; kept so nothing is lost
-    defineField({ name: 'order', type: 'number', hidden: true }),
-    defineField({ name: 'featured', type: 'boolean', hidden: true }),
   ],
   preview: {
     select: { title: 'title', studio: 'studios.0', media: 'cover' },

@@ -6,7 +6,7 @@ import { defaultHome, defaultProjects, defaultSettings, defaultWorkPage } from '
 const imageFields = `{ asset, alt, "lqip": asset->metadata.lqip, "width": asset->metadata.dimensions.width, "height": asset->metadata.dimensions.height }`;
 
 const projectFields = `{
-  _id, title, "slug": slug.current, year, location, studios, summary, featured,
+  _id, title, "slug": slug.current, studios, summary,
   brief, whatWeDid, liveUrl, "links": coalesce(links[]{ label, url }, []),
   "services": coalesce(services, []),
   "cover": cover ${imageFields},
@@ -85,8 +85,6 @@ function mapProject(raw: any): Project {
     _id: raw._id,
     title: raw.title,
     slug: raw.slug,
-    year: raw.year,
-    location: raw.location,
     studios: raw.studios ?? [],
     summary: raw.summary,
     brief: raw.brief,

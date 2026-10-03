@@ -78,7 +78,7 @@ async function project(p, rank) {
   return {
     _id: projectId(p.slug), _type: 'project',
     title: p.title, slug: { _type: 'slug', current: p.slug },
-    year: p.year, location: p.location, studios: p.studios,
+    studios: p.studios,
     summary: p.summary, brief: p.brief, whatWeDid: p.whatWeDid,
     links: keyed(p.links), services: p.services ?? [],
     cover: await image(p.cover), media,
