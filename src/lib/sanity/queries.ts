@@ -57,20 +57,24 @@ const projectBySlugQuery = `*[_type == "project" && slug.current == $slug][0] ${
 
 /* ── mappers ───────────────────────────────────────────────────────── */
 /** the same ladder scripts/images.mjs writes for the local files, so a page
- *  behaves the same whichever the picture came from */
-const WIDTHS = [900, 1400, 2200];
+ *  behaves the same whichever the picture came from — with the 480 rung a
+ *  phone's card wants, which the CDN ladder had lost */
+const WIDTHS = [480, 900, 1400, 2200];
+/** a face shown a few centimetres across: a testimonial, the founder */
+const PORTRAIT = [120, 240, 480];
 
-function mapImage(raw: any, fallback?: ImageRef): ImageRef | undefined {
+function mapImage(raw: any, fallback?: ImageRef, widths: number[] = WIDTHS): ImageRef | undefined {
   if (!raw?.asset) return fallback;
   return {
-    url: imageUrl(raw)!,
+    // the one a browser without srcset gets: a middling size, not the largest
+    url: imageUrl(raw, widths[Math.min(1, widths.length - 1)])!,
     alt: raw.alt,
     lqip: raw.lqip,
     width: raw.width,
     height: raw.height,
     /* one srcset, not two: every URL is auto=format, so the CDN answers each
        with AVIF or WebP by what the browser asked for */
-    webpSrcset: imageSrcset(raw, WIDTHS, raw.width),
+    webpSrcset: imageSrcset(raw, widths, raw.width),
   };
 }
 
@@ -157,7 +161,7 @@ export async function getHome(): Promise<HomeContent> {
       about: {
         ...defaultHome.about,
         ...raw.about,
-        founder: founder ? { ...founder, portrait: mapImage(founder.portrait) } : defaultHome.about.founder,
+        founder: founder ? { ...founder, portrait: mapImage(founder.portrait, undefined, PORTRAIT) } : defaultHome.about.founder,
       },
       /* the defaults first, so a field the studio has not filled in — its
          heading, say — falls back rather than coming through undefined */
@@ -174,7 +178,7 @@ export async function getHome(): Promise<HomeContent> {
       testimonials: raw.testimonials?.items?.length
         ? {
             tag: raw.testimonials.tag ?? defaultHome.testimonials.tag,
-            items: raw.testimonials.items.map((t: any) => ({ ...t, portrait: mapImage(t.portrait) })),
+            items: raw.testimonials.items.map((t: any) => ({ ...t, portrait: mapImage(t.portrait, undefined, PORTRAIT) })),
           }
         : defaultHome.testimonials,
       process: raw.process?.steps?.length
