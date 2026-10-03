@@ -75,8 +75,9 @@ export interface Project {
   brief?: string;
   /** how it was tackled and what was delivered */
   whatWeDid?: string;
-  /** where the finished thing lives, if it lives anywhere public */
-  liveUrl?: string;
+  /** buttons on the project page — where the finished thing lives, a film,
+   *  the press — each with its own words */
+  links: { label: string; url: string }[];
   cover?: ImageRef;
   gallery: ImageRef[];
   /** the project page's right column, in order: stills and silent loops
@@ -89,7 +90,19 @@ export interface Project {
 /** one step of the process, as it reads on the homepage */
 export interface Step { title: string; body: string; }
 
+/** the team section — the figure built between the two halves of a line */
+export interface TeamContent {
+  lead: string;
+  tail: string;
+  /** two short lines; '\n' breaks them */
+  note: string;
+  /** up to six, each keeping the icon of its place */
+  steps: { word: string; line: string }[];
+}
+
 export interface HomeContent {
+  /** for search engines and sharing; the site's own when empty */
+  description?: string;
   hero: {
     headline: string;   // '\n' marks the line break before the rotating word
     words: string[];
@@ -109,6 +122,8 @@ export interface HomeContent {
   };
   studios: {
     tag: string;
+    /** the small line over the heading */
+    kicker: string;
     /** the section's own heading, at display scale */
     title: string;
     intro: string;
@@ -155,5 +170,23 @@ export interface HomeContent {
     featured: string[];
     cta: Cta;
   };
-  featuredProject?: Project;
+  team: TeamContent;
 }
+
+/** what every page shares — the footer, how to reach the studio */
+export interface Settings {
+  description: string;
+  email: string;
+  phone: string;
+  words: string[];
+  buttons: Cta[];
+  location: string;
+  city: string;
+  social: { label: string; url: string }[];
+}
+
+export interface WorkPage { title: string; description?: string; empty: string; }
+
+/** the privacy policy or the terms, when they come from the CMS — absent,
+ *  the page's own text stands */
+export interface LegalPage { title: string; updated?: string; description?: string; body: unknown[]; }

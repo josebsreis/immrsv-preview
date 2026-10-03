@@ -1,24 +1,58 @@
 ---
-/** A small Portable Text renderer: paragraphs, headings, plain marks. Enough
- *  for project stories; swap for astro-portabletext when the schema grows. */
+/** A small Portable Text renderer: paragraphs, headings, bullet lists, bold,
+ *  italic and links. Enough for project stories and the small print; swap
+ *  for astro-portabletext if the schema grows past it. */
 interface Props { blocks: unknown[]; }
 const { blocks } = Astro.props;
-type Span = { text: string; marks?: string[] };
-type Block = { _type: string; style?: string; children?: Span[] };
-const text = (b: Block) => (b.children ?? []).map((s) => s.text).join('');
+type RawSpan = { text: string; marks?: string[] };
+type MarkDef = { _key: string; href?: string };
+type RawBlock = { _type: string; style?: string; listItem?: string; children?: RawSpan[]; markDefs?: MarkDef[] };
+
+/** a run of text and what is done to it */
+type Run = { text: string; strong: boolean; em: boolean; href?: string; out: boolean };
+const runsOf = (b: RawBlock): Run[] => (b.children ?? []).map((s) => {
+  const marks = s.marks ?? [];
+  const href = marks.map((m) => b.markDefs?.find((d) => d._key === m)?.href).find(Boolean);
+  return { text: s.text, strong: marks.includes('strong'), em: marks.includes('em'),
+           href, out: !!href && /^https?:\/\//.test(href) };
+});
+
+/* consecutive list items gather into one list */
+type Item = { kind: 'list'; items: Run[][] } | { kind: 'p' | 'h2' | 'h3'; runs: Run[] };
+const items: Item[] = [];
+for (const b of blocks as RawBlock[]) {
+  if (b._type !== 'block') continue;
+  const last = items[items.length - 1];
+  if (b.listItem) {
+    if (last?.kind === 'list') last.items.push(runsOf(b));
+    else items.push({ kind: 'list', items: [runsOf(b)] });
+  } else {
+    items.push({ kind: b.style === 'h2' ? 'h2' : b.style === 'h3' ? 'h3' : 'p', runs: runsOf(b) });
+  }
+}
 ---
 <div class="pt">
-  {(blocks as Block[]).map((b) => {
-    if (b._type !== 'block') return null;
-    if (b.style === 'h2') return <h2>{text(b)}</h2>;
-    if (b.style === 'h3') return <h3>{text(b)}</h3>;
-    return <p>{text(b)}</p>;
+  {items.map((it) => {
+    const line = (runs: Run[]) => runs.map((r) => {
+      const inner = r.strong && r.em ? <strong><em>{r.text}</em></strong>
+        : r.strong ? <strong>{r.text}</strong> : r.em ? <em>{r.text}</em> : r.text;
+      return r.href
+        ? (r.out ? <a href={r.href} rel="noopener" target="_blank">{inner}</a> : <a href={r.href}>{inner}</a>)
+        : inner;
+    });
+    if (it.kind === 'list') return <ul>{it.items.map((runs) => <li>{line(runs)}</li>)}</ul>;
+    if (it.kind === 'h2') return <h2>{line(it.runs)}</h2>;
+    if (it.kind === 'h3') return <h3>{line(it.runs)}</h3>;
+    return <p>{line(it.runs)}</p>;
   })}
 </div>
 
 <style>
   .pt { max-width: 62ch; }
-  .pt p { font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-2); margin-bottom: 1.2em; }
+  .pt p, .pt li { font-size: var(--t-body); line-height: var(--lh-body); color: var(--ink-2); }
+  .pt p { margin-bottom: 1.2em; }
+  .pt ul { margin: 0 0 1.2em 1.2em; }
+  .pt a { text-decoration: underline; text-underline-offset: 0.15em; }
   .pt h2, .pt h3 { margin: 2em 0 0.6em; line-height: var(--lh-title); letter-spacing: var(--track-title); }
   .pt h2 { font-size: var(--t-statement); } .pt h3 { font-size: var(--t-lead); }
 </style>

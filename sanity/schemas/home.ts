@@ -14,6 +14,12 @@ export const home = defineType({
   type: 'document',
   fields: [
     defineField({
+      name: 'description',
+      title: 'Description',
+      type: 'text', rows: 2,
+      description: 'For search engines and sharing. Leave empty to use the one in Site settings.',
+    }),
+    defineField({
       name: 'hero',
       type: 'object',
       fields: [
@@ -65,6 +71,7 @@ export const home = defineType({
       type: 'object',
       fields: [
         defineField({ name: 'tag', type: 'string', initialValue: 'Studios' }),
+        defineField({ name: 'kicker', title: 'Small line over the heading', type: 'string', initialValue: 'How we help' }),
         defineField({ name: 'title', type: 'string', initialValue: 'Three studios.' }),
         defineField({ name: 'intro', type: 'text', rows: 2 }),
         defineField({
@@ -133,9 +140,36 @@ export const home = defineType({
       ],
     }),
     defineField({
+      name: 'team',
+      title: 'Your team, extended',
+      type: 'object',
+      description: 'The section where the figure is built. The film and the icons are fixed; the words are yours.',
+      fields: [
+        defineField({ name: 'lead', title: 'First half of the title', type: 'string', initialValue: 'Your team,' }),
+        defineField({ name: 'tail', title: 'Second half of the title', type: 'string', initialValue: 'extended.' }),
+        defineField({ name: 'note', title: 'Note at the top', type: 'text', rows: 2, description: 'Two short lines; the line break is kept.' }),
+        defineField({
+          name: 'steps',
+          title: 'Cards',
+          type: 'array',
+          validation: (r) => r.max(6),
+          description: 'Up to six, in order. Each card keeps the icon of its place: 1 bars, 2 squares, 3 network, 4 concept, 5 gauge, 6 radar.',
+          of: [{
+            type: 'object',
+            fields: [
+              defineField({ name: 'word', title: 'Title', type: 'string', description: 'Short: it sets in capitals on two lines at most.' }),
+              defineField({ name: 'line', title: 'Text', type: 'text', rows: 3 }),
+            ],
+            preview: { select: { title: 'word', subtitle: 'line' } },
+          }],
+        }),
+      ],
+    }),
+    defineField({
       name: 'process',
       title: 'How we work',
       type: 'object',
+      hidden: true,
       description: 'Read one step at a time as the section is scrolled. Three or four steps; more and the bar has nothing left to say between them.',
       fields: [
         defineField({ name: 'tag', type: 'string', initialValue: 'Our process' }),
@@ -191,7 +225,6 @@ export const home = defineType({
         }),
       ],
     }),
-    defineField({ name: 'featuredProject', title: 'Featured project (hero)', type: 'reference', to: [{ type: 'project' }] }),
   ],
   preview: { prepare: () => ({ title: 'Homepage' }) },
 });

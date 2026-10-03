@@ -2,13 +2,14 @@
 import Base from '@layouts/Base.astro';
 import ProjectGrid from '@components/work/ProjectGrid.astro';
 import StudioFilter from '@components/work/StudioFilter.astro';
-import { getProjects } from '@lib/sanity/queries';
+import { getProjects, getWorkPage } from '@lib/sanity/queries';
 const projects = await getProjects();
+const page = await getWorkPage();
 ---
-<Base theme="light" title="Work">
+<Base theme="light" title="Work" description={page.description}>
   <main class="page" data-page="work">
     <header class="head">
-      <h1>Selected works</h1>
+      <h1>{page.title}</h1>
       <div class="filter">
         <StudioFilter projects={projects} />
         <!-- not shown: the tally is only there to be read out when the
@@ -18,7 +19,7 @@ const projects = await getProjects();
     </header>
 
     <ProjectGrid projects={projects} />
-    <p class="empty label" data-filter-empty hidden>Nothing in this studio yet.</p>
+    <p class="empty label" data-filter-empty hidden>{page.empty}</p>
   </main>
   <script>
     import { onPage } from '../../scripts/lifecycle';

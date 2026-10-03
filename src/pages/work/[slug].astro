@@ -103,7 +103,11 @@ const turns = [
             {project.services.map((x) => <li class="chip">{x}</li>)}
           </ul>
         )}
-        {project.liveUrl && <Button href={project.liveUrl} label="View live" />}
+        {project.links.length > 0 && (
+          <div class="links">
+            {project.links.map((l) => <Button href={l.url} label={l.label} />)}
+          </div>
+        )}
       </div>
 
       <nav class="ends" aria-label="Projects">
@@ -275,6 +279,8 @@ const turns = [
   .story { margin-top: var(--s-6); font-size: var(--t-small); color: var(--ink-2); }
 
   /* what is on offer at the foot: what was ours, and the thing itself */
+  /* a project's buttons, side by side, wrapping on a narrow column */
+  .links { display: flex; flex-wrap: wrap; gap: var(--s-3); }
   .foot { display: flex; flex-direction: column; align-items: flex-start;
           gap: var(--s-5); margin-bottom: var(--s-5); }
 

@@ -116,7 +116,7 @@ export function createForming(root: HTMLElement): Forming {
       const im = new Image();
       im.src = SRC(i);
       im.decode()
-        .then(() => (typeof createImageBitmap === 'function' ? createImageBitmap(im) : im))
+        .then((): Frame | Promise<Frame> => (typeof createImageBitmap === 'function' ? createImageBitmap(im) : im))
         .then((f) => {
           if (gone || !keep(i)) { release(f); return; }
           frames[i] = f;

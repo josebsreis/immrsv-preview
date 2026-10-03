@@ -4,8 +4,15 @@
  *  this site actually does; they are a starting point to be read and
  *  approved by the practice (and its lawyer), not legal advice. */
 import Base from '@layouts/Base.astro';
-interface Props { title: string; updated: string; description: string; }
-const { title, updated, description } = Astro.props;
+import PortableText from '@components/ui/PortableText.astro';
+/** `body`, when the page comes from Sanity; without it the page's own text,
+ *  in the slot, stands */
+interface Props { title: string; updated: string; description: string; body?: unknown[]; }
+const { title, updated: raw, description, body } = Astro.props;
+/* a date from the studio comes as 2026-09-15 and is written out */
+const updated = /^\d{4}-\d{2}-\d{2}$/.test(raw)
+  ? new Date(`${raw}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+  : raw;
 ---
 <Base theme="light" title={title} description={description}>
   <main class="legal" data-page="legal">
@@ -13,7 +20,10 @@ const { title, updated, description } = Astro.props;
       <h1>{title}</h1>
       <p class="label updated">Last updated {updated}</p>
     </header>
-    <div class="body"><slot /></div>
+    <div class="body">
+      {body?.length ? <PortableText blocks={body} /> : <slot />}
+      <slot name="after" />
+    </div>
   </main>
 </Base>
 

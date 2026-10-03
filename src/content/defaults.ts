@@ -1,4 +1,4 @@
-import type { Brand, HomeContent, Project, Studio } from '@lib/sanity/types';
+import type { Brand, HomeContent, Project, Settings, Studio, WorkPage } from '@lib/sanity/types';
 import { site, type StudioKey } from '@lib/site';
 import delivered from './work.generated.json';
 
@@ -89,11 +89,6 @@ const COPY: Record<StudioKey, Copy> = {
   },
 };
 
-/** The live link, when there is one — and for now there is not. Most of the
- *  work has nothing public to point at, so no default carries one and the
- *  button is simply absent; give a project a `liveUrl` in Sanity and it
- *  appears on that project alone. */
-const PLACEHOLDER_LIVE = undefined;
 
 const STUDIO_OF: Record<string, StudioKey> = {
   'architecture-design': 'architecture',
@@ -139,7 +134,9 @@ function fromDelivery(entry: Delivered): Project {
     slug: entry.slug,
     studios: [key],
     ...COPY[key],
-    liveUrl: PLACEHOLDER_LIVE,
+    /* most of the work has nothing public to point at, so no default carries
+       a button; give a project one in Sanity and it shows on that one alone */
+    links: [],
     services: servicesOf(key),
     /* a project that is only a film leads with the clip's poster */
     cover: shots[0]
@@ -170,7 +167,7 @@ const productPlaceholders: Project[] = [
     slug: 'unit-configurator',
     studios: ['products'],
     ...COPY.products,
-    liveUrl: PLACEHOLDER_LIVE,
+    links: [],
     services: servicesOf('products'),
     cover: { url: '/studios/products.jpg', alt: 'Digital products' },
     gallery: [],
@@ -186,7 +183,7 @@ const productPlaceholders: Project[] = [
     slug: 'practice-design-system',
     studios: ['products'],
     ...COPY.products,
-    liveUrl: PLACEHOLDER_LIVE,
+    links: [],
     services: servicesOf('products'),
     cover: { url: '/studios/media-900.webp', alt: 'Digital products', width: 1280, height: 720,
              avifSrcset: '/studios/media-480.avif 480w, /studios/media-900.avif 900w, /studios/media-1400.avif 1400w',
@@ -250,6 +247,7 @@ export const defaultHome: HomeContent = {
   },
   studios: {
     tag: 'Studios',
+    kicker: 'How we help',
     title: 'Three studios',
     intro: 'Three doors into the same room. Whichever one you come in by, the same people design it, show it and build it.',
     claim: "Before it exists, we've already built it.",
@@ -384,5 +382,48 @@ export const defaultHome: HomeContent = {
       },
     ],
   },
-  featuredProject: defaultProjects[0],
+  team: {
+    lead: 'Your team,',
+    tail: 'extended.',
+    note: 'For studios and firms at capacity.\nOne more on your team, when you need it.',
+    steps: [
+      { word: 'Scale without the overhead',
+        line: 'IMMRSV becomes an extension of your studio when internal resources reach capacity.' },
+      { word: 'One partner, more capabilities',
+        line: 'From architecture and documentation to visualization, interactive experiences and digital products.' },
+      { word: 'Built into your workflow',
+        line: 'We adapt to your tools, standards, deadlines and processes, not the other way around.' },
+      { word: 'From concept to experience',
+        line: 'We turn ideas into drawings, visuals, digital environments and experiences that clients can see, understand and interact with.' },
+      { word: 'Capacity when it matters',
+        line: 'Bring us in for a single deadline, a specialized need or ongoing project support.' },
+      { word: 'More than production',
+        line: 'We bring design thinking, technology and creative problem-solving to every project we touch.' },
+    ],
+  },
+};
+
+/* PLACEHOLDERS, until Oscar sends them: the social accounts point at the
+   networks' home pages, and Book a call rings the number until there is a
+   booking page to send it to. */
+export const defaultSettings: Settings = {
+  description: 'IMMRSV is an independent practice working across architecture, creative media and digital products.',
+  email: 'hello@immrsv.studio',
+  phone: '747.302.6868',
+  words: ['IMMRSV.', 'lasting.', 'real.', 'together.'],
+  buttons: [
+    { label: 'Discuss your project', href: 'mailto:hello@immrsv.studio' },
+    { label: 'Book a call', href: 'tel:+17473026868' },
+  ],
+  location: 'Working globally from Los Angeles, California.',
+  city: 'Los Angeles',
+  social: [
+    { label: 'LinkedIn', url: 'https://www.linkedin.com/' },
+    { label: 'Instagram', url: 'https://www.instagram.com/' },
+  ],
+};
+
+export const defaultWorkPage: WorkPage = {
+  title: 'Selected works',
+  empty: 'Nothing in this studio yet.',
 };

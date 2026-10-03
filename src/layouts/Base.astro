@@ -6,6 +6,7 @@ import { ClientRouter } from 'astro:transitions';
 import Nav from '@components/layout/Nav.astro';
 import Footer from '@components/layout/Footer.astro';
 import { site } from '@lib/site';
+import { getSettings } from '@lib/sanity/queries';
 
 interface Props {
   title?: string;
@@ -16,7 +17,10 @@ interface Props {
   noNav?: boolean;
   noFooter?: boolean;
 }
-const { title, description = 'IMMRSV is an independent practice working across architecture, creative media and digital products.', theme = 'dark', noNav = false, noFooter = false } = Astro.props;
+const settings = await getSettings();
+const { title, description: own, theme = 'dark', noNav = false, noFooter = false } = Astro.props;
+/* a page's own words for search and sharing, or the site's */
+const description = own || settings.description;
 const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | Designing the future of experience`;
 ---
 <!doctype html>

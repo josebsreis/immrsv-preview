@@ -32,8 +32,23 @@ export const project = defineType({
     }),
     defineField({ name: 'whatWeDid', title: 'What we did', type: 'text', rows: 5,
       description: 'The second paragraph. How it was tackled and what was delivered; end on the result if there is one worth stating. The services list below is shown separately, at the foot of the column.' }),
-    defineField({ name: 'liveUrl', title: 'Live link', type: 'url',
-      description: 'Where the finished thing lives, if it lives anywhere public. Leave empty and the button is not shown.' }),
+    defineField({
+      name: 'links',
+      title: 'Buttons',
+      type: 'array',
+      validation: (r) => r.max(3),
+      description: 'Links shown as buttons on the project page, e.g. "Visit website", "Watch the film". Leave empty and no button is shown.',
+      of: [{
+        type: 'object',
+        fields: [
+          defineField({ name: 'label', type: 'string', validation: (r) => r.required() }),
+          defineField({ name: 'url', title: 'Link', type: 'url', validation: (r) => r.required() }),
+        ],
+        preview: { select: { title: 'label', subtitle: 'url' } },
+      }],
+    }),
+    defineField({ name: 'liveUrl', title: 'Live link (old)', type: 'url', hidden: ({ value }) => !value,
+      description: 'Replaced by Buttons above. Still shown as a "View live" button until Buttons is filled in.' }),
     defineField({
       name: 'services',
       title: 'Services',

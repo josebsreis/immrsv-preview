@@ -1,36 +1,27 @@
 ---
 /** The foot of every page: a black band, the invitation, the ways in, and
- *  the name drawn once at full width.
- *
- *  PLACEHOLDER. The shape is right, but the address, the number and the
- *  accounts are stand-ins until the client sends the real ones — everything
- *  marked below is meant to be replaced, not kept. */
+ *  the name drawn once at full width. Its words — the address, the number,
+ *  the accounts, the buttons — are the Site settings in Sanity
+ *  (defaults in src/content/defaults.ts until they are filled in). */
 import Button from '@components/ui/Button.astro';
 import { site } from '@lib/site';
 import { LETTERMARK, SYMBOL } from '@lib/lettermark';
+import { getSettings } from '@lib/sanity/queries';
 
 const year = new Date().getFullYear();
+const settings = await getSettings();
 
+/* the number is written as it reads; the call is made from its digits */
+const digits = settings.phone.replace(/\D/g, '');
 const enquiry = [
-  { label: 'hello@immrsv.studio', href: 'mailto:hello@immrsv.studio' },
-  { label: '747.302.6868', href: 'tel:+17473026868' },
+  { label: settings.email, href: `mailto:${settings.email}` },
+  { label: settings.phone, href: `tel:+${digits.length === 10 ? '1' + digits : digits}` },
 ];
 /* the last word of the invitation turns, as the headline's does: the name
    first, then what the work is meant to be, and back to the name */
-const words = ['IMMRSV.', 'lasting.', 'real.', 'together.'];
-/* PLACEHOLDER: the call goes to the number until the client says where a
-   booking should go — a calendar link, most likely */
-const acts = [
-  { label: 'Discuss your project', href: 'mailto:hello@immrsv.studio' },
-  { label: 'Book a call', href: 'tel:+17473026868' },
-];
-
-/* PLACEHOLDER: the practice's accounts — the two it is likeliest to have,
-   pointing nowhere real until the client sends the handles */
-const social = [
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/' },
-  { label: 'Instagram', href: 'https://www.instagram.com/' },
-];
+const words = settings.words;
+const acts = settings.buttons;
+const social = settings.social.map((x) => ({ label: x.label, href: x.url }));
 
 /** what a site has to say about itself, at its foot */
 const legal = [
@@ -56,7 +47,7 @@ const legal = [
            margin: where the reply would come from, what o'clock it is there
            and what day, all set by the script from the studio's zone -->
       <div class="when label" data-clock>
-        <span>Los Angeles <span class="time" data-clock-time>--:--:-- --</span></span>
+        <span>{settings.city} <span class="time" data-clock-time>--:--:-- --</span></span>
         <span data-clock-date>&nbsp;</span>
       </div>
       </div>
@@ -68,7 +59,7 @@ const legal = [
     <div class="details">
       <div class="col">
         <span class="label head">Location</span>
-        <p class="based">Working globally from Los Angeles, California.</p>
+        <p class="based">{settings.location}</p>
       </div>
       <div class="col">
         <span class="label head">Contact</span>

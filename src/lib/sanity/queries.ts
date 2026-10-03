@@ -1,13 +1,13 @@
 import { sanity, imageUrl, imageSrcset } from './client';
-import type { HomeContent, Project, ImageRef, Media } from './types';
-import { defaultHome, defaultProjects } from '@/content/defaults';
+import type { HomeContent, Project, ImageRef, Media, Settings, WorkPage, LegalPage } from './types';
+import { defaultHome, defaultProjects, defaultSettings, defaultWorkPage } from '@/content/defaults';
 
 /* ── GROQ ──────────────────────────────────────────────────────────── */
 const imageFields = `{ asset, alt, "lqip": asset->metadata.lqip, "width": asset->metadata.dimensions.width, "height": asset->metadata.dimensions.height }`;
 
 const projectFields = `{
   _id, title, "slug": slug.current, year, location, studios, summary, featured,
-  brief, whatWeDid, liveUrl,
+  brief, whatWeDid, liveUrl, "links": coalesce(links[]{ label, url }, []),
   "services": coalesce(services, []),
   "cover": cover ${imageFields},
   "gallery": coalesce(gallery[] ${imageFields}, []),
@@ -20,17 +20,25 @@ const projectFields = `{
 }`;
 
 const homeQuery = `*[_type == "home"][0]{
+  description,
   hero{ headline, words, description, primaryCta, secondaryCta },
   about{ tag, statement, lead, stats, founder{ name, role, "portrait": portrait ${imageFields} } },
-  studios{ tag, title, intro, "items": items[]{ key, name, promise, description, services,
+  studios{ tag, kicker, title, intro, "items": items[]{ key, name, promise, description, services,
     "media": media{ kind, "url": coalesce(file.asset->url, url), "poster": poster ${imageFields}, alt } } },
   brands{ tag, "items": items[]{ name, "logo": logo ${imageFields} } },
   process{ tag, title, intro, "steps": coalesce(steps[]{ title, body }, []) },
   testimonials{ tag, "items": coalesce(items[]{ label, quote, name, role, "portrait": portrait ${imageFields} }, []) },
   work{ tag, title, intro, "featured": coalesce(featured[]->slug.current, []), cta },
   faqs{ tag, title, aside, cta, "items": coalesce(items[]{ q, a }, []) },
-  "featuredProject": featuredProject-> ${projectFields}
+  team{ lead, tail, note, "steps": coalesce(steps[]{ word, line }, []) }
 }`;
+
+const settingsQuery = `*[_id == "settings"][0]{
+  description, contact{ email, phone },
+  footer{ words, "buttons": coalesce(buttons[]{ label, href }, []), location, city, "social": coalesce(social[]{ label, url }, []) }
+}`;
+const workPageQuery = `*[_id == "workPage"][0]{ title, description, empty }`;
+const legalQuery = `*[_id == $id][0]{ title, updated, description, "body": coalesce(body, []) }`;
 
 const projectsQuery = `*[_type == "project"] | order(coalesce(order, 999) asc, year desc) ${projectFields}`;
 const projectBySlugQuery = `*[_type == "project" && slug.current == $slug][0] ${projectFields}`;
@@ -85,7 +93,11 @@ function mapProject(raw: any): Project {
     summary: raw.summary,
     brief: raw.brief,
     whatWeDid: raw.whatWeDid,
-    liveUrl: raw.liveUrl,
+    /* the buttons; a project from before them that only has the old live
+       link keeps it, as it was shown */
+    links: (raw.links ?? []).filter((l: any) => l?.label && l?.url).length
+      ? raw.links.filter((l: any) => l?.label && l?.url)
+      : raw.liveUrl ? [{ label: 'View live', url: raw.liveUrl }] : [],
     services: raw.services ?? [],
     cover,
     gallery,
@@ -117,7 +129,19 @@ export async function getHome(): Promise<HomeContent> {
     const brandItems = (raw.brands?.items ?? [])
       .map((b: any) => ({ name: b.name, logo: mapImage(b.logo) }))
       .filter((b: any) => b.logo);
+    const team = raw.team ?? {};
+    const steps = (team.steps ?? []).filter((t: any) => t?.word);
+    /** a field left empty in the studio falls back to the default, rather
+     *  than coming through as nothing */
+    const keep = <T extends object>(base: T, over: any): T => {
+      const out: any = { ...base };
+      for (const [k, v] of Object.entries(over ?? {})) if (v !== null && v !== undefined && v !== '') out[k] = v;
+      return out;
+    };
     return {
+      description: raw.description || undefined,
+      team: { ...keep(defaultHome.team, { lead: team.lead, tail: team.tail, note: team.note }),
+              steps: steps.length ? steps : defaultHome.team.steps },
       hero: { ...defaultHome.hero, ...raw.hero },
       about: {
         ...defaultHome.about,
@@ -130,6 +154,7 @@ export async function getHome(): Promise<HomeContent> {
         ? {
             ...defaultHome.studios,
             tag: raw.studios?.tag ?? defaultHome.studios.tag,
+            kicker: raw.studios?.kicker ?? defaultHome.studios.kicker,
             title: raw.studios?.title ?? defaultHome.studios.title,
             intro: raw.studios?.intro ?? defaultHome.studios.intro,
             items: studioItems,
@@ -153,7 +178,6 @@ export async function getHome(): Promise<HomeContent> {
       brands: brandItems.length
         ? { tag: raw.brands?.tag ?? defaultHome.brands.tag, items: brandItems }
         : defaultHome.brands,
-      featuredProject: raw.featuredProject ? mapProject(raw.featuredProject) : defaultHome.featuredProject,
     };
   } catch (e) {
     console.warn('[sanity] home fetch failed, using defaults', e);
@@ -180,5 +204,61 @@ export async function getProject(slug: string): Promise<Project | undefined> {
   } catch (e) {
     console.warn('[sanity] project fetch failed', e);
     return defaultProjects.find((p) => p.slug === slug);
+  }
+}
+
+/* every page asks for the settings, for its footer; one fetch serves the build */
+let settingsOnce: Promise<Settings> | null = null;
+export function getSettings(): Promise<Settings> {
+  settingsOnce ??= (async () => {
+    if (!sanity) return defaultSettings;
+    try {
+      const raw = await sanity.fetch(settingsQuery);
+      if (!raw) return defaultSettings;
+      const f = raw.footer ?? {};
+      const list = <T>(v: T[] | undefined, d: T[]) => (v && v.length ? v : d);
+      return {
+        description: raw.description || defaultSettings.description,
+        email: raw.contact?.email || defaultSettings.email,
+        phone: raw.contact?.phone || defaultSettings.phone,
+        words: list(f.words, defaultSettings.words),
+        buttons: list(f.buttons?.filter((b: any) => b?.label && b?.href), defaultSettings.buttons),
+        location: f.location || defaultSettings.location,
+        city: f.city || defaultSettings.city,
+        social: list(f.social?.filter((x: any) => x?.label && x?.url), defaultSettings.social),
+      };
+    } catch (e) {
+      console.warn('[sanity] settings fetch failed, using defaults', e);
+      return defaultSettings;
+    }
+  })();
+  return settingsOnce;
+}
+
+export async function getWorkPage(): Promise<WorkPage> {
+  if (!sanity) return defaultWorkPage;
+  try {
+    const raw = await sanity.fetch(workPageQuery);
+    return {
+      title: raw?.title || defaultWorkPage.title,
+      description: raw?.description || undefined,
+      empty: raw?.empty || defaultWorkPage.empty,
+    };
+  } catch (e) {
+    console.warn('[sanity] work page fetch failed, using defaults', e);
+    return defaultWorkPage;
+  }
+}
+
+/** the privacy policy or the terms from the studio — or nothing, and the
+ *  page keeps its own text */
+export async function getLegal(id: 'privacy' | 'terms'): Promise<LegalPage | undefined> {
+  if (!sanity) return undefined;
+  try {
+    const raw = await sanity.fetch(legalQuery, { id });
+    return raw?.body?.length ? raw : undefined;
+  } catch (e) {
+    console.warn('[sanity] legal fetch failed', e);
+    return undefined;
   }
 }

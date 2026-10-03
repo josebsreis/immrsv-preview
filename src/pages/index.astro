@@ -14,7 +14,7 @@ import { getHome, getProjects } from '@lib/sanity/queries';
 const home = await getHome();
 const projects = await getProjects();
 ---
-<Base theme="dark">
+<Base theme="dark" description={home.description}>
   <main class="main" data-page="home">
     <div class="dark" data-hold>
       <Hero content={home.hero} />
@@ -31,7 +31,7 @@ const projects = await getProjects();
          its head: the ground opens from the mark, and the section arrives
          inside that opening; the first studio follows -->
     <div class="light" data-light>
-      <Forming />
+      <Forming {...home.team} />
       <section class="next" id="work" data-next data-theme="light">
         <Studios content={home.studios} />
         {/* The process section is off the page: the handover above says the

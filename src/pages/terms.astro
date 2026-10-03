@@ -1,8 +1,11 @@
 ---
 import LegalPage from '@components/legal/LegalPage.astro';
+import { getLegal } from '@lib/sanity/queries';
+/* from Sanity once it is written there; until then, the text below */
+const cms = await getLegal('terms');
 ---
-<LegalPage title="Terms of use" updated="15 September 2026"
-           description="The terms that apply to using the IMMRSV website.">
+<LegalPage title={cms?.title ?? "Terms of use"} updated={cms?.updated ?? "15 September 2026"}
+           description={cms?.description ?? "The terms that apply to using the IMMRSV website."} body={cms?.body}>
   <p>By using this website you agree to these terms. If you do not agree, please do not use the site.</p>
 
   <h2>The content</h2>
@@ -13,9 +16,6 @@ import LegalPage from '@components/legal/LegalPage.astro';
 
   <h2>Accuracy</h2>
   <p>We try to keep the site accurate and up to date, but it is provided as it is, without warranties of any kind. Visualisations show intended designs and may differ from what is finally built.</p>
-
-  <h2>Credits</h2>
-  <p>Some icons on this site are from <a href="https://github.com/Arcticons-Team/Arcticons">Arcticons</a> by Donnnno and contributors, used under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</p>
 
   <h2>Links</h2>
   <p>Where we link to other websites, we are not responsible for their content or how they handle your information.</p>
@@ -28,4 +28,10 @@ import LegalPage from '@components/legal/LegalPage.astro';
 
   <h2>Contact</h2>
   <p><a href="mailto:hello@immrsv.studio">hello@immrsv.studio</a></p>
+  <!-- the icons' licence asks for this credit, so it is not part of the
+       text that can be edited away in Sanity -->
+  <Fragment slot="after">
+    <h2>Credits</h2>
+    <p>Some icons on this site are from <a href="https://github.com/Arcticons-Team/Arcticons">Arcticons</a> by Donnnno and contributors, used under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</p>
+  </Fragment>
 </LegalPage>
