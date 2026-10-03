@@ -7,6 +7,8 @@ import { CaseIcon } from '@sanity/icons/Case';
 import { ThListIcon } from '@sanity/icons/ThList';
 import { CogIcon } from '@sanity/icons/Cog';
 import { DocumentTextIcon } from '@sanity/icons/DocumentText';
+import { HelpCircleIcon } from '@sanity/icons/HelpCircle';
+import { Help } from './sanity/help';
 import { schemaTypes } from './sanity/schemas';
 
 /** The Studio, hosted by Sanity at https://immrsv.sanity.studio — and reached
@@ -30,6 +32,9 @@ export default defineConfig({
         S.list()
           .title('IMMRSV')
           .items([
+            S.listItem().title('How to edit').icon(HelpCircleIcon)
+              .child(S.component(Help).title('How to edit')),
+            S.divider(),
             S.listItem().title('Homepage').icon(HomeIcon)
               .child(S.document().schemaType('home').documentId('home').title('Homepage')),
             // drag to reorder: this order is the Work page's
