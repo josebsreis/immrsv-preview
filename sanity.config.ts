@@ -1,5 +1,6 @@
 import { defineConfig } from 'sanity';
 import { structureTool } from 'sanity/structure';
+import { media } from 'sanity-plugin-media';
 import { schemaTypes } from './sanity/schemas';
 
 /** The Studio, embedded at /admin. Transferring the project to the client
@@ -28,6 +29,9 @@ export default defineConfig({
             S.documentTypeListItem('project').title('Projects'),
           ]),
     }),
+    /* a Media tab: every picture and clip on the site in one place, to find,
+       tag, replace and see where each is used */
+    media(),
   ],
   /* the pages that exist once are not made again from the + menu */
   document: {

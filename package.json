@@ -19,6 +19,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "sanity": "^6.12.0",
+    "sanity-plugin-media": "^6.3.2",
     "three": "^0.185.1",
     "vgpu": "^0.4.0"
   },
