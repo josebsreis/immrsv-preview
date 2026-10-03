@@ -175,6 +175,8 @@ export interface HomeContent {
 
 /** what every page shares — the footer, how to reach the studio */
 export interface Settings {
+  /** the buttons at the top right of every page */
+  nav: Cta[];
   description: string;
   email: string;
   phone: string;

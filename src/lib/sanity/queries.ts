@@ -32,13 +32,14 @@ const homeQuery = `*[_type == "home"][0]{
 }`;
 
 const settingsQuery = `*[_id == "settings"][0]{
-  description, contact{ email, phone },
+  "nav": coalesce(nav[]{ label, href }, []), description, contact{ email, phone },
   footer{ words, "buttons": coalesce(buttons[]{ label, href }, []), location, city, "social": coalesce(social[]{ label, url }, []) }
 }`;
 const workPageQuery = `*[_id == "workPage"][0]{ title, description, empty }`;
 const legalQuery = `*[_id == $id][0]{ title, updated, description, "body": coalesce(body, []) }`;
 
-const projectsQuery = `*[_type == "project"] | order(coalesce(order, 999) asc, year desc) ${projectFields}`;
+/* in the order they are dragged into in the Studio's Projects list */
+const projectsQuery = `*[_type == "project"] | order(orderRank asc) ${projectFields}`;
 const projectBySlugQuery = `*[_type == "project" && slug.current == $slug][0] ${projectFields}`;
 
 /* ── mappers ───────────────────────────────────────────────────────── */
@@ -215,6 +216,7 @@ export function getSettings(): Promise<Settings> {
       const f = raw.footer ?? {};
       const list = <T>(v: T[] | undefined, d: T[]) => (v && v.length ? v : d);
       return {
+        nav: list(raw.nav?.filter((x: any) => x?.label && x?.href), defaultSettings.nav),
         description: raw.description || defaultSettings.description,
         email: raw.contact?.email || defaultSettings.email,
         phone: raw.contact?.phone || defaultSettings.phone,

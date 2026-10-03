@@ -414,6 +414,14 @@ export const defaultHome: HomeContent = {
    networks' home pages, and Book a call rings the number until there is a
    booking page to send it to. */
 export const defaultSettings: Settings = {
+  /* Home, the work, and the way to get in touch. Contact is a link to the
+     page's own foot: every page ends on the footer, so it never has to leave
+     for the homepage to find it (scripts/ui/smoothScroll glides there). */
+  nav: [
+    { label: 'Home', href: '/' },
+    { label: 'Work', href: '/work' },
+    { label: 'Contact', href: '#contact' },
+  ],
   description: 'IMMRSV is an independent practice working across architecture, creative media and digital products.',
   email: 'hello@immrsv.studio',
   phone: '747.302.6868',

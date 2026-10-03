@@ -47,7 +47,7 @@ const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | Designing 
   </head>
   <body data-theme={theme}>
     {/* the nav persists itself — see Nav.astro */}
-    {!noNav && <Nav items={site.nav} />}
+    {!noNav && <Nav items={settings.nav} />}
     <slot />
     {!noFooter && <Footer />}
     <Cursor />

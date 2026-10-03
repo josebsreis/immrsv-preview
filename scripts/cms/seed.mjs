@@ -14,6 +14,7 @@
 import { createReadStream, existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { getCliClient } from 'sanity/cli';
+import { LexoRank } from 'lexorank';
 
 const file = process.argv.at(-1);
 if (!file?.endsWith('.json')) throw new Error('usage: sanity exec scripts/cms/seed.mjs --with-user-token -- <seed.json>');
@@ -60,7 +61,7 @@ async function image(ref, extra = {}) {
 /* ── documents ─────────────────────────────────────────────────────── */
 const projectId = (slug) => `project-${slug}`;
 
-async function project(p, order) {
+async function project(p, rank) {
   const media = [];
   for (const m of p.media ?? []) {
     if (m.kind === 'video') {
@@ -81,7 +82,8 @@ async function project(p, order) {
     summary: p.summary, brief: p.brief, whatWeDid: p.whatWeDid,
     links: keyed(p.links), services: p.services ?? [],
     cover: await image(p.cover), media,
-    body: p.body ?? [], featured: !!p.featured, order,
+    // the place in the Studio's drag-to-reorder Projects list
+    orderRank: rank,
   };
 }
 
@@ -124,6 +126,7 @@ async function home(h) {
 
 const settings = (s) => ({
   _id: 'settings', _type: 'settings',
+  nav: keyed(s.nav),
   description: s.description,
   contact: { email: s.email, phone: s.phone },
   footer: { words: s.words, buttons: keyed(s.buttons), location: s.location, city: s.city, social: keyed(s.social) },
@@ -133,7 +136,8 @@ const settings = (s) => ({
 console.log(`seeding ${client.config().projectId}/${client.config().dataset}`);
 const docs = [];
 console.log('projects');
-for (const [i, p] of seed.projects.entries()) docs.push(await project(p, i + 1));
+let rank = LexoRank.middle();
+for (const p of seed.projects) { docs.push(await project(p, rank.toString())); rank = rank.genNext().genNext(); }
 console.log('homepage');
 docs.push(await home(seed.home));
 docs.push(settings(seed.settings));
