@@ -48,6 +48,10 @@ jobs:
         env:
           # a preview is not the site: kept out of search engines
           PUBLIC_NOINDEX: '1'
+          # the content is read from Sanity at build time (not secrets: the
+          # dataset is public-read); unset, the build uses the built-in copy
+          PUBLIC_SANITY_PROJECT_ID: ${{ vars.PUBLIC_SANITY_PROJECT_ID }}
+          PUBLIC_SANITY_DATASET: ${{ vars.PUBLIC_SANITY_DATASET }}
 
       - name: Move the build under the sub-path
         run: node scripts/rebase.mjs "${{ steps.pages.outputs.base_path }}"
