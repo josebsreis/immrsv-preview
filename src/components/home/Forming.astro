@@ -179,6 +179,10 @@ const {
      under it rather than in a colour of its own. */
   [data-live] .pane { isolation: isolate; }
   [data-live] .title { color: #fff; mix-blend-mode: difference; }
+  /* Once the light has filled the screen both lines are off it, and a
+     blend the size of the screen was still being worked out under her
+     every frame, for the whole section — Safari and Firefox felt it. */
+  [data-live][data-open] .title { visibility: hidden; mix-blend-mode: normal; }
   .half { position: absolute; left: var(--page-x); right: var(--page-x); top: 50%;
           text-align: center; --v: 1; --dy: 0px; }
   [data-live] .half { opacity: var(--v);

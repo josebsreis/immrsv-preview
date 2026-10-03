@@ -89,32 +89,73 @@ export function createForming(root: HTMLElement): Forming {
   /* ── frames ──────────────────────────────────────────────────────────
      Three megabytes of stills is not something to fetch while the reader
      is still in the hero, so nothing is asked for until the section is
-     within a screen or so of arriving. Coarse first — every eighth frame,
-     so a fast scrub always finds something near where it landed — then the
-     rest in order. */
-  const frames: (HTMLImageElement | null)[] = Array(N).fill(null);
-  let shown = 0, warmed = false;
-  const fetch = (i: number) => {
-    if (frames[i]) return;
-    const im = new Image();
-    im.src = SRC(i);
-    im.decode().then(() => { frames[i] = im; if (i === shown) draw(); }).catch(() => {});
+     within a screen or so of arriving.
+
+     Decoded, though, the 121 frames are some 450 megabytes, and they were
+     all decoded at once and kept as images the browser may throw away.
+     Chrome on a large Mac keeps them; Safari and Firefox drop most of them,
+     and then decode one again — on the main thread, in the middle of the
+     scroll — every time it is drawn: the stutter around her. So only a few
+     are held decoded, as bitmaps the browser cannot drop: every eighth, so
+     a fast scrub always finds one near where it landed, and the dozen
+     either side of the one on show, asked for nearest first, three at a
+     time. The rest are let go as she moves on. */
+  type Frame = ImageBitmap | HTMLImageElement;
+  const frames: (Frame | null)[] = Array(N).fill(null);
+  /** asked for and not yet back, so nothing is asked for twice */
+  const asked = new Uint8Array(N);
+  const KEY = 8, AROUND = 12, AT_ONCE = 3;
+  const keep = (i: number) => i % KEY === 0 || Math.abs(i - shown) <= AROUND;
+  let shown = 0, warmed = false, busy = 0, gone = false, queue: number[] = [];
+  const release = (f: Frame | null) => { if (f && 'close' in f) f.close(); };
+  const pump = () => {
+    while (busy < AT_ONCE && queue.length) {
+      const i = queue.shift()!;
+      if (frames[i] || asked[i] || !keep(i)) continue;
+      asked[i] = 1; busy++;
+      const im = new Image();
+      im.src = SRC(i);
+      im.decode()
+        .then(() => (typeof createImageBitmap === 'function' ? createImageBitmap(im) : im))
+        .then((f) => {
+          if (gone || !keep(i)) { release(f); return; }
+          frames[i] = f;
+          if (Math.abs(i - shown) <= Math.abs(drawn - shown)) draw();
+        })
+        .catch(() => {})
+        .finally(() => { asked[i] = 0; busy--; if (!gone) pump(); });
+    }
+  };
+  /** what to hold for where she is now: the keys, then outwards from her,
+   *  the way the reader is going first */
+  let heading = 1;
+  const plan = () => {
+    for (let i = 0; i < N; i++) if (frames[i] && !keep(i)) { release(frames[i]); frames[i] = null; }
+    const want: number[] = [];
+    for (let i = 0; i < N; i += KEY) want.push(i);
+    for (let d = 0; d <= AROUND; d++) {
+      for (const i of [shown + d * heading, shown - d * heading]) if (i >= 0 && i < N) want.push(i);
+    }
+    queue = want.filter((i, k) => !frames[i] && !asked[i] && want.indexOf(i) === k);
+    // the one on show and its neighbours before the keys, once she is moving
+    if (warmed) queue.sort((a, b) => Math.abs(a - shown) - Math.abs(b - shown));
+    pump();
   };
   const warm = () => {
     if (warmed) return;
+    plan();
     warmed = true;
-    for (let i = 0; i < N; i += 8) fetch(i);
-    for (let i = 0; i < N; i++) fetch(i);
   };
 
   /** the nearest frame that has arrived, when the exact one has not */
-  const nearest = (i: number) => {
-    if (frames[i]) return frames[i];
+  let drawn = -1;
+  const nearest = (i: number): [Frame | null, number] => {
+    if (frames[i]) return [frames[i], i];
     for (let d = 1; d < N; d++) {
-      if (frames[i - d]) return frames[i - d];
-      if (frames[i + d]) return frames[i + d];
+      if (frames[i - d]) return [frames[i - d], i - d];
+      if (frames[i + d]) return [frames[i + d], i + d];
     }
-    return null;
+    return [null, -1];
   };
 
   /* ── the boxes ───────────────────────────────────────────────────────
@@ -125,6 +166,7 @@ export function createForming(root: HTMLElement): Forming {
   /** where each of the two lines stands, joined and parted */
   const joined = [0, 0], apart = [0, 0], heights = [0, 0];
   const size = () => {
+    sizedAt = `${innerWidth}x${innerHeight}`;
     const dpr = Math.min(devicePixelRatio || 1, 2);
     const pr = win.getBoundingClientRect();
     w = pr.width; h = pr.height;
@@ -195,12 +237,15 @@ export function createForming(root: HTMLElement): Forming {
     draw();
   };
   const draw = () => {
-    const im = nearest(shown);
+    const [im, at] = nearest(shown);
     if (!im || sw < 1) return;
+    drawn = at;
+    const iw = 'naturalWidth' in im ? im.naturalWidth : im.width;
+    const ih = 'naturalHeight' in im ? im.naturalHeight : im.height;
     ctx.clearRect(0, 0, sw, sh);
     // cover: the figure is centred in the frame, so a centred crop keeps her
-    const s = Math.max(sw / im.naturalWidth, sh / im.naturalHeight);
-    const dw = im.naturalWidth * s, dh = im.naturalHeight * s;
+    const s = Math.max(sw / iw, sh / ih);
+    const dw = iw * s, dh = ih * s;
     ctx.drawImage(im, (sw - dw) / 2, (sh - dh) / 2, dw, dh);
   };
 
@@ -307,7 +352,10 @@ export function createForming(root: HTMLElement): Forming {
     // own — only once the light has filled the screen, not while the nav
     // is still over the dark
     const ground = g >= 1 ? 'light' : 'dark';
-    if (root.dataset.theme !== ground) root.dataset.theme = ground;
+    if (root.dataset.theme !== ground) {
+      root.dataset.theme = ground;
+      root.toggleAttribute('data-open', g >= 1);
+    }
 
     /* She is seen only inside the light: the same circle, cut out of her
        slot, so it opens from our dot with her already standing in it. */
@@ -354,7 +402,12 @@ export function createForming(root: HTMLElement): Forming {
 
     // the frame
     const f = Math.round(ramp(p, T.play[0], T.play[1]) * (N - 1));
-    if (f !== shown) { shown = f; draw(); }
+    if (f !== shown) {
+      heading = f > shown ? 1 : -1;
+      shown = f;
+      draw();
+      if (warmed) plan();
+    }
 
     /* Her four steps, passing where the halves of the line stood: each rises
        through its own half circle — in towards her at the middle of the pass,
@@ -398,7 +451,17 @@ export function createForming(root: HTMLElement): Forming {
   const schedule = () => { if (!raf && live) raf = requestAnimationFrame(() => { raf = 0; update(); }); };
   const near = new IntersectionObserver(([e]) => { if (e.isIntersecting) { warm(); near.disconnect(); } },
                                         { rootMargin: '100% 0px' });
-  const seen = new IntersectionObserver(([e]) => { live = e.isIntersecting; if (live) { size(); update(); } });
+  /* measured again on the way back in only if the screen has changed size
+     since: each measure is several forced layouts and a new canvas, in the
+     middle of a scroll */
+  let sizedAt = '';
+  const seen = new IntersectionObserver(([e]) => {
+    live = e.isIntersecting;
+    if (!live) return;
+    if (sizedAt !== `${innerWidth}x${innerHeight}`) size();
+    update();
+  });
+  document.fonts?.ready.then(() => { size(); update(); });
   near.observe(root); seen.observe(root);
 
   /* Dev only, and stripped from a build: `?f=0.4` pins the pane and holds the
@@ -427,6 +490,8 @@ export function createForming(root: HTMLElement): Forming {
     destroy() {
       near.disconnect(); seen.disconnect();
       cancelAnimationFrame(raf);
+      gone = true; queue = [];
+      frames.forEach(release); frames.fill(null);
       removeEventListener('scroll', schedule);
       removeEventListener('resize', onResize);
     },
