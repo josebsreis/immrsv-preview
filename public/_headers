@@ -1,0 +1,33 @@
+# Cloudflare Pages: headers for every response, then how long each kind of
+# file may be kept. (GitHub Pages ignores this file.)
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  X-Frame-Options: SAMEORIGIN
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+# the build's scripts and styles carry a hash in their names: kept for a year
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# fonts and the figure's frames never change under the same name
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+/forming/*
+  Cache-Control: public, max-age=2592000
+/shapes/*
+  Cache-Control: public, max-age=2592000
+
+# pictures and clips shipped with the site (Sanity's come from its own CDN)
+/work/*
+  Cache-Control: public, max-age=604800
+/studios/*
+  Cache-Control: public, max-age=604800
+/brands/*
+  Cache-Control: public, max-age=604800
+/team/*
+  Cache-Control: public, max-age=604800
+/testimonials/*
+  Cache-Control: public, max-age=604800
