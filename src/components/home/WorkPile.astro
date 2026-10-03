@@ -96,7 +96,7 @@ const rings = RINGS.map((r, k) => {
                 <picture>
                   {p.cover!.avifSrcset && <source srcset={p.cover!.avifSrcset} sizes={SIZES} type="image/avif" />}
                   <img src={p.cover!.url} srcset={p.cover!.webpSrcset} sizes={SIZES}
-                       alt={p.cover!.alt ?? p.title} width={p.cover!.width} height={p.cover!.height}
+                       alt={p.cover!.alt && p.cover!.alt !== p.title ? p.cover!.alt : ''} width={p.cover!.width} height={p.cover!.height}
                        loading="lazy" draggable="false" />
                 </picture>
                 <!-- the shade over a card that is not on show: a flat layer
