@@ -5,7 +5,6 @@
  *  runs the media past; when it ends, the footer follows. */
 import Base from '@layouts/Base.astro';
 import Button from '@components/ui/Button.astro';
-import PortableText from '@components/ui/PortableText.astro';
 import { getProjects } from '@lib/sanity/queries';
 import type { Media, Project } from '@lib/sanity/types';
 
@@ -94,7 +93,6 @@ const turns = [
           </div>
         )}
 
-        {project.body.length > 0 && <div class="story"><PortableText blocks={project.body} /></div>}
       </div>
 
       <div class="foot">
@@ -276,7 +274,6 @@ const turns = [
   .a p { margin: 0; padding: 0 0 var(--s-5); font-size: var(--t-body); line-height: var(--lh-body);
          color: var(--ink-3); max-width: 40ch; }
 
-  .story { margin-top: var(--s-6); font-size: var(--t-small); color: var(--ink-2); }
 
   /* what is on offer at the foot: what was ours, and the thing itself */
   /* a project's buttons, side by side, wrapping on a narrow column */

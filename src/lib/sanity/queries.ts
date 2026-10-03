@@ -10,13 +10,11 @@ const projectFields = `{
   brief, whatWeDid, liveUrl, "links": coalesce(links[]{ label, url }, []),
   "services": coalesce(services, []),
   "cover": cover ${imageFields},
-  "gallery": coalesce(gallery[] ${imageFields}, []),
   "media": coalesce(media[]{
     _type,
     _type == "clip" => { "url": coalesce(file.asset->url, url), "poster": poster ${imageFields}, alt },
     _type == "image" => ${imageFields}
-  }, []),
-  "body": coalesce(body, [])
+  }, [])
 }`;
 
 const homeQuery = `*[_type == "home"][0]{
@@ -80,8 +78,7 @@ function mapMedia(raw: any): Media | undefined {
 
 function mapProject(raw: any): Project {
   const cover = mapImage(raw.cover);
-  const gallery = (raw.gallery ?? []).map((g: any) => mapImage(g)).filter(Boolean);
-  /* the Media field is the page; the old gallery stands in until it is filled */
+  /* the Media field is the page; a project with none shows its cover */
   const media: Media[] = (raw.media ?? []).map(mapMedia).filter(Boolean);
   return {
     _id: raw._id,
@@ -100,14 +97,14 @@ function mapProject(raw: any): Project {
       : raw.liveUrl ? [{ label: 'View live', url: raw.liveUrl }] : [],
     services: raw.services ?? [],
     cover,
-    gallery,
+    gallery: [],
     media: media.length
       ? media
-      : [cover, ...gallery].filter(Boolean).map((img: any) => ({
+      : [cover].filter(Boolean).map((img: any) => ({
           kind: 'image' as const, url: img.url, alt: img.alt,
           webpSrcset: img.webpSrcset, width: img.width, height: img.height,
         })),
-    body: raw.body ?? [],
+    body: [],
     featured: raw.featured,
   };
 }
