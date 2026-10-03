@@ -81,7 +81,8 @@ export const home = defineType({
           fields: [
             defineField({ name: 'name', type: 'string' }),
             defineField({ name: 'role', type: 'string', description: 'e.g. "Founder"' }),
-            defineField({ name: 'portrait', type: 'image', options: { hotspot: true }, description: 'Square works best. It is shown in black and white.' }),
+            defineField({ name: 'portrait', type: 'image', options: { hotspot: true }, description: 'Square works best. It is shown in black and white.',
+              fields: [defineField({ name: 'alt', type: 'string', title: 'Alt text', description: 'A few words on what the picture shows, for people who cannot see it.' })] }),
           ],
         }),
         // not on the page any more; kept so nothing written in it is lost
@@ -106,7 +107,8 @@ export const home = defineType({
             type: 'object',
             fields: [
               defineField({ name: 'name', title: 'Client', type: 'string' }),
-              defineField({ name: 'logo', type: 'image' }),
+              defineField({ name: 'logo', type: 'image',
+                fields: [defineField({ name: 'alt', type: 'string', title: 'Alt text', description: 'Usually just the client\'s name.' })] }),
             ],
             preview: { select: { title: 'name', media: 'logo' } },
           }],
