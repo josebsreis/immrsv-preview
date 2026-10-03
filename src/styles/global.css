@@ -127,24 +127,30 @@ p, li, dd, blockquote { text-wrap: pretty; }
   padding: var(--s-5);
 }
 
-/* Frosted glass — the nav's pills, the buttons, the studio filter: the
-   controls that float over whatever the page is showing. Two layers, and both
-   are needed: the veil is the page's own ground, which is what keeps a label
-   readable when it crosses a photograph, and the tint over it is what gives
-   the pill an edge against the plain page where the veil is invisible.
-   The saturate is the frosted part — a blur alone greys out the colour it is
-   standing on, and pulling it back is what makes it read as glass rather than
-   as fog. */
+/* Frosted glass — the buttons and the studio filter: the controls that
+   float over whatever the page is showing. Two layers, and both are needed:
+   the veil is the page's own ground, which is what keeps a label readable
+   when it crosses a photograph, and the tint over it is what gives the pill
+   an edge against the plain page where the veil is invisible.
+   The blur is only where there is something under it to blur — `.frost`:
+   over the hero's figure, the studios' pictures, the work the filter floats
+   over. On a flat ground it showed nothing and still cost a fresh blur of
+   whatever moved behind it, every frame, which Firefox, Safari and a
+   Windows laptop all felt. The saturate is the frosted part — a blur alone
+   greys out the colour it is standing on, and pulling it back is what makes
+   it read as glass rather than as fog. */
 .glass {
   background-color: var(--veil);
   background-image: linear-gradient(var(--glass), var(--glass));
+  border-radius: var(--radius);
+  transition: background var(--dur-fast) ease;
+}
+.glass.frost {
   /* prefix first, standard last: the build's minifier collapses the pair and
      keeps whichever it sees as the winner, and with the order the other way
      round it kept only -webkit-, which is no blur at all in Firefox */
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
   backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
-  border-radius: var(--radius);
-  transition: background var(--dur-fast) ease;
 }
 @media (hover: hover) and (pointer: fine) { .glass:hover { background-image: linear-gradient(var(--glass-hover), var(--glass-hover)); } }
 

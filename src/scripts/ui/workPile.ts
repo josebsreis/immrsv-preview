@@ -80,7 +80,7 @@ const MS = 600;
 const AMP = 1.2, PERIOD = 1;
 const PHASE = (PERIOD / (Math.PI * 2)) * Math.asin(1 / AMP);
 const elastic = (t: number) =>
-  t >= 1 ? 1 : AMP * 2 ** (-10 * t) * Math.sin((t - PHASE) * ((Math.PI * 2) / PERIOD)) + 1;
+  t <= 0 ? 0 : t >= 1 ? 1 : AMP * 2 ** (-10 * t) * Math.sin((t - PHASE) * ((Math.PI * 2) / PERIOD)) + 1;
 
 /* The stacking order travels with the move rather than being switched at
    its end: the card coming forward passes the one going back half-way
@@ -142,34 +142,91 @@ export function createWorkPile(root: HTMLElement): WorkPile {
   fitDial();
   document.fonts?.ready.then(fitDial);
   addEventListener('resize', fitDial);
+  /* The covers are fetched and decoded while the section is still a couple
+     of screens away. Lazy and decoded on demand, a card coming back from the
+     hidden edge could show its dark ground for a frame before its picture. */
+  const warmIo = new IntersectionObserver(([e]) => {
+    if (!e.isIntersecting) return;
+    warmIo.disconnect();
+    root.querySelectorAll<HTMLImageElement>('.media img').forEach((im) => {
+      im.loading = 'eager';
+      im.decode?.().catch(() => {});
+    });
+  }, { rootMargin: '200% 0px' });
+  warmIo.observe(root);
+
   let now: Pose[] = cards.map((_, i) => poseFor(offset(i, 0, n)));
   let from: Pose[] = now, to: Pose[] = now;
   let start = 0, raf = 0;
-  /** the card a throw is bringing to the middle, whose frame waits to open
-   *  until it is in front — opened at once it stood out white round a card
-   *  still behind the one it was replacing, a flash for the first half of
-   *  every throw */
-  let pending = -1;
-  const arrive = () => {
-    if (pending < 0) return;
-    cards[pending].dataset.pileStatus = 'active';
-    pending = -1;
+
+  /* What a card shows is read off where it is drawn, every frame — its
+     frame, its name and how dim its picture is — not switched by a class
+     and left to a CSS transition of its own. Two clocks drove one handover:
+     the stacking swapped some thirty milliseconds into a throw while the
+     frame of the card going back was still closing on its own half second,
+     so the card coming in cut most of a white frame away in one frame —
+     the flash. Read off the pose, the frame going back is gone before the
+     swap and the one coming in opens only once its card is in front, under
+     the hand as well as in a throw. */
+  const parts = cards.map((c) => ({
+    plate: c.querySelector<HTMLElement>('.plate'),
+    bar: c.querySelector<HTMLElement>('.bar'),
+    dim: c.querySelector<HTMLElement>('.dim'),
+  }));
+  /** what was last written, so a frame where nothing changed writes nothing */
+  const wrote = cards.map(() => new Map<string, string>());
+  const put = (i: number, el: HTMLElement | null, prop: string, v: string) => {
+    if (!el) return;
+    const key = prop + (el === cards[i] ? '' : el.className);
+    if (wrote[i].get(key) === v) return;
+    wrote[i].set(key, v);
+    el.style.setProperty(prop, v);
+  };
+  const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+  /** The frame is open within a fifth of a step of the middle and gone by
+   *  three-eighths — before the stacking swaps, at a half — and only on a
+   *  card drawn near its full size: a card two over crosses the middle on
+   *  its way, small and behind, and must not open as it passes. */
+  const frameAt = (p: Pose) => Math.min(clamp01((12 - Math.abs(p.x)) / 6), clamp01((p.s - 0.86) / 0.08));
+  const paint = (i: number) => {
+    const card = cards[i], p = now[i], f = frameAt(p);
+    put(i, card, 'transform', transformOf(p));
+    put(i, card, 'opacity', p.o.toFixed(3));
+    put(i, card, 'z-index', String(p.z));
+    const { plate, bar, dim } = parts[i];
+    put(i, plate, 'opacity', f.toFixed(3));
+    put(i, plate, 'transform', `scale(${(0.96 + 0.04 * f).toFixed(4)})`);
+    // the name and the studio a beat behind the frame
+    put(i, bar, 'opacity', Math.min(f, clamp01((9 - Math.abs(p.x)) / 4)).toFixed(3));
+    // by how far the card has shrunk: a quarter darker one step out, half by two
+    put(i, dim, 'opacity', Math.min(0.5, ((1 - p.s) / 0.22) * 0.25).toFixed(3));
   };
 
-  const paint = (i: number) => {
-    const card = cards[i], p = now[i];
-    card.style.transform = transformOf(p);
-    card.style.opacity = p.o.toFixed(3);
-    card.style.zIndex = String(p.z);
+  /* In a throw the stacking follows what is drawn: the larger card in front.
+     Taken from the move's progress instead, a throw two cards over tied
+     three of them for a few frames and let the order of the list decide —
+     the wrong picture on top, then a jump. The card that was in front when
+     the throw began keeps the front until it is passed, so a short throw
+     settling back, or one let go after the hand had already swapped them,
+     cannot flip twice. */
+  let keep = -1;
+  const rankZ = () => {
+    const order = now.map((_, i) => i).sort((a, b) =>
+      Number(b === keep) - Number(a === keep) || now[b].s - now[a].s
+      || Math.abs(now[a].x) - Math.abs(now[b].x) || a - b);
+    order.forEach((i, r) => { now[i] = { ...now[i], z: Math.max(2, 5 - r) }; });
   };
 
   function tick(t: number) {
     raf = 0;
-    const k = Math.min(1, (t - start) / MS);
+    // a throw's first frame can be stamped a moment before the throw itself;
+    // read as a negative time, the ease ran backwards for that frame
+    const k = Math.max(0, Math.min(1, (t - start) / MS));
     const e = elastic(k);
-    // past the middle of the move the card coming in is in front: its frame opens
-    if (e >= 0.5) arrive();
     now = cards.map((_, i) => mix(from[i], to[i], e));
+    // the kept card holds the front only until the card coming in is larger
+    if (keep >= 0 && keep !== at && now[at].s > now[keep].s) keep = -1;
+    rankZ();
     cards.forEach((_, i) => paint(i));
     if (k < 1) raf = requestAnimationFrame(tick);
   }
@@ -177,14 +234,14 @@ export function createWorkPile(root: HTMLElement): WorkPile {
   /** lay the pile out around card `index`, from wherever the cards are now */
   function settle(index: number) {
     const target = ((index % n) + n) % n;
-    const by = offset(target, at, n);
+    // whichever card is in front as the move begins
+    keep = now.reduce((b, p, i) => (p.z >= now[b].z ? i : b), 0);
     at = target;
-    pending = -1;
     cards.forEach((card, i) => {
       const d = offset(i, at, n);
-      // the one thrown to the middle is 'near' until it gets there
-      if (d === 0 && by) { card.dataset.pileStatus = 'near'; pending = i; }
-      else card.dataset.pileStatus = statusFor(d);
+      // the status no longer draws anything moving: it says which card can
+      // be pressed and reached, at once
+      card.dataset.pileStatus = statusFor(d);
       // only the card on show can be reached from the keyboard: the others
       // are brought to the middle first
       card.querySelectorAll<HTMLElement>('a').forEach((a) => a.setAttribute('tabindex', d === 0 ? '0' : '-1'));
@@ -198,7 +255,6 @@ export function createWorkPile(root: HTMLElement): WorkPile {
     if (still || document.visibilityState !== 'visible') {
       now = to;
       cards.forEach((_, i) => paint(i));
-      arrive();
       return;
     }
     start = performance.now();
@@ -215,23 +271,36 @@ export function createWorkPile(root: HTMLElement): WorkPile {
      it was still landing from the last throw jumped from mid-flight to its
      rest poses in one frame; followed, it is simply caught where it is. And
      a pointer never holds still, so every tremor of the hand was a tremor of
-     the pile; followed, it is smoothed out. */
-  const FOLLOW = still ? 1 : 0.3;
-  let aim: Pose[] | null = null, followRaf = 0;
-  const follow = () => {
+     the pile; followed, it is smoothed out.
+     The closing is by time, not a share a frame: a share a frame trailed
+     twice as far behind the hand on a 60Hz screen as on a 120Hz one, and
+     further with every frame dropped — the pile felt heaviest exactly where
+     the machine was slowest. Once the cards have caught up the loop rests
+     until the hand moves again. */
+  const TAU = 0.023;              // s: what 0.3 a frame was at 120Hz
+  let aim: Pose[] | null = null, followRaf = 0, followLast = 0;
+  const follow = (t: number) => {
     followRaf = 0;
     if (!aim) return;
+    const dt = followLast ? Math.min(0.05, (t - followLast) / 1000) : 1 / 60;
+    followLast = t;
+    const F = still ? 1 : 1 - Math.exp(-dt / TAU);
     const a = aim;
-    now = now.map((p, i) => ({
-      x: p.x + (a[i].x - p.x) * FOLLOW, y: p.y + (a[i].y - p.y) * FOLLOW,
-      rot: p.rot + (a[i].rot - p.rot) * FOLLOW, s: p.s + (a[i].s - p.s) * FOLLOW,
-      o: p.o + (a[i].o - p.o) * FOLLOW,
-      // the order is not eased: a stacking order is whole numbers, and one
-      // half-way between two of them is just noise
-      z: a[i].z,
-    }));
+    let gap = 0;
+    now = now.map((p, i) => {
+      gap = Math.max(gap, Math.abs(a[i].x - p.x), Math.abs(a[i].rot - p.rot), Math.abs(a[i].s - p.s) * 100);
+      return {
+        x: p.x + (a[i].x - p.x) * F, y: p.y + (a[i].y - p.y) * F,
+        rot: p.rot + (a[i].rot - p.rot) * F, s: p.s + (a[i].s - p.s) * F,
+        o: p.o + (a[i].o - p.o) * F,
+        // the order is not eased: a stacking order is whole numbers, and one
+        // half-way between two of them is just noise
+        z: a[i].z,
+      };
+    });
     cards.forEach((_, i) => paint(i));
-    followRaf = requestAnimationFrame(follow);
+    if (gap > 0.01) followRaf = requestAnimationFrame(follow);
+    else followLast = 0;
   };
   /* Which card is in front swaps in the middle of a drag, where the two
      overlap most — so a hand resting near the middle flipped it back and
@@ -281,7 +350,7 @@ export function createWorkPile(root: HTMLElement): WorkPile {
       const a = poseFor(offset(i, at, n)), b = poseFor(offset(i, next, n));
       return { ...mix(a, b, k), z: front ? b.z : a.z };
     });
-    if (!followRaf) followRaf = requestAnimationFrame(follow);
+    if (!followRaf) { followLast = 0; followRaf = requestAnimationFrame(follow); }
   };
 
   const onUp = () => {
@@ -290,7 +359,7 @@ export function createWorkPile(root: HTMLElement): WorkPile {
     delete root.dataset.drag;
     // the hand has let go: nothing to follow, and the throw takes over from
     // wherever the cards have got to
-    aim = null; cancelAnimationFrame(followRaf); followRaf = 0;
+    aim = null; cancelAnimationFrame(followRaf); followRaf = 0; followLast = 0;
     if (axis !== 'x') return;
     const raw = dx / width;
     settle(at + (raw > THRESHOLD ? -1 : raw < -THRESHOLD ? 1 : 0));
@@ -331,7 +400,7 @@ export function createWorkPile(root: HTMLElement): WorkPile {
 
   return {
     destroy() {
-      cancelAnimationFrame(raf); cancelAnimationFrame(followRaf);
+      cancelAnimationFrame(raf); cancelAnimationFrame(followRaf); warmIo.disconnect();
       removeEventListener('resize', fitDial);
       list.removeEventListener('pointerdown', onDown);
       removeEventListener('pointermove', onMove);

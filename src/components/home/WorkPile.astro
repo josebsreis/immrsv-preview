@@ -97,8 +97,11 @@ const rings = RINGS.map((r, k) => {
                   {p.cover!.avifSrcset && <source srcset={p.cover!.avifSrcset} sizes={SIZES} type="image/avif" />}
                   <img src={p.cover!.url} srcset={p.cover!.webpSrcset} sizes={SIZES}
                        alt={p.cover!.alt ?? p.title} width={p.cover!.width} height={p.cover!.height}
-                       loading="lazy" decoding="async" draggable="false" />
+                       loading="lazy" draggable="false" />
                 </picture>
+                <!-- the shade over a card that is not on show: a flat layer
+                     faded over the picture, never the picture itself fading -->
+                <i class="dim" aria-hidden="true"></i>
               </div>
             </a>
           </li>
@@ -153,15 +156,15 @@ const rings = RINGS.map((r, k) => {
      way, so its rings leave the section rather than end inside it. It fades
      out towards its edge, where it would otherwise stop on the section's
      border as a hard line. It stands still: turning, it was drawn again
-     every frame, and that was the pile's weight outside Chrome. */
+     every frame, and that was the pile's weight outside Chrome. (It had a
+     fading mask too, which hid nothing — the ticks end well inside where
+     the fade began — and doubled the cost in Firefox.) */
   .dial { position: absolute; left: 50%; top: calc(var(--card-w) * 0.3125);
           /* the page caps pictures at their column; this one is meant to
              run off the screen, so it is let out of that */
           width: 200vmax; height: 200vmax; max-width: none; translate: -50% -50%;
           pointer-events: none;
-          fill: none; stroke: var(--ink-dim); stroke-width: 1;
-          -webkit-mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
-          mask-image: radial-gradient(closest-side, #000 62%, transparent 100%); }
+          fill: none; stroke: var(--ink-dim); stroke-width: 1; }
   .ring { vector-effect: non-scaling-stroke; }
 
   .list { position: relative; list-style: none; display: grid; justify-items: center;
@@ -184,35 +187,37 @@ const rings = RINGS.map((r, k) => {
            border-radius: var(--radius-media); background: var(--surface); }
   .link { display: block; color: inherit; }
   .media img { width: 100%; height: 100%; object-fit: cover; pointer-events: none;
-               -webkit-user-drag: none; opacity: 0.5;
-               transition: opacity var(--dur-fast) ease, scale var(--dur-base) var(--ease-panel); }
-  .card[data-pile-status="near"] .media img { opacity: 0.75; }
-  .card[data-pile-status="active"] .media img { opacity: 1; }
+               -webkit-user-drag: none;
+               transition: scale var(--dur-base) var(--ease-panel); }
+  /* The shade: the card's own ground, laid over the picture and faded by
+     the script from where the card is drawn — clear in the middle, a
+     quarter one step out, half beyond. It was the picture's own opacity on
+     a transition, which put every picture on a layer of its own at the
+     start of a throw and took it off again at the end: a redraw of each one
+     in the fastest frames of the move. On its own layer from the start, a
+     change of shade redraws nothing. These are its values before the
+     script is running. */
+  .dim { position: absolute; inset: 0; background: var(--surface); pointer-events: none;
+         opacity: 0.5; will-change: opacity; }
+  .card[data-pile-status="near"] .dim { opacity: 0.25; }
+  .card[data-pile-status="active"] .dim { opacity: 0; }
 
   /* The frame. The plate is larger than the picture by the frame on three
-     sides and by the foot on the fourth, and sits under it; a clip holds it
-     to the picture's own edge, where it cannot be seen, until the card is
-     the one on show — and then it opens out from under it. The clip takes
-     the clicks with it, so a closed plate's button cannot be pressed. */
+     sides and by the foot on the fourth, and sits under it. It is opened by
+     the script from where the card is drawn: it fades and grows out from
+     under the picture as the card comes to the middle, and is gone before
+     a card coming in can pass in front of it. Closed, it is at nothing
+     rather than clipped down — a clip left a hairline of white at the
+     rounded corners whenever the card moved — and it is on its own layer
+     from the start, so neither its fade nor its growth redraws anything,
+     and no layer is made or unmade in the middle of a throw. A closed
+     plate takes no clicks. These are its values before the script runs. */
   .plate { position: absolute;
            inset: calc(var(--frame) * -1) calc(var(--frame) * -1) calc(var(--foot) * -1);
            background: var(--surface); border-radius: var(--radius-media);
-           /* Closed, it is clipped inside the picture's edge — and it is also
-              not there: opacity 0 and hidden. A clip alone left a hairline of
-              white at the rounded corners whenever the card's scale and turn
-              put the two edges on different pixels, which is any time it
-              moved. It fades as it closes and comes up as it opens, so the
-              opening from under the picture still reads. */
-           clip-path: inset(calc(var(--frame) + 1px) calc(var(--frame) + 1px) calc(var(--foot) + 1px) calc(var(--frame) + 1px) round var(--radius-media));
-           opacity: 0; visibility: hidden;
-           /* on its own layer while it is shown (hidden, it has none), so a
-              clip and a fade running under a card that is itself moving are
-              not repainted into the card's picture every frame */
-           will-change: clip-path, opacity; backface-visibility: hidden;
-           transition: clip-path var(--dur-base) var(--ease-panel), opacity var(--dur-base) var(--ease-panel),
-                       visibility 0s linear var(--dur-base); }
-  .card[data-pile-status="active"] .plate { clip-path: inset(0 round var(--radius-media));
-                                            opacity: 1; visibility: visible; transition-delay: 0s; }
+           opacity: 0; transform: scale(0.96); will-change: opacity, transform;
+           pointer-events: none; }
+  .card[data-pile-status="active"] .plate { opacity: 1; transform: none; pointer-events: auto; }
 
   .bar { position: absolute; left: 0; right: 0; bottom: 0; height: var(--foot);
          display: flex; align-items: center; justify-content: space-between;
@@ -221,15 +226,17 @@ const rings = RINGS.map((r, k) => {
   .name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
           font-size: var(--t-lead); font-weight: var(--w-display);
           letter-spacing: var(--track-display); color: var(--ink); }
-  /* the name and the studio fade in once the frame has opened, a beat behind it */
-  .bar > * { opacity: 0; transition: opacity 0.4s var(--ease-snap); }
-  .card[data-pile-status="active"] .bar > * { opacity: 1;
-                                                            transition-delay: 0.08s; }
+  /* the name and the studio, a beat behind the frame — faded by the script,
+     as one layer */
+  .bar { opacity: 0; will-change: opacity; }
+  .card[data-pile-status="active"] .bar { opacity: 1; }
 
   /* With no button on it, the card has to say it can be pressed: the picture
      eases in a touch under the pointer, inside a frame that holds still. */
   @media (hover: hover) and (pointer: fine) {
-    .card[data-pile-status="active"] .link:hover .media img { scale: 1.03; }
+    /* not while it is being dragged: the pointer held on it swaps what is
+       under it, and the picture eased out and in again mid-throw */
+    .pile:not([data-drag]) .card[data-pile-status="active"] .link:hover .media img { scale: 1.03; }
   }
 
   .more { position: absolute; left: 0; right: 0; bottom: calc(var(--page-y) + var(--s-6));
@@ -245,7 +252,7 @@ const rings = RINGS.map((r, k) => {
     .name { font-size: var(--t-body); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .plate, .bar > *, .media img { transition: none; }
+    .media img { transition: none; }
   }
   /* the section's name steps down a size only on a phone: a tablet has the
      width for it at full size, stacked */

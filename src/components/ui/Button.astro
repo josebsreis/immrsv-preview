@@ -5,10 +5,12 @@
  *  the label for the character split; `data-tap` gives it the hover sound. */
 interface Props { href: string; label: string; class?: string;
   /** the whole width of its column — a slab rather than a pill */
-  wide?: boolean; }
-const { href, label, class: cls, wide = false } = Astro.props;
+  wide?: boolean;
+  /** blurs what is behind it — only where that is a picture, not a flat ground */
+  frost?: boolean; }
+const { href, label, class: cls, wide = false, frost = false } = Astro.props;
 ---
-<a class:list={['btn', 'glass', cls, { wide }]} href={href} data-tap data-dhover-item data-axis="x">
+<a class:list={['btn', 'glass', cls, { wide, frost }]} href={href} data-tap data-dhover-item data-axis="x">
   <span class="tile" data-dhover-tile aria-hidden="true"></span>
   <i class="sq" aria-hidden="true"></i>
   <b data-split>{label}</b>
