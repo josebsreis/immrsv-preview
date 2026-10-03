@@ -1,7 +1,12 @@
 /* The guide that opens first in the Studio: how the site is edited, in the
    words of the person editing it. Plain text and nothing to configure, so it
-   cannot drift out of step with a setting somewhere. */
-import { Box, Card, Heading, Stack, Text } from '@sanity/ui';
+   cannot drift out of step with a setting somewhere.
+
+   Laid out by hand rather than with the Studio's stacks: those set the
+   lines tight and the sections loose in a way that read as one block. Here
+   it is a reading column — a comfortable measure, an easy line height, air
+   between the points and more between the sections — and the pane scrolls. */
+import type { CSSProperties } from 'react';
 
 const sections: [string, string[]][] = [
   ['Publishing', [
@@ -35,21 +40,35 @@ const sections: [string, string[]][] = [
   ]],
 ];
 
+const css: Record<string, CSSProperties> = {
+  pane: { height: '100%', overflowY: 'auto', boxSizing: 'border-box', padding: '40px 32px 64px',
+          color: 'var(--card-fg-color)', fontFamily: 'var(--font-family-base, system-ui, sans-serif)' },
+  column: { maxWidth: 640, margin: '0 auto' },
+  title: { margin: '0 0 8px', fontSize: 26, lineHeight: 1.25, fontWeight: 600 },
+  intro: { margin: '0 0 40px', fontSize: 15, lineHeight: 1.6, opacity: 0.7 },
+  section: { margin: '0 0 36px', paddingTop: 24, borderTop: '1px solid var(--card-border-color, rgba(128,128,128,.25))' },
+  heading: { margin: '0 0 14px', fontSize: 17, lineHeight: 1.3, fontWeight: 600 },
+  list: { margin: 0, paddingLeft: 20, display: 'grid', gap: 12 },
+  item: { fontSize: 15, lineHeight: 1.65 },
+  foot: { marginTop: 48, fontSize: 13, lineHeight: 1.6, opacity: 0.6 },
+};
+
 export function Help() {
   return (
-    <Box padding={5} style={{ maxWidth: 720 }}>
-      <Stack space={5}>
-        <Heading size={3}>How to edit the IMMRSV website</Heading>
+    <div style={css.pane}>
+      <div style={css.column}>
+        <h1 style={css.title}>How to edit the IMMRSV website</h1>
+        <p style={css.intro}>Everything on the site that can be changed is in the list on the left. This page is the short version of how.</p>
         {sections.map(([title, lines]) => (
-          <Card key={title} padding={4} radius={2} shadow={1}>
-            <Stack space={4}>
-              <Heading size={1}>{title}</Heading>
-              {lines.map((l, i) => <Text key={i} size={2} muted={false}>{l}</Text>)}
-            </Stack>
-          </Card>
+          <section key={title} style={css.section}>
+            <h2 style={css.heading}>{title}</h2>
+            <ul style={css.list}>
+              {lines.map((l, i) => <li key={i} style={css.item}>{l}</li>)}
+            </ul>
+          </section>
         ))}
-        <Text size={1} muted>The address of this editor is immrsv.studio/admin (or immrsv.sanity.studio).</Text>
-      </Stack>
-    </Box>
+        <p style={css.foot}>This editor opens at immrsv.studio/admin, or immrsv.sanity.studio.</p>
+      </div>
+    </div>
   );
 }
