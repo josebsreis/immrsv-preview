@@ -6,7 +6,7 @@ import { getProjects, getWorkPage } from '@lib/sanity/queries';
 const projects = await getProjects();
 const page = await getWorkPage();
 ---
-<Base theme="light" title="Work" description={page.description}>
+<Base theme="light" title={page.title} seo={page.seo}>
   <main class="page" data-page="work">
     <header class="head">
       <h1>{page.title}</h1>

@@ -7,10 +7,24 @@ import Nav from '@components/layout/Nav.astro';
 import Footer from '@components/layout/Footer.astro';
 import { site } from '@lib/site';
 import { getSettings } from '@lib/sanity/queries';
+import type { Seo } from '@lib/sanity/types';
+import { clip } from '@lib/seo';
 
 interface Props {
+  /** the page's name; the title becomes "<name> | IMMRSV" */
   title?: string;
+  /** the page's own words for search and sharing, worked out by the page */
   description?: string;
+  /** the page's own picture for a shared link, 1200 × 630, absolute or root-relative */
+  image?: string;
+  /** what was written in the Studio's Search & sharing: it wins, part by part */
+  seo?: Seo;
+  /** a project is an article to a link preview; everything else a website */
+  type?: 'website' | 'article';
+  /** structured data for search engines, as plain objects */
+  jsonLd?: object[];
+  /** kept out of search engines whatever the Studio says (the lab pages) */
+  noIndex?: boolean;
   /** the page's starting theme; sections can override with their own data-theme */
   theme?: 'dark' | 'light';
   /** hide the shared nav (a page that renders its own) */
@@ -18,10 +32,20 @@ interface Props {
   noFooter?: boolean;
 }
 const settings = await getSettings();
-const { title, description: own, theme = 'dark', noNav = false, noFooter = false } = Astro.props;
-/* a page's own words for search and sharing, or the site's */
-const description = own || settings.description;
-const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | Designing the future of experience`;
+const { title, description: own, image: ownImage, seo, type = 'website', jsonLd = [], noIndex: forced,
+        theme = 'dark', noNav = false, noFooter = false } = Astro.props;
+
+/* Each part: what the Studio says, else what the page worked out, else the
+   site's own. */
+const fullTitle = seo?.title
+  || (title ? `${title} | ${site.name}` : `${site.name} | Designing the future of experience`);
+const description = clip(seo?.description || own || settings.description) ?? '';
+const absolute = (u: string) => new URL(u, Astro.site).href;
+const image = absolute(seo?.image || ownImage || settings.shareImage || '/og.jpg');
+/* the address this page is known by: the real domain, never a preview's */
+const canonical = absolute(Astro.url.pathname);
+/* a preview build is kept out of search engines entirely */
+const hidden = forced || seo?.noIndex || import.meta.env.PUBLIC_NOINDEX === '1';
 ---
 <!doctype html>
 <html lang="en" data-theme={theme}>
@@ -30,8 +54,24 @@ const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | Designing 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {hidden && <meta name="robots" content="noindex, nofollow" />}
+    <!-- the link preview: messages, social posts, Slack -->
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonical} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} />
+    <link rel="sitemap" href="/sitemap.xml" />
+    {jsonLd.map((d) => <script type="application/ld+json" set:html={JSON.stringify(d)} />)}
     <meta name="theme-color" content={theme === 'dark' ? '#060606' : '#ffffff'} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <!-- the one file the page is set in: fetched alongside the CSS rather

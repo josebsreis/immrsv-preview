@@ -259,11 +259,11 @@ export const home = defineType({
     }),
 
     defineField({
-      name: 'description',
-      title: 'Description for search and sharing',
-      type: 'text', rows: 2, group: 'seo',
-      description: 'The line Google shows under the site\'s name, and the one shown when the link is shared. Leave empty to use the one in Menu & footer.',
+      name: 'seo', title: 'Search & sharing', type: 'seo', group: 'seo',
+      description: 'Everything here fills itself in: the title is "IMMRSV | Designing the future of experience", the description and picture are the ones in Menu & footer. Change them only to say something different for the homepage.',
     }),
+    // replaced by Search & sharing; kept so nothing written in it is lost
+    defineField({ name: 'description', type: 'text', hidden: true }),
 
     // a section that is no longer on the page; kept so nothing written in it is lost
     defineField({

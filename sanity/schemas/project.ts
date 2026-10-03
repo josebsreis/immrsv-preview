@@ -22,6 +22,7 @@ export const project = defineType({
     { name: 'text', title: 'Text' },
     { name: 'media', title: 'Pictures & video' },
     { name: 'links', title: 'Buttons' },
+    { name: 'seo', title: 'Search & sharing' },
   ],
   fields: [
     // the place in the Projects list, set by dragging there
@@ -124,6 +125,10 @@ export const project = defineType({
         ],
         preview: { select: { title: 'label', subtitle: 'url' } },
       }],
+    }),
+    defineField({
+      name: 'seo', title: 'Search & sharing', type: 'seo', group: 'seo',
+      description: 'Fills itself in: the title is the project\'s name, the description is its line under the title (or the start of The brief), the picture is its cover. Change any of them only if the automatic one is not right.',
     }),
     defineField({ name: 'liveUrl', title: 'Live link (old)', type: 'url', group: 'links', hidden: ({ value }) => !value,
       description: 'Replaced by Buttons above. Still shown as a "View live" button until Buttons is filled in.' }),

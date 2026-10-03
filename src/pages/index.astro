@@ -9,12 +9,30 @@ import Testimonials from '@components/home/Testimonials.astro';
 import Faqs from '@components/home/Faqs.astro';
 import WorkPile from '@components/home/WorkPile.astro';
 import Brands from '@components/home/Brands.astro';
-import { getHome, getProjects } from '@lib/sanity/queries';
+import { getHome, getProjects, getSettings } from '@lib/sanity/queries';
+import { site } from '@lib/site';
 
 const home = await getHome();
 const projects = await getProjects();
+const settings = await getSettings();
+
+/* who the site belongs to, for search engines: the name, how to reach it,
+   where it is, and the accounts that are really its own (a link to a
+   network's front page is a placeholder, not an account) */
+const url = Astro.site!.href;
+const accounts = settings.social.map((s) => s.url).filter((u) => { try { return new URL(u).pathname.length > 1; } catch { return false; } });
+const jsonLd = [
+  {
+    '@context': 'https://schema.org', '@type': 'Organization',
+    name: site.name, url, logo: new URL('/favicon.svg', url).href,
+    email: settings.email, telephone: settings.phone,
+    address: { '@type': 'PostalAddress', addressLocality: 'Los Angeles', addressRegion: 'CA', addressCountry: 'US' },
+    ...(accounts.length ? { sameAs: accounts } : {}),
+  },
+  { '@context': 'https://schema.org', '@type': 'WebSite', name: site.name, url },
+];
 ---
-<Base theme="dark" description={home.description}>
+<Base theme="dark" seo={home.seo} jsonLd={jsonLd}>
   <main class="main" data-page="home">
     <div class="dark" data-hold>
       <Hero content={home.hero} />

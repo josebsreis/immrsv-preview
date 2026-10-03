@@ -1,13 +1,14 @@
-import { sanity, imageUrl, imageSrcset } from './client';
-import type { HomeContent, Project, ImageRef, Media, Settings, WorkPage, LegalPage } from './types';
+import { sanity, imageUrl, imageSrcset, shareImageUrl } from './client';
+import type { HomeContent, Project, ImageRef, Media, Settings, WorkPage, LegalPage, Seo } from './types';
 import { defaultHome, defaultProjects, defaultSettings, defaultWorkPage } from '@/content/defaults';
 
 /* ── GROQ ──────────────────────────────────────────────────────────── */
+const seoFields = `seo{ title, description, noIndex, image }`;
 const imageFields = `{ asset, alt, "lqip": asset->metadata.lqip, "width": asset->metadata.dimensions.width, "height": asset->metadata.dimensions.height }`;
 
 const projectFields = `{
   _id, title, "slug": slug.current, studios, summary,
-  brief, whatWeDid, liveUrl, "links": coalesce(links[]{ label, url }, []),
+  brief, whatWeDid, liveUrl, "links": coalesce(links[]{ label, url }, []), ${seoFields}, "coverRaw": cover,
   "services": coalesce(services, []),
   "cover": cover ${imageFields},
   "media": coalesce(media[]{
@@ -18,7 +19,7 @@ const projectFields = `{
 }`;
 
 const homeQuery = `*[_type == "home"][0]{
-  description,
+  ${seoFields}, description,
   hero{ headline, words, description, primaryCta, secondaryCta },
   about{ tag, statement, lead, stats, founder{ name, role, "portrait": portrait ${imageFields} } },
   studios{ tag, kicker, title, intro, "items": items[]{ key, name, promise, description, services,
@@ -32,11 +33,23 @@ const homeQuery = `*[_type == "home"][0]{
 }`;
 
 const settingsQuery = `*[_id == "settings"][0]{
-  "nav": coalesce(nav[]{ label, href }, []), description, contact{ email, phone },
+  "nav": coalesce(nav[]{ label, href }, []), description, shareImage, contact{ email, phone },
   footer{ words, "buttons": coalesce(buttons[]{ label, href }, []), location, city, "social": coalesce(social[]{ label, url }, []) }
 }`;
-const workPageQuery = `*[_id == "workPage"][0]{ title, description, empty }`;
-const legalQuery = `*[_id == $id][0]{ title, updated, description, "body": coalesce(body, []) }`;
+const workPageQuery = `*[_id == "workPage"][0]{ title, empty, ${seoFields}, description }`;
+const legalQuery = `*[_id == $id][0]{ title, updated, ${seoFields}, description, "body": coalesce(body, []) }`;
+
+/** only the parts someone wrote; the picture cropped for a link preview.
+ *  An older plain description, from before these fields, still counts. */
+function mapSeo(raw: any, legacyDescription?: string): Seo | undefined {
+  const s: Seo = {
+    title: raw?.title || undefined,
+    description: raw?.description || legacyDescription || undefined,
+    image: shareImageUrl(raw?.image),
+    noIndex: raw?.noIndex || undefined,
+  };
+  return Object.values(s).some(Boolean) ? s : undefined;
+}
 
 /* in the order they are dragged into in the Studio's Projects list */
 const projectsQuery = `*[_type == "project"] | order(orderRank asc) ${projectFields}`;
@@ -91,6 +104,8 @@ function mapProject(raw: any): Project {
     whatWeDid: raw.whatWeDid,
     /* the buttons; a project from before them that only has the old live
        link keeps it, as it was shown */
+    shareImage: shareImageUrl(raw.coverRaw),
+    seo: mapSeo(raw.seo),
     links: (raw.links ?? []).filter((l: any) => l?.label && l?.url).length
       ? raw.links.filter((l: any) => l?.label && l?.url)
       : raw.liveUrl ? [{ label: 'View live', url: raw.liveUrl }] : [],
@@ -135,7 +150,7 @@ export async function getHome(): Promise<HomeContent> {
       return out;
     };
     return {
-      description: raw.description || undefined,
+      seo: mapSeo(raw.seo, raw.description),
       team: { ...keep(defaultHome.team, { lead: team.lead, tail: team.tail, note: team.note }),
               steps: steps.length ? steps : defaultHome.team.steps },
       hero: { ...defaultHome.hero, ...raw.hero },
@@ -223,6 +238,7 @@ export function getSettings(): Promise<Settings> {
         location: f.location || defaultSettings.location,
         city: f.city || defaultSettings.city,
         social: list(f.social?.filter((x: any) => x?.label && x?.url), defaultSettings.social),
+        shareImage: shareImageUrl(raw.shareImage),
       };
     } catch (e) {
       console.warn('[sanity] settings fetch failed, using defaults', e);
@@ -238,8 +254,8 @@ export async function getWorkPage(): Promise<WorkPage> {
     const raw = await sanity.fetch(workPageQuery);
     return {
       title: raw?.title || defaultWorkPage.title,
-      description: raw?.description || undefined,
       empty: raw?.empty || defaultWorkPage.empty,
+      seo: mapSeo(raw?.seo, raw?.description),
     };
   } catch (e) {
     console.warn('[sanity] work page fetch failed, using defaults', e);
@@ -253,7 +269,9 @@ export async function getLegal(id: 'privacy' | 'terms'): Promise<LegalPage | und
   if (!sanity) return undefined;
   try {
     const raw = await sanity.fetch(legalQuery, { id });
-    return raw?.body?.length ? raw : undefined;
+    return raw?.body?.length
+      ? { title: raw.title, updated: raw.updated, body: raw.body, seo: mapSeo(raw.seo, raw.description) }
+      : undefined;
   } catch (e) {
     console.warn('[sanity] legal fetch failed', e);
     return undefined;

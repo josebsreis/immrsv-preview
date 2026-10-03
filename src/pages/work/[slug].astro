@@ -28,6 +28,30 @@ export async function getStaticPaths() {
 const { project, prev, next, index, total } = Astro.props as
   { project: Project; prev: Project; next: Project; index: number; total: number };
 const pad = (n: number) => String(n).padStart(2, '0');
+
+/* for search and sharing: the line under its title, or the start of the
+   brief; its cover, cropped for a link preview; and what it is, for search
+   engines — a piece of work by IMMRSV, filed under Work */
+const description = project.summary || project.brief;
+const shareImage = project.shareImage || project.cover?.url;
+const here = new URL(`/work/${project.slug}`, Astro.site).href;
+const jsonLd = [
+  {
+    '@context': 'https://schema.org', '@type': 'CreativeWork',
+    name: project.title, url: here,
+    ...(description ? { description } : {}),
+    ...(shareImage ? { image: new URL(shareImage, Astro.site).href } : {}),
+    creator: { '@type': 'Organization', name: 'IMMRSV', url: Astro.site!.href },
+  },
+  {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site!.href },
+      { '@type': 'ListItem', position: 2, name: 'Work', item: new URL('/work', Astro.site).href },
+      { '@type': 'ListItem', position: 3, name: project.title, item: here },
+    ],
+  },
+];
 /** the media list, or the stills we have if a project never got one */
 const media: Media[] = project.media.length
   ? project.media
@@ -48,7 +72,8 @@ const turns = [
   project.whatWeDid && { key: 'did', label: 'What we did', body: project.whatWeDid },
 ].filter(Boolean) as { key: string; label: string; body: string }[];
 ---
-<Base theme="light" title={project.title} description={project.summary}>
+<Base theme="light" title={project.title} description={description} image={shareImage}
+      seo={project.seo} type="article" jsonLd={jsonLd}>
   <main class="project" data-page="project">
     <!-- the written half: fixed, and the only place the page is left from -->
     <aside class="side">

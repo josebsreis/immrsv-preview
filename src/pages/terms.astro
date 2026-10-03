@@ -5,7 +5,7 @@ import { getLegal } from '@lib/sanity/queries';
 const cms = await getLegal('terms');
 ---
 <LegalPage title={cms?.title ?? "Terms of use"} updated={cms?.updated ?? "15 September 2026"}
-           description={cms?.description ?? "The terms that apply to using the IMMRSV website."} body={cms?.body}>
+           description={"The terms that apply to using the IMMRSV website."} body={cms?.body} seo={cms?.seo}>
   <p>By using this website you agree to these terms. If you do not agree, please do not use the site.</p>
 
   <h2>The content</h2>

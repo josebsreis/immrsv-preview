@@ -12,7 +12,9 @@ export const workPage = defineType({
   fields: [
     defineField({ name: 'title', title: 'Heading', type: 'string', description: 'e.g. "Selected works"' }),
     defineField({ name: 'empty', title: 'When a studio has no work yet', type: 'string', description: 'Shown when a filter has nothing in it, e.g. "Nothing in this studio yet."' }),
-    defineField({ name: 'description', title: 'Description for search and sharing', type: 'text', rows: 2 }),
+    defineField({ name: 'seo', title: 'Search & sharing', type: 'seo',
+      description: 'Fills itself in: the title is the heading, the description and picture are the ones in Menu & footer.' }),
+    defineField({ name: 'description', type: 'text', hidden: true }),
   ],
   preview: { prepare: () => ({ title: 'Work page' }) },
 });
@@ -26,7 +28,9 @@ export const legalPage = defineType({
   fields: [
     defineField({ name: 'title', type: 'string', validation: (r) => r.required() }),
     defineField({ name: 'updated', title: 'Last updated', type: 'date', description: 'Change this whenever the text changes.' }),
-    defineField({ name: 'description', title: 'Description for search and sharing', type: 'text', rows: 2 }),
+    defineField({ name: 'seo', title: 'Search & sharing', type: 'seo',
+      description: 'Fills itself in: the title is the page\'s title, the description comes from its first paragraph.' }),
+    defineField({ name: 'description', type: 'text', hidden: true }),
     defineField({
       name: 'body', title: 'Text', type: 'array',
       of: [defineArrayMember({

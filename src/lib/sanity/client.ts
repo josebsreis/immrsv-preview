@@ -37,3 +37,10 @@ export function imageSrcset(source: unknown, widths: number[], full?: number): s
     .map((w) => `${builder.image(source as never).width(w).auto('format').fit('max').url()} ${w}w`)
     .join(', ');
 }
+
+/** a picture as a link preview wants it: 1200 × 630, cropped round the
+ *  focus point set in the Studio, as a JPEG every app can show */
+export function shareImageUrl(source: unknown): string | undefined {
+  if (!builder || !(source as any)?.asset) return undefined;
+  return builder.image(source as never).width(1200).height(630).fit('crop').format('jpg').quality(82).url();
+}

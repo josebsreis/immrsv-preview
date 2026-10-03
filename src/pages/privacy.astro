@@ -5,7 +5,7 @@ import { getLegal } from '@lib/sanity/queries';
 const cms = await getLegal('privacy');
 ---
 <LegalPage title={cms?.title ?? "Privacy policy"} updated={cms?.updated ?? "15 September 2026"}
-           description={cms?.description ?? "How IMMRSV handles personal information on this website."} body={cms?.body}>
+           description={"How IMMRSV handles personal information on this website."} body={cms?.body} seo={cms?.seo}>
   <p>This policy explains what personal information IMMRSV collects through this website, how it is used, and the choices you have.</p>
 
   <h2>What we collect</h2>

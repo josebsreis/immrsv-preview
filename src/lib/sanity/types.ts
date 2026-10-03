@@ -2,6 +2,10 @@ import type { StudioKey } from '@lib/site';
 
 export interface Cta { label: string; href: string; }
 
+/** what a page says to search engines and when its link is shared — each
+ *  part only when someone has written it; the page works out the rest */
+export interface Seo { title?: string; description?: string; image?: string; noIndex?: boolean; }
+
 /** a figure and what it counts — one slide of the stats reel */
 export interface Fact { value: string; label: string; }
 
@@ -76,6 +80,9 @@ export interface Project {
   /** buttons on the project page — where the finished thing lives, a film,
    *  the press — each with its own words */
   links: { label: string; url: string }[];
+  /** the cover as a link preview wants it (1200 × 630), when it comes from Sanity */
+  shareImage?: string;
+  seo?: Seo;
   cover?: ImageRef;
   gallery: ImageRef[];
   /** the project page's right column, in order: stills and silent loops
@@ -99,8 +106,7 @@ export interface TeamContent {
 }
 
 export interface HomeContent {
-  /** for search engines and sharing; the site's own when empty */
-  description?: string;
+  seo?: Seo;
   hero: {
     headline: string;   // '\n' marks the line break before the rotating word
     words: string[];
@@ -183,10 +189,12 @@ export interface Settings {
   location: string;
   city: string;
   social: { label: string; url: string }[];
+  /** the picture for a shared link, for any page with none of its own */
+  shareImage?: string;
 }
 
-export interface WorkPage { title: string; description?: string; empty: string; }
+export interface WorkPage { title: string; empty: string; seo?: Seo; }
 
 /** the privacy policy or the terms, when they come from the CMS — absent,
  *  the page's own text stands */
-export interface LegalPage { title: string; updated?: string; description?: string; body: unknown[]; }
+export interface LegalPage { title: string; updated?: string; body: unknown[]; seo?: Seo; }
